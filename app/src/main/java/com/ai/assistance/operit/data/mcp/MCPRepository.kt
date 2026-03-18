@@ -13,6 +13,7 @@ import com.ai.assistance.operit.core.tools.mcp.MCPServerConfig
 import com.ai.assistance.operit.core.tools.mcp.MCPToolExecutor
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
+import com.ai.assistance.operit.services.WebhookService
 
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -299,6 +300,13 @@ class MCPRepository(private val context: Context) {
                 savePluginMetadata(metadata, result.pluginPath)
                 // 重新加载插件状态
                 loadPluginsFromMCPLocalServer()
+                // 发送Webhook通知 - MCP服务器安装成功
+                try {
+                    val webhookService = WebhookService.getInstance(context)
+                    webhookService.sendMcpServerInstall(pluginId, metadata.name)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "发送Webhook通知失败", e)
+                }
             }
 
             result
@@ -322,6 +330,13 @@ class MCPRepository(private val context: Context) {
                 savePluginMetadata(server, result.pluginPath)
                 // 重新加载插件状态
                 loadPluginsFromMCPLocalServer()
+                // 发送Webhook通知 - MCP服务器安装成功
+                try {
+                    val webhookService = WebhookService.getInstance(context)
+                    webhookService.sendMcpServerInstall(server.id, server.name)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "发送Webhook通知失败", e)
+                }
             }
 
             result
@@ -366,6 +381,13 @@ class MCPRepository(private val context: Context) {
                     savePluginMetadata(server, result.pluginPath)
                     // 重新加载插件状态
                     loadPluginsFromMCPLocalServer()
+                    // 发送Webhook通知 - MCP服务器安装成功
+                    try {
+                        val webhookService = WebhookService.getInstance(context)
+                        webhookService.sendMcpServerInstall(serverId, name)
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "发送Webhook通知失败", e)
+                    }
                 }
 
                 result
@@ -397,6 +419,13 @@ class MCPRepository(private val context: Context) {
                     // 重新加载插件状态
                     loadPluginsFromMCPLocalServer()
                     AppLogger.d(TAG, "插件卸载成功: $pluginId")
+                    // 发送Webhook通知 - MCP服务器卸载成功
+                    try {
+                        val webhookService = WebhookService.getInstance(context)
+                        webhookService.sendMcpServerUninstall(pluginId)
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "发送Webhook通知失败", e)
+                    }
                 } else {
                     AppLogger.e(TAG, "插件卸载失败: $pluginId")
                 }

@@ -8,6 +8,7 @@ import com.ai.assistance.operit.core.tools.mcp.MCPServerConfig
 import com.ai.assistance.operit.data.mcp.MCPLocalServer
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import com.ai.assistance.operit.core.tools.system.Terminal
+import com.ai.assistance.operit.services.WebhookService
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
@@ -381,6 +382,13 @@ class MCPStarter(private val context: Context) {
 
             if (connectSuccess) {
                 statusCallback(StartStatus.Success("Service $pluginId started successfully"))
+                // Send webhook notification for MCP server start
+                try {
+                    val webhookService = WebhookService.getInstance(context)
+                    webhookService.sendMcpServerStart(pluginId, extractedServerName)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Error sending webhook for MCP server start", e)
+                }
                 return true
             } else {
                 statusCallback(StartStatus.Error("Service $pluginId started but is not active"))

@@ -20,6 +20,7 @@ import com.ai.assistance.operit.data.model.Workflow
 import com.ai.assistance.operit.data.model.WorkflowNode
 import com.ai.assistance.operit.data.model.WorkflowNodeConnection
 import com.ai.assistance.operit.core.tools.MessageSendResultData
+import com.ai.assistance.operit.services.WebhookService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.LinkedList
@@ -65,6 +66,7 @@ data class WorkflowExecutionResult(
 class WorkflowExecutor(private val context: Context) {
     
     private val toolHandler = AIToolHandler.getInstance(context)
+    private val webhookService = WebhookService.getInstance(context)
     
     companion object {
         private const val TAG = "WorkflowExecutor"
@@ -446,6 +448,15 @@ class WorkflowExecutor(private val context: Context) {
         AppLogger.d(TAG, context.getString(R.string.workflow_log_start_execution, workflow.name, workflow.id))
         
         val nodeResults = mutableMapOf<String, NodeExecutionState>()
+        val startTime = System.currentTimeMillis()
+        
+        // 发送Webhook通知 - 工作流触发
+        try {
+            val triggerType = if (triggerNodeId != null) "scheduled" else "manual"
+            webhookService.sendWorkflowTrigger(workflow.id, workflow.name, triggerType)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "发送Webhook通知失败", e)
+        }
         
         try {
             // 1. 找到所有触发节点作为入口
@@ -528,6 +539,13 @@ class WorkflowExecutor(private val context: Context) {
             
             // 如果执行失败，停止整个流程
             if (!executionResult) {
+                // 发送Webhook通知 - 工作流完成（失败）
+                try {
+                    val duration = System.currentTimeMillis() - startTime
+                    webhookService.sendWorkflowComplete(workflow.id, workflow.name, false, duration)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "发送Webhook通知失败", e)
+                }
                 return@withContext WorkflowExecutionResult(
                     workflowId = workflow.id,
                     success = false,
@@ -538,6 +556,14 @@ class WorkflowExecutor(private val context: Context) {
             
             AppLogger.d(TAG, context.getString(R.string.workflow_log_execution_complete, workflow.name))
             
+            // 发送Webhook通知 - 工作流完成（成功）
+            try {
+                val duration = System.currentTimeMillis() - startTime
+                webhookService.sendWorkflowComplete(workflow.id, workflow.name, true, duration)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "发送Webhook通知失败", e)
+            }
+            
             return@withContext WorkflowExecutionResult(
                 workflowId = workflow.id,
                 success = true,
@@ -547,6 +573,13 @@ class WorkflowExecutor(private val context: Context) {
             
         } catch (e: Exception) {
             AppLogger.e(TAG, "工作流执行异常", e)
+            // 发送Webhook通知 - 工作流异常
+            try {
+                val duration = System.currentTimeMillis() - startTime
+                webhookService.sendWorkflowComplete(workflow.id, workflow.name, false, duration)
+            } catch (ex: Exception) {
+                AppLogger.e(TAG, "发送Webhook通知失败", ex)
+            }
             return@withContext WorkflowExecutionResult(
                 workflowId = workflow.id,
                 success = false,
@@ -990,6 +1023,13 @@ class WorkflowExecutor(private val context: Context) {
         if (node is MCPNode) {
             nodeResults[node.id] = NodeExecutionState.Running
             onNodeStateChange(node.id, NodeExecutionState.Running)
+            
+            // 发送Webhook通知 - 节点开始执行
+            try {
+                webhookService.sendWorkflowNodeStart(workflow.id, workflow.name, node.id, node.name, "MCP")
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "发送Webhook通知失败", e)
+            }
 
             return try {
                 // 验证服务器名称和工具名称
@@ -1043,6 +1083,12 @@ class WorkflowExecutor(private val context: Context) {
                     val errorMsg = context.getString(R.string.workflow_mcp_node_empty_response)
                     nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
                     onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))
+                    // 发送Webhook通知 - 节点执行失败
+                    try {
+                        webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "MCP", false, errorMsg)
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "发送Webhook通知失败", e)
+                    }
                     return false
                 }
 
@@ -1068,18 +1114,36 @@ class WorkflowExecutor(private val context: Context) {
 
                     nodeResults[node.id] = NodeExecutionState.Success(resultText)
                     onNodeStateChange(node.id, NodeExecutionState.Success(resultText))
+                    // 发送Webhook通知 - 节点执行成功
+                    try {
+                        webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "MCP", true, resultText.take(500))
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "发送Webhook通知失败", e)
+                    }
                     true
                 } else {
                     val errorObj = response.optJSONObject("error")
                     val errorMsg = errorObj?.optString("message") ?: context.getString(R.string.workflow_unknown_error)
                     nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
                     onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))
+                    // 发送Webhook通知 - 节点执行失败
+                    try {
+                        webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "MCP", false, errorMsg)
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "发送Webhook通知失败", e)
+                    }
                     false
                 }
             } catch (e: Exception) {
                 val errorMsg = context.getString(R.string.workflow_node_execution_exception, e.message ?: "")
                 nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
                 onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))
+                // 发送Webhook通知 - 节点执行异常
+                try {
+                    webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "MCP", false, errorMsg)
+                } catch (ex: Exception) {
+                    AppLogger.e(TAG, "发送Webhook通知失败", ex)
+                }
                 false
             }
         }

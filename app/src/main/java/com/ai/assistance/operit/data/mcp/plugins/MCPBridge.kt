@@ -8,6 +8,7 @@ import com.ai.assistance.operit.core.tools.system.Terminal
 import com.ai.assistance.operit.core.tools.AIToolHandler
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
+import com.ai.assistance.operit.services.WebhookService
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -643,7 +644,15 @@ class MCPBridge private constructor(private val context: Context) {
 
     // 取消注册MCP服务
     suspend fun unregisterMcpService(name: String): JSONObject? {
-        return sendCommand(MCPBridgeClient.buildUnregisterCommand(name))
+        val result = sendCommand(MCPBridgeClient.buildUnregisterCommand(name))
+        // Send webhook notification for MCP server stop
+        try {
+            val webhookService = WebhookService.getInstance(context)
+            webhookService.sendMcpServerStop(name, name)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error sending webhook for MCP server stop", e)
+        }
+        return result
     }
 
     // 列出所有注册的MCP服务或查询单个服务
