@@ -2,6 +2,7 @@ package com.ai.assistance.operit.core.tools
 
 import android.content.Context
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.core.tools.creator.PackageCreatorTools
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
@@ -1437,4 +1438,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 ffmpegConvertTool.invoke(tool)
             }
     )
+
+    // Register package creator tools (create packages, MCP servers, and skills)
+    PackageCreatorTools.registerCreatorTools(handler, context)
 }
