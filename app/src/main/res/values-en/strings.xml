@@ -942,6 +942,37 @@
     <string name="import_failed">Import failed: %1$s</string>
     <string name="package_import_failed">Package import failed</string>
     <string name="package_remove_failed">Package removal failed</string>
+
+    <!-- Import/Export -->
+    <string name="import_export_title">Import / Export</string>
+    <string name="import_export_chats">Chats</string>
+    <string name="import_export_workflows">Workflows</string>
+    <string name="import_export_skills">Skills</string>
+    <string name="import_export_mcp_servers">MCP Servers</string>
+    <string name="import_export_chats_description">Export or import chat histories</string>
+    <string name="import_export_workflows_description">Export or import workflow configurations</string>
+    <string name="import_export_skills_description">Export or import skill packages</string>
+    <string name="import_export_mcp_servers_description">Export or import MCP server configurations</string>
+    <string name="import_action">Import</string>
+    <string name="export_all">Export All</string>
+    <string name="export_selected">Export Selected</string>
+    <string name="import_export_processing">Processing…</string>
+    <string name="import_export_close">Close</string>
+    <string name="import_export_imported_chats">Imported %1$d chats</string>
+    <string name="import_export_imported_workflows">Imported %1$d workflows</string>
+    <string name="import_export_imported_skills">Imported %1$d skills</string>
+    <string name="import_export_imported_mcp_servers">Imported %1$d MCP servers</string>
+    <string name="import_export_exported_to">Exported to: %1$s</string>
+    <string name="import_export_error">Error: %1$s</string>
+    <string name="import_export_select_chat_to_export">Select chat to export:</string>
+    <string name="import_export_select_workflow_to_export">Select workflow to export:</string>
+    <string name="import_export_select_skill_to_export">Select skill to export:</string>
+    <string name="import_export_select_mcp_to_export">Select MCP server to export:</string>
+    <string name="import_export_export_all_title">Export All Data</string>
+    <string name="import_export_export_all_description">Export all chats, workflows, skills, and MCP server configurations as a backup file</string>
+    <string name="import_export_will_include">Will include:</string>
+    <string name="mcp_servers">MCP Servers</string>
+    <string name="package_manager_title">Package Manager</string>
     
     <!-- OperScript Execution -->
     <string name="run_script">Run Script</string>

@@ -25,8 +25,11 @@ import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.ImportExport
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,6 +56,8 @@ import com.ai.assistance.operit.ui.features.packages.screens.mcp.components.MCPE
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.ui.features.packages.components.EmptyState
 import com.ai.assistance.operit.ui.features.packages.components.PackageTab
+import com.ai.assistance.operit.ui.features.packages.components.dialogs.ImportExportDialog
+import com.ai.assistance.operit.ui.features.packages.components.dialogs.ExportAllDataDialog
 import com.ai.assistance.operit.ui.features.packages.dialogs.PackageDetailsDialog
 import com.ai.assistance.operit.ui.features.packages.dialogs.ScriptExecutionDialog
 import com.ai.assistance.operit.ui.features.packages.lists.PackagesList
@@ -107,6 +112,10 @@ fun PackageManagerScreen(
 
     val packageLoadErrors = remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var showPackageLoadErrorsDialog by remember { mutableStateOf(false) }
+    
+    // Import/Export dialog state
+    var showImportExportDialog by remember { mutableStateOf(false) }
+    var showExportAllDataDialog by remember { mutableStateOf(false) }
 
     val requiredEnvByPackage by remember {
         derivedStateOf {
@@ -239,6 +248,35 @@ fun PackageManagerScreen(
     }
 
     CustomScaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.package_manager_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                actions = {
+                    // Import/Export All Data button
+                    IconButton(onClick = { showExportAllDataDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Backup,
+                            contentDescription = stringResource(R.string.import_export_export_all_title)
+                        )
+                    }
+                    // Import/Export button
+                    IconButton(onClick = { showImportExportDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.ImportExport,
+                            contentDescription = stringResource(R.string.import_export_title)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
@@ -690,6 +728,32 @@ fun PackageManagerScreen(
                 PackageLoadErrorsDialog(
                     errors = packageLoadErrors.value,
                     onDismiss = { showPackageLoadErrorsDialog = false }
+                )
+            }
+
+            // Import/Export Dialogs
+            if (showImportExportDialog) {
+                ImportExportDialog(
+                    onDismiss = { showImportExportDialog = false },
+                    onExportComplete = { path ->
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.import_export_exported_to, path)
+                        )
+                    },
+                    onImportComplete = { message ->
+                        snackbarHostState.showSnackbar(message = message)
+                    }
+                )
+            }
+
+            if (showExportAllDataDialog) {
+                ExportAllDataDialog(
+                    onDismiss = { showExportAllDataDialog = false },
+                    onExportComplete = { path ->
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.import_export_exported_to, path)
+                        )
+                    }
                 )
             }
         }

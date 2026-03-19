@@ -919,6 +919,37 @@
     <string name="import_failed">导入失败: %1$s</string>
     <string name="package_import_failed">包导入失败</string>
     <string name="package_remove_failed">包移除失败</string>
+
+    <!-- Import/Export -->
+    <string name="import_export_title">导入/导出</string>
+    <string name="import_export_chats">聊天记录</string>
+    <string name="import_export_workflows">工作流</string>
+    <string name="import_export_skills">技能</string>
+    <string name="import_export_mcp_servers">MCP服务器</string>
+    <string name="import_export_chats_description">导出或导入聊天记录</string>
+    <string name="import_export_workflows_description">导出或导入工作流配置</string>
+    <string name="import_export_skills_description">导出或导入技能包</string>
+    <string name="import_export_mcp_servers_description">导出或导入MCP服务器配置</string>
+    <string name="import_action">导入</string>
+    <string name="export_all">导出全部</string>
+    <string name="export_selected">导出选中</string>
+    <string name="import_export_processing">处理中…</string>
+    <string name="import_export_close">关闭</string>
+    <string name="import_export_imported_chats">已导入 %1$d 个聊天</string>
+    <string name="import_export_imported_workflows">已导入 %1$d 个工作流</string>
+    <string name="import_export_imported_skills">已导入 %1$d 个技能</string>
+    <string name="import_export_imported_mcp_servers">已导入 %1$d 个MCP服务器</string>
+    <string name="import_export_exported_to">已导出到: %1$s</string>
+    <string name="import_export_error">错误: %1$s</string>
+    <string name="import_export_select_chat_to_export">选择要导出的聊天:</string>
+    <string name="import_export_select_workflow_to_export">选择要导出的工作流:</string>
+    <string name="import_export_select_skill_to_export">选择要导出的技能:</string>
+    <string name="import_export_select_mcp_to_export">选择要导出的MCP服务器:</string>
+    <string name="import_export_export_all_title">导出所有数据</string>
+    <string name="import_export_export_all_description">将所有聊天记录、工作流、技能和MCP服务器配置导出为一个备份文件</string>
+    <string name="import_export_will_include">将包含:</string>
+    <string name="mcp_servers">MCP服务器</string>
+    <string name="package_manager_title">包管理</string>
     
     <!-- OperScript Execution -->
     <string name="run_script">运行脚本</string>
