@@ -4,7 +4,7 @@ import android.content.Context
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.tools.AIToolHandler
 import com.ai.assistance.operit.core.tools.StringResultData
-import com.ai.assistance.operit.core.tools.ToolResult
+import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
 import com.ai.assistance.operit.core.tools.skill.SkillManager
 import com.ai.assistance.operit.data.mcp.MCPLocalServer
@@ -352,8 +352,8 @@ export default $name;
         val description = tool.parameters.find { it.name == "description" }?.value ?: ""
         val serverType = tool.parameters.find { it.name == "server_type" }?.value ?: "npx"
         val packageName = tool.parameters.find { it.name == "package_name" }?.value ?: ""
-        val args = tool.parameters.find { it.name == "args" }?.value ?: "[]"
-        val env = tool.parameters.find { it.name == "env" }?.value ?: "{}"
+        val argsStr = tool.parameters.find { it.name == "args" }?.value ?: "[]"
+        val envStr = tool.parameters.find { it.name == "env" }?.value ?: "{}"
 
         if (name.isBlank()) {
             return ToolResult(
@@ -374,16 +374,37 @@ export default $name;
         }
 
         return try {
-            // Generate MCP server configuration
+            // Generate server ID from name
             val serverId = name.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
             
-            val config = buildMcpServerConfig(serverId, name, description, serverType, packageName, args, env)
+            // Parse args list
+            val argsList = parseArgsList(argsStr, packageName)
             
-            // Save the configuration
-            mcpLocalServer.addOrUpdateMCPServer(serverId, config)
+            // Parse env map
+            val envMap = parseEnvMap(envStr)
+            
+            // Save the MCP server configuration
+            mcpLocalServer.addOrUpdateMCPServer(
+                serverId = serverId,
+                command = serverType,
+                args = argsList,
+                env = envMap
+            )
+            
+            // Add plugin metadata
+            val metadata = MCPLocalServer.PluginMetadata(
+                id = serverId,
+                name = name,
+                description = description,
+                type = serverType,
+                isInstalled = false,
+                version = "1.0.0",
+                author = "User Created"
+            )
+            mcpLocalServer.addOrUpdatePluginMetadata(metadata)
             
             // Refresh available MCP servers
-            skillManager.refreshAvailableSkills() // This also refreshes MCP
+            skillManager.refreshAvailableSkills()
 
             ToolResult(
                 toolName = tool.name,
@@ -408,62 +429,46 @@ export default $name;
     }
 
     /**
-     * Build MCP server configuration JSON
+     * Parse args list from string
      */
-    private fun buildMcpServerConfig(
-        serverId: String,
-        name: String,
-        description: String,
-        serverType: String,
-        packageName: String,
-        args: String,
-        env: String
-    ): String {
-        val argsList = try {
-            if (args.startsWith("[")) {
-                args.removePrefix("[").removeSuffix("]").split(",").map { it.trim().removeSurrounding("\"") }
+    private fun parseArgsList(argsStr: String, defaultValue: String): List<String> {
+        return try {
+            if (argsStr.startsWith("[")) {
+                argsStr.removePrefix("[").removeSuffix("]")
+                    .split(",")
+                    .map { it.trim().removeSurrounding("\"") }
+                    .filter { it.isNotBlank() }
             } else {
-                listOf(packageName)
+                listOf(defaultValue)
             }
         } catch (e: Exception) {
-            listOf(packageName)
+            listOf(defaultValue)
         }
+    }
 
-        val envMap = try {
-            if (env.startsWith("{")) {
-                val pairs = env.removePrefix("{").removeSuffix("}").split(",")
-                pairs.associate {
-                    val kv = it.split(":")
-                    if (kv.size == 2) {
-                        kv[0].trim().removeSurrounding("\"") to kv[1].trim().removeSurrounding("\"")
-                    } else {
-                        "" to ""
+    /**
+     * Parse env map from string
+     */
+    private fun parseEnvMap(envStr: String): Map<String, String> {
+        return try {
+            if (envStr.startsWith("{")) {
+                envStr.removePrefix("{").removeSuffix("}")
+                    .split(",")
+                    .mapNotNull { pair ->
+                        val kv = pair.split(":")
+                        if (kv.size == 2) {
+                            val key = kv[0].trim().removeSurrounding("\"")
+                            val value = kv[1].trim().removeSurrounding("\"")
+                            if (key.isNotBlank()) key to value else null
+                        } else null
                     }
-                }.filterKeys { it.isNotEmpty() }
+                    .toMap()
             } else {
                 emptyMap()
             }
         } catch (e: Exception) {
             emptyMap()
         }
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-        
-        return """
-{
-  "$serverId": {
-    "command": "$serverType",
-    "args": ${argsList.map { "\"$it\"" }},
-    "env": $env,
-    "metadata": {
-      "name": "$name",
-      "description": "$description",
-      "type": "$serverType",
-      "createdAt": "${dateFormat.format(Date())}"
-    }
-  }
-}
-""".trimIndent()
     }
 
     /**
@@ -589,9 +594,6 @@ Provide usage examples here...
                     val status = if (imported.contains(name)) "[imported]" else "[available]"
                     sb.appendLine("- **$name** $status")
                     sb.appendLine("  - ${pkg.description}")
-                    if (pkg.version != null) {
-                        sb.appendLine("  - Version: ${pkg.version}")
-                    }
                     sb.appendLine()
                 }
             }
@@ -629,7 +631,7 @@ Provide usage examples here...
             if (servers.isEmpty()) {
                 sb.appendLine("No MCP servers configured.")
             } else {
-                servers.forEach { server ->
+                servers.forEach { (serverId, server) ->
                     val status = if (server.isInstalled) "[installed]" else "[not installed]"
                     sb.appendLine("- **${server.name}** $status")
                     sb.appendLine("  - ID: ${server.id}")
