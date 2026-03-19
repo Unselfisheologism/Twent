@@ -122,8 +122,11 @@ class ImportExportManager(private val context: Context) {
         try {
             AppLogger.d(TAG, "Exporting chat: $chatId")
             
-            val chat = chatHistoryManager.getChatById(chatId)
+            // Get chat from database directly
+            val database = com.ai.assistance.operit.data.db.AppDatabase.getDatabase(context)
+            val chatEntity = database.chatDao().getChatById(chatId)
                 ?: return@withContext Result.failure(Exception("Chat not found: $chatId"))
+            val chat = chatEntity.toChatHistory(emptyList())
 
             val exportDir = getExportDirectory()
             val safeName = chat.title?.replace(Regex("[^a-zA-Z0-9]"), "_") ?: chatId
