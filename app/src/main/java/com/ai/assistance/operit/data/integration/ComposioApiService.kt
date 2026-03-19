@@ -12,7 +12,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -324,16 +326,16 @@ class ComposioApiService(private val context: Context) {
             
             val requestBody = buildToolExecutionBody(parameters, accountId)
             val jsonBody = json.encodeToString(requestBody)
-            
+
             val request = createAuthenticatedRequest(
                 url = url,
                 method = "POST",
                 body = jsonBody.toRequestBody("application/json".toMediaType())
             )
-            
+
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
-            
+
             if (response.isSuccessful && responseBody != null) {
                 val executionId = parseExecutionId(responseBody)
                 Result.success(executionId)
@@ -491,7 +493,7 @@ class ComposioApiService(private val context: Context) {
                 return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
             }
             
-            val urlBuilder = HttpUrl.parse(buildUrl(ENDPOINT_CONNECTIONS))?.newBuilder()
+            val urlBuilder = buildUrl(ENDPOINT_CONNECTIONS).toHttpUrlOrNull()?.newBuilder()
             toolkit?.let { urlBuilder?.addQueryParameter("toolkit", it) }
             
             val url = urlBuilder?.build()?.toString()
@@ -551,14 +553,7 @@ class ComposioApiService(private val context: Context) {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
             val toolkitsArray = jsonElement.jsonObject["toolkits"] ?: jsonElement
-            
-            kotlinx.serialization.json.JsonArray = toolkitsArray.let {
-                when (it) {
-                    is kotlinx.serialization.json.JsonArray -> it
-                    else -> kotlinx.serialization.json.jsonArrayOf(it)
-                }
-            }
-            
+
             // Parse each toolkit
             val toolkits = mutableListOf<ToolkitDefinition>()
             // Simplified parsing - in production, use proper serializable classes
@@ -591,12 +586,12 @@ class ComposioApiService(private val context: Context) {
     private fun buildToolExecutionBody(
         parameters: Map<String, Any>,
         accountId: String?
-    ): Map<String, Any?> {
-        val body = mutableMapOf<String, Any?>(
-            "parameters" to parameters
+    ): JsonObject {
+        val body = mutableMapOf<String, JsonElement>(
+            "parameters" to json.encodeToJsonElement(parameters)
         )
-        accountId?.let { body["account_id"] = it }
-        return body
+        accountId?.let { body["account_id"] = json.encodeToJsonElement(it) }
+        return JsonObject(body)
     }
     
     private fun parseToolExecutionResponse(responseBody: String): ToolExecutionResponse {
@@ -725,6 +720,7 @@ data class ToolExecutionResponse(
 @Serializable
 data class OAuthUrlResponse(
     val url: String,
+    val authUrl: String = url,
     val connectionId: String
 )
 
@@ -737,7 +733,12 @@ data class OAuthExchangeResponse(
     val connectionId: String,
     val accountId: String,
     val toolkit: String,
-    val message: String? = null
+    val message: String? = null,
+    val expiresIn: Long = 3600L,
+    val accessToken: String = "",
+    val refreshToken: String? = null,
+    val accountName: String? = null,
+    val entityId: String? = null
 )
 
 /**

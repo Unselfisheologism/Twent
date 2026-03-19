@@ -185,9 +185,10 @@ class ExecuteIntegrationNode(context: Context) {
     for (nodeConfig in nodeConfigs) {
       val result = executeNode(nodeConfig, contextData)
       results.add(result)
-      
+
       // Build context for next node
-      result.getOrNull()?.let { integrationResult ->
+      val integrationResult = result.getOrNull()
+      if (integrationResult != null) {
         if (integrationResult.success) {
           contextData = contextData + (nodeConfig.id to (
             integrationResult.metadata + mapOf("result" to integrationResult.output)
@@ -354,7 +355,7 @@ class ExecuteIntegrationNode(context: Context) {
       // Add body for POST/PUT/PATCH
       val body = when (method) {
         "POST", "PUT", "PATCH" -> {
-          val jsonBody = json.encodeToString(parameters)
+          val jsonBody = json.encodeToJsonElement(parameters).toString()
           requestBuilder.post(jsonBody.toRequestBody("application/json".toMediaType()))
         }
         else -> null
@@ -426,7 +427,7 @@ class ExecuteIntegrationNode(context: Context) {
           IntegrationResult(
             nodeId = nodeConfig.id,
             success = true,
-            output = json.encodeToString(result),
+            output = json.encodeToJsonElement(result).toString(),
             executionTime = 0L,
             metadata = mapOf("action" to "connect", "toolkit" to toolkit)
           )
@@ -494,7 +495,7 @@ class ExecuteIntegrationNode(context: Context) {
           lastError = Exception(execResult.errorMessage)
         },
         onFailure = { error ->
-          lastError = error
+          lastError = error as Exception
           
           // Check if error is retryable
           if (retryConfig.retryableErrors.isNotEmpty()) {

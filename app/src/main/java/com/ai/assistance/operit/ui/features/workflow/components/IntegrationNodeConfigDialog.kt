@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.integration.model.ToolDefinition
+import com.ai.assistance.operit.data.integration.model.ToolParameter
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.data.model.IntegrationNode
 import com.ai.assistance.operit.data.model.IntegrationNodeConstants
@@ -606,7 +607,7 @@ private fun ToolConfigSection(
 @Composable
 private fun ParameterInputField(
     paramName: String,
-    paramDefinition: ToolDefinition.ToolParameter,
+    paramDefinition: ToolParameter,
     value: String,
     isNodeReference: Boolean,
     referenceNodeId: String,

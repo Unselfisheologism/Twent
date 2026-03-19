@@ -1335,11 +1335,11 @@ data class WorkflowDetailResultData(
                 is com.ai.assistance.operit.data.model.IntegrationNode -> {
                     sb.appendLine("  - [Integration] ${node.name} (${node.id})")
                     sb.appendLine("    Type: ${node.integrationType}")
-                    if (node.toolkitName.isNotBlank()) {
-                        sb.appendLine("    Toolkit: ${node.toolkitName}")
+                    if (node.toolkit.isNotBlank()) {
+                        sb.appendLine("    Toolkit: ${node.toolkit}")
                     }
-                    if (node.action.isNotBlank()) {
-                        sb.appendLine("    Action: ${node.action}")
+                    if (node.actionId.isNotBlank()) {
+                        sb.appendLine("    Action: ${node.actionId}")
                     }
                     if (node.description.isNotBlank()) {
                         sb.appendLine("    Description: ${node.description}")

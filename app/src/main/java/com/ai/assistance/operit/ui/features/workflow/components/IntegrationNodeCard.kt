@@ -414,6 +414,7 @@ private fun ExecutionStateIndicator(
 /**
  * Get integration info text based on node configuration
  */
+@Composable
 private fun getIntegrationInfo(node: IntegrationNode): String {
     return when (node.integrationType) {
         IntegrationNodeConstants.TYPE_TOOL -> {
@@ -433,8 +434,8 @@ private fun getIntegrationInfo(node: IntegrationNode): String {
         }
         IntegrationNodeConstants.TYPE_MCP -> {
             // Show MCP server name
-            node.mcpServerConfig?.serverName?.ifEmpty { 
-                stringResource(R.string.integration_no_mcp_server) 
+            node.mcpServerConfig?.serverName?.ifEmpty {
+                stringResource(R.string.integration_no_mcp_server)
             } ?: stringResource(R.string.integration_no_mcp_server)
         }
         IntegrationNodeConstants.TYPE_OAUTH -> {
@@ -463,6 +464,7 @@ private data class IntegrationNodeStyle(
 /**
  * Get the style for an integration node based on its type
  */
+@Composable
 private fun getIntegrationNodeStyle(integrationType: String): IntegrationNodeStyle {
     return when (integrationType) {
         IntegrationNodeConstants.TYPE_TOOL -> IntegrationNodeStyle(
