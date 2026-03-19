@@ -44,6 +44,7 @@ import com.ai.assistance.operit.data.model.LogicNode
 import com.ai.assistance.operit.data.model.ParameterValue
 import com.ai.assistance.operit.data.model.WorkflowNode
 import com.ai.assistance.operit.data.model.WorkflowNodeConnection
+import com.ai.assistance.operit.ui.features.workflow.components.IntegrationNodeCard
 import kotlin.math.roundToInt
 
 // 画布配置常量
@@ -630,51 +631,103 @@ fun GridWorkflowCanvas(
                             )
                         }
                 ) {
-                    DraggableNodeCard(
-                        node = node,
-                        isDragging = node.id == draggingNodeId,
-                        executionState = nodeExecutionStates[node.id],
-                        onDragStart = {
-                            draggingNodeId = node.id
-                        },
-                        onDrag = { amount ->
-                            if (node.id == draggingNodeId) {
-                                // 根据缩放比例调整拖动量
-                                dragOffset += amount / scale
+                    // 根据节点类型使用不同的卡片组件
+                    if (node is com.ai.assistance.operit.data.model.IntegrationNode) {
+                        IntegrationNodeCard(
+                            node = node,
+                            isDragging = node.id == draggingNodeId,
+                            executionState = nodeExecutionStates[node.id],
+                            onDragStart = {
+                                draggingNodeId = node.id
+                            },
+                            onDrag = { amount ->
+                                if (node.id == draggingNodeId) {
+                                    // 根据缩放比例调整拖动量
+                                    dragOffset += amount / scale
+                                }
+                            },
+                            onDragEnd = {
+                                draggingNodeId?.let { nodeId ->
+                                    val startPosition = nodePositions[nodeId] ?: Offset.Zero
+                                    val finalPosition = startPosition + dragOffset
+                                    
+                                    // --- 吸附逻辑：吸附左上角 ---
+                                    val snappedX = (finalPosition.x / cellSizePx).roundToInt() * cellSizePx
+                                    val snappedY = (finalPosition.y / cellSizePx).roundToInt() * cellSizePx
+                                    
+                                    val finalX = snappedX.toFloat()
+                                    val finalY = snappedY.toFloat()
+                                    
+                                    nodePositions[nodeId] = Offset(finalX, finalY)
+                                    onNodePositionChanged(nodeId, finalX, finalY)
+                                }
+                                
+                                // 重置拖动状态
+                                draggingNodeId = null
+                                dragOffset = Offset.Zero
+                            },
+                            onDragCancel = {
+                                // 重置拖动状态
+                                draggingNodeId = null
+                                dragOffset = Offset.Zero
+                            },
+                            onLongPress = {
+                                onNodeLongPress(node.id)
+                            },
+                            onClick = {
+                                onNodeClick(node.id)
+                            },
+                            onEnabledChanged = { enabled ->
+                                // 处理启用/禁用状态变更
                             }
-                        },
-                        onDragEnd = {
-                            draggingNodeId?.let { nodeId ->
-                                val startPosition = nodePositions[nodeId] ?: Offset.Zero
-                                val finalPosition = startPosition + dragOffset
+                        )
+                    } else {
+                        DraggableNodeCard(
+                            node = node,
+                            isDragging = node.id == draggingNodeId,
+                            executionState = nodeExecutionStates[node.id],
+                            onDragStart = {
+                                draggingNodeId = node.id
+                            },
+                            onDrag = { amount ->
+                                if (node.id == draggingNodeId) {
+                                    // 根据缩放比例调整拖动量
+                                    dragOffset += amount / scale
+                                }
+                            },
+                            onDragEnd = {
+                                draggingNodeId?.let { nodeId ->
+                                    val startPosition = nodePositions[nodeId] ?: Offset.Zero
+                                    val finalPosition = startPosition + dragOffset
+                                    
+                                    // --- 吸附逻辑：吸附左上角 ---
+                                    val snappedX = (finalPosition.x / cellSizePx).roundToInt() * cellSizePx
+                                    val snappedY = (finalPosition.y / cellSizePx).roundToInt() * cellSizePx
+                                    
+                                    val finalX = snappedX.toFloat()
+                                    val finalY = snappedY.toFloat()
+                                    
+                                    nodePositions[nodeId] = Offset(finalX, finalY)
+                                    onNodePositionChanged(nodeId, finalX, finalY)
+                                }
                                 
-                                // --- 吸附逻辑：吸附左上角 ---
-                                val snappedX = (finalPosition.x / cellSizePx).roundToInt() * cellSizePx
-                                val snappedY = (finalPosition.y / cellSizePx).roundToInt() * cellSizePx
-                                
-                                val finalX = snappedX.toFloat()
-                                val finalY = snappedY.toFloat()
-                                
-                                nodePositions[nodeId] = Offset(finalX, finalY)
-                                onNodePositionChanged(nodeId, finalX, finalY)
+                                // 重置拖动状态
+                                draggingNodeId = null
+                                dragOffset = Offset.Zero
+                            },
+                            onDragCancel = {
+                                // 重置拖动状态
+                                draggingNodeId = null
+                                dragOffset = Offset.Zero
+                            },
+                            onLongPress = {
+                                onNodeLongPress(node.id)
+                            },
+                            onClick = {
+                                onNodeClick(node.id)
                             }
-                            
-                            // 重置拖动状态
-                            draggingNodeId = null
-                            dragOffset = Offset.Zero
-                        },
-                        onDragCancel = {
-                            // 重置拖动状态
-                            draggingNodeId = null
-                            dragOffset = Offset.Zero
-                        },
-                        onLongPress = {
-                            onNodeLongPress(node.id)
-                        },
-                        onClick = {
-                            onNodeClick(node.id)
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

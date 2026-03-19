@@ -46,6 +46,7 @@ import com.ai.assistance.operit.data.model.LogicOperator
 import com.ai.assistance.operit.data.model.ExtractNode
 import com.ai.assistance.operit.data.model.ExtractMode
 import com.ai.assistance.operit.data.model.MCPNode
+import com.ai.assistance.operit.data.model.IntegrationNode
 import com.ai.assistance.operit.data.model.ParameterValue
 import com.ai.assistance.operit.data.model.ToolParameterSchema
 import com.ai.assistance.operit.data.mcp.MCPRepository
@@ -58,6 +59,7 @@ import com.ai.assistance.operit.ui.features.workflow.components.ConnectionMenuDi
 import com.ai.assistance.operit.ui.features.workflow.components.AddMCPServerDialog
 import com.ai.assistance.operit.ui.features.workflow.components.NodeActionMenuDialog
 import com.ai.assistance.operit.ui.features.workflow.components.ScheduleConfigDialog
+import com.ai.assistance.operit.ui.features.workflow.components.IntegrationNodeConfigDialog
 import com.ai.assistance.operit.core.workflow.NodeExecutionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -181,6 +183,7 @@ fun WorkflowDetailScreen(
     var showNodeActionMenu by remember { mutableStateOf<String?>(null) }
     var showConnectionMenu by remember { mutableStateOf<String?>(null) }
     var showEditNodeDialog by remember { mutableStateOf<WorkflowNode?>(null) }
+    var showIntegrationNodeConfigDialog by remember { mutableStateOf(false) }
     var isFabMenuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(workflowId) {
@@ -635,16 +638,29 @@ fun WorkflowDetailScreen(
             // 节点编辑对话框
             if (workflow != null) {
                 showEditNodeDialog?.let { node ->
-                    NodeDialog(
-                        node = node, // 编辑模式
-                        workflow = workflow,
-                        onDismiss = { showEditNodeDialog = null },
-                        onConfirm = { updatedNode ->
-                            viewModel.updateNode(workflowId, updatedNode) {
-                                showEditNodeDialog = null
+                    // 检查是否是 IntegrationNode，如果是则使用专门的配置对话框
+                    if (node is IntegrationNode) {
+                        IntegrationNodeConfigDialog(
+                            node = node,
+                            onDismiss = { showEditNodeDialog = null },
+                            onConfirm = { updatedNode ->
+                                viewModel.updateNode(workflowId, updatedNode) {
+                                    showEditNodeDialog = null
+                                }
                             }
-                        }
-                    )
+                        )
+                    } else {
+                        NodeDialog(
+                            node = node, // 编辑模式
+                            workflow = workflow,
+                            onDismiss = { showEditNodeDialog = null },
+                            onConfirm = { updatedNode ->
+                                viewModel.updateNode(workflowId, updatedNode) {
+                                    showEditNodeDialog = null
+                                }
+                            }
+                        )
+                    }
                 }
             }
 
@@ -740,6 +756,7 @@ fun NodeDialog(
         is LogicNode -> "logic"
         is ExtractNode -> "extract"
         is MCPNode -> "mcp"
+        is IntegrationNode -> "integration"
         else -> "trigger"
     }
     
@@ -1128,7 +1145,8 @@ fun NodeDialog(
         "condition" to stringResource(R.string.workflow_node_type_condition),
         "logic" to stringResource(R.string.workflow_node_type_logic),
         "extract" to stringResource(R.string.workflow_node_type_extract),
-        "mcp" to stringResource(R.string.workflow_node_type_mcp)
+        "mcp" to stringResource(R.string.workflow_node_type_mcp),
+        "integration" to stringResource(R.string.workflow_node_type_integration)
     )
 
     val triggerTypes = mapOf(
@@ -2354,6 +2372,7 @@ fun NodeDialog(
                             "condition" -> context.getString(R.string.workflow_node_default_name_condition)
                             "logic" -> context.getString(R.string.workflow_node_default_name_logic)
                             "extract" -> context.getString(R.string.workflow_node_default_name_extract)
+                            "integration" -> context.getString(R.string.workflow_node_type_integration)
                             else -> nodeTypes[nodeType] ?: context.getString(R.string.workflow_node_fallback)
                         }
                     } else {
@@ -2456,6 +2475,8 @@ fun NodeDialog(
                                         }
                                     }
                             )
+                            // IntegrationNode 编辑模式：使用专门的配置对话框处理
+                            is IntegrationNode -> node
                             else -> node
                         }
                     } else {
@@ -2561,6 +2582,17 @@ fun NodeDialog(
                                             ParameterValue.StaticValue(param.value)
                                         }
                                     },
+                                position = smartPosition
+                            )
+                            // IntegrationNode 创建：使用专门的配置对话框处理
+                            "integration" -> IntegrationNode(
+                                name = nodeName,
+                                description = description,
+                                enabled = true,
+                                integrationType = com.ai.assistance.operit.data.model.IntegrationNodeConstants.TYPE_TOOL,
+                                toolkitName = "",
+                                action = "",
+                                parameters = emptyMap(),
                                 position = smartPosition
                             )
                             else -> TriggerNode(name = nodeName, description = description, position = smartPosition)

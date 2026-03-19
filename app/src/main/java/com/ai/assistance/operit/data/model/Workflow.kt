@@ -182,6 +182,107 @@ data class MCPNode(
 ) : WorkflowNode()
 
 /**
+ * 集成节点类型常量
+ */
+object IntegrationNodeConstants {
+    const val TYPE_INTEGRATION = "integration"
+    
+    // Integration node type values (matching IntegrationNodeType)
+    const val TYPE_TOOL = "tool"
+    const val TYPE_WEBHOOK = "webhook"
+    const val TYPE_MCP = "mcp"
+    const val TYPE_OAUTH = "oauth"
+}
+
+/**
+ * 集成节点
+ * 允许在工作流中调用外部集成（Composio工具、Webhooks、MCP服务器、OAuth）
+ * 
+ * 支持的集成类型：
+ * - TOOL: Composio工具执行
+ * - WEBHOOK: 自定义Webhook HTTP调用
+ * - MCP: MCP服务器工具执行
+ * - OAUTH: OAuth连接管理
+ */
+@Serializable
+data class IntegrationNode(
+    override val id: String = UUID.randomUUID().toString(),
+    override val type: String = IntegrationNodeConstants.TYPE_INTEGRATION,
+    override var name: String = "",
+    override var description: String = "",
+    override var position: NodePosition = NodePosition(0f, 0f),
+    // Integration type (tool, webhook, mcp, oauth)
+    var integrationType: String = IntegrationNodeConstants.TYPE_TOOL,
+    // Toolkit name (for tool-based integrations like Composio)
+    var toolkit: String = "",
+    // Action/tool to execute
+    var actionId: String = "",
+    // Parameters for the action (supports static values or node references)
+    var parameters: Map<String, ParameterValue> = emptyMap(),
+    // Connected account ID to use (if required)
+    var accountId: String? = null,
+    // Custom webhook configuration (if integrationType is WEBHOOK)
+    var webhookConfig: IntegrationWebhookConfig? = null,
+    // MCP server configuration (if integrationType is MCP)
+    var mcpServerConfig: IntegrationMcpServerConfig? = null,
+    // Error handling settings
+    var errorHandling: IntegrationErrorHandlingConfig = IntegrationErrorHandlingConfig(),
+    // Retry settings
+    var retryConfig: IntegrationRetryConfig = IntegrationRetryConfig(),
+    // Execution timeout in milliseconds
+    var timeout: Long = 30000L,
+    // Whether the node is enabled
+    var enabled: Boolean = true
+) : WorkflowNode()
+
+/**
+ * Integration webhook configuration
+ */
+@Serializable
+data class IntegrationWebhookConfig(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val url: String = "",
+    val method: String = "GET",
+    val headers: Map<String, String> = emptyMap(),
+    val apiKeyRequired: Boolean = false
+)
+
+/**
+ * Integration MCP server configuration
+ */
+@Serializable
+data class IntegrationMcpServerConfig(
+    val serverName: String = "",
+    val serverId: String? = null,
+    val toolName: String = "",
+    val parameters: Map<String, String> = emptyMap()
+)
+
+/**
+ * Integration error handling configuration
+ */
+@Serializable
+data class IntegrationErrorHandlingConfig(
+    val onError: String = "stop", // stop, continue, retry, fallback
+    val errorMessage: String = "",
+    val fallbackValue: String? = null,
+    val continueOnError: Boolean = false
+)
+
+/**
+ * Integration retry configuration
+ */
+@Serializable
+data class IntegrationRetryConfig(
+    val enabled: Boolean = false,
+    val maxRetries: Int = 3,
+    val retryDelay: Long = 1000L,
+    val exponentialBackoff: Boolean = true,
+    val retryableErrors: List<String> = emptyList()
+)
+
+/**
  * 参数值类型
  * 支持静态值或引用其他节点的输出
  */

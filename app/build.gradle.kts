@@ -76,6 +76,7 @@ android {
 
         buildConfigField("String", "GITHUB_CLIENT_ID", "\"${localProperties.getProperty("GITHUB_CLIENT_ID")}\"")
         buildConfigField("String", "GITHUB_CLIENT_SECRET", "\"${localProperties.getProperty("GITHUB_CLIENT_SECRET")}\"")
+        buildConfigField("String", "COMPOSIO_API_KEY", "\"${localProperties.getProperty("COMPOSIO_API_KEY")}\"")
     }
 
     buildTypes {

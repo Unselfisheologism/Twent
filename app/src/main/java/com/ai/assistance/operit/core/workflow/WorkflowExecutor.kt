@@ -10,6 +10,7 @@ import com.ai.assistance.operit.data.model.ConditionOperator
 import com.ai.assistance.operit.data.model.ExecuteNode
 import com.ai.assistance.operit.data.model.ExtractMode
 import com.ai.assistance.operit.data.model.ExtractNode
+import com.ai.assistance.operit.data.model.IntegrationNode
 import com.ai.assistance.operit.data.model.LogicNode
 import com.ai.assistance.operit.data.model.LogicOperator
 import com.ai.assistance.operit.data.model.MCPNode
@@ -67,6 +68,7 @@ class WorkflowExecutor(private val context: Context) {
     
     private val toolHandler = AIToolHandler.getInstance(context)
     private val webhookService = WebhookService.getInstance(context)
+    private val integrationNodeExecutor = IntegrationNodeExecutor.getInstance(context)
     
     companion object {
         private const val TAG = "WorkflowExecutor"
@@ -419,6 +421,13 @@ class WorkflowExecutor(private val context: Context) {
                     }
                 }
                 is MCPNode -> {
+                    node.parameters.values.forEach { value ->
+                        if (value is ParameterValue.NodeReference) {
+                            addDependency(value.nodeId, node.id)
+                        }
+                    }
+                }
+                is IntegrationNode -> {
                     node.parameters.values.forEach { value ->
                         if (value is ParameterValue.NodeReference) {
                             addDependency(value.nodeId, node.id)
@@ -1143,6 +1152,78 @@ class WorkflowExecutor(private val context: Context) {
                     webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "MCP", false, errorMsg)
                 } catch (ex: Exception) {
                     AppLogger.e(TAG, "发送Webhook通知失败", ex)
+                }
+                false
+            }
+        }
+
+        // Integration节点执行
+        if (node is IntegrationNode) {
+            nodeResults[node.id] = NodeExecutionState.Running
+            onNodeStateChange(node.id, NodeExecutionState.Running)
+            
+            // 发送Webhook通知 - 节点开始执行
+            try {
+                webhookService.sendWorkflowNodeStart(workflow.id, workflow.name, node.id, node.name, "Integration")
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "发送Webhook通知失败", e)
+            }
+
+            return try {
+                // 委托给 IntegrationNodeExecutor 执行
+                val result = integrationNodeExecutor.execute(node, nodeResults, triggerExtras)
+                
+                // 处理执行结果
+                when (result) {
+                    is NodeExecutionState.Success -> {
+                        nodeResults[node.id] = result
+                        onNodeStateChange(node.id, result)
+                        // 发送Webhook通知 - 节点执行成功
+                        try {
+                            webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "Integration", true, result.result.take(500))
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "发送Webhook通知失败", e)
+                        }
+                        true
+                    }
+                    is NodeExecutionState.Skipped -> {
+                        nodeResults[node.id] = result
+                        onNodeStateChange(node.id, result)
+                        // 发送Webhook通知 - 节点跳过
+                        try {
+                            webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "Integration", true, "Skipped: ${result.reason}")
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "发送Webhook通知失败", e)
+                        }
+                        true
+                    }
+                    is NodeExecutionState.Failed -> {
+                        nodeResults[node.id] = result
+                        onNodeStateChange(node.id, result)
+                        // 发送Webhook通知 - 节点执行失败
+                        try {
+                            webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "Integration", false, result.error)
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "发送Webhook通知失败", e)
+                        }
+                        false
+                    }
+                    else -> {
+                        val errorMsg = context.getString(R.string.workflow_unknown_error)
+                        nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
+                        onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))
+                        false
+                    }
+                }
+            } catch (e: Exception) {
+                val errorMsg = context.getString(R.string.workflow_node_execution_exception, e.message ?: "")
+                nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
+                onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))
+                // 发送Webhook通知 - 节点执行异常
+                try {
+                    webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "Integration", false, errorMsg)
+                } catch (ex: Exception) {
+                    AppLogger.e(TAG, "发送Webhook通知失败", e)
                 }
                 false
             }
