@@ -1332,6 +1332,19 @@ data class WorkflowDetailResultData(
                         sb.appendLine("    Description: ${node.description}")
                     }
                 }
+                is com.ai.assistance.operit.data.model.IntegrationNode -> {
+                    sb.appendLine("  - [Integration] ${node.name} (${node.id})")
+                    sb.appendLine("    Type: ${node.integrationType}")
+                    if (node.toolkitName.isNotBlank()) {
+                        sb.appendLine("    Toolkit: ${node.toolkitName}")
+                    }
+                    if (node.action.isNotBlank()) {
+                        sb.appendLine("    Action: ${node.action}")
+                    }
+                    if (node.description.isNotBlank()) {
+                        sb.appendLine("    Description: ${node.description}")
+                    }
+                }
             }
         }
         sb.appendLine()

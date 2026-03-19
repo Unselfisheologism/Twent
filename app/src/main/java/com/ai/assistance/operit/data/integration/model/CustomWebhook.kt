@@ -17,6 +17,7 @@ data class CustomWebhook(
     val body: String = "",  // Request body template
     val enabled: Boolean = true,  // Whether the webhook is active
     val eventType: WebhookEventType = WebhookEventType.MANUAL,  // Trigger event type
+    val apiKeyRequired: Boolean = false,  // Whether API key auth is required
     val createdAt: Long = System.currentTimeMillis(),
     var updatedAt: Long = System.currentTimeMillis()
 )

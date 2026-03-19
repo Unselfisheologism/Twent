@@ -14,6 +14,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
@@ -161,7 +162,7 @@ class ComposioApiService(private val context: Context) {
                 return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
             }
             
-            val urlBuilder = HttpUrl.parse(buildUrl(ENDPOINT_TOOLKITS))?.newBuilder()
+            val urlBuilder = buildUrl(ENDPOINT_TOOLKITS).toHttpUrlOrNull()?.newBuilder()
                 ?.addQueryParameter("limit", limit.toString())
                 ?.addQueryParameter("offset", offset.toString())
             

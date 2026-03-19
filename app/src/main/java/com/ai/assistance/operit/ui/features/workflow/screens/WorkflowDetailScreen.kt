@@ -2590,8 +2590,8 @@ fun NodeDialog(
                                 description = description,
                                 enabled = true,
                                 integrationType = com.ai.assistance.operit.data.model.IntegrationNodeConstants.TYPE_TOOL,
-                                toolkitName = "",
-                                action = "",
+                                toolkit = "",
+                                actionId = "",
                                 parameters = emptyMap(),
                                 position = smartPosition
                             )

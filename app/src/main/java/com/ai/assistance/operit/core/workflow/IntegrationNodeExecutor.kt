@@ -220,7 +220,7 @@ class IntegrationNodeExecutor(private val context: Context) {
       parameters = parameters,
       accountId = accountId
     ).map { response ->
-      response.rawResponse ?: json.encodeToString(response)
+      response.result
     }
   }
   
@@ -269,7 +269,8 @@ class IntegrationNodeExecutor(private val context: Context) {
       // Add body for POST/PUT/PATCH
       val request = when (method) {
         "POST", "PUT", "PATCH" -> {
-          val bodyContent = json.encodeToString(parameters)
+          @Suppress("UNCHECKED_CAST")
+          val bodyContent = json.encodeToString(parameters as Map<String, Any>)
           requestBuilder
             .method(method, bodyContent.toRequestBody("application/json".toMediaType()))
             .build()
@@ -365,7 +366,7 @@ class IntegrationNodeExecutor(private val context: Context) {
         val redirectUri = parameters["redirect_uri"] as? String ?: ""
         
         manageConnections.initiateOAuthFlow(toolkit, redirectUri).map { result ->
-          json.encodeToString(result)
+          "auth_url:${result.authUrl},account_id:${result.accountId}"
         }
       }
       "disconnect" -> {
@@ -380,9 +381,9 @@ class IntegrationNodeExecutor(private val context: Context) {
         val accountId = parameters["account_id"] as? String
           ?: return Result.failure(Exception("Missing account_id parameter"))
         
-        // Refresh the OAuth token
-        manageConnections.refreshToken(accountId).map { success ->
-          if (success) "Token refreshed successfully" else "Failed to refresh token"
+        // Refresh the OAuth token - use refreshConnection
+        manageConnections.refreshConnection(accountId).map { account ->
+          "Token refreshed successfully for ${account.accountName}"
         }
       }
       else -> Result.failure(Exception("Unknown OAuth action: ${node.actionId}"))
@@ -409,7 +410,7 @@ class IntegrationNodeExecutor(private val context: Context) {
     // If initial execution succeeded, no need to retry
     initialResult.getOrNull()?.let { return Result.success(it) }
     
-    var lastError: Exception? = null
+    var lastError: Throwable? = null
     var currentParams = parameters
     
     for (attempt in 1..retryConfig.maxRetries) {
@@ -462,7 +463,7 @@ class IntegrationNodeExecutor(private val context: Context) {
    */
   private fun handleError(
     node: IntegrationNode,
-    error: Exception,
+    error: Throwable,
     startTime: Long
   ): NodeExecutionState {
     val errorHandling = node.errorHandling

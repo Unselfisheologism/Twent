@@ -587,6 +587,56 @@ class StandardWorkflowTools(private val context: Context) {
                             parameters = parameters
                         )
                     }
+                    is IntegrationNode -> {
+                        // Get existing values from IntegrationNode
+                        val currentWebhookConfig = existingNode.webhookConfig
+                        val currentMcpConfig = existingNode.mcpServerConfig
+
+                        val integrationType = if (patchObj.has("integrationType")) patchObj.optString("integrationType", existingNode.integrationType) else existingNode.integrationType
+                        val toolkitName = if (patchObj.has("toolkitName")) patchObj.optString("toolkitName", existingNode.toolkit) else existingNode.toolkit
+                        val action = if (patchObj.has("action")) patchObj.optString("action", existingNode.actionId) else existingNode.actionId
+                        val parameters = mergeParameterValueMap(existingNode.parameters, patchObj.optJSONObject("parameters"))
+                        val webhookUrl = if (patchObj.has("webhookUrl")) patchObj.optString("webhookUrl", currentWebhookConfig?.url ?: "") else currentWebhookConfig?.url ?: ""
+                        val webhookMethod = if (patchObj.has("webhookMethod")) patchObj.optString("webhookMethod", currentWebhookConfig?.method ?: "GET") else currentWebhookConfig?.method ?: "GET"
+                        val webhookHeaders = if (patchObj.has("webhookHeaders")) patchObj.optString("webhookHeaders", "") else ""
+                        val webhookAuthType = if (patchObj.has("webhookAuthType")) patchObj.optString("webhookAuthType", "") else ""
+                        val mcpServerName = if (patchObj.has("mcpServerName")) patchObj.optString("mcpServerName", currentMcpConfig?.serverName ?: "") else currentMcpConfig?.serverName ?: ""
+                        val oauthAccountId = if (patchObj.has("oauthAccountId")) patchObj.optString("oauthAccountId", existingNode.accountId ?: "") else existingNode.accountId ?: ""
+                        val timeout = if (patchObj.has("timeout")) patchObj.optInt("timeout", (existingNode.timeout / 1000).toInt()) else (existingNode.timeout / 1000).toInt()
+
+                        // Map JSON field names to IntegrationNode field names
+                        val webhookConfig = if (webhookUrl.isNotBlank()) {
+                            com.ai.assistance.operit.data.model.IntegrationWebhookConfig(
+                                url = webhookUrl,
+                                method = webhookMethod,
+                                headers = currentWebhookConfig?.headers ?: emptyMap(),
+                                apiKeyRequired = webhookAuthType == "api_key"
+                            )
+                        } else null
+
+                        val mcpServerConfig = if (mcpServerName.isNotBlank()) {
+                            com.ai.assistance.operit.data.model.IntegrationMcpServerConfig(
+                                serverName = mcpServerName,
+                                serverId = currentMcpConfig?.serverId,
+                                toolName = currentMcpConfig?.toolName ?: "",
+                                parameters = currentMcpConfig?.parameters ?: emptyMap()
+                            )
+                        } else null
+
+                        existingNode.copy(
+                            name = name,
+                            description = description,
+                            position = position,
+                            integrationType = integrationType,
+                            toolkit = toolkitName,
+                            actionId = action,
+                            parameters = parameters,
+                            webhookConfig = webhookConfig,
+                            mcpServerConfig = mcpServerConfig,
+                            accountId = if (oauthAccountId.isNotBlank()) oauthAccountId else null,
+                            timeout = timeout.toLong() * 1000
+                        )
+                    }
                 }
             }
 

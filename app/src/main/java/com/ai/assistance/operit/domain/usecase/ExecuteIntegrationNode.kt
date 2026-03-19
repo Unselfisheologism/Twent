@@ -307,9 +307,9 @@ class ExecuteIntegrationNode(context: Context) {
       IntegrationResult(
         nodeId = nodeConfig.id,
         success = response.success,
-        output = response.rawResponse ?: "",
+        output = response.result,
         errorMessage = response.error,
-        executionTime = response.executionTime ?: 0L,
+        executionTime = 0L,
         metadata = mapOf(
           "toolName" to nodeConfig.actionId,
           "toolkit" to nodeConfig.toolkit,

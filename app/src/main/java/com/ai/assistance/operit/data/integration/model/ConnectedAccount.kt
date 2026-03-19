@@ -12,8 +12,9 @@ data class ConnectedAccount(
     val id: String = UUID.randomUUID().toString(),
     val toolkit: String,  // The integration toolkit (e.g., "github", "slack", "composio")
     val accountName: String,  // Display name for the account
-    val accountId: String,  // Remote account ID from the provider
+    val accountId: String = "",  // Remote account ID from the provider
     val connectedAt: Long = System.currentTimeMillis(),  // Timestamp when connected
+    val lastSyncAt: Long? = null,  // Last successful sync timestamp
     val status: AccountStatus = AccountStatus.ACTIVE,  // Current connection status
     val accessToken: String = "",  // Encrypted access token (should be stored securely)
     val refreshToken: String = "",  // Encrypted refresh token for token renewal
@@ -26,6 +27,7 @@ data class ConnectedAccount(
  */
 @Serializable
 enum class AccountStatus {
+    PENDING,   // OAuth flow initiated, waiting for callback
     ACTIVE,    // Account is connected and working
     EXPIRED,   // Token has expired and needs refresh
     REVOKED,   // User has revoked access
