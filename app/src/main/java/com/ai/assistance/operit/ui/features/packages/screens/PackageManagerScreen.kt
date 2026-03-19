@@ -736,12 +736,16 @@ fun PackageManagerScreen(
                 ImportExportDialog(
                     onDismiss = { showImportExportDialog = false },
                     onExportComplete = { path ->
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.import_export_exported_to, path)
-                        )
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.import_export_exported_to, path)
+                            )
+                        }
                     },
                     onImportComplete = { message ->
-                        snackbarHostState.showSnackbar(message = message)
+                        scope.launch {
+                            snackbarHostState.showSnackbar(message = message)
+                        }
                     }
                 )
             }
@@ -750,9 +754,11 @@ fun PackageManagerScreen(
                 ExportAllDataDialog(
                     onDismiss = { showExportAllDataDialog = false },
                     onExportComplete = { path ->
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.import_export_exported_to, path)
-                        )
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.import_export_exported_to, path)
+                            )
+                        }
                     }
                 )
             }

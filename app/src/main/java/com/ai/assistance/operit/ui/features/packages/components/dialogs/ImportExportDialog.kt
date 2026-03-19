@@ -952,9 +952,9 @@ fun ExportAllDataDialog(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        ImportExportItem(stringResource(R.string.chats))
-                        ImportExportItem(stringResource(R.string.workflows))
-                        ImportExportItem(stringResource(R.string.skills))
+                        ImportExportItem(stringResource(R.string.import_export_chats))
+                        ImportExportItem(stringResource(R.string.import_export_workflows))
+                        ImportExportItem(stringResource(R.string.import_export_skills))
                         ImportExportItem(stringResource(R.string.mcp_servers))
                     }
                 }

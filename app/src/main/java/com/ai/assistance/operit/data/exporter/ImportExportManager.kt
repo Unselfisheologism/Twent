@@ -6,6 +6,7 @@ import android.os.Environment
 import com.ai.assistance.operit.data.mcp.MCPLocalServer
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import com.ai.assistance.operit.data.converter.ChatFormat
+import com.ai.assistance.operit.data.model.ChatEntity
 import com.ai.assistance.operit.data.model.ChatHistory
 import com.ai.assistance.operit.data.model.Workflow
 import com.ai.assistance.operit.data.repository.ChatHistoryManager
@@ -121,7 +122,7 @@ class ImportExportManager(private val context: Context) {
         try {
             AppLogger.d(TAG, "Exporting chat: $chatId")
             
-            val chat = chatHistoryManager.getChat(chatId)
+            val chat = chatHistoryManager.getChatById(chatId)
                 ?: return@withContext Result.failure(Exception("Chat not found: $chatId"))
 
             val exportDir = getExportDirectory()
@@ -484,7 +485,14 @@ class ImportExportManager(private val context: Context) {
                                 importedConfig.mcpServers.forEach { (serverId, serverConfig) ->
                                     if (!currentConfig.mcpServers.containsKey(serverId)) {
                                         // Persist the imported server
-                                        mcpLocalServer.addOrUpdateMCPServer(serverId, serverConfig)
+                                        mcpLocalServer.addOrUpdateMCPServer(
+                                            serverId = serverId,
+                                            command = serverConfig.command,
+                                            args = serverConfig.args,
+                                            env = serverConfig.env,
+                                            disabled = serverConfig.disabled,
+                                            autoApprove = serverConfig.autoApprove
+                                        )
                                         importedCount++
                                     }
                                 }
@@ -500,7 +508,14 @@ class ImportExportManager(private val context: Context) {
                                 
                                 if (!currentConfig.mcpServers.containsKey(serverId)) {
                                     // Persist the imported server
-                                    mcpLocalServer.addOrUpdateMCPServer(serverId, serverConfig)
+                                    mcpLocalServer.addOrUpdateMCPServer(
+                                        serverId = serverId,
+                                        command = serverConfig.command,
+                                        args = serverConfig.args,
+                                        env = serverConfig.env,
+                                        disabled = serverConfig.disabled,
+                                        autoApprove = serverConfig.autoApprove
+                                    )
                                     importedCount++
                                 }
                             } catch (e: Exception) {
@@ -532,7 +547,14 @@ class ImportExportManager(private val context: Context) {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val content = inputStream.bufferedReader().readText()
                 val serverConfig = gson.fromJson(content, MCPLocalServer.MCPConfig.ServerConfig::class.java)
-                mcpLocalServer.addMCPServer(serverId, serverConfig)
+                mcpLocalServer.addOrUpdateMCPServer(
+                    serverId = serverId,
+                    command = serverConfig.command,
+                    args = serverConfig.args,
+                    env = serverConfig.env,
+                    disabled = serverConfig.disabled,
+                    autoApprove = serverConfig.autoApprove
+                )
             }
 
             Result.success(true)
@@ -570,7 +592,9 @@ class ImportExportManager(private val context: Context) {
 
                 // Export chats
                 try {
-                    val chats = chatHistoryManager.getAllChatHistories()
+                    val database = com.ai.assistance.operit.data.db.AppDatabase.getDatabase(context)
+                    val chatEntities = database.chatDao().getAllChatsDirectly()
+                    val chats = chatEntities.map { it.toChatHistory(emptyList()) }
                     if (chats.isNotEmpty()) {
                         chats.forEach { chat ->
                             val chatJson = json.encodeToString(chat)
@@ -685,15 +709,7 @@ class ImportExportManager(private val context: Context) {
             // Get from chatDao directly
             val database = com.ai.assistance.operit.data.db.AppDatabase.getDatabase(context)
             val chatEntities = database.chatDao().getAllChatsDirectly()
-            chatEntities.map { entity ->
-                ChatHistory(
-                    id = entity.id,
-                    title = entity.title,
-                    messages = emptyList(), // Messages would need separate query
-                    createdAt = entity.createdAt,
-                    updatedAt = entity.updatedAt
-                )
-            }
+            chatEntities.map { entity -> entity.toChatHistory(emptyList()) }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to get chats for export", e)
             emptyList()
