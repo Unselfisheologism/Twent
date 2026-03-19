@@ -930,7 +930,6 @@
     <string name="import_export_workflows_description">导出或导入工作流配置</string>
     <string name="import_export_skills_description">导出或导入技能包</string>
     <string name="import_export_mcp_servers_description">导出或导入MCP服务器配置</string>
-    <string name="import_action">导入</string>
     <string name="export_all">导出全部</string>
     <string name="export_selected">导出选中</string>
     <string name="import_export_processing">处理中…</string>

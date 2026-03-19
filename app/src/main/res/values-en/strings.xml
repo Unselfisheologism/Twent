@@ -953,7 +953,6 @@
     <string name="import_export_workflows_description">Export or import workflow configurations</string>
     <string name="import_export_skills_description">Export or import skill packages</string>
     <string name="import_export_mcp_servers_description">Export or import MCP server configurations</string>
-    <string name="import_action">Import</string>
     <string name="export_all">Export All</string>
     <string name="export_selected">Export Selected</string>
     <string name="import_export_processing">Processing…</string>
