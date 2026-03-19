@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -63,7 +65,20 @@ class IntegrationNodeExecutor(private val context: Context) {
     prettyPrint = false
     encodeDefaults = true
   }
-  
+
+  // Helper function to convert Map<String, Any> to JsonObject
+  private fun buildJsonObject(map: Map<String, Any>): JsonObject {
+    val jsonMap = map.mapValues { (_, v) ->
+      when (v) {
+        is String -> JsonPrimitive(v)
+        is Number -> JsonPrimitive(v)
+        is Boolean -> JsonPrimitive(v)
+        else -> JsonPrimitive(v.toString())
+      }
+    }
+    return JsonObject(jsonMap)
+  }
+
   // HTTP client for webhook execution with configurable timeout
   private fun createHttpClient(timeoutMs: Long): OkHttpClient {
     return OkHttpClient.Builder()
@@ -270,7 +285,7 @@ class IntegrationNodeExecutor(private val context: Context) {
       val request = when (method) {
         "POST", "PUT", "PATCH" -> {
           @Suppress("UNCHECKED_CAST")
-          val bodyContent = json.encodeToString(parameters)
+          val bodyContent = buildJsonObject(parameters).toString()
           requestBuilder
             .method(method, bodyContent.toRequestBody("application/json".toMediaType()))
             .build()

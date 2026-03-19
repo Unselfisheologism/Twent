@@ -406,7 +406,7 @@ class ComposioApiService(private val context: Context) {
                 "toolkit" to toolkit,
                 "redirect_uri" to redirectUri
             )
-            val jsonBody = json.encodeToJsonElement(requestBody).toString()
+            val jsonBody = JsonObject(requestBody.mapValues { JsonPrimitive(it.value) }).toString()
             
             val request = createAuthenticatedRequest(
                 url = url,
@@ -454,7 +454,7 @@ class ComposioApiService(private val context: Context) {
                 "code" to code,
                 "connection_id" to connectionId
             )
-            val jsonBody = json.encodeToJsonElement(requestBody).toString()
+            val jsonBody = JsonObject(requestBody.mapValues { JsonPrimitive(it.value) }).toString()
             
             val request = createAuthenticatedRequest(
                 url = url,
@@ -589,10 +589,22 @@ class ComposioApiService(private val context: Context) {
         accountId: String?
     ): JsonObject {
         val body = mutableMapOf<String, JsonElement>(
-            "parameters" to JsonObject(parameters.mapValues { (_, v) -> json.encodeToJsonElement(v) })
+            "parameters" to buildJsonObject(parameters)
         )
         accountId?.let { body["account_id"] = JsonPrimitive(it) }
         return JsonObject(body)
+    }
+    
+    private fun buildJsonObject(map: Map<String, Any>): JsonObject {
+        val jsonMap = map.mapValues { (_, v) ->
+            when (v) {
+                is String -> JsonPrimitive(v)
+                is Number -> JsonPrimitive(v)
+                is Boolean -> JsonPrimitive(v)
+                else -> JsonPrimitive(v.toString())
+            }
+        }
+        return JsonObject(jsonMap)
     }
     
     private fun parseToolExecutionResponse(responseBody: String): ToolExecutionResponse {
