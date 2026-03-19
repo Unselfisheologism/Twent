@@ -3723,7 +3723,6 @@
     <string name="notes_placeholder">Record character card source, author info, etc.</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
-    <string name="add">Add</string>
     <string name="create_tag">Create Tag</string>
     <string name="edit_tag">Edit Tag</string>
     <string name="tag_name">Tag Name</string>
