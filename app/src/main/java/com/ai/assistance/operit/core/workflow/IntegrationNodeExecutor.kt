@@ -270,7 +270,7 @@ class IntegrationNodeExecutor(private val context: Context) {
       val request = when (method) {
         "POST", "PUT", "PATCH" -> {
           @Suppress("UNCHECKED_CAST")
-          val bodyContent = json.encodeToJsonElement(parameters).toString()
+          val bodyContent = json.encodeToString(parameters)
           requestBuilder
             .method(method, bodyContent.toRequestBody("application/json".toMediaType()))
             .build()

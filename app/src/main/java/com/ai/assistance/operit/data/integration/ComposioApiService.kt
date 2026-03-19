@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.*
@@ -275,7 +276,7 @@ class ComposioApiService(private val context: Context) {
             
             // Build request body
             val requestBody = buildToolExecutionBody(parameters, accountId)
-            val jsonBody = json.encodeToString(requestBody)
+            val jsonBody = requestBody.toString()
             
             AppLogger.d(TAG, "Executing tool: $toolName with params: $jsonBody")
             
@@ -325,7 +326,7 @@ class ComposioApiService(private val context: Context) {
             val url = buildUrl(String.format(ENDPOINT_TOOL_EXECUTE, toolName) + "?async=true")
             
             val requestBody = buildToolExecutionBody(parameters, accountId)
-            val jsonBody = json.encodeToString(requestBody)
+            val jsonBody = requestBody.toString()
 
             val request = createAuthenticatedRequest(
                 url = url,
@@ -405,7 +406,7 @@ class ComposioApiService(private val context: Context) {
                 "toolkit" to toolkit,
                 "redirect_uri" to redirectUri
             )
-            val jsonBody = json.encodeToString(requestBody)
+            val jsonBody = json.encodeToJsonElement(requestBody).toString()
             
             val request = createAuthenticatedRequest(
                 url = url,
@@ -453,7 +454,7 @@ class ComposioApiService(private val context: Context) {
                 "code" to code,
                 "connection_id" to connectionId
             )
-            val jsonBody = json.encodeToString(requestBody)
+            val jsonBody = json.encodeToJsonElement(requestBody).toString()
             
             val request = createAuthenticatedRequest(
                 url = url,
@@ -588,9 +589,9 @@ class ComposioApiService(private val context: Context) {
         accountId: String?
     ): JsonObject {
         val body = mutableMapOf<String, JsonElement>(
-            "parameters" to json.encodeToJsonElement(parameters)
+            "parameters" to JsonObject(parameters.mapValues { (_, v) -> json.encodeToJsonElement(v) })
         )
-        accountId?.let { body["account_id"] = json.encodeToJsonElement(it) }
+        accountId?.let { body["account_id"] = JsonPrimitive(it) }
         return JsonObject(body)
     }
     

@@ -270,10 +270,10 @@ fun IntegrationNodeConfigDialog(
                         onServerExpandedChange = { mcpServerExpanded = it },
                         onServerSelected = { name, id ->
                             mcpServerName = name
-                            mcpServerId = id
+                            mcpServerId = id ?: ""
                         },
                         onToolNameChange = { mcpToolName = it },
-                        onParametersChange = { mcpParameters = it }
+                        onParametersChange = { mcpParameters = it.toMutableMap() }
                     )
                 }
 

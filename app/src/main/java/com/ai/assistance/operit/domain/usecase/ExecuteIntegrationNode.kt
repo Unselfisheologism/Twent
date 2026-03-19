@@ -335,7 +335,7 @@ class ExecuteIntegrationNode(context: Context) {
       
       // Build request
       val url = webhook.url
-      val method = webhook.method.uppercase()
+      val method = webhook.method.name.uppercase()
       
       val requestBuilder = Request.Builder().url(url)
       
@@ -355,7 +355,7 @@ class ExecuteIntegrationNode(context: Context) {
       // Add body for POST/PUT/PATCH
       val body = when (method) {
         "POST", "PUT", "PATCH" -> {
-          val jsonBody = json.encodeToJsonElement(parameters).toString()
+          val jsonBody = json.encodeToString(parameters)
           requestBuilder.post(jsonBody.toRequestBody("application/json".toMediaType()))
         }
         else -> null
@@ -427,7 +427,7 @@ class ExecuteIntegrationNode(context: Context) {
           IntegrationResult(
             nodeId = nodeConfig.id,
             success = true,
-            output = json.encodeToJsonElement(result).toString(),
+            output = """{"accountId":"${result.accountId}","authUrl":"${result.authUrl}","connectionId":"${result.connectionId}"}""",
             executionTime = 0L,
             metadata = mapOf("action" to "connect", "toolkit" to toolkit)
           )
