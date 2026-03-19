@@ -1,0 +1,88 @@
+{
+    "templateId": "webhook_notify",
+    "name": "Webhook Notification",
+    "description": "Send notifications via webhooks when triggered",
+    "category": "integration",
+    "icon": "📢",
+    "workflow": {
+        "id": "",
+        "name": "Webhook Notification",
+        "description": "Send webhook notifications",
+        "nodes": [
+            {
+                "id": "trigger_1",
+                "type": "trigger",
+                "name": "Manual Trigger",
+                "description": "Start workflow manually",
+                "position": {
+                    "x": 100,
+                    "y": 100
+                },
+                "triggerType": "manual",
+                "triggerConfig": {}
+            },
+            {
+                "id": "integration_1",
+                "type": "integration",
+                "name": "Send Notification",
+                "description": "Send webhook notification",
+                "position": {
+                    "x": 300,
+                    "y": 100
+                },
+                "integrationType": "webhook",
+                "toolkit": "",
+                "actionId": "",
+                "parameters": {},
+                "webhookConfig": {
+                    "id": "webhook_notify",
+                    "name": "Notification Webhook",
+                    "url": "https://your-webhook-url.com/notify",
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "apiKeyRequired": true
+                },
+                "errorHandling": {
+                    "onError": "continue",
+                    "errorMessage": "",
+                    "fallbackValue": null,
+                    "continueOnError": true
+                }
+            },
+            {
+                "id": "execute_1",
+                "type": "execute",
+                "name": "Log Status",
+                "description": "Log notification status",
+                "position": {
+                    "x": 500,
+                    "y": 100
+                },
+                "actionType": "log_message",
+                "actionConfig": {
+                    "message": {
+                        "type": "static",
+                        "value": "Notification sent!"
+                    }
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn_1",
+                "sourceNodeId": "trigger_1",
+                "targetNodeId": "integration_1"
+            },
+            {
+                "id": "conn_2",
+                "sourceNodeId": "integration_1",
+                "targetNodeId": "execute_1"
+            }
+        ],
+        "createdAt": 0,
+        "updatedAt": 0,
+        "enabled": true
+    }
+}

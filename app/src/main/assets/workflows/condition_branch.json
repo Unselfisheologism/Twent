@@ -1,0 +1,101 @@
+{
+    "templateId": "condition_branch",
+    "name": "Conditional Branch",
+    "description": "Execute different actions based on a condition",
+    "category": "logic",
+    "icon": "🔀",
+    "workflow": {
+        "id": "",
+        "name": "Conditional Branch",
+        "description": "Workflow with conditional logic",
+        "nodes": [
+            {
+                "id": "trigger_1",
+                "type": "trigger",
+                "name": "Manual Trigger",
+                "description": "Start workflow manually",
+                "position": {
+                    "x": 100,
+                    "y": 150
+                },
+                "triggerType": "manual",
+                "triggerConfig": {}
+            },
+            {
+                "id": "condition_1",
+                "type": "condition",
+                "name": "Check Condition",
+                "description": "Evaluate a condition",
+                "position": {
+                    "x": 250,
+                    "y": 150
+                },
+                "left": {
+                    "type": "static",
+                    "value": ""
+                },
+                "operator": "EQ",
+                "right": {
+                    "type": "static",
+                    "value": ""
+                }
+            },
+            {
+                "id": "execute_1",
+                "type": "execute",
+                "name": "If True",
+                "description": "Action when condition is true",
+                "position": {
+                    "x": 450,
+                    "y": 50
+                },
+                "actionType": "log_message",
+                "actionConfig": {
+                    "message": {
+                        "type": "static",
+                        "value": "Condition is true!"
+                    }
+                }
+            },
+            {
+                "id": "execute_2",
+                "type": "execute",
+                "name": "If False",
+                "description": "Action when condition is false",
+                "position": {
+                    "x": 450,
+                    "y": 250
+                },
+                "actionType": "log_message",
+                "actionConfig": {
+                    "message": {
+                        "type": "static",
+                        "value": "Condition is false!"
+                    }
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn_1",
+                "sourceNodeId": "trigger_1",
+                "targetNodeId": "condition_1"
+            },
+            {
+                "id": "conn_2",
+                "sourceNodeId": "condition_1",
+                "targetNodeId": "execute_1",
+                "condition": "true"
+            },
+            {
+                "id": "conn_3",
+                "sourceNodeId": "condition_1",
+                "targetNodeId": "execute_2",
+                "condition": "false"
+            }
+        ],
+        "createdAt": 0,
+        "updatedAt": 0,
+        "enabled": true
+    }
+}

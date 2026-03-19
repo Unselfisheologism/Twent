@@ -5128,6 +5128,8 @@
     <string name="workflow_node_success">Success</string>
     <string name="workflow_create_blank">Create Blank</string>
     <string name="workflow_create_from_template">Create from Template</string>
+    <string name="workflow_browse_templates">Browse Templates</string>
+    <string name="workflow_no_templates">No templates available</string>
     <string name="workflow_start_creation">Start Creating Workflow</string>
     <string name="workflow_automation_desc">Automate your task processes</string>
     <string name="workflow_new">New Workflow</string>

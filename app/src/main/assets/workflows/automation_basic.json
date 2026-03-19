@@ -1,0 +1,53 @@
+{
+    "templateId": "automation_basic",
+    "name": "Basic Automation",
+    "description": "A simple manual trigger workflow that executes a basic action",
+    "category": "automation",
+    "icon": "⚡",
+    "workflow": {
+        "id": "",
+        "name": "Basic Automation",
+        "description": "Created from template",
+        "nodes": [
+            {
+                "id": "trigger_1",
+                "type": "trigger",
+                "name": "Manual Trigger",
+                "description": "Start workflow manually",
+                "position": {
+                    "x": 100,
+                    "y": 100
+                },
+                "triggerType": "manual",
+                "triggerConfig": {}
+            },
+            {
+                "id": "execute_1",
+                "type": "execute",
+                "name": "Execute Action",
+                "description": "Execute a basic action",
+                "position": {
+                    "x": 300,
+                    "y": 100
+                },
+                "actionType": "log_message",
+                "actionConfig": {
+                    "message": {
+                        "type": "static",
+                        "value": "Workflow executed!"
+                    }
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn_1",
+                "sourceNodeId": "trigger_1",
+                "targetNodeId": "execute_1"
+            }
+        ],
+        "createdAt": 0,
+        "updatedAt": 0,
+        "enabled": true
+    }
+}

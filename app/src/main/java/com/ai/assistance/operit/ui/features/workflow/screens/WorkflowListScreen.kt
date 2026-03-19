@@ -12,14 +12,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.ExecutionStatus
 import com.ai.assistance.operit.data.model.Workflow
+import com.ai.assistance.operit.data.model.WorkflowTemplate
 import com.ai.assistance.operit.ui.components.CustomScaffold
 import com.ai.assistance.operit.ui.features.workflow.viewmodel.WorkflowViewModel
 import java.text.SimpleDateFormat
@@ -52,7 +56,15 @@ fun WorkflowListScreen(
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var showTemplateDialog by remember { mutableStateOf(false) }
+    var showJsonTemplatesDialog by remember { mutableStateOf(false) }
     var isFabMenuExpanded by remember { mutableStateOf(false) }
+    
+    // Load templates when dialog opens
+    LaunchedEffect(showJsonTemplatesDialog) {
+        if (showJsonTemplatesDialog && viewModel.templates.isEmpty()) {
+            viewModel.loadTemplates()
+        }
+    }
     
     CustomScaffold(
         floatingActionButton = {
@@ -82,6 +94,14 @@ fun WorkflowListScreen(
                             icon = Icons.Outlined.PlayCircle,
                             onClick = {
                                 showTemplateDialog = true
+                                isFabMenuExpanded = false
+                            }
+                        )
+                        SpeedDialAction(
+                            text = stringResource(R.string.workflow_browse_templates),
+                            icon = Icons.Default.FileOpen,
+                            onClick = {
+                                showJsonTemplatesDialog = true
                                 isFabMenuExpanded = false
                             }
                         )
@@ -262,6 +282,21 @@ fun WorkflowListScreen(
                     }
                 )
             }
+            
+            // JSON Templates Dialog
+            if (showJsonTemplatesDialog) {
+                JsonTemplatesDialog(
+                    templates = viewModel.templates,
+                    isLoading = viewModel.templatesLoading,
+                    onDismiss = { showJsonTemplatesDialog = false },
+                    onSelectTemplate = { template ->
+                        viewModel.createWorkflowFromTemplate(template) { workflow ->
+                            showJsonTemplatesDialog = false
+                            onNavigateToDetail(workflow.id)
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -403,6 +438,132 @@ private fun SpeedDialAction(
         ) {
             Icon(icon, contentDescription = text)
         }
+    }
+}
+
+/**
+ * Dialog to browse and import JSON workflow templates
+ */
+@Composable
+private fun JsonTemplatesDialog(
+    templates: List<WorkflowTemplate>,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onSelectTemplate: (WorkflowTemplate) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.workflow_browse_templates)) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    templates.isEmpty() -> {
+                        Text(
+                            text = stringResource(R.string.workflow_no_templates),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    else -> {
+                        // Group templates by category
+                        val groupedTemplates = templates.groupBy { it.category }
+                        
+                        groupedTemplates.forEach { (category, categoryTemplates) ->
+                            Text(
+                                text = getCategoryDisplayName(category),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            
+                            categoryTemplates.forEach { template ->
+                                JsonTemplateItem(
+                                    template = template,
+                                    onClick = { onSelectTemplate(template) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.workflow_close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun JsonTemplateItem(
+    template: WorkflowTemplate,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = CardDefaults.outlinedCardBorder()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Icon
+            Text(
+                text = template.icon,
+                style = MaterialTheme.typography.titleLarge
+            )
+            
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = template.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = template.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+private fun getCategoryDisplayName(category: String): String {
+    return when (category) {
+        "automation" -> "Automation"
+        "integration" -> "Integration"
+        "logic" -> "Logic"
+        "data" -> "Data"
+        "notification" -> "Notification"
+        else -> "Other"
     }
 }
 

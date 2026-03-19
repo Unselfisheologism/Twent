@@ -21,7 +21,9 @@ import com.ai.assistance.operit.data.model.TriggerNode
 import com.ai.assistance.operit.data.model.WorkflowNodeConnection
 import com.ai.assistance.operit.data.model.Workflow
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.model.WorkflowTemplate
 import com.ai.assistance.operit.data.repository.WorkflowRepository
+import com.ai.assistance.operit.data.repository.WorkflowTemplateRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +41,7 @@ import java.util.UUID
 class WorkflowViewModel(application: Application) : AndroidViewModel(application) {
     
     private val repository = WorkflowRepository(application)
+    private val templateRepository = WorkflowTemplateRepository(application)
     private val app = application
 
     var workflows by mutableStateOf<List<Workflow>>(emptyList())
@@ -51,6 +54,12 @@ class WorkflowViewModel(application: Application) : AndroidViewModel(application
         private set
     
     var currentWorkflow by mutableStateOf<Workflow?>(null)
+        private set
+    
+    var templates by mutableStateOf<List<WorkflowTemplate>>(emptyList())
+        private set
+    
+    var templatesLoading by mutableStateOf(false)
         private set
     
     // 节点执行状态 Map
@@ -975,6 +984,45 @@ class WorkflowViewModel(application: Application) : AndroidViewModel(application
             
             repository.createWorkflow(workflow).fold(
                 onSuccess = { 
+                    loadWorkflows()
+                    onSuccess(it)
+                },
+                onFailure = { error = it.message ?: app.getString(R.string.workflow_create_failed) }
+            )
+            
+            isLoading = false
+        }
+    }
+    
+    /**
+     * Load all available workflow templates from assets
+     */
+    fun loadTemplates() {
+        viewModelScope.launch {
+            templatesLoading = true
+            error = null
+            
+            templateRepository.getAllTemplates().fold(
+                onSuccess = { templates = it },
+                onFailure = { error = it.message ?: "Failed to load templates" }
+            )
+            
+            templatesLoading = false
+        }
+    }
+    
+    /**
+     * Create a workflow from a JSON template
+     */
+    fun createWorkflowFromTemplate(template: WorkflowTemplate, customName: String? = null, onSuccess: (Workflow) -> Unit = {}) {
+        viewModelScope.launch {
+            isLoading = true
+            error = null
+            
+            val workflow = templateRepository.createWorkflowFromTemplate(template, customName)
+            
+            repository.createWorkflow(workflow).fold(
+                onSuccess = {
                     loadWorkflows()
                     onSuccess(it)
                 },

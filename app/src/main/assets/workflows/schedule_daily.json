@@ -1,0 +1,57 @@
+{
+    "templateId": "schedule_daily",
+    "name": "Daily Schedule",
+    "description": "Run a workflow automatically every day at a specified time",
+    "category": "automation",
+    "icon": "⏰",
+    "workflow": {
+        "id": "",
+        "name": "Daily Schedule",
+        "description": "Scheduled daily workflow",
+        "nodes": [
+            {
+                "id": "trigger_1",
+                "type": "trigger",
+                "name": "Daily Trigger",
+                "description": "Triggers daily at specified time",
+                "position": {
+                    "x": 100,
+                    "y": 100
+                },
+                "triggerType": "schedule",
+                "triggerConfig": {
+                    "scheduleType": "daily",
+                    "hour": "9",
+                    "minute": "0"
+                }
+            },
+            {
+                "id": "execute_1",
+                "type": "execute",
+                "name": "Execute Action",
+                "description": "Execute the scheduled action",
+                "position": {
+                    "x": 300,
+                    "y": 100
+                },
+                "actionType": "log_message",
+                "actionConfig": {
+                    "message": {
+                        "type": "static",
+                        "value": "Daily workflow executed!"
+                    }
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn_1",
+                "sourceNodeId": "trigger_1",
+                "targetNodeId": "execute_1"
+            }
+        ],
+        "createdAt": 0,
+        "updatedAt": 0,
+        "enabled": true
+    }
+}
