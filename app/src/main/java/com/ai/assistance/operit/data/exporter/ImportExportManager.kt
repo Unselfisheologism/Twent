@@ -644,6 +644,8 @@ class ImportExportManager(private val context: Context) {
                         zos.putNextEntry(configEntry)
                         zos.write(configJson.toByteArray())
                         zos.closeEntry()
+                    } else {
+                        AppLogger.d(TAG, "No MCP servers to export")
                     }
                 } catch (e: Exception) {
                     AppLogger.w(TAG, "Failed to export MCP config: ${e.message}")
