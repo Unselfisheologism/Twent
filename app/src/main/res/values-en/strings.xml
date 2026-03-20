@@ -3543,6 +3543,7 @@
     <string name="provider_doubao">Doubao</string>
     <string name="provider_llama_cpp">llama.cpp Local Inference</string>
     <string name="provider_mnn">MNN Local Inference</string>
+    <string name="provider_runanywhere">Runanywhere Local AI</string>
     <string name="select_api_provider_title">Select API Provider</string>
     <string name="search_providers">Search providers</string>
 
@@ -3553,6 +3554,18 @@
     <string name="llama_select_downloaded_model">Select downloaded model</string>
     <string name="llama_thread_count">Thread count</string>
     <string name="llama_context_size">Context size</string>
+    <string name="runanywhere_select_model">Select Runanywhere model</string>
+    <string name="runanywhere_thread_count">Thread count</string>
+    <string name="runanywhere_context_size">Context size</string>
+    <string name="runanywhere_local_model_tip">Runanywhere local AI model inference</string>
+    <string name="runanywhere_local_model_download_tip">Please download GGUF model files to the following directory:</string>
+    <string name="runanywhere_local_model_dir">Model directory: %1$s</string>
+    <string name="runanywhere_error_prefix">Runanywhere error</string>
+    <string name="runanywhere_error_model_file_not_exist">Model file does not exist: %1$s</string>
+    <string name="runanywhere_error_create_session_failed">Failed to create inference session</string>
+    <string name="runanywhere_error_session_create_failed">Unable to create Runanywhere session</string>
+    <string name="runanywhere_error_inference_failed">Inference failed</string>
+    <string name="runanywhere_error_inference_tag">[Inference Failed]</string>
 
     <!-- ModelParametersSection strings -->
     <string name="max_tokens_name">Max Tokens</string>

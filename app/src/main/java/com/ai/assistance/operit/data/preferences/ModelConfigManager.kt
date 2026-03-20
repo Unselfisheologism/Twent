@@ -341,6 +341,9 @@ class ModelConfigManager(private val context: Context) {
             mnnThreadCount: Int,
             llamaThreadCount: Int,
             llamaContextSize: Int,
+            runanywhereModelSlug: String,
+            runanywhereThreadCount: Int,
+            runanywhereContextSize: Int,
             enableDirectImageProcessing: Boolean,
             enableDirectAudioProcessing: Boolean,
             enableDirectVideoProcessing: Boolean,
@@ -349,7 +352,7 @@ class ModelConfigManager(private val context: Context) {
     ): ModelConfigData {
         return updateConfigInternal(configId) {
             val resolvedEnableToolCall =
-                if (apiProviderType == ApiProviderType.MNN || apiProviderType == ApiProviderType.LLAMA_CPP) {
+                if (apiProviderType == ApiProviderType.MNN || apiProviderType == ApiProviderType.LLAMA_CPP || apiProviderType == ApiProviderType.RUNANYWHERE) {
                     false
                 } else {
                     enableToolCall
@@ -363,6 +366,9 @@ class ModelConfigManager(private val context: Context) {
                     mnnThreadCount = mnnThreadCount,
                     llamaThreadCount = llamaThreadCount,
                     llamaContextSize = llamaContextSize,
+                    runanywhereModelSlug = runanywhereModelSlug,
+                    runanywhereThreadCount = runanywhereThreadCount,
+                    runanywhereContextSize = runanywhereContextSize,
                     enableDirectImageProcessing = enableDirectImageProcessing,
                     enableDirectAudioProcessing = enableDirectAudioProcessing,
                     enableDirectVideoProcessing = enableDirectVideoProcessing,
@@ -484,7 +490,7 @@ class ModelConfigManager(private val context: Context) {
     suspend fun updateToolCall(configId: String, enableToolCall: Boolean): ModelConfigData {
         return updateConfigInternal(configId) {
             val resolvedEnableToolCall =
-                if (it.apiProviderType == ApiProviderType.MNN || it.apiProviderType == ApiProviderType.LLAMA_CPP) {
+                if (it.apiProviderType == ApiProviderType.MNN || it.apiProviderType == ApiProviderType.LLAMA_CPP || it.apiProviderType == ApiProviderType.RUNANYWHERE) {
                     false
                 } else {
                     enableToolCall

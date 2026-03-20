@@ -50,6 +50,7 @@ import com.ai.assistance.operit.api.chat.llmprovider.EndpointCompleter
 import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.api.chat.llmprovider.LlamaProvider
 import com.ai.assistance.operit.api.chat.llmprovider.ModelListFetcher
+import com.ai.assistance.operit.api.chat.llmprovider.RunanywhereProvider
 import com.ai.assistance.operit.data.model.ApiProviderType
 import com.ai.assistance.operit.data.model.ModelConfigData
 import com.ai.assistance.operit.data.model.ModelOption
@@ -155,7 +156,11 @@ fun ModelApiSettingsSection(
     // llama.cpp 特定配置状态
     var llamaThreadCountInput by remember(config.id) { mutableStateOf(config.llamaThreadCount.toString()) }
     var llamaContextSizeInput by remember(config.id) { mutableStateOf(config.llamaContextSize.toString()) }
-    
+
+    // Runanywhere 特定配置状态
+    var runanywhereThreadCountInput by remember(config.id) { mutableStateOf(config.runanywhereThreadCount.toString()) }
+    var runanywhereContextSizeInput by remember(config.id) { mutableStateOf(config.runanywhereContextSize.toString()) }
+
     // 图片处理配置状态
     var enableDirectImageProcessingInput by remember(config.id) { mutableStateOf(config.enableDirectImageProcessing) }
 
@@ -170,7 +175,7 @@ fun ModelApiSettingsSection(
     var enableToolCallInput by remember(config.id) { mutableStateOf(config.enableToolCall) }
 
     LaunchedEffect(config.id, selectedApiProvider) {
-        if (selectedApiProvider == ApiProviderType.MNN || selectedApiProvider == ApiProviderType.LLAMA_CPP) {
+        if (selectedApiProvider == ApiProviderType.MNN || selectedApiProvider == ApiProviderType.LLAMA_CPP || selectedApiProvider == ApiProviderType.RUNANYWHERE) {
             enableToolCallInput = false
         }
     }
@@ -184,6 +189,9 @@ fun ModelApiSettingsSection(
         val mnnThreadCount: Int,
         val llamaThreadCount: Int,
         val llamaContextSize: Int,
+        val runanywhereModelSlug: String,
+        val runanywhereThreadCount: Int,
+        val runanywhereContextSize: Int,
         val enableDirectImageProcessing: Boolean,
         val enableDirectAudioProcessing: Boolean,
         val enableDirectVideoProcessing: Boolean,
@@ -205,6 +213,9 @@ fun ModelApiSettingsSection(
                     mnnThreadCount = state.mnnThreadCount,
                     llamaThreadCount = state.llamaThreadCount,
                     llamaContextSize = state.llamaContextSize,
+                    runanywhereModelSlug = state.runanywhereModelSlug,
+                    runanywhereThreadCount = state.runanywhereThreadCount,
+                    runanywhereContextSize = state.runanywhereContextSize,
                     enableDirectImageProcessing = state.enableDirectImageProcessing,
                     enableDirectAudioProcessing = state.enableDirectAudioProcessing,
                     enableDirectVideoProcessing = state.enableDirectVideoProcessing,
@@ -229,6 +240,9 @@ fun ModelApiSettingsSection(
             mnnThreadCount = mnnThreadCountInput.toIntOrNull() ?: 4,
             llamaThreadCount = llamaThreadCountInput.toIntOrNull() ?: 4,
             llamaContextSize = llamaContextSizeInput.toIntOrNull() ?: 4096,
+            runanywhereModelSlug = modelNameInput, // 使用modelName作为slug
+            runanywhereThreadCount = runanywhereThreadCountInput.toIntOrNull() ?: 4,
+            runanywhereContextSize = runanywhereContextSizeInput.toIntOrNull() ?: 4096,
             enableDirectImageProcessing = enableDirectImageProcessingInput,
             enableDirectAudioProcessing = enableDirectAudioProcessingInput,
             enableDirectVideoProcessing = enableDirectVideoProcessingInput,
@@ -281,6 +295,8 @@ fun ModelApiSettingsSection(
                 mnnThreadCount = mnnThreadCountInput.toIntOrNull() ?: 4,
                 llamaThreadCount = llamaThreadCountInput.toIntOrNull() ?: 4,
                 llamaContextSize = llamaContextSizeInput.toIntOrNull() ?: 4096,
+                runanywhereThreadCount = runanywhereThreadCountInput.toIntOrNull() ?: 4,
+                runanywhereContextSize = runanywhereContextSizeInput.toIntOrNull() ?: 4096,
                 enableDirectImageProcessing = enableDirectImageProcessingInput,
                 enableDirectAudioProcessing = enableDirectAudioProcessingInput,
                 enableDirectVideoProcessing = enableDirectVideoProcessingInput,
@@ -345,6 +361,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.LMSTUDIO -> "http://localhost:1234/v1/chat/completions"
             ApiProviderType.MNN -> "" // MNN本地推理不需要endpoint
             ApiProviderType.LLAMA_CPP -> "" // llama.cpp本地推理不需要endpoint
+            ApiProviderType.RUNANYWHERE -> "" // Runanywhere本地推理不需要endpoint
             ApiProviderType.PPINFRA -> "https://api.ppinfra.com/openai/v1/chat/completions"
             ApiProviderType.OPENAI_GENERIC -> ""
             ApiProviderType.OTHER -> ""
@@ -462,6 +479,7 @@ fun ModelApiSettingsSection(
 
             val isMnnProvider = selectedApiProvider == ApiProviderType.MNN
             val isLlamaProvider = selectedApiProvider == ApiProviderType.LLAMA_CPP
+            val isRunanywhereProvider = selectedApiProvider == ApiProviderType.RUNANYWHERE
             val endpointOptions = getEndpointOptions(selectedApiProvider)
             if (isMnnProvider) {
                 MnnSettingsBlock(
@@ -487,6 +505,21 @@ fun ModelApiSettingsSection(
                     onContextSizeChange = { input ->
                         if (input.isEmpty() || input.toIntOrNull() != null) {
                             llamaContextSizeInput = input
+                        }
+                    }
+                )
+            } else if (isRunanywhereProvider) {
+                RunanywhereSettingsBlock(
+                    runanywhereThreadCountInput = runanywhereThreadCountInput,
+                    onThreadCountChange = { input ->
+                        if (input.isEmpty() || input.toIntOrNull() != null) {
+                            runanywhereThreadCountInput = input
+                        }
+                    },
+                    runanywhereContextSizeInput = runanywhereContextSizeInput,
+                    onContextSizeChange = { input ->
+                        if (input.isEmpty() || input.toIntOrNull() != null) {
+                            runanywhereContextSizeInput = input
                         }
                     }
                 )
@@ -606,19 +639,20 @@ fun ModelApiSettingsSection(
                     subtitle = when {
                         isMnnProvider -> stringResource(R.string.mnn_select_downloaded_model)
                         isLlamaProvider -> stringResource(R.string.llama_select_downloaded_model)
+                        isRunanywhereProvider -> stringResource(R.string.runanywhere_select_model)
                         else -> stringResource(R.string.model_name_placeholder) + stringResource(R.string.model_name_multiple_hint)
                     },
                         value = modelNameInput,
                         onValueChange = {
-                        if (!isMnnProvider && !isLlamaProvider && !isUsingDefaultApiKey) {
+                        if (!isMnnProvider && !isLlamaProvider && !isRunanywhereProvider && !isUsingDefaultApiKey) {
                                 modelNameInput = it.replace("\n", "").replace("\r", "")
                             }
                         },
-                    enabled = if (isMnnProvider || isLlamaProvider) false else !isUsingDefaultApiKey,
+                    enabled = if (isMnnProvider || isLlamaProvider || isRunanywhereProvider) false else !isUsingDefaultApiKey,
                     trailingContent = {
                 IconButton(
                         onClick = {
-                                    if (isMnnProvider || isLlamaProvider) {
+                                    if (isMnnProvider || isLlamaProvider || isRunanywhereProvider) {
                                         AppLogger.d(TAG, "获取本地模型列表")
                                         val gettingModelsText =
                                                 context.getString(R.string.getting_models_list)
@@ -631,10 +665,11 @@ fun ModelApiSettingsSection(
                                             modelLoadError = null
 
                                             try {
-                                                val result = if (isMnnProvider) {
-                                                    ModelListFetcher.getMnnLocalModels(context)
-                                                } else {
-                                                    ModelListFetcher.getLlamaLocalModels(context)
+                                                val result = when {
+                                                    isMnnProvider -> ModelListFetcher.getMnnLocalModels(context)
+                                                    isLlamaProvider -> ModelListFetcher.getLlamaLocalModels(context)
+                                                    isRunanywhereProvider -> Result.success(RunanywhereProvider.AVAILABLE_MODELS)
+                                                    else -> Result.success(emptyList())
                                                 }
                                                 if (result.isSuccess) {
                                                     val models = result.getOrThrow()
@@ -737,7 +772,7 @@ fun ModelApiSettingsSection(
                                 IconButtonDefaults.iconButtonColors(
                                         contentColor = MaterialTheme.colorScheme.primary
                                 ),
-                                enabled = if (isMnnProvider || isLlamaProvider) true else !isUsingDefaultApiKey
+                                enabled = if (isMnnProvider || isLlamaProvider || isRunanywhereProvider) true else !isUsingDefaultApiKey
                 ) {
                     if (isLoadingModels) {
                         CircularProgressIndicator(
@@ -749,7 +784,7 @@ fun ModelApiSettingsSection(
                                 imageVector = Icons.AutoMirrored.Filled.FormatListBulleted,
                                 contentDescription = stringResource(R.string.get_models_list),
                                 tint =
-                                                if (!isMnnProvider && !isLlamaProvider && isUsingDefaultApiKey)
+                                                if (!isMnnProvider && !isLlamaProvider && !isRunanywhereProvider && isUsingDefaultApiKey)
                                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                                 else MaterialTheme.colorScheme.primary
                                 )
@@ -796,7 +831,7 @@ fun ModelApiSettingsSection(
                 subtitle = stringResource(R.string.enable_tool_call_desc),
                 checked = enableToolCallInput,
                 onCheckedChange = { enableToolCallInput = it },
-                enabled = selectedApiProvider != ApiProviderType.MNN && selectedApiProvider != ApiProviderType.LLAMA_CPP
+                enabled = selectedApiProvider != ApiProviderType.MNN && selectedApiProvider != ApiProviderType.LLAMA_CPP && selectedApiProvider != ApiProviderType.RUNANYWHERE
             )
             
         }
@@ -1113,6 +1148,7 @@ private fun getProviderDisplayName(provider: ApiProviderType, context: android.c
         ApiProviderType.LMSTUDIO -> context.getString(R.string.provider_lmstudio)
         ApiProviderType.MNN -> context.getString(R.string.provider_mnn)
         ApiProviderType.LLAMA_CPP -> context.getString(R.string.provider_llama_cpp)
+        ApiProviderType.RUNANYWHERE -> context.getString(R.string.provider_runanywhere)
         ApiProviderType.PPINFRA -> context.getString(R.string.provider_ppinfra)
         ApiProviderType.OTHER -> context.getString(R.string.provider_other)
     }
@@ -1536,6 +1572,52 @@ private fun LlamaSettingsBlock(
     }
 }
 
+@Composable
+private fun RunanywhereSettingsBlock(
+        runanywhereThreadCountInput: String,
+        onThreadCountChange: (String) -> Unit,
+        runanywhereContextSizeInput: String,
+        onContextSizeChange: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SettingsInfoBanner(text = stringResource(R.string.runanywhere_local_model_tip))
+
+        SettingsInfoBanner(
+            text =
+                stringResource(R.string.runanywhere_local_model_download_tip) +
+                    "\n" +
+                    stringResource(
+                        R.string.runanywhere_local_model_dir,
+                        RunanywhereProvider.getModelsDir().absolutePath
+                    )
+        )
+
+        SettingsTextField(
+                title = stringResource(R.string.runanywhere_thread_count),
+                value = runanywhereThreadCountInput,
+                onValueChange = onThreadCountChange,
+                placeholder = "4",
+                keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                ),
+                valueFilter = { input -> input.filter { it.isDigit() } }
+        )
+
+        SettingsTextField(
+                title = stringResource(R.string.runanywhere_context_size),
+                value = runanywhereContextSizeInput,
+                onValueChange = onContextSizeChange,
+                placeholder = "4096",
+                keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                ),
+                valueFilter = { input -> input.filter { it.isDigit() } }
+        )
+    }
+}
+
 private fun forwardTypeName(type: Int): String {
     return when (type) {
         0 -> "CPU"
@@ -1702,6 +1784,7 @@ private fun getProviderColor(provider: ApiProviderType): androidx.compose.ui.gra
         ApiProviderType.LMSTUDIO -> MaterialTheme.colorScheme.tertiary
         ApiProviderType.MNN -> MaterialTheme.colorScheme.secondary
         ApiProviderType.LLAMA_CPP -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f)
+        ApiProviderType.RUNANYWHERE -> MaterialTheme.colorScheme.tertiary
         ApiProviderType.PPINFRA -> MaterialTheme.colorScheme.primaryContainer
         ApiProviderType.OTHER -> MaterialTheme.colorScheme.surfaceVariant
     }

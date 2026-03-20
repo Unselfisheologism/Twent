@@ -164,6 +164,16 @@ object AIServiceFactory {
                 providerType = config.apiProviderType
             )
 
+            // Runanywhere 本地AI模型
+            ApiProviderType.RUNANYWHERE -> RunanywhereProvider(
+                context = context,
+                modelSlug = config.runanywhereModelSlug,
+                modelName = config.modelName,
+                threadCount = config.runanywhereThreadCount,
+                contextSize = config.runanywhereContextSize,
+                providerType = config.apiProviderType
+            )
+
             // 阿里云（通义千问）使用专用的QwenProvider
             ApiProviderType.ALIYUN ->
                 QwenAIProvider(

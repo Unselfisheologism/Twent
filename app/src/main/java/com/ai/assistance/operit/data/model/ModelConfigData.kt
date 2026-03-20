@@ -28,6 +28,7 @@ enum class ApiProviderType {
         LMSTUDIO, // LM Studio本地模型服务
         MNN, // MNN本地推理引擎
         LLAMA_CPP, // llama.cpp 本地推理引擎
+        RUNANYWHERE, // Runanywhere本地AI模型
         PPINFRA, // 派欧云
         OTHER // 其他提供商（自定义端点）
 }
@@ -103,6 +104,11 @@ data class ModelConfigData(
         // llama.cpp 特定配置
         val llamaThreadCount: Int = 4, // 推理线程数
         val llamaContextSize: Int = 4096, // n_ctx
+
+        // Runanywhere 特定配置
+        val runanywhereModelSlug: String = "", // 模型标识符
+        val runanywhereThreadCount: Int = 4, // 推理线程数
+        val runanywhereContextSize: Int = 4096, // 上下文大小
 
         // 图片处理配置
         val enableDirectImageProcessing: Boolean = false, // 是否启用直接图片处理
