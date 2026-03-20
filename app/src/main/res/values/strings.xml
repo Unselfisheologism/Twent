@@ -4185,6 +4185,7 @@
     <string name="runanywhere_error_prefix">Runanywhere错误</string>
     <string name="runanywhere_error_model_file_not_exist">模型文件不存在：%1$s</string>
     <string name="runanywhere_error_model_not_downloaded">模型未下载：%1$s 请先下载模型</string>
+    <string name="runanywhere_error_model_not_configured">未选择模型 请先在设置中选择Runanywhere并选择已下载的模型</string>
     <string name="runanywhere_error_create_session_failed">创建推理会话失败</string>
     <string name="runanywhere_error_session_create_failed">无法创建Runanywhere会话</string>
     <string name="runanywhere_error_inference_failed">推理失败</string>

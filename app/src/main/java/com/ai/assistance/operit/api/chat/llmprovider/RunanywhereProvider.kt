@@ -766,6 +766,12 @@ class RunanywhereProvider(
     ): Stream<String> = stream {
         isCancelled = false
 
+        // Check if model slug is configured (similar to MNNProvider validation)
+        if (modelSlug.isEmpty()) {
+            emit("${context.getString(R.string.runanywhere_error_prefix)}: ${context.getString(R.string.runanywhere_error_model_not_configured)}")
+            return@stream
+        }
+
         if (!isSdkAvailable()) {
             emit("${context.getString(R.string.runanywhere_error_prefix)}: ${getUnavailableReason()}")
             return@stream

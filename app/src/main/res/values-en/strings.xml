@@ -3564,6 +3564,7 @@
     <string name="runanywhere_error_prefix">Runanywhere error</string>
     <string name="runanywhere_error_model_file_not_exist">Model file does not exist: %1$s</string>
     <string name="runanywhere_error_model_not_downloaded">Model not downloaded: %1$s Please download the model first</string>
+    <string name="runanywhere_error_model_not_configured">No model selected. Please select Runanywhere as provider and choose a downloaded model in settings first.</string>
     <string name="runanywhere_error_create_session_failed">Failed to create inference session</string>
     <string name="runanywhere_error_session_create_failed">Unable to create Runanywhere session</string>
     <string name="runanywhere_error_inference_failed">Inference failed</string>
