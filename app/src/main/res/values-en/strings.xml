@@ -3577,7 +3577,7 @@
     <string name="runanywhere_download">Download</string>
     <string name="runanywhere_downloading_state">Downloading…</string>
     <string name="runanywhere_downloaded">Downloaded</string>
-    <string name="refresh">Refresh</string>
+    <string name="runanywhere_refresh">Refresh</string>
 
     <!-- ModelParametersSection strings -->
     <string name="max_tokens_name">Max Tokens</string>

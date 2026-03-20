@@ -1896,7 +1896,7 @@ private fun RunanywhereSettingsBlock(
                 } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = stringResource(R.string.refresh),
+                        contentDescription = stringResource(R.string.runanywhere_refresh),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
