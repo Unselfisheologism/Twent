@@ -84,51 +84,51 @@ class RunanywhereProvider(
         }
     }
 
-    /**
-     * 将SDK的DownloadProgress转换为本地DownloadProgress
-     */
-    private fun convertSdkDownloadProgress(sdkProgress: Any): DownloadProgress {
-        return try {
-            val modelIdField = sdkProgress.javaClass.getField("modelId")
-            val progressField = sdkProgress.javaClass.getField("progress")
-            val stateField = sdkProgress.javaClass.getField("state")
-            val bytesDownloadedField = try { sdkProgress.javaClass.getField("bytesDownloaded") } catch (e: Exception) { null }
-            val totalBytesField = try { sdkProgress.javaClass.getField("totalBytes") } catch (e: Exception) { null }
-            val errorField = try { sdkProgress.javaClass.getField("error") } catch (e: Exception) { null }
-
-            val modelId = modelIdField.get(sdkProgress) as? String ?: ""
-            val progress = (progressField.get(sdkProgress) as? Number)?.toFloat() ?: 0f
-            val state = stateField.get(sdkProgress)
-            val bytesDownloaded = (bytesDownloadedField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
-            val totalBytes = (totalBytesField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
-            val error = errorField?.get(sdkProgress) as? String
-
-            DownloadProgress(
-                modelId = modelId,
-                progress = progress,
-                status = DownloadStatus.fromSdkState(state),
-                message = "",
-                bytesDownloaded = bytesDownloaded,
-                totalBytes = totalBytes,
-                error = error
-            )
-        } catch (e: Exception) {
-            AppLogger.w(TAG, "Failed to convert SDK progress: ${e.message}")
-            DownloadProgress(
-                modelId = "",
-                progress = 0f,
-                status = DownloadStatus.DOWNLOADING,
-                message = "Converting progress..."
-            )
-        }
-    }
-
     companion object {
         private const val TAG = "RunanywhereProvider"
 
         // 用于SDK调用的Application Context
         @Volatile
         private var sdkContext: Context? = null
+
+        /**
+         * 将SDK的DownloadProgress转换为本地DownloadProgress
+         */
+        private fun convertSdkDownloadProgress(sdkProgress: Any): DownloadProgress {
+            return try {
+                val modelIdField = sdkProgress.javaClass.getField("modelId")
+                val progressField = sdkProgress.javaClass.getField("progress")
+                val stateField = sdkProgress.javaClass.getField("state")
+                val bytesDownloadedField = try { sdkProgress.javaClass.getField("bytesDownloaded") } catch (e: Exception) { null }
+                val totalBytesField = try { sdkProgress.javaClass.getField("totalBytes") } catch (e: Exception) { null }
+                val errorField = try { sdkProgress.javaClass.getField("error") } catch (e: Exception) { null }
+
+                val modelId = modelIdField.get(sdkProgress) as? String ?: ""
+                val progress = (progressField.get(sdkProgress) as? Number)?.toFloat() ?: 0f
+                val state = stateField.get(sdkProgress)
+                val bytesDownloaded = (bytesDownloadedField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
+                val totalBytes = (totalBytesField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
+                val error = errorField?.get(sdkProgress) as? String
+
+                DownloadProgress(
+                    modelId = modelId,
+                    progress = progress,
+                    status = DownloadStatus.fromSdkState(state),
+                    message = "",
+                    bytesDownloaded = bytesDownloaded,
+                    totalBytes = totalBytes,
+                    error = error
+                )
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "Failed to convert SDK progress: ${e.message}")
+                DownloadProgress(
+                    modelId = "",
+                    progress = 0f,
+                    status = DownloadStatus.DOWNLOADING,
+                    message = "Converting progress..."
+                )
+            }
+        }
 
         /**
          * 创建模拟下载流程（当SDK不可用时）
@@ -350,10 +350,10 @@ class RunanywhereProvider(
                     if (modelList != null) {
                         val models = modelList.mapNotNull { modelInfo ->
                             try {
-                                val idField = modelInfo.javaClass.getField("id")
-                                val nameField = modelInfo.javaClass.getField("name")
-                                val id = idField.get(modelInfo) as? String
-                                val name = nameField.get(modelInfo) as? String
+                                val idField = modelInfo?.javaClass?.getField("id")
+                                val nameField = modelInfo?.javaClass?.getField("name")
+                                val id = idField?.get(modelInfo) as? String
+                                val name = nameField?.get(modelInfo) as? String
                                 if (id != null && name != null) {
                                     ModelOption(id = id, name = name)
                                 } else null
@@ -426,10 +426,10 @@ class RunanywhereProvider(
                     if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
                             try {
-                                val idField = modelInfo.javaClass.getField("id")
-                                val nameField = modelInfo.javaClass.getField("name")
-                                val id = idField.get(modelInfo) as? String
-                                val name = nameField.get(modelInfo) as? String
+                                val idField = modelInfo?.javaClass?.getField("id")
+                                val nameField = modelInfo?.javaClass?.getField("name")
+                                val id = idField?.get(modelInfo) as? String
+                                val name = nameField?.get(modelInfo) as? String
                                 if (id != null && name != null) {
                                     ModelOption(id = id, name = name)
                                 } else null
@@ -493,8 +493,8 @@ class RunanywhereProvider(
                             val modelList = availableModelsMethod.invoke(instance) as? List<*>
                             val modelInfo = modelList?.find { m ->
                                 try {
-                                    val idField = m.javaClass.getField("id")
-                                    idField.get(m) == modelId
+                                    val idField = m?.javaClass?.getField("id")
+                                    idField?.get(m) == modelId
                                 } catch (e: Exception) {
                                     false
                                 }
@@ -611,17 +611,19 @@ class RunanywhereProvider(
 
                     // Collect the flow in a blocking way (Flow from SDK is cold)
                     try {
-                        flow.collect { progress ->
-                            onProgress(progress)
-                            
-                            // Check if download is complete - use status instead of state
-                            if (progress.status == DownloadStatus.COMPLETED) {
-                                // Mark as downloaded in memory
-                                val modelName = progress.modelId // SDK should have name in modelId
-                                markModelAsDownloaded(progress.modelId, modelName)
-                                onComplete(true, null)
-                            } else if (progress.status == DownloadStatus.ERROR) {
-                                onComplete(false, progress.error ?: "Unknown error")
+                        kotlinx.coroutines.runBlocking {
+                            flow.collect { progress ->
+                                onProgress(progress)
+                                
+                                // Check if download is complete - use status instead of state
+                                if (progress.status == DownloadStatus.COMPLETED) {
+                                    // Mark as downloaded in memory
+                                    val modelName = progress.modelId // SDK should have name in modelId
+                                    markModelAsDownloaded(progress.modelId, modelName)
+                                    onComplete(true, null)
+                                } else if (progress.status == DownloadStatus.ERROR) {
+                                    onComplete(false, progress.error ?: "Unknown error")
+                                }
                             }
                         }
                     } catch (e: Exception) {
