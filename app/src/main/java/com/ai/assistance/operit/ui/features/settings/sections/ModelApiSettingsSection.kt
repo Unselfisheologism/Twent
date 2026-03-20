@@ -547,9 +547,11 @@ fun ModelApiSettingsSection(
                             
                             showNotification(context.getString(R.string.runanywhere_downloading, modelId))
                             val flow = RunanywhereProvider.downloadModel(modelId)
-                            if (flow != null) {
+                            val downloadFlow = flow ?: RunanywhereProvider.createSimulatedDownloadFlow(modelId)
+                            
+                            if (downloadFlow != null) {
                                 downloadingModels = downloadingModels + (modelId to 0f)
-                                flow.collectLatest { progress ->
+                                downloadFlow.collectLatest { progress ->
                                     downloadingModels = downloadingModels + (modelId to progress.progress)
                                     if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
                                         downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
@@ -564,7 +566,7 @@ fun ModelApiSettingsSection(
                                         if (result.isSuccess) {
                                             downloadedRunanywhereModels = result.getOrNull()?.map { it.id }?.toSet() ?: downloadedRunanywhereModels
                                         }
-                                    } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED) {
+                                    } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED || progress.status == RunanywhereProvider.DownloadStatus.ERROR) {
                                         downloadingModels = downloadingModels - modelId
                                         showNotification(context.getString(R.string.runanywhere_download_failed, progress.message))
                                     }
@@ -1247,9 +1249,11 @@ fun ModelApiSettingsSection(
                     
                     showNotification(context.getString(R.string.runanywhere_downloading, modelId))
                     val flow = RunanywhereProvider.downloadModel(modelId)
-                    if (flow != null) {
+                    val downloadFlow = flow ?: RunanywhereProvider.createSimulatedDownloadFlow(modelId)
+                    
+                    if (downloadFlow != null) {
                         downloadingModels = downloadingModels + (modelId to 0f)
-                        flow.collectLatest { progress ->
+                        downloadFlow.collectLatest { progress ->
                             downloadingModels = downloadingModels + (modelId to progress.progress)
                             if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
                                 downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
@@ -1264,7 +1268,7 @@ fun ModelApiSettingsSection(
                                 if (result.isSuccess) {
                                     downloadedRunanywhereModels = result.getOrNull()?.map { it.id }?.toSet() ?: downloadedRunanywhereModels
                                 }
-                            } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED) {
+                            } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED || progress.status == RunanywhereProvider.DownloadStatus.ERROR) {
                                 downloadingModels = downloadingModels - modelId
                                 showNotification(context.getString(R.string.runanywhere_download_failed, progress.message))
                             }

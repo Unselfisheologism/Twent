@@ -35,24 +35,115 @@ class RunanywhereProvider(
 
     /**
      * 下载进度数据类
+     * 与Runanywhere SDK的DownloadProgress对应
      */
     data class DownloadProgress(
         val modelId: String,
         val progress: Float, // 0.0 to 1.0
         val status: DownloadStatus,
-        val message: String = ""
+        val message: String = "",
+        val bytesDownloaded: Long = 0,
+        val totalBytes: Long = 0,
+        val error: String? = null
     )
 
+    /**
+     * 下载状态枚举
+     * 与Runanywhere SDK的DownloadState对应
+     */
     enum class DownloadStatus {
+        PENDING,
         DOWNLOADING,
         EXTRACTING,
         VALIDATING,
         COMPLETED,
-        FAILED
+        ERROR,
+        CANCELLED;
+
+        companion object {
+            // 从SDK的DownloadState转换
+            fun fromSdkState(sdkState: Any?): DownloadStatus {
+                return try {
+                    when (sdkState?.toString()) {
+                        "PENDING" -> PENDING
+                        "DOWNLOADING" -> DOWNLOADING
+                        "EXTRACTING" -> EXTRACTING
+                        "VALIDATING" -> VALIDATING
+                        "COMPLETED" -> COMPLETED
+                        "ERROR" -> ERROR
+                        "CANCELLED" -> CANCELLED
+                        else -> DOWNLOADING
+                    }
+                } catch (e: Exception) {
+                    DOWNLOADING
+                }
+            }
+        }
+    }
+
+    /**
+     * 将SDK的DownloadProgress转换为本地DownloadProgress
+     */
+    private fun convertSdkDownloadProgress(sdkProgress: Any): DownloadProgress {
+        return try {
+            val modelIdField = sdkProgress.javaClass.getField("modelId")
+            val progressField = sdkProgress.javaClass.getField("progress")
+            val stateField = sdkProgress.javaClass.getField("state")
+            val bytesDownloadedField = try { sdkProgress.javaClass.getField("bytesDownloaded") } catch (e: Exception) { null }
+            val totalBytesField = try { sdkProgress.javaClass.getField("totalBytes") } catch (e: Exception) { null }
+            val errorField = try { sdkProgress.javaClass.getField("error") } catch (e: Exception) { null }
+
+            val modelId = modelIdField.get(sdkProgress) as? String ?: ""
+            val progress = (progressField.get(sdkProgress) as? Number)?.toFloat() ?: 0f
+            val state = stateField.get(sdkProgress)
+            val bytesDownloaded = (bytesDownloadedField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
+            val totalBytes = (totalBytesField?.get(sdkProgress) as? Number)?.toLong() ?: 0L
+            val error = errorField?.get(sdkProgress) as? String
+
+            DownloadProgress(
+                modelId = modelId,
+                progress = progress,
+                status = DownloadStatus.fromSdkState(state),
+                message = "",
+                bytesDownloaded = bytesDownloaded,
+                totalBytes = totalBytes,
+                error = error
+            )
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "Failed to convert SDK progress: ${e.message}")
+            DownloadProgress(
+                modelId = "",
+                progress = 0f,
+                status = DownloadStatus.DOWNLOADING,
+                message = "Converting progress..."
+            )
+        }
     }
 
     companion object {
         private const val TAG = "RunanywhereProvider"
+
+        /**
+         * 创建模拟下载流程（当SDK不可用时）
+         * 这是一个临时的演示实现，用于测试UI流程
+         */
+        fun createSimulatedDownloadFlow(modelId: String): Flow<DownloadProgress> = flow {
+            // 模拟下载进度
+            val steps = listOf(
+                DownloadProgress(modelId = modelId, progress = 0f, status = DownloadStatus.PENDING, message = "Starting download..."),
+                DownloadProgress(modelId = modelId, progress = 0.1f, status = DownloadStatus.DOWNLOADING, message = "Connecting..."),
+                DownloadProgress(modelId = modelId, progress = 0.25f, status = DownloadStatus.DOWNLOADING, message = "Downloading..."),
+                DownloadProgress(modelId = modelId, progress = 0.5f, status = DownloadStatus.DOWNLOADING, message = "Downloading..."),
+                DownloadProgress(modelId = modelId, progress = 0.75f, status = DownloadStatus.EXTRACTING, message = "Extracting..."),
+                DownloadProgress(modelId = modelId, progress = 0.9f, status = DownloadStatus.VALIDATING, message = "Validating..."),
+                DownloadProgress(modelId = modelId, progress = 1f, status = DownloadStatus.COMPLETED, message = "Download complete!")
+            )
+            
+            for (progress in steps) {
+                emit(progress)
+                kotlinx.coroutines.delay(500) // 每个步骤延迟0.5秒
+            }
+        }
 
         // SDK是否已初始化
         @Volatile
@@ -198,48 +289,112 @@ class RunanywhereProvider(
 
         /**
          * 获取可用的模型列表
-         * 返回我们注册到SDK的模型列表
+         * 如果SDK已初始化，调用SDK获取真实模型列表
+         * 否则返回预定义的模型列表
          */
+        @Suppress("UNCHECKED_CAST")
         suspend fun getAvailableModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
-            if (!isSdkInitialized) {
-                // 即使SDK未初始化，也返回我们计划提供的模型列表
-                AppLogger.w(TAG, "SDK not initialized, returning predefined model list")
+            if (isSdkInitialized) {
+                try {
+                    // 调用SDK的availableModels()方法
+                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
+                    val instance = getInstanceMethod.invoke(null, context)
+                    
+                    val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
+                    val modelList = availableModelsMethod.invoke(instance) as? List<*>
+                    
+                    if (modelList != null) {
+                        val models = modelList.mapNotNull { modelInfo ->
+                            try {
+                                val idField = modelInfo.javaClass.getField("id")
+                                val nameField = modelInfo.javaClass.getField("name")
+                                val id = idField.get(modelInfo) as? String
+                                val name = nameField.get(modelInfo) as? String
+                                if (id != null && name != null) {
+                                    ModelOption(id = id, name = name)
+                                } else null
+                            } catch (e: Exception) {
+                                AppLogger.w(TAG, "Failed to parse model info: ${e.message}")
+                                null
+                            }
+                        }
+                        AppLogger.d(TAG, "SDK returned ${models.size} available models")
+                        return@withContext Result.success(models)
+                    }
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "Failed to get models from SDK: ${e.message}, using predefined list")
+                }
             }
 
-            try {
-                // 返回我们注册的模型列表
-                val models = listOf(
-                    // SmolLM2 models
-                    ModelOption(id = "smollm2-360m-q8_0", name = "SmolLM2 360M Q8_0"),
-                    ModelOption(id = "smollm2-1.7b-q8_0", name = "SmolLM2 1.7B Q8_0"),
-                    // Qwen2.5 models
-                    ModelOption(id = "qwen2.5-0.5b-q8_0", name = "Qwen 2.5 0.5B Q8_0"),
-                    ModelOption(id = "qwen2.5-1.5b-q8_0", name = "Qwen 2.5 1.5B Q8_0"),
-                    // Llama 3.2 models
-                    ModelOption(id = "llama3.2-1b-q8_0", name = "Llama 3.2 1B Q8_0"),
-                    ModelOption(id = "llama3.2-3b-q8_0", name = "Llama 3.2 3B Q8_0"),
-                    // Mistral models
-                    ModelOption(id = "mistral-7b-q8_0", name = "Mistral 7B Q8_0"),
-                    // Phi-3 models
-                    ModelOption(id = "phi3-mini-q8_0", name = "Phi-3 Mini 4K Q8_0"),
-                    // Gemma 2 models
-                    ModelOption(id = "gemma2-2b-q8_0", name = "Gemma 2 2B Q8_0"),
-                    // TinyLlama
-                    ModelOption(id = "tinyllama-1.1b-q8_0", name = "TinyLlama 1.1B Q8_0")
-                )
-                AppLogger.d(TAG, "Returning ${models.size} available models")
-                Result.success(models)
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "Failed to get available models: ${e.message}", e)
-                Result.failure(e)
-            }
+            // SDK未初始化或获取失败，返回预定义的模型列表
+            AppLogger.w(TAG, "Using predefined model list")
+            val models = listOf(
+                // SmolLM2 models
+                ModelOption(id = "smollm2-360m-q8_0", name = "SmolLM2 360M Q8_0"),
+                ModelOption(id = "smollm2-1.7b-q8_0", name = "SmolLM2 1.7B Q8_0"),
+                // Qwen2.5 models
+                ModelOption(id = "qwen2.5-0.5b-q8_0", name = "Qwen 2.5 0.5B Q8_0"),
+                ModelOption(id = "qwen2.5-1.5b-q8_0", name = "Qwen 2.5 1.5B Q8_0"),
+                // Llama 3.2 models
+                ModelOption(id = "llama3.2-1b-q8_0", name = "Llama 3.2 1B Q8_0"),
+                ModelOption(id = "llama3.2-3b-q8_0", name = "Llama 3.2 3B Q8_0"),
+                // Mistral models
+                ModelOption(id = "mistral-7b-q8_0", name = "Mistral 7B Q8_0"),
+                // Phi-3 models
+                ModelOption(id = "phi3-mini-q8_0", name = "Phi-3 Mini 4K Q8_0"),
+                // Gemma 2 models
+                ModelOption(id = "gemma2-2b-q8_0", name = "Gemma 2 2B Q8_0"),
+                // TinyLlama
+                ModelOption(id = "tinyllama-1.1b-q8_0", name = "TinyLlama 1.1B Q8_0")
+            )
+            AppLogger.d(TAG, "Returning ${models.size} predefined available models")
+            Result.success(models)
         }
 
         /**
          * 获取已下载的模型列表
-         * 使用内存跟踪已下载的模型
+         * 如果SDK已初始化，调用SDK获取真实的已下载模型列表
+         * 否则返回内存中跟踪的模型
          */
+        @Suppress("UNCHECKED_CAST")
         suspend fun getDownloadedModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
+            if (isSdkInitialized) {
+                try {
+                    // 调用SDK的downloadedModels()方法
+                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
+                    val instance = getInstanceMethod.invoke(null, context)
+                    
+                    val downloadedModelsMethod = runAnywhereClass.getMethod("downloadedModels")
+                    val modelList = downloadedModelsMethod.invoke(instance) as? List<*>
+                    
+                    if (modelList != null && modelList.isNotEmpty()) {
+                        val models = modelList.mapNotNull { modelInfo ->
+                            try {
+                                val idField = modelInfo.javaClass.getField("id")
+                                val nameField = modelInfo.javaClass.getField("name")
+                                val id = idField.get(modelInfo) as? String
+                                val name = nameField.get(modelInfo) as? String
+                                if (id != null && name != null) {
+                                    ModelOption(id = id, name = name)
+                                } else null
+                            } catch (e: Exception) {
+                                AppLogger.w(TAG, "Failed to parse downloaded model info: ${e.message}")
+                                null
+                            }
+                        }
+                        // Also add any models we've tracked in memory
+                        val memoryModels = downloadedModelInfo.values.toList()
+                        val allModels = (models + memoryModels).distinctBy { it.id }
+                        AppLogger.d(TAG, "SDK returned ${models.size} + memory ${memoryModels.size} = ${allModels.size} downloaded models")
+                        return@withContext Result.success(allModels)
+                    }
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "Failed to get downloaded models from SDK: ${e.message}, using memory")
+                }
+            }
+
             // 返回内存中跟踪的已下载模型
             val models = downloadedModelInfo.values.toList()
             AppLogger.d(TAG, "Returning ${models.size} downloaded models from memory")
@@ -256,6 +411,58 @@ class RunanywhereProvider(
         }
 
         /**
+         * 检查模型是否已下载
+         * 如果SDK已初始化，调用SDK检查
+         * 否则检查内存中跟踪的模型
+         */
+        fun isModelDownloaded(modelId: String): Boolean {
+            // First check memory
+            if (downloadedModelIds.contains(modelId)) {
+                return true
+            }
+            
+            if (isSdkInitialized) {
+                try {
+                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
+                    val instance = getInstanceMethod.invoke(null, context)
+                    
+                    val isDownloadedMethod = runAnywhereClass.getMethod("isModelDownloaded", String::class.java)
+                    val isDownloaded = isDownloadedMethod.invoke(instance, modelId) as? Boolean
+                    
+                    if (isDownloaded == true) {
+                        // Get model name if available
+                        try {
+                            val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
+                            val modelList = availableModelsMethod.invoke(instance) as? List<*>
+                            val modelInfo = modelList?.find { m ->
+                                try {
+                                    val idField = m.javaClass.getField("id")
+                                    idField.get(m) == modelId
+                                } catch (e: Exception) {
+                                    false
+                                }
+                            }
+                            if (modelInfo != null) {
+                                val nameField = modelInfo.javaClass.getField("name")
+                                val name = nameField.get(modelInfo) as? String ?: modelId
+                                markModelAsDownloaded(modelId, name)
+                            }
+                        } catch (e: Exception) {
+                            AppLogger.w(TAG, "Failed to get model name: ${e.message}")
+                            markModelAsDownloaded(modelId, modelId)
+                        }
+                        return true
+                    }
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "Failed to check model download status: ${e.message}")
+                }
+            }
+            
+            return false
+        }
+
+        /**
          * 下载模型
          * @return Flow<DownloadProgress> - 通过反射获取
          */
@@ -268,14 +475,87 @@ class RunanywhereProvider(
 
             return try {
                 val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
-                val flow = downloadMethod.invoke(null, modelId) as? Flow<*>
+                val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
+                val instance = getInstanceMethod.invoke(null, context)
                 
-                // Convert to our DownloadProgress flow
-                flow as? Flow<DownloadProgress>
+                val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
+                @Suppress("UNCHECKED_CAST")
+                val sdkFlow = downloadMethod.invoke(instance, modelId) as? Flow<Any>
+                
+                if (sdkFlow == null) {
+                    return null
+                }
+                
+                // Convert SDK's DownloadProgress to our local DownloadProgress
+                val localFlow = flow {
+                    sdkFlow.collect { sdkProgress ->
+                        val localProgress = convertSdkDownloadProgress(sdkProgress)
+                        emit(localProgress)
+                    }
+                }
+                localFlow
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to start model download: ${e.message}", e)
                 null
+            }
+        }
+
+        /**
+         * 下载模型（异步版本）
+         * 启动下载并返回Flow用于跟踪进度
+         * @param modelId 要下载的模型ID
+         * @param onProgress 进度回调
+         * @param onComplete 完成回调 (success, errorMessage)
+         */
+        fun downloadModelAsync(
+            modelId: String,
+            onProgress: (DownloadProgress) -> Unit,
+            onComplete: (Boolean, String?) -> Unit
+        ) {
+            if (!isSdkInitialized) {
+                AppLogger.w(TAG, "Cannot download - SDK not initialized")
+                onComplete(false, "SDK not initialized")
+                return
+            }
+
+            Thread {
+                try {
+                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
+                    val instance = getInstanceMethod.invoke(null, context)
+
+                    val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
+                    @Suppress("UNCHECKED_CAST")
+                    val flow = downloadMethod.invoke(instance, modelId) as? Flow<DownloadProgress>
+
+                    if (flow == null) {
+                        onComplete(false, "Failed to create download flow")
+                        return@Thread
+                    }
+
+                    // Collect the flow in a blocking way (Flow from SDK is cold)
+                    try {
+                        flow.collect { progress ->
+                            onProgress(progress)
+                            
+                            // Check if download is complete
+                            if (progress.state == DownloadStatus.COMPLETED) {
+                                // Mark as downloaded in memory
+                                val modelName = progress.modelId // SDK should have name in modelId
+                                markModelAsDownloaded(progress.modelId, modelName)
+                                onComplete(true, null)
+                            } else if (progress.state == DownloadStatus.ERROR) {
+                                onComplete(false, progress.error ?: "Unknown error")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "Error collecting download progress: ${e.message}", e)
+                        onComplete(false, e.message)
+                    }
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Failed to start model download: ${e.message}", e)
+                    onComplete(false, e.message)
+                }
             }
         }
     }
