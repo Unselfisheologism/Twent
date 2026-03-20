@@ -117,6 +117,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.LMSTUDIO -> "meta-llama-3.1-8b-instruct"
             ApiProviderType.MNN -> ""
             ApiProviderType.LLAMA_CPP -> ""
+            ApiProviderType.RUNANYWHERE -> "qwen2.5-0.5b"
             ApiProviderType.PPINFRA -> "gpt-4o-mini"
             ApiProviderType.OTHER -> ""
         }
@@ -158,6 +159,7 @@ fun ModelApiSettingsSection(
     var llamaContextSizeInput by remember(config.id) { mutableStateOf(config.llamaContextSize.toString()) }
 
     // Runanywhere 特定配置状态
+    var runanywhereModelSlugInput by remember(config.id) { mutableStateOf(config.runanywhereModelSlug) }
     var runanywhereThreadCountInput by remember(config.id) { mutableStateOf(config.runanywhereThreadCount.toString()) }
     var runanywhereContextSizeInput by remember(config.id) { mutableStateOf(config.runanywhereContextSize.toString()) }
 
@@ -240,7 +242,7 @@ fun ModelApiSettingsSection(
             mnnThreadCount = mnnThreadCountInput.toIntOrNull() ?: 4,
             llamaThreadCount = llamaThreadCountInput.toIntOrNull() ?: 4,
             llamaContextSize = llamaContextSizeInput.toIntOrNull() ?: 4096,
-            runanywhereModelSlug = modelNameInput, // 使用modelName作为slug
+            runanywhereModelSlug = runanywhereModelSlugInput,
             runanywhereThreadCount = runanywhereThreadCountInput.toIntOrNull() ?: 4,
             runanywhereContextSize = runanywhereContextSizeInput.toIntOrNull() ?: 4096,
             enableDirectImageProcessing = enableDirectImageProcessingInput,
@@ -295,6 +297,7 @@ fun ModelApiSettingsSection(
                 mnnThreadCount = mnnThreadCountInput.toIntOrNull() ?: 4,
                 llamaThreadCount = llamaThreadCountInput.toIntOrNull() ?: 4,
                 llamaContextSize = llamaContextSizeInput.toIntOrNull() ?: 4096,
+                runanywhereModelSlug = runanywhereModelSlugInput,
                 runanywhereThreadCount = runanywhereThreadCountInput.toIntOrNull() ?: 4,
                 runanywhereContextSize = runanywhereContextSizeInput.toIntOrNull() ?: 4096,
                 enableDirectImageProcessing = enableDirectImageProcessingInput,

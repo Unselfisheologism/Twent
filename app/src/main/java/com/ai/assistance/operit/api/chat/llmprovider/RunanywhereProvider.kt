@@ -39,33 +39,23 @@ class RunanywhereProvider(
         val AVAILABLE_MODELS = listOf(
             ModelOption(
                 id = "qwen2.5-0.5b",
-                name = "Qwen 2.5 0.5B",
-                description = "轻量级中文模型，适合低端设备",
-                provider = ApiProviderType.RUNANYWHERE
+                name = "Qwen 2.5 0.5B"
             ),
             ModelOption(
                 id = "qwen2.5-1.5b",
-                name = "Qwen 2.5 1.5B",
-                description = "中等大小中文模型",
-                provider = ApiProviderType.RUNANYWHERE
+                name = "Qwen 2.5 1.5B"
             ),
             ModelOption(
                 id = "llama3.2-1b",
-                name = "Llama 3.2 1B",
-                description = "Llama 3.2 1B英语言模型",
-                provider = ApiProviderType.RUNANYWHERE
+                name = "Llama 3.2 1B"
             ),
             ModelOption(
                 id = "mistral-7b-q4",
-                name = "Mistral 7B Q4",
-                description = "Mistral 7B量化版本",
-                provider = ApiProviderType.RUNANYWHERE
+                name = "Mistral 7B Q4"
             ),
             ModelOption(
                 id = "smollm2-360m",
-                name = "SmolLM2 360M",
-                description = "超轻量模型，适合极致轻量设备",
-                provider = ApiProviderType.RUNANYWHERE
+                name = "SmolLM2 360M"
             )
         )
 
@@ -194,7 +184,7 @@ class RunanywhereProvider(
             return@withContext Result.failure(Exception(getUnavailableReason()))
         }
 
-        val modelFile = getModelFile(context, modelSlug)
+        val modelFile = getModelFile(modelSlug)
         if (!modelFile.exists()) {
             return@withContext Result.failure(
                 Exception(context.getString(R.string.runanywhere_error_model_file_not_exist, modelFile.absolutePath))
@@ -253,7 +243,7 @@ class RunanywhereProvider(
             return@stream
         }
 
-        val modelFile = getModelFile(context, modelSlug)
+        val modelFile = getModelFile(modelSlug)
         if (!modelFile.exists()) {
             emit("${context.getString(R.string.runanywhere_error_prefix)}: ${context.getString(R.string.runanywhere_error_model_file_not_exist, modelFile.absolutePath)}")
             return@stream
