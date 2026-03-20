@@ -33,6 +33,24 @@ class RunanywhereProvider(
     private val providerType: ApiProviderType = ApiProviderType.RUNANYWHERE
 ) : AIService {
 
+    /**
+     * 下载进度数据类
+     */
+    data class DownloadProgress(
+        val modelId: String,
+        val progress: Float, // 0.0 to 1.0
+        val status: DownloadStatus,
+        val message: String = ""
+    )
+
+    enum class DownloadStatus {
+        DOWNLOADING,
+        EXTRACTING,
+        VALIDATING,
+        COMPLETED,
+        FAILED
+    }
+
     companion object {
         private const val TAG = "RunanywhereProvider"
 
@@ -274,24 +292,6 @@ class RunanywhereProvider(
                 AppLogger.e(TAG, "Failed to start model download: ${e.message}", e)
                 null
             }
-        }
-
-        /**
-         * 下载进度数据类
-         */
-        data class DownloadProgress(
-            val modelId: String,
-            val progress: Float, // 0.0 to 1.0
-            val status: DownloadStatus,
-            val message: String = ""
-        )
-
-        enum class DownloadStatus {
-            DOWNLOADING,
-            EXTRACTING,
-            VALIDATING,
-            COMPLETED,
-            FAILED
         }
     }
 
