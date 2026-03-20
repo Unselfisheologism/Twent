@@ -3402,6 +3402,7 @@
     <string name="enter_tag_name">Enter tag name (max 10 characters)</string>
     <string name="add_action">Add</string>
     <string name="confirm_action">Confirm</string>
+    <string name="close">Close</string>
     <string name="profile_config_title">Configure "%s"</string>
     <string name="editing_profile_id">Editing profile ID: %s</string>
     <string name="all_options_optional">All the following options are optional. You can fill them according to your preferences.</string>
@@ -3557,15 +3558,26 @@
     <string name="runanywhere_select_model">Select Runanywhere model</string>
     <string name="runanywhere_thread_count">Thread count</string>
     <string name="runanywhere_context_size">Context size</string>
-    <string name="runanywhere_local_model_tip">Runanywhere local AI model inference</string>
-    <string name="runanywhere_local_model_download_tip">Please download GGUF model files to the following directory:</string>
-    <string name="runanywhere_local_model_dir">Model directory: %1$s</string>
+    <string name="runanywhere_local_model_tip">Runanywhere local AI model inference - Using Runanywhere SDK</string>
+    <string name="runanywhere_local_model_download_tip">Select and download models from the list below:</string>
+    <string name="runanywhere_local_model_dir">Models will be saved to app storage</string>
     <string name="runanywhere_error_prefix">Runanywhere error</string>
     <string name="runanywhere_error_model_file_not_exist">Model file does not exist: %1$s</string>
+    <string name="runanywhere_error_model_not_downloaded">Model not downloaded: %1$s Please download the model first</string>
     <string name="runanywhere_error_create_session_failed">Failed to create inference session</string>
     <string name="runanywhere_error_session_create_failed">Unable to create Runanywhere session</string>
     <string name="runanywhere_error_inference_failed">Inference failed</string>
     <string name="runanywhere_error_inference_tag">[Inference Failed]</string>
+    <string name="runanywhere_downloading">Downloading: %1$s</string>
+    <string name="runanywhere_download_complete">Download complete: %1$s</string>
+    <string name="runanywhere_download_failed">Download failed: %1$s</string>
+    <string name="runanywhere_select_downloaded_model">Select downloaded model</string>
+    <string name="runanywhere_available_models">Available models</string>
+    <string name="runanywhere_downloaded_models">Downloaded models</string>
+    <string name="runanywhere_download">Download</string>
+    <string name="runanywhere_downloading_state">Downloading…</string>
+    <string name="runanywhere_downloaded">Downloaded</string>
+    <string name="refresh">Refresh</string>
 
     <!-- ModelParametersSection strings -->
     <string name="max_tokens_name">Max Tokens</string>

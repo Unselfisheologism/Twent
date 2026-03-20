@@ -6,6 +6,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -162,6 +164,13 @@ fun ModelApiSettingsSection(
     var runanywhereModelSlugInput by remember(config.id) { mutableStateOf(config.runanywhereModelSlug) }
     var runanywhereThreadCountInput by remember(config.id) { mutableStateOf(config.runanywhereThreadCount.toString()) }
     var runanywhereContextSizeInput by remember(config.id) { mutableStateOf(config.runanywhereContextSize.toString()) }
+    
+    // Runanywhere 下载状态
+    var availableRunanywhereModels by remember { mutableStateOf<List<ModelOption>>(emptyList()) }
+    var downloadedRunanywhereModels by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var downloadingModels by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    var showRunanywhereModelsDialog by remember { mutableStateOf(false) }
+    var isLoadingRunanywhereModels by remember { mutableStateOf(false) }
 
     // 图片处理配置状态
     var enableDirectImageProcessingInput by remember(config.id) { mutableStateOf(config.enableDirectImageProcessing) }
@@ -524,7 +533,94 @@ fun ModelApiSettingsSection(
                         if (input.isEmpty() || input.toIntOrNull() != null) {
                             runanywhereContextSizeInput = input
                         }
-                    }
+                    },
+                    availableModels = availableRunanywhereModels,
+                    downloadedModels = downloadedRunanywhereModels,
+                    downloadingModels = downloadingModels,
+                    onDownloadClick = { modelId ->
+                        scope.launch {
+                            showNotification(context.getString(R.string.runanywhere_downloading, modelId))
+                            val flow = RunanywhereProvider.downloadModel(modelId)
+                            if (flow != null) {
+                                downloadingModels = downloadingModels + (modelId to 0f)
+                                flow.collectLatest { progress ->
+                                    downloadingModels = downloadingModels + (modelId to progress.progress)
+                                    if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
+                                        downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
+                                        downloadingModels = downloadingModels - modelId
+                                        showNotification(context.getString(R.string.runanywhere_download_complete, modelId))
+                                        // Refresh the model list
+                                        val result = RunanywhereProvider.getDownloadedModels()
+                                        if (result.isSuccess) {
+                                            downloadedRunanywhereModels = result.getOrNull()?.map { it.id }?.toSet() ?: downloadedRunanywhereModels
+                                        }
+                                    } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED) {
+                                        downloadingModels = downloadingModels - modelId
+                                        showNotification(context.getString(R.string.runanywhere_download_failed, progress.message))
+                                    }
+                                }
+                            } else {
+                                showNotification(context.getString(R.string.runanywhere_download_failed, "Failed to start download"))
+                            }
+                        }
+                    },
+                    onRefreshModels = {
+                        scope.launch {
+                            isLoadingRunanywhereModels = true
+                            try {
+                                // Initialize SDK if needed
+                                if (!RunanywhereProvider.isSdkInitialized) {
+                                    RunanywhereProvider.initializeSdk(context)
+                                    RunanywhereProvider.registerModels()
+                                }
+                                
+                                val availableResult = RunanywhereProvider.getAvailableModels()
+                                if (availableResult.isSuccess) {
+                                    availableRunanywhereModels = availableResult.getOrNull() ?: emptyList()
+                                }
+                                
+                                val downloadedResult = RunanywhereProvider.getDownloadedModels()
+                                if (downloadedResult.isSuccess) {
+                                    downloadedRunanywhereModels = downloadedResult.getOrNull()?.map { it.id }?.toSet() ?: emptySet()
+                                }
+                            } catch (e: Exception) {
+                                AppLogger.e(TAG, "Failed to load Runanywhere models: ${e.message}", e)
+                            } finally {
+                                isLoadingRunanywhereModels = false
+                            }
+                        }
+                    },
+                    showModelsDialog = showRunanywhereModelsDialog,
+                    onShowModelsDialog = {
+                        // Load models when dialog is shown
+                        if (availableRunanywhereModels.isEmpty()) {
+                            scope.launch {
+                                isLoadingRunanywhereModels = true
+                                try {
+                                    if (!RunanywhereProvider.isSdkInitialized) {
+                                        RunanywhereProvider.initializeSdk(context)
+                                        RunanywhereProvider.registerModels()
+                                    }
+                                    
+                                    val availableResult = RunanywhereProvider.getAvailableModels()
+                                    if (availableResult.isSuccess) {
+                                        availableRunanywhereModels = availableResult.getOrNull() ?: emptyList()
+                                    }
+                                    
+                                    val downloadedResult = RunanywhereProvider.getDownloadedModels()
+                                    if (downloadedResult.isSuccess) {
+                                        downloadedRunanywhereModels = downloadedResult.getOrNull()?.map { it.id }?.toSet() ?: emptySet()
+                                    }
+                                } catch (e: Exception) {
+                                    AppLogger.e(TAG, "Failed to load Runanywhere models: ${e.message}", e)
+                                } finally {
+                                    isLoadingRunanywhereModels = false
+                                }
+                            }
+                        }
+                        showRunanywhereModelsDialog = true
+                    },
+                    isLoading = isLoadingRunanywhereModels
                 )
             } else {
                 if (endpointOptions != null) {
@@ -671,7 +767,7 @@ fun ModelApiSettingsSection(
                                                 val result = when {
                                                     isMnnProvider -> ModelListFetcher.getMnnLocalModels(context)
                                                     isLlamaProvider -> ModelListFetcher.getLlamaLocalModels(context)
-                                                    isRunanywhereProvider -> Result.success(RunanywhereProvider.AVAILABLE_MODELS)
+                                                    isRunanywhereProvider -> RunanywhereProvider.getAvailableModels()
                                                     else -> Result.success(emptyList())
                                                 }
                                                 if (result.isSuccess) {
@@ -1120,6 +1216,173 @@ fun ModelApiSettingsSection(
                             ) 
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    // Runanywhere Models Dialog
+    if (showRunanywhereModelsDialog) {
+        RunanywhereModelsDialog(
+            availableModels = availableRunanywhereModels,
+            downloadedModels = downloadedRunanywhereModels,
+            downloadingModels = downloadingModels,
+            onDownloadClick = { modelId ->
+                scope.launch {
+                    showNotification(context.getString(R.string.runanywhere_downloading, modelId))
+                    val flow = RunanywhereProvider.downloadModel(modelId)
+                    if (flow != null) {
+                        downloadingModels = downloadingModels + (modelId to 0f)
+                        flow.collectLatest { progress ->
+                            downloadingModels = downloadingModels + (modelId to progress.progress)
+                            if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
+                                downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
+                                downloadingModels = downloadingModels - modelId
+                                showNotification(context.getString(R.string.runanywhere_download_complete, modelId))
+                                // Refresh the model list
+                                val result = RunanywhereProvider.getDownloadedModels()
+                                if (result.isSuccess) {
+                                    downloadedRunanywhereModels = result.getOrNull()?.map { it.id }?.toSet() ?: downloadedRunanywhereModels
+                                }
+                            } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED) {
+                                downloadingModels = downloadingModels - modelId
+                                showNotification(context.getString(R.string.runanywhere_download_failed, progress.message))
+                            }
+                        }
+                    } else {
+                        showNotification(context.getString(R.string.runanywhere_download_failed, "Failed to start download"))
+                    }
+                }
+            },
+            onModelSelected = { modelId ->
+                runanywhereModelSlugInput = modelId
+                modelNameInput = availableRunanywhereModels.find { it.id == modelId }?.name ?: modelId
+                showRunanywhereModelsDialog = false
+            },
+            onDismiss = { showRunanywhereModelsDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun RunanywhereModelsDialog(
+    availableModels: List<ModelOption>,
+    downloadedModels: Set<String>,
+    downloadingModels: Map<String, Float>,
+    onDownloadClick: (String) -> Unit,
+    onModelSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = stringResource(R.string.runanywhere_available_models),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (availableModels.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(availableModels) { model ->
+                            val isDownloaded = downloadedModels.contains(model.id)
+                            val isDownloading = downloadingModels.containsKey(model.id)
+                            val downloadProgress = downloadingModels[model.id]
+                            
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = isDownloaded) { onModelSelected(model.id) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isDownloaded) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = model.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        if (isDownloaded) {
+                                            Text(
+                                                text = stringResource(R.string.runanywhere_downloaded),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        } else if (isDownloading) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            LinearProgressIndicator(
+                                                progress = { downloadProgress ?: 0f },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                            Text(
+                                                text = "${((downloadProgress ?: 0f) * 100).toInt()}%",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
+                                    }
+                                    
+                                    if (isDownloading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else if (!isDownloaded) {
+                                        IconButton(onClick = { onDownloadClick(model.id) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Download,
+                                                contentDescription = stringResource(R.string.runanywhere_download),
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.close))
                 }
             }
         }
@@ -1580,20 +1843,65 @@ private fun RunanywhereSettingsBlock(
         runanywhereThreadCountInput: String,
         onThreadCountChange: (String) -> Unit,
         runanywhereContextSizeInput: String,
-        onContextSizeChange: (String) -> Unit
+        onContextSizeChange: (String) -> Unit,
+        availableModels: List<ModelOption>,
+        downloadedModels: Set<String>,
+        downloadingModels: Map<String, Float>,
+        onDownloadClick: (String) -> Unit,
+        onRefreshModels: () -> Unit,
+        showModelsDialog: Boolean,
+        onShowModelsDialog: () -> Unit,
+        isLoading: Boolean
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SettingsInfoBanner(text = stringResource(R.string.runanywhere_local_model_tip))
 
-        SettingsInfoBanner(
-            text =
-                stringResource(R.string.runanywhere_local_model_download_tip) +
-                    "\n" +
-                    stringResource(
-                        R.string.runanywhere_local_model_dir,
-                        RunanywhereProvider.getModelsDir().absolutePath
+        // Model selection button
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onShowModelsDialog() },
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.runanywhere_available_models),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
                     )
-        )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (downloadedModels.isEmpty()) {
+                            stringResource(R.string.runanywhere_select_downloaded_model)
+                        } else {
+                            stringResource(R.string.runanywhere_downloaded_models) + ": ${downloadedModels.size}"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = stringResource(R.string.refresh),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        }
 
         SettingsTextField(
                 title = stringResource(R.string.runanywhere_thread_count),

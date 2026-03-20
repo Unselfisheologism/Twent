@@ -20,6 +20,7 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.api.chat.llmprovider.RunanywhereProvider
 import com.ai.assistance.operit.core.chat.AIMessageManager
 import com.ai.assistance.operit.api.chat.AIForegroundService
 import com.ai.assistance.operit.core.config.SystemPromptConfig
@@ -273,6 +274,18 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
             val schedulerStartTime = System.currentTimeMillis()
             WorkflowSchedulerInitializer.initialize(applicationContext)
             AppLogger.d(TAG, "【启动计时】WorkflowScheduler初始化完成（异步） - ${System.currentTimeMillis() - schedulerStartTime}ms")
+        }
+
+        // 初始化Runanywhere SDK（异步）
+        applicationScope.launch {
+            try {
+                val runanywhereStartTime = System.currentTimeMillis()
+                RunanywhereProvider.initializeSdk(applicationContext)
+                RunanywhereProvider.registerModels()
+                AppLogger.d(TAG, "【启动计时】Runanywhere SDK初始化完成（异步） - ${System.currentTimeMillis() - runanywhereStartTime}ms")
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Runanywhere SDK初始化失败: ${e.message}", e)
+            }
         }
 
         applicationScope.launch {

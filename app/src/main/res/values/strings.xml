@@ -3316,6 +3316,7 @@
     <string name="enter_tag_name">输入标签名称（最多10字符）</string>
     <string name="add_action">添加</string>
     <string name="confirm_action">确定</string>
+    <string name="close">关闭</string>
     <string name="profile_config_title">配置「%s」</string>
     <string name="editing_profile_id">正在编辑配置ID: %s</string>
     <string name="all_options_optional">以下所有选项均为可选，您可以根据自己的偏好自由填写。</string>
@@ -4179,15 +4180,26 @@
     <string name="runanywhere_select_model">选择Runanywhere模型</string>
     <string name="runanywhere_thread_count">线程数</string>
     <string name="runanywhere_context_size">上下文长度</string>
-    <string name="runanywhere_local_model_tip">Runanywhere本地AI模型推理</string>
-    <string name="runanywhere_local_model_download_tip">请将GGUF模型文件下载到以下目录：</string>
-    <string name="runanywhere_local_model_dir">模型目录：%1$s</string>
+    <string name="runanywhere_local_model_tip">Runanywhere本地AI模型推理 - 使用Runanywhere SDK</string>
+    <string name="runanywhere_local_model_download_tip">从下方列表选择并下载模型：</string>
+    <string name="runanywhere_local_model_dir">模型将保存到应用存储空间</string>
     <string name="runanywhere_error_prefix">Runanywhere错误</string>
     <string name="runanywhere_error_model_file_not_exist">模型文件不存在：%1$s</string>
+    <string name="runanywhere_error_model_not_downloaded">模型未下载：%1$s 请先下载模型</string>
     <string name="runanywhere_error_create_session_failed">创建推理会话失败</string>
     <string name="runanywhere_error_session_create_failed">无法创建Runanywhere会话</string>
     <string name="runanywhere_error_inference_failed">推理失败</string>
     <string name="runanywhere_error_inference_tag">[推理失败]</string>
+    <string name="runanywhere_downloading">正在下载：%1$s</string>
+    <string name="runanywhere_download_complete">下载完成：%1$s</string>
+    <string name="runanywhere_download_failed">下载失败：%1$s</string>
+    <string name="runanywhere_select_downloaded_model">选择已下载的模型</string>
+    <string name="runanywhere_available_models">可用模型</string>
+    <string name="runanywhere_downloaded_models">已下载模型</string>
+    <string name="runanywhere_download">下载</string>
+    <string name="runanywhere_downloading_state">下载中…</string>
+    <string name="runanywhere_downloaded">已下载</string>
+    <string name="refresh">刷新</string>
     
     <!-- 工作流执行状态 -->
     <string name="workflow_execution_running">执行中…</string>
