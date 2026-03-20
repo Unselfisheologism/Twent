@@ -3761,8 +3761,7 @@
     <string name="copy_tone_prompt">Copy Tone Prompt</string>
     <string name="copy_all_content">Copy All Content</string>
     <string name="old_config_usage_tip">You can copy this content for use in the new character card system.</string>
-    <string name="close">Close</string>
-    
+
     <!-- Waifu Mode Settings Screen -->
     <string name="waifu_mode">Waifu Mode</string>
     <string name="waifu_mode_description">When enabled, AI responses will be split by punctuation and sent sentence by sentence for a more natural conversation experience.</string>
