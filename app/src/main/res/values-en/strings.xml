@@ -3568,6 +3568,7 @@
     <string name="runanywhere_error_session_create_failed">Unable to create Runanywhere session</string>
     <string name="runanywhere_error_inference_failed">Inference failed</string>
     <string name="runanywhere_error_inference_tag">[Inference Failed]</string>
+    <string name="runanywhere_error_model_load_failed">Failed to load model</string>
     <string name="runanywhere_downloading">Downloading: %1$s</string>
     <string name="runanywhere_download_complete">Download complete: %1$s</string>
     <string name="runanywhere_download_failed">Download failed: %1$s</string>

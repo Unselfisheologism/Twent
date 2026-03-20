@@ -4189,6 +4189,7 @@
     <string name="runanywhere_error_session_create_failed">无法创建Runanywhere会话</string>
     <string name="runanywhere_error_inference_failed">推理失败</string>
     <string name="runanywhere_error_inference_tag">[推理失败]</string>
+    <string name="runanywhere_error_model_load_failed">加载模型失败</string>
     <string name="runanywhere_downloading">正在下载：%1$s</string>
     <string name="runanywhere_download_complete">下载完成：%1$s</string>
     <string name="runanywhere_download_failed">下载失败：%1$s</string>

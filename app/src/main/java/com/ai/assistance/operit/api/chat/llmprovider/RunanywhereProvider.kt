@@ -170,6 +170,10 @@ class RunanywhereProvider(
         /**
          * 初始化Runanywhere SDK
          * 需要在Application级别调用
+         * 
+         * 重要: 这是正确的初始化流程:
+         * 1. 注册后端 (LlamaCPP.register())
+         * 2. 使用 DEVELOPMENT 环境初始化 (无需 API Key)
          */
         fun initializeSdk(context: Context) {
             if (isSdkInitialized) return
@@ -178,24 +182,26 @@ class RunanywhereProvider(
             sdkContext = context.applicationContext
 
             try {
-                // Phase 0: Register backends
-                val androidPlatformClass = Class.forName("ai.runanywhere.android.AndroidPlatformContext")
-                val initializeMethod = androidPlatformClass.getMethod("initialize", Context::class.java)
-                initializeMethod.invoke(null, context)
-
-                // Register LlamaCPP backend
+                // Step 1: Register LlamaCPP backend - 无需参数
                 val llamaCppClass = Class.forName("ai.runanywhere.llama.LlamaCPP")
-                val registerMethod = llamaCppClass.getMethod("register", Int::class.java)
-                registerMethod.invoke(null, 100)
+                val registerMethod = llamaCppClass.getMethod("register")
+                registerMethod.invoke(null)
+                AppLogger.d(TAG, "LlamaCPP backend registered")
 
-                // Phase 1: Core initialization
+                // Step 2: Core initialization with DEVELOPMENT environment (no API key needed)
                 val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                val initializeEnvMethod = runAnywhereClass.getMethod("initialize", String::class.java)
-                // Use DEVELOPMENT mode for now - can be changed to PRODUCTION with API key
-                initializeEnvMethod.invoke(null, "DEVELOPMENT")
+                
+                // Get SDKEnvironment enum class
+                val sdkEnvClass = Class.forName("ai.runanywhere.sdk.environment.SDKEnvironment")
+                val developmentField = sdkEnvClass.getField("DEVELOPMENT")
+                val developmentEnv = developmentField.get(null)
+                
+                // Call initialize(SDKEnvironment.DEVELOPMENT)
+                val initializeMethod = runAnywhereClass.getMethod("initialize", sdkEnvClass)
+                initializeMethod.invoke(null, developmentEnv)
 
                 isSdkInitialized = true
-                AppLogger.i(TAG, "Runanywhere SDK initialized successfully")
+                AppLogger.i(TAG, "Runanywhere SDK initialized successfully in DEVELOPMENT mode")
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to initialize Runanywhere SDK: ${e.message}", e)
                 isSdkInitialized = false
@@ -205,6 +211,9 @@ class RunanywhereProvider(
         /**
          * 注册可用模型到SDK
          * 需要在初始化SDK后调用
+         * 
+         * 重要: 模型必须先注册才能下载使用
+         * 注册流程: 注册模型 -> 保存到C++注册表 -> 可下载 -> 下载 -> 加载 -> 推理
          */
         fun registerModels() {
             if (registeredModels) return
@@ -215,49 +224,63 @@ class RunanywhereProvider(
 
             try {
                 val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+                
+                // Get InferenceFramework enum class
+                val inferenceFrameworkClass = Class.forName("ai.runanywhere.sdk.models.InferenceFramework")
+                val llamaCppField = inferenceFrameworkClass.getField("LLAMA_CPP")
+                val llamaCppFramework = llamaCppField.get(null)
+                
+                // Get ModelCategory enum class
+                val modelCategoryClass = Class.forName("ai.runanywhere.sdk.models.ModelCategory")
+                val languageField = modelCategoryClass.getField("LANGUAGE")
+                val languageCategory = languageField.get(null)
+
+                // Use the extension function registerModel from RunAnywhere+ModelManagement
+                // Signature: registerModel(id, name, url, framework, modality, memoryRequirement)
                 val registerModelMethod = runAnywhereClass.getMethod(
                     "registerModel",
-                    String::class.java, // id
-                    String::class.java, // name
-                    String::class.java, // url
-                    String::class.java, // framework
-                    String::class.java, // modality
-                    Long::class.java   // memoryRequirement
+                    String::class.java,      // id
+                    String::class.java,      // name
+                    String::class.java,      // url
+                    inferenceFrameworkClass, // framework (InferenceFramework enum)
+                    modelCategoryClass,      // modality (ModelCategory enum)
+                    Long::class.javaObjectType // memoryRequirement
                 )
 
                 // Register language models from various sources
+                // Format: Quadruple(id, name, url, memoryRequirement)
                 val models = listOf(
-                    // SmolLM2 models
-                    Triple("smollm2-360m-q8_0", "SmolLM2 360M Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-360M-GGUF/resolve/main/SmolLM2-360M.Q8_0.gguf"),
-                    Triple("smollm2-1.7b-q8_0", "SmolLM2 1.7B Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-1.7B-GGUF/resolve/main/SmolLM2-1.7B.Q8_0.gguf"),
-                    // Qwen2.5 models
-                    Triple("qwen2.5-0.5b-q8_0", "Qwen 2.5 0.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0.5b-instruct-q5_k_m.gguf"),
-                    Triple("qwen2.5-1.5b-q8_0", "Qwen 2.5 1.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1.5b-instruct-q5_k_m.gguf"),
-                    // Llama 3.2 models
-                    Triple("llama3.2-1b-q8_0", "Llama 3.2 1B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-1b-instruct-q8_0/resolve/main/llama-3.2-1b-instruct-q8_0.gguf"),
-                    Triple("llama3.2-3b-q8_0", "Llama 3.2 3B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-3b-instruct-q8_0/resolve/main/llama-3.2-3b-instruct-q8_0.gguf"),
+                    // SmolLM2 models - small, fast
+                    Quadruple("smollm2-360m-q8_0", "SmolLM2 360M Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-360M-GGUF/resolve/main/SmolLM2-360M.Q8_0.gguf", 400_000_000L),
+                    Quadruple("smollm2-1.7b-q8_0", "SmolLM2 1.7B Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-1.7B-GGUF/resolve/main/SmolLM2-1.7B.Q8_0.gguf", 2_000_000_000L),
+                    // Qwen2.5 models - good Chinese support
+                    Quadruple("qwen2.5-0.5b-q8_0", "Qwen 2.5 0.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0.5b-instruct-q5_k_m.gguf", 600_000_000L),
+                    Quadruple("qwen2.5-1.5b-q8_0", "Qwen 2.5 1.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1.5b-instruct-q5_k_m.gguf", 1_800_000_000L),
+                    // Llama 3.2 models - latest Llama
+                    Quadruple("llama3.2-1b-q8_0", "Llama 3.2 1B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-1b-instruct-q8_0/resolve/main/llama-3.2-1b-instruct-q8_0.gguf", 1_200_000_000L),
+                    Quadruple("llama3.2-3b-q8_0", "Llama 3.2 3B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-3b-instruct-q8_0/resolve/main/llama-3.2-3b-instruct-q8_0.gguf", 3_500_000_000L),
                     // Mistral models
-                    Triple("mistral-7b-q8_0", "Mistral 7B Q8_0", "https://huggingface.co/TheBlok/Mistral-7B-Instruct-v0.3-GGUF/resolve/main/mistral-7b-instruct-v0.3.Q8_0.gguf"),
+                    Quadruple("mistral-7b-q8_0", "Mistral 7B Q8_0", "https://huggingface.co/TheBlok/Mistral-7B-Instruct-v0.3-GGUF/resolve/main/mistral-7b-instruct-v0.3.Q8_0.gguf", 8_000_000_000L),
                     // Phi-3 models
-                    Triple("phi3-mini-q8_0", "Phi-3 Mini 4K Q8_0", "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q8_0.gguf"),
+                    Quadruple("phi3-mini-q8_0", "Phi-3 Mini 4K Q8_0", "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q8_0.gguf", 2_500_000_000L),
                     // Gemma 2 models
-                    Triple("gemma2-2b-q8_0", "Gemma 2 2B Q8_0", "https://huggingface.co/google/gemma-2-2b-it-gguf/resolve/main/gemma-2-2b-it-q8_0.gguf"),
-                    // TinyLlama
-                    Triple("tinyllama-1.1b-q8_0", "TinyLlama 1.1B Q8_0", "https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.q8_0.gguf")
+                    Quadruple("gemma2-2b-q8_0", "Gemma 2 2B Q8_0", "https://huggingface.co/google/gemma-2-2b-it-gguf/resolve/main/gemma-2-2b-it-q8_0.gguf", 2_500_000_000L),
+                    // TinyLlama - smallest
+                    Quadruple("tinyllama-1.1b-q8_0", "TinyLlama 1.1B Q8_0", "https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.q8_0.gguf", 700_000_000L)
                 )
 
-                for ((id, name, url) in models) {
+                for ((id, name, url, memory) in models) {
                     try {
                         registerModelMethod.invoke(
                             null,
                             id,
                             name,
                             url,
-                            "LLAMA_CPP", // framework
-                            "LANGUAGE",  // modality
-                            500_000_000L // memory requirement ~500MB
+                            llamaCppFramework,  // InferenceFramework.LLAMA_CPP
+                            languageCategory,  // ModelCategory.LANGUAGE
+                            memory
                         )
-                        AppLogger.d(TAG, "Registered model: $id")
+                        AppLogger.d(TAG, "Registered model: $id (memory: ${memory / 1_000_000}MB)")
                     } catch (e: Exception) {
                         AppLogger.w(TAG, "Failed to register model $id: ${e.message}")
                     }
@@ -269,6 +292,11 @@ class RunanywhereProvider(
                 AppLogger.e(TAG, "Failed to register models: ${e.message}", e)
             }
         }
+
+        /**
+         * 数据类用于模型注册 (id, name, url, memoryRequirement)
+         */
+        private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
         /**
          * 获取SDK是否可用
@@ -616,7 +644,6 @@ class RunanywhereProvider(
     private var isCancelled = false
 
     private val sessionLock = Any()
-    private var llmSession: Any? = null
 
     override val inputTokenCount: Int
         get() = _inputTokenCount
@@ -638,29 +665,26 @@ class RunanywhereProvider(
 
     override fun cancelStreaming() {
         isCancelled = true
-        synchronized(sessionLock) {
-            try {
-                llmSession?.let { session ->
-                    val method = session.javaClass.getMethod("cancel")
-                    method.invoke(session)
-                }
-            } catch (e: Exception) {
-                AppLogger.w(TAG, "取消推理失败: ${e.message}")
-            }
+        // 使用 RunAnywhere.cancel() 取消当前推理
+        try {
+            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+            val cancelMethod = runAnywhereClass.getMethod("cancel")
+            cancelMethod.invoke(null)
+            AppLogger.d(TAG, "推理已取消")
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "取消推理失败: ${e.message}")
         }
     }
 
     override fun release() {
-        synchronized(sessionLock) {
-            try {
-                llmSession?.let { session ->
-                    val method = session.javaClass.getMethod("unload")
-                    method.invoke(session)
-                }
-                llmSession = null
-            } catch (e: Exception) {
-                AppLogger.w(TAG, "释放会话失败: ${e.message}")
-            }
+        // 使用 RunAnywhere.unloadLLMModel() 卸载模型
+        try {
+            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+            val unloadMethod = runAnywhereClass.getMethod("unloadLLMModel")
+            unloadMethod.invoke(null)
+            AppLogger.d(TAG, "模型已卸载")
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "卸载模型失败: ${e.message}")
         }
     }
 
@@ -690,15 +714,22 @@ class RunanywhereProvider(
             )
         }
 
-        // Test creating a session
+        // Test model loading
+        // 注意: loadLLMModel返回Unit，不是session对象
+        // 正确的测试方式是尝试加载模型，然后尝试一次简单的chat调用
         try {
-            val testSession = createSession(modelSlug)
-            if (testSession != null) {
-                val unloadMethod = testSession.javaClass.getMethod("unload")
-                unloadMethod.invoke(testSession)
-                Result.success("Runanywhere backend is available.")
+            // 尝试加载模型
+            val loaded = loadLLMModel(modelSlug)
+            if (!loaded) {
+                return@withContext Result.failure(Exception(context.getString(R.string.runanywhere_error_model_load_failed)))
+            }
+            
+            // 尝试一次简单的chat调用来验证模型工作正常
+            val testResult = chat(modelSlug, "Hi")
+            if (testResult != null) {
+                Result.success("Runanywhere backend is available. Model: $modelSlug")
             } else {
-                Result.failure(Exception(context.getString(R.string.runanywhere_error_create_session_failed)))
+                Result.failure(Exception(context.getString(R.string.runanywhere_error_inference_failed)))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Runanywhere测试失败: ${e.message}"))
@@ -756,25 +787,20 @@ class RunanywhereProvider(
             return@stream
         }
 
-        val session = withContext(Dispatchers.IO) {
-            ensureSessionLocked(modelSlug)
+        // Step 1: Load the model (loadLLMModel returns Unit, not a session)
+        val loaded = withContext(Dispatchers.IO) {
+            ensureModelLoaded(modelSlug)
         }
-        if (session == null) {
-            emit(context.getString(R.string.runanywhere_error_session_create_failed))
+        if (!loaded) {
+            emit(context.getString(R.string.runanywhere_error_model_load_failed))
             return@stream
         }
 
-        // Build messages
-        val messages = buildMessages(chatHistory, message)
-
-        // Get sampling parameters
-        val temperature = modelParameters
-            .firstOrNull { it.id == "temperature" && it.isEnabled }
-            ?.let { (it.currentValue as? Number)?.toFloat() }
-            ?: 1.0f
+        // Build prompt from chat history
+        val prompt = buildPrompt(chatHistory, message)
 
         // Token estimation
-        _inputTokenCount = estimateTokens(message + chatHistory.joinToString("") { it.second })
+        _inputTokenCount = estimateTokens(prompt)
         _outputTokenCount = 0
         onTokensUpdated(_inputTokenCount, 0, 0)
 
@@ -784,11 +810,9 @@ class RunanywhereProvider(
         try {
             withContext(Dispatchers.IO) {
                 if (stream) {
-                    // Use streaming chat
+                    // 流式推理: RunAnywhere.streamChat(prompt)
                     try {
-                        val streamChatMethod = session.javaClass.getMethod("streamChat", String::class.java)
-                        @Suppress("UNCHECKED_CAST")
-                        val flow = streamChatMethod.invoke(session, message) as? Flow<String>
+                        val flow = streamChat(modelSlug, prompt)
                         
                         flow?.collectLatest { token ->
                             if (isCancelled) return@collectLatest
@@ -800,10 +824,9 @@ class RunanywhereProvider(
                             }
                         }
                     } catch (e: Exception) {
-                        AppLogger.w(TAG, "Streaming not available, falling back to non-streaming: ${e.message}")
+                        AppLogger.w(TAG, "流式推理失败，回退到非流式: ${e.message}")
                         // Fall back to non-streaming
-                        val chatMethod = session.javaClass.getMethod("chat", String::class.java)
-                        val result = chatMethod.invoke(session, message) as? String
+                        val result = chat(modelSlug, prompt)
                         result?.let { response ->
                             response.forEach { char ->
                                 if (isCancelled) return@forEach
@@ -817,9 +840,8 @@ class RunanywhereProvider(
                         }
                     }
                 } else {
-                    // Non-streaming chat
-                    val chatMethod = session.javaClass.getMethod("chat", String::class.java)
-                    val result = chatMethod.invoke(session, message) as? String
+                    // 非流式推理: RunAnywhere.chat(prompt)
+                    val result = chat(modelSlug, prompt)
                     result?.let { response ->
                         response.forEach { char ->
                             if (isCancelled) return@forEach
@@ -855,49 +877,107 @@ class RunanywhereProvider(
         return ((chineseChars * 1.5) + (asciiChars * 0.25)).toInt().coerceAtLeast(1)
     }
 
-    private fun buildMessages(chatHistory: List<Pair<String, String>>, currentMessage: String): Map<String, Any> {
-        val messages = mutableListOf<Map<String, String>>()
+    /**
+     * 构建提示词字符串
+     * RunAnywhere.chat() 和 RunAnywhere.streamChat() 接受一个 String prompt 参数
+     * 我们需要将聊天历史和当前消息合并为一个提示词字符串
+     */
+    private fun buildPrompt(chatHistory: List<Pair<String, String>>, currentMessage: String): String {
+        val sb = StringBuilder()
         
+        // 添加系统提示（如果有）
+        // 这里可以添加系统消息，根据需要定制
+        
+        // 添加聊天历史
         for ((role, content) in chatHistory) {
-            messages.add(mapOf(
-                "role" to role,
-                "content" to content
-            ))
+            when (role.lowercase()) {
+                "user" -> sb.append("User: $content\n")
+                "assistant", "bot" -> sb.append("Assistant: $content\n")
+                "system" -> sb.append("System: $content\n")
+                else -> sb.append("$role: $content\n")
+            }
         }
         
-        messages.add(mapOf(
-            "role" to "user",
-            "content" to currentMessage
-        ))
+        // 添加当前用户消息
+        sb.append("User: $currentMessage\n")
+        sb.append("Assistant: ")
         
-        return mapOf("messages" to messages)
+        return sb.toString()
     }
 
-    private fun createSession(modelId: String): Any? {
+    /**
+     * 加载LLM模型到内存
+     * loadLLMModel返回Unit（无返回值），不是session对象
+     * 加载后需要调用RunAnywhere.chat()或RunAnywhere.streamChat()进行推理
+     */
+    private fun loadLLMModel(modelId: String): Boolean {
         return try {
             val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-            val instance = getInstanceMethod.invoke(null, context)
             
-            val loadLLMMethod = instance.javaClass.getMethod(
-                "loadLLMModel",
-                String::class.java
-            )
+            // loadLLMModel(modelId: String) returns Unit
+            val loadLLMMethod = runAnywhereClass.getMethod("loadLLMModel", String::class.java)
+            loadLLMMethod.invoke(null, modelId)
             
-            loadLLMMethod.invoke(instance, modelId)
+            AppLogger.i(TAG, "Model loaded successfully: $modelId")
+            true
         } catch (e: Exception) {
-            AppLogger.e(TAG, "创建Runanywhere会话失败: ${e.message}", e)
+            AppLogger.e(TAG, "加载模型失败: ${e.message}", e)
+            false
+        }
+    }
+
+    /**
+     * 执行聊天推理（流式）
+     * 正确流程: loadLLMModel -> RunAnywhere.streamChat()
+     */
+    private fun streamChat(modelId: String, prompt: String): Flow<String>? {
+        return try {
+            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
+            
+            // streamChat(prompt: String): Flow<String>
+            val streamChatMethod = runAnywhereClass.getMethod("streamChat", String::class.java)
+            @Suppress("UNCHECKED_CAST")
+            val flow = streamChatMethod.invoke(null, prompt) as? Flow<String>
+            
+            flow
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "流式推理失败: ${e.message}", e)
             null
         }
     }
 
-    private fun ensureSessionLocked(modelId: String): Any? {
-        synchronized(sessionLock) {
-            llmSession?.let { return it }
+    /**
+     * 执行聊天推理（非流式）
+     * 正确流程: loadLLMModel -> RunAnywhere.chat()
+     */
+    private fun chat(modelId: String, prompt: String): String? {
+        return try {
+            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
             
-            val created = createSession(modelId)
-            llmSession = created
-            return created
+            // chat(prompt: String): String
+            val chatMethod = runAnywhereClass.getMethod("chat", String::class.java)
+            val result = chatMethod.invoke(null, prompt) as? String
+            
+            result
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "聊天推理失败: ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * 确保模型已加载
+     * 使用锁防止并发加载
+     */
+    private fun ensureModelLoaded(modelId: String): Boolean {
+        synchronized(sessionLock) {
+            // 检查是否已经加载（通过尝试加载）
+            return try {
+                loadLLMModel(modelId)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "模型加载失败: ${e.message}", e)
+                false
+            }
         }
     }
 }
