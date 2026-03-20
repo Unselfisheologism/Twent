@@ -63,6 +63,12 @@ class RunanywhereProvider(
         @Volatile
         private var registeredModels = false
 
+        // 已下载的模型ID集合（内存中跟踪）
+        private val downloadedModelIds = mutableSetOf<String>()
+
+        // 下载的模型信息
+        private val downloadedModelInfo = mutableMapOf<String, ModelOption>()
+
         /**
          * 初始化Runanywhere SDK
          * 需要在Application级别调用
@@ -192,39 +198,37 @@ class RunanywhereProvider(
 
         /**
          * 获取可用的模型列表
+         * 返回我们注册到SDK的模型列表
          */
         suspend fun getAvailableModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
             if (!isSdkInitialized) {
-                return@withContext Result.failure(Exception("SDK未初始化"))
+                // 即使SDK未初始化，也返回我们计划提供的模型列表
+                AppLogger.w(TAG, "SDK not initialized, returning predefined model list")
             }
 
             try {
-                val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
-                @Suppress("UNCHECKED_CAST")
-                val modelsList = availableModelsMethod.invoke(null) as? List<*>
-
-                if (modelsList != null) {
-                    val options = modelsList.mapNotNull { model ->
-                        try {
-                            // Each model has id and name properties
-                            val modelClass = model!!::class.java
-                            val getIdMethod = modelClass.getMethod("getId")
-                            val getNameMethod = modelClass.getMethod("getName")
-                            val id = getIdMethod.invoke(model) as? String
-                            val name = getNameMethod.invoke(model) as? String
-                            if (id != null && name != null) {
-                                ModelOption(id = id, name = name)
-                            } else null
-                        } catch (e: Exception) {
-                            AppLogger.w(TAG, "Failed to parse model: ${e.message}")
-                            null
-                        }
-                    }
-                    Result.success(options)
-                } else {
-                    Result.success(emptyList())
-                }
+                // 返回我们注册的模型列表
+                val models = listOf(
+                    // SmolLM2 models
+                    ModelOption(id = "smollm2-360m-q8_0", name = "SmolLM2 360M Q8_0"),
+                    ModelOption(id = "smollm2-1.7b-q8_0", name = "SmolLM2 1.7B Q8_0"),
+                    // Qwen2.5 models
+                    ModelOption(id = "qwen2.5-0.5b-q8_0", name = "Qwen 2.5 0.5B Q8_0"),
+                    ModelOption(id = "qwen2.5-1.5b-q8_0", name = "Qwen 2.5 1.5B Q8_0"),
+                    // Llama 3.2 models
+                    ModelOption(id = "llama3.2-1b-q8_0", name = "Llama 3.2 1B Q8_0"),
+                    ModelOption(id = "llama3.2-3b-q8_0", name = "Llama 3.2 3B Q8_0"),
+                    // Mistral models
+                    ModelOption(id = "mistral-7b-q8_0", name = "Mistral 7B Q8_0"),
+                    // Phi-3 models
+                    ModelOption(id = "phi3-mini-q8_0", name = "Phi-3 Mini 4K Q8_0"),
+                    // Gemma 2 models
+                    ModelOption(id = "gemma2-2b-q8_0", name = "Gemma 2 2B Q8_0"),
+                    // TinyLlama
+                    ModelOption(id = "tinyllama-1.1b-q8_0", name = "TinyLlama 1.1B Q8_0")
+                )
+                AppLogger.d(TAG, "Returning ${models.size} available models")
+                Result.success(models)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to get available models: ${e.message}", e)
                 Result.failure(e)
@@ -233,41 +237,22 @@ class RunanywhereProvider(
 
         /**
          * 获取已下载的模型列表
+         * 使用内存跟踪已下载的模型
          */
         suspend fun getDownloadedModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
-            if (!isSdkInitialized) {
-                return@withContext Result.failure(Exception("SDK未初始化"))
-            }
+            // 返回内存中跟踪的已下载模型
+            val models = downloadedModelInfo.values.toList()
+            AppLogger.d(TAG, "Returning ${models.size} downloaded models from memory")
+            Result.success(models)
+        }
 
-            try {
-                val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                val downloadedModelsMethod = runAnywhereClass.getMethod("downloadedModels")
-                @Suppress("UNCHECKED_CAST")
-                val modelsList = downloadedModelsMethod.invoke(null) as? List<*>
-
-                if (modelsList != null) {
-                    val options = modelsList.mapNotNull { model ->
-                        try {
-                            val modelClass = model!!::class.java
-                            val getIdMethod = modelClass.getMethod("getId")
-                            val getNameMethod = modelClass.getMethod("getName")
-                            val id = getIdMethod.invoke(model) as? String
-                            val name = getNameMethod.invoke(model) as? String
-                            if (id != null && name != null) {
-                                ModelOption(id = id, name = name)
-                            } else null
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                    Result.success(options)
-                } else {
-                    Result.success(emptyList())
-                }
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "Failed to get downloaded models: ${e.message}", e)
-                Result.failure(e)
-            }
+        /**
+         * 标记模型为已下载
+         */
+        fun markModelAsDownloaded(modelId: String, modelName: String) {
+            downloadedModelIds.add(modelId)
+            downloadedModelInfo[modelId] = ModelOption(id = modelId, name = modelName)
+            AppLogger.i(TAG, "Marked model as downloaded: $modelId ($modelName)")
         }
 
         /**

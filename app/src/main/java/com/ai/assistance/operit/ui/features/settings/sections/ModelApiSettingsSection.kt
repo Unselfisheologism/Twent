@@ -548,6 +548,10 @@ fun ModelApiSettingsSection(
                                     if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
                                         downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
                                         downloadingModels = downloadingModels - modelId
+                                        // Get model name from available models
+                                        val modelName = availableRunanywhereModels.find { it.id == modelId }?.name ?: modelId
+                                        // Mark as downloaded in the provider
+                                        RunanywhereProvider.markModelAsDownloaded(modelId, modelName)
                                         showNotification(context.getString(R.string.runanywhere_download_complete, modelId))
                                         // Refresh the model list
                                         val result = RunanywhereProvider.getDownloadedModels()
@@ -1238,6 +1242,10 @@ fun ModelApiSettingsSection(
                             if (progress.status == RunanywhereProvider.DownloadStatus.COMPLETED) {
                                 downloadedRunanywhereModels = downloadedRunanywhereModels + modelId
                                 downloadingModels = downloadingModels - modelId
+                                // Get model name from available models
+                                val modelName = availableRunanywhereModels.find { it.id == modelId }?.name ?: modelId
+                                // Mark as downloaded in the provider
+                                RunanywhereProvider.markModelAsDownloaded(modelId, modelName)
                                 showNotification(context.getString(R.string.runanywhere_download_complete, modelId))
                                 // Refresh the model list
                                 val result = RunanywhereProvider.getDownloadedModels()
