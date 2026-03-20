@@ -771,7 +771,7 @@ Provide usage examples here...
         return try {
             // Find server by name
             val servers = mcpLocalServer.getAllPluginMetadata()
-            val server = servers.find { it.name.equals(name, ignoreCase = true) }
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
 
             if (server == null) {
                 return ToolResult(
@@ -784,6 +784,7 @@ Provide usage examples here...
 
             // Remove from configuration
             mcpLocalServer.removeMCPServer(server.id)
+            mcpLocalServer.removePluginMetadata(server.id)
 
             ToolResult(
                 toolName = tool.name,
