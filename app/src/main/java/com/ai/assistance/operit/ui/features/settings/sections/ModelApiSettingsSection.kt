@@ -539,6 +539,12 @@ fun ModelApiSettingsSection(
                     downloadingModels = downloadingModels,
                     onDownloadClick = { modelId ->
                         scope.launch {
+                            // Initialize SDK if needed before downloading
+                            if (!RunanywhereProvider.isSdkInitialized) {
+                                RunanywhereProvider.initializeSdk(context)
+                                RunanywhereProvider.registerModels()
+                            }
+                            
                             showNotification(context.getString(R.string.runanywhere_downloading, modelId))
                             val flow = RunanywhereProvider.downloadModel(modelId)
                             if (flow != null) {
@@ -1233,6 +1239,12 @@ fun ModelApiSettingsSection(
             downloadingModels = downloadingModels,
             onDownloadClick = { modelId ->
                 scope.launch {
+                    // Initialize SDK if needed before downloading
+                    if (!RunanywhereProvider.isSdkInitialized) {
+                        RunanywhereProvider.initializeSdk(context)
+                        RunanywhereProvider.registerModels()
+                    }
+                    
                     showNotification(context.getString(R.string.runanywhere_downloading, modelId))
                     val flow = RunanywhereProvider.downloadModel(modelId)
                     if (flow != null) {
