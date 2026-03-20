@@ -566,7 +566,7 @@ fun ModelApiSettingsSection(
                                         if (result.isSuccess) {
                                             downloadedRunanywhereModels = result.getOrNull()?.map { it.id }?.toSet() ?: downloadedRunanywhereModels
                                         }
-                                    } else if (progress.status == RunanywhereProvider.DownloadStatus.FAILED || progress.status == RunanywhereProvider.DownloadStatus.ERROR) {
+                                    } else if (progress.status == RunanywhereProvider.DownloadStatus.ERROR) {
                                         downloadingModels = downloadingModels - modelId
                                         showNotification(context.getString(R.string.runanywhere_download_failed, progress.message))
                                     }

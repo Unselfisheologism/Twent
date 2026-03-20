@@ -10,10 +10,13 @@ import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.util.stream.Stream
 import com.ai.assistance.operit.util.stream.stream
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Runanywhere本地AI模型Provider
@@ -123,6 +126,10 @@ class RunanywhereProvider(
     companion object {
         private const val TAG = "RunanywhereProvider"
 
+        // 用于SDK调用的Application Context
+        @Volatile
+        private var sdkContext: Context? = null
+
         /**
          * 创建模拟下载流程（当SDK不可用时）
          * 这是一个临时的演示实现，用于测试UI流程
@@ -141,7 +148,7 @@ class RunanywhereProvider(
             
             for (progress in steps) {
                 emit(progress)
-                kotlinx.coroutines.delay(500) // 每个步骤延迟0.5秒
+                delay(500) // 每个步骤延迟0.5秒
             }
         }
 
@@ -166,6 +173,9 @@ class RunanywhereProvider(
          */
         fun initializeSdk(context: Context) {
             if (isSdkInitialized) return
+
+            // Store context for SDK calls
+            sdkContext = context.applicationContext
 
             try {
                 // Phase 0: Register backends
@@ -294,12 +304,17 @@ class RunanywhereProvider(
          */
         @Suppress("UNCHECKED_CAST")
         suspend fun getAvailableModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
+            val ctx = sdkContext ?: run {
+                AppLogger.w(TAG, "SDK context not available")
+                return@withContext Result.success(getPredefinedModels())
+            }
+            
             if (isSdkInitialized) {
                 try {
                     // 调用SDK的availableModels()方法
                     val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
                     val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, context)
+                    val instance = getInstanceMethod.invoke(null, ctx)
                     
                     val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
                     val modelList = availableModelsMethod.invoke(instance) as? List<*>
@@ -329,28 +344,33 @@ class RunanywhereProvider(
 
             // SDK未初始化或获取失败，返回预定义的模型列表
             AppLogger.w(TAG, "Using predefined model list")
-            val models = listOf(
-                // SmolLM2 models
-                ModelOption(id = "smollm2-360m-q8_0", name = "SmolLM2 360M Q8_0"),
-                ModelOption(id = "smollm2-1.7b-q8_0", name = "SmolLM2 1.7B Q8_0"),
-                // Qwen2.5 models
-                ModelOption(id = "qwen2.5-0.5b-q8_0", name = "Qwen 2.5 0.5B Q8_0"),
-                ModelOption(id = "qwen2.5-1.5b-q8_0", name = "Qwen 2.5 1.5B Q8_0"),
-                // Llama 3.2 models
-                ModelOption(id = "llama3.2-1b-q8_0", name = "Llama 3.2 1B Q8_0"),
-                ModelOption(id = "llama3.2-3b-q8_0", name = "Llama 3.2 3B Q8_0"),
-                // Mistral models
-                ModelOption(id = "mistral-7b-q8_0", name = "Mistral 7B Q8_0"),
-                // Phi-3 models
-                ModelOption(id = "phi3-mini-q8_0", name = "Phi-3 Mini 4K Q8_0"),
-                // Gemma 2 models
-                ModelOption(id = "gemma2-2b-q8_0", name = "Gemma 2 2B Q8_0"),
-                // TinyLlama
-                ModelOption(id = "tinyllama-1.1b-q8_0", name = "TinyLlama 1.1B Q8_0")
-            )
+            val models = getPredefinedModels()
             AppLogger.d(TAG, "Returning ${models.size} predefined available models")
             Result.success(models)
         }
+
+        /**
+         * 获取预定义的模型列表
+         */
+        private fun getPredefinedModels(): List<ModelOption> = listOf(
+            // SmolLM2 models
+            ModelOption(id = "smollm2-360m-q8_0", name = "SmolLM2 360M Q8_0"),
+            ModelOption(id = "smollm2-1.7b-q8_0", name = "SmolLM2 1.7B Q8_0"),
+            // Qwen2.5 models
+            ModelOption(id = "qwen2.5-0.5b-q8_0", name = "Qwen 2.5 0.5B Q8_0"),
+            ModelOption(id = "qwen2.5-1.5b-q8_0", name = "Qwen 2.5 1.5B Q8_0"),
+            // Llama 3.2 models
+            ModelOption(id = "llama3.2-1b-q8_0", name = "Llama 3.2 1B Q8_0"),
+            ModelOption(id = "llama3.2-3b-q8_0", name = "Llama 3.2 3B Q8_0"),
+            // Mistral models
+            ModelOption(id = "mistral-7b-q8_0", name = "Mistral 7B Q8_0"),
+            // Phi-3 models
+            ModelOption(id = "phi3-mini-q8_0", name = "Phi-3 Mini 4K Q8_0"),
+            // Gemma 2 models
+            ModelOption(id = "gemma2-2b-q8_0", name = "Gemma 2 2B Q8_0"),
+            // TinyLlama
+            ModelOption(id = "tinyllama-1.1b-q8_0", name = "TinyLlama 1.1B Q8_0")
+        )
 
         /**
          * 获取已下载的模型列表
@@ -359,12 +379,18 @@ class RunanywhereProvider(
          */
         @Suppress("UNCHECKED_CAST")
         suspend fun getDownloadedModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
+            val ctx = sdkContext ?: run {
+                // 返回内存中跟踪的已下载模型
+                val models = downloadedModelInfo.values.toList()
+                return@withContext Result.success(models)
+            }
+            
             if (isSdkInitialized) {
                 try {
                     // 调用SDK的downloadedModels()方法
                     val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
                     val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, context)
+                    val instance = getInstanceMethod.invoke(null, ctx)
                     
                     val downloadedModelsMethod = runAnywhereClass.getMethod("downloadedModels")
                     val modelList = downloadedModelsMethod.invoke(instance) as? List<*>
@@ -421,11 +447,13 @@ class RunanywhereProvider(
                 return true
             }
             
+            val ctx = sdkContext ?: return false
+            
             if (isSdkInitialized) {
                 try {
                     val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
                     val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, context)
+                    val instance = getInstanceMethod.invoke(null, ctx)
                     
                     val isDownloadedMethod = runAnywhereClass.getMethod("isModelDownloaded", String::class.java)
                     val isDownloaded = isDownloadedMethod.invoke(instance, modelId) as? Boolean
@@ -468,6 +496,11 @@ class RunanywhereProvider(
          */
         @Suppress("UNCHECKED_CAST")
         fun downloadModel(modelId: String): Flow<DownloadProgress>? {
+            val ctx = sdkContext ?: run {
+                AppLogger.w(TAG, "Cannot download - SDK context not available")
+                return null
+            }
+            
             if (!isSdkInitialized) {
                 AppLogger.w(TAG, "Cannot download - SDK not initialized")
                 return null
@@ -476,7 +509,7 @@ class RunanywhereProvider(
             return try {
                 val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
                 val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                val instance = getInstanceMethod.invoke(null, context)
+                val instance = getInstanceMethod.invoke(null, ctx)
                 
                 val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
                 @Suppress("UNCHECKED_CAST")
@@ -486,14 +519,23 @@ class RunanywhereProvider(
                     return null
                 }
                 
-                // Convert SDK's DownloadProgress to our local DownloadProgress
-                val localFlow = flow {
-                    sdkFlow.collect { sdkProgress ->
-                        val localProgress = convertSdkDownloadProgress(sdkProgress)
-                        emit(localProgress)
+                // Convert SDK's DownloadProgress to our local DownloadProgress using callbackFlow
+                return kotlinx.coroutines.flow.callbackFlow {
+                    // Use runBlocking to collect from the SDK flow in a blocking manner
+                    // since we need to convert each element
+                    kotlinx.coroutines.runBlocking {
+                        try {
+                            sdkFlow.collect { sdkProgress ->
+                                val localProgress = convertSdkDownloadProgress(sdkProgress)
+                                trySend(localProgress)
+                            }
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "Error collecting SDK flow: ${e.message}")
+                            close(e)
+                        }
                     }
+                    close()
                 }
-                localFlow
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to start model download: ${e.message}", e)
                 null
@@ -512,6 +554,12 @@ class RunanywhereProvider(
             onProgress: (DownloadProgress) -> Unit,
             onComplete: (Boolean, String?) -> Unit
         ) {
+            val ctx = sdkContext ?: run {
+                AppLogger.w(TAG, "Cannot download - SDK context not available")
+                onComplete(false, "SDK not initialized")
+                return
+            }
+            
             if (!isSdkInitialized) {
                 AppLogger.w(TAG, "Cannot download - SDK not initialized")
                 onComplete(false, "SDK not initialized")
@@ -522,7 +570,7 @@ class RunanywhereProvider(
                 try {
                     val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
                     val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, context)
+                    val instance = getInstanceMethod.invoke(null, ctx)
 
                     val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
                     @Suppress("UNCHECKED_CAST")
@@ -538,13 +586,13 @@ class RunanywhereProvider(
                         flow.collect { progress ->
                             onProgress(progress)
                             
-                            // Check if download is complete
-                            if (progress.state == DownloadStatus.COMPLETED) {
+                            // Check if download is complete - use status instead of state
+                            if (progress.status == DownloadStatus.COMPLETED) {
                                 // Mark as downloaded in memory
                                 val modelName = progress.modelId // SDK should have name in modelId
                                 markModelAsDownloaded(progress.modelId, modelName)
                                 onComplete(true, null)
-                            } else if (progress.state == DownloadStatus.ERROR) {
+                            } else if (progress.status == DownloadStatus.ERROR) {
                                 onComplete(false, progress.error ?: "Unknown error")
                             }
                         }
