@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     id("io.objectbox")
     id("kotlin-kapt")
-    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 val localProperties = Properties()
@@ -134,6 +133,11 @@ android {
         aidl = true
         buildConfig = true
     }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.10"
+    }
+
     packaging {
         
         jniLibs {
