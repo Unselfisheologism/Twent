@@ -953,13 +953,14 @@ fun ModelApiSettingsSection(
         var searchQuery by remember { mutableStateOf("") }
         // 维护已选中的模型集合
         // For Runanywhere, we need to map display names to IDs since modelNameInput contains display names
-        val selectedModels = remember(modelNameInput, modelsList, isRunanywhereProvider) {
+        val selectedModels = remember(modelNameInput, modelsList, selectedApiProvider) {
             val selectedNames = modelNameInput.split(",")
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
                 .toSet()
             
-            if (isRunanywhereProvider && selectedNames.isNotEmpty()) {
+            val isRunanywhere = selectedApiProvider == ApiProviderType.RUNANYWHERE
+            if (isRunanywhere && selectedNames.isNotEmpty()) {
                 // For Runanywhere, map display names to IDs
                 val selectedIds = selectedNames.mapNotNull { name ->
                     modelsList.find { it.name == name }?.id
