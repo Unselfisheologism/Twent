@@ -246,7 +246,7 @@ fun IntegrationNodeConfigDialog(
                         authTypeExpanded = authTypeExpanded,
                         onUrlChange = { webhookUrl = it },
                         onMethodChange = { webhookMethod = it },
-                        onHeadersChange = { webhookHeaders = it }
+                        onHeadersChange = { webhookHeaders = it },
                         onAuthTypeChange = { webhookAuthType = it },
                         onApiKeyChange = { webhookApiKey = it },
                         onBearerTokenChange = { webhookBearerToken = it },
