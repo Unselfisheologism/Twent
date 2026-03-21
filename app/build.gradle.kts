@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     id("io.objectbox")
     id("kotlin-kapt")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 val localProperties = Properties()
@@ -20,7 +21,7 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.ai.assistance.operit"
-    compileSdk = 34
+    compileSdk = 35
 
     signingConfigs {
         val releaseKeystorePath = localProperties.getProperty("RELEASE_STORE_FILE")
@@ -52,7 +53,7 @@ android {
     defaultConfig {
         applicationId = "com.ai.assistance.operit"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 39
         versionName = "1.8.1+1"
 
@@ -132,10 +133,6 @@ android {
         compose = true
         aidl = true
         buildConfig = true
-    }
-    
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         
