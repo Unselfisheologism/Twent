@@ -14,6 +14,7 @@ import com.runanywhere.sdk.llm.llamacpp.LlamaCPP
 import com.runanywhere.sdk.public.RunAnywhere
 import com.runanywhere.sdk.public.SDKEnvironment
 import com.runanywhere.sdk.public.extensions.Models.ModelCategory
+import com.runanywhere.sdk.public.extensions.runAnywhere.registerModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

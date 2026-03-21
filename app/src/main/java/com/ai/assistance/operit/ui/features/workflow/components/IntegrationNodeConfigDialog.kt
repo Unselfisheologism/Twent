@@ -79,7 +79,7 @@ fun IntegrationNodeConfigDialog(
     var webhookUrl by remember { mutableStateOf(currentNode.webhookConfig?.url ?: "") }
     var webhookMethod by remember { mutableStateOf(currentNode.webhookConfig?.method ?: "GET") }
     var webhookHeaders by remember { 
-        mutableStateOf(currentNode.webhookConfig?.headers?.toMutableMap() ?: mutableMapOf()) 
+        mutableStateOf(currentNode.webhookConfig?.headers?.toMutableMap() ?: mutableMapOf<String, String>())
     }
     var webhookAuthType by remember { mutableStateOf(getAuthTypeFromWebhook(currentNode.webhookConfig)) }
     var webhookApiKey by remember { mutableStateOf("") }
@@ -93,7 +93,7 @@ fun IntegrationNodeConfigDialog(
     var mcpServerId by remember { mutableStateOf(currentNode.mcpServerConfig?.serverId ?: "") }
     var mcpToolName by remember { mutableStateOf(currentNode.mcpServerConfig?.toolName ?: "") }
     var mcpParameters by remember { 
-        mutableStateOf(currentNode.mcpServerConfig?.parameters?.toMutableMap() ?: mutableMapOf()) 
+        mutableStateOf(currentNode.mcpServerConfig?.parameters?.toMutableMap() ?: mutableMapOf<String, String>())
     }
 
     // Dropdown states
@@ -185,13 +185,13 @@ fun IntegrationNodeConfigDialog(
                             IntegrationNodeConstants.TYPE_WEBHOOK -> {
                                 webhookUrl = ""
                                 webhookMethod = "GET"
-                                webhookHeaders.clear()
+                                webhookHeaders = mutableStateOf(mutableMapOf<String, String>())
                             }
                             IntegrationNodeConstants.TYPE_MCP -> {
                                 mcpServerName = ""
                                 mcpServerId = ""
                                 mcpToolName = ""
-                                mcpParameters.clear()
+                                mcpParameters = mutableStateOf(mutableMapOf<String, String>())
                             }
                             IntegrationNodeConstants.TYPE_OAUTH -> {
                                 selectedAccountId = null
@@ -235,7 +235,7 @@ fun IntegrationNodeConfigDialog(
                     WebhookConfigSection(
                         url = webhookUrl,
                         method = webhookMethod,
-                        headers = webhookHeaders,
+                        headers = webhookHeaders.value,
                         authType = webhookAuthType,
                         apiKey = webhookApiKey,
                         bearerToken = webhookBearerToken,
@@ -264,7 +264,7 @@ fun IntegrationNodeConfigDialog(
                         serverName = mcpServerName,
                         serverId = mcpServerId,
                         toolName = mcpToolName,
-                        parameters = mcpParameters,
+                        parameters = mcpParameters.value,
                         availableMcpServers = availableMcpServers,
                         serverExpanded = mcpServerExpanded,
                         onServerExpandedChange = { mcpServerExpanded = it },
@@ -339,7 +339,7 @@ fun IntegrationNodeConfigDialog(
                                 id = currentNode.webhookConfig?.id ?: UUID.randomUUID().toString(),
                                 url = webhookUrl,
                                 method = webhookMethod,
-                                headers = webhookHeaders,
+                                headers = webhookHeaders.value,
                                 apiKeyRequired = webhookAuthType != "none"
                             )
                         } else null,
@@ -348,7 +348,7 @@ fun IntegrationNodeConfigDialog(
                                 serverName = mcpServerName,
                                 serverId = mcpServerId,
                                 toolName = mcpToolName,
-                                parameters = mcpParameters
+                                parameters = mcpParameters.value
                             )
                         } else null
                     )

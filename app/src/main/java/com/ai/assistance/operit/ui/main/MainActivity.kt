@@ -797,7 +797,7 @@ class MainActivity : ComponentActivity() {
 
         val appVersion =
                 try {
-                    packageManager.getPackageInfo(packageName, 0).versionName
+                    packageManager.getPackageInfo(packageName, 0).versionName ?: getString(R.string.unknown_value)
                 } catch (e: PackageManager.NameNotFoundException) {
                     getString(R.string.unknown_value)
                 }
