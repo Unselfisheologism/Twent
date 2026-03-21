@@ -362,7 +362,11 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
         }
     }
     // 判断是否有默认配置可用
-    val hasDefaultConfig = apiKey.isNotBlank()
+    // 对于本地AI提供商（Runanywhere, MNN, Llama.cpp），不需要API key，所以也要检查这些提供商类型
+    val hasDefaultConfig = apiKey.isNotBlank() ||
+            apiProviderType == ApiProviderType.RUNANYWHERE ||
+            apiProviderType == ApiProviderType.MNN ||
+            apiProviderType == ApiProviderType.LLAMA_CPP
 
     // 确定是否显示配置界面的最终逻辑
     val showConfig = shouldShowConfigDialog && !ConfigurationStateHolder.hasConfirmedDefaultInSession
