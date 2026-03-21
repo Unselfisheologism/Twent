@@ -1282,6 +1282,8 @@ fun ModelApiSettingsSection(
                 runanywhereModelSlugInput = modelId
                 modelNameInput = availableRunanywhereModels.find { it.id == modelId }?.name ?: modelId
                 showRunanywhereModelsDialog = false
+                // 立即保存设置，刷新服务，避免因700ms debounce导致的问题
+                flushSettings(showSuccess = false)
             },
             onDismiss = { showRunanywhereModelsDialog = false }
         )
