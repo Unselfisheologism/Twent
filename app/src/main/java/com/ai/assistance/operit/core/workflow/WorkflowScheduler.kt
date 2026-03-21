@@ -277,7 +277,8 @@ class WorkflowScheduler(private val context: Context) {
      */
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
-            val workInfos = workManager.getWorkInfosForUniqueWorkResult(getWorkName(workflowId)).await()
+            val operation = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId))
+            val workInfos = operation.result.get()
             workInfos.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error checking workflow schedule status", e)
