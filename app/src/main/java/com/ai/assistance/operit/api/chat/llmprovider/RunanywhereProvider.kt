@@ -9,6 +9,11 @@ import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.util.stream.Stream
 import com.ai.assistance.operit.util.stream.stream
+import com.runanywhere.sdk.core.types.InferenceFramework
+import com.runanywhere.sdk.llm.llamacpp.LlamaCPP
+import com.runanywhere.sdk.public.RunAnywhere
+import com.runanywhere.sdk.public.SDKEnvironment
+import com.runanywhere.sdk.public.extensions.Models.ModelCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -182,23 +187,12 @@ class RunanywhereProvider(
             sdkContext = context.applicationContext
 
             try {
-                // Step 1: Register LlamaCPP backend - 无需参数
-                val llamaCppClass = Class.forName("ai.runanywhere.llama.LlamaCPP")
-                val registerMethod = llamaCppClass.getMethod("register")
-                registerMethod.invoke(null)
+                // Step 1: Register LlamaCPP backend
+                LlamaCPP.register()
                 AppLogger.d(TAG, "LlamaCPP backend registered")
 
                 // Step 2: Core initialization with DEVELOPMENT environment (no API key needed)
-                val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                
-                // Get SDKEnvironment enum class
-                val sdkEnvClass = Class.forName("ai.runanywhere.sdk.environment.SDKEnvironment")
-                val developmentField = sdkEnvClass.getField("DEVELOPMENT")
-                val developmentEnv = developmentField.get(null)
-                
-                // Call initialize(SDKEnvironment.DEVELOPMENT)
-                val initializeMethod = runAnywhereClass.getMethod("initialize", sdkEnvClass)
-                initializeMethod.invoke(null, developmentEnv)
+                RunAnywhere.initialize(environment = SDKEnvironment.DEVELOPMENT)
 
                 isSdkInitialized = true
                 AppLogger.i(TAG, "Runanywhere SDK initialized successfully in DEVELOPMENT mode")
@@ -223,30 +217,6 @@ class RunanywhereProvider(
             }
 
             try {
-                val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                
-                // Get InferenceFramework enum class
-                val inferenceFrameworkClass = Class.forName("ai.runanywhere.sdk.models.InferenceFramework")
-                val llamaCppField = inferenceFrameworkClass.getField("LLAMA_CPP")
-                val llamaCppFramework = llamaCppField.get(null)
-                
-                // Get ModelCategory enum class
-                val modelCategoryClass = Class.forName("ai.runanywhere.sdk.models.ModelCategory")
-                val languageField = modelCategoryClass.getField("LANGUAGE")
-                val languageCategory = languageField.get(null)
-
-                // Use the extension function registerModel from RunAnywhere+ModelManagement
-                // Signature: registerModel(id, name, url, framework, modality, memoryRequirement)
-                val registerModelMethod = runAnywhereClass.getMethod(
-                    "registerModel",
-                    String::class.java,      // id
-                    String::class.java,      // name
-                    String::class.java,      // url
-                    inferenceFrameworkClass, // framework (InferenceFramework enum)
-                    modelCategoryClass,      // modality (ModelCategory enum)
-                    Long::class.javaObjectType // memoryRequirement
-                )
-
                 // Register language models from various sources
                 // Format: Quadruple(id, name, url, memoryRequirement)
                 val models = listOf(
@@ -271,14 +241,13 @@ class RunanywhereProvider(
 
                 for ((id, name, url, memory) in models) {
                     try {
-                        registerModelMethod.invoke(
-                            null,
-                            id,
-                            name,
-                            url,
-                            llamaCppFramework,  // InferenceFramework.LLAMA_CPP
-                            languageCategory,  // ModelCategory.LANGUAGE
-                            memory
+                        RunAnywhere.registerModel(
+                            id = id,
+                            name = name,
+                            url = url,
+                            framework = InferenceFramework.LLAMA_CPP,
+                            modality = ModelCategory.LANGUAGE,
+                            memoryRequirement = memory
                         )
                         AppLogger.d(TAG, "Registered model: $id (memory: ${memory / 1_000_000}MB)")
                     } catch (e: Exception) {
@@ -302,12 +271,7 @@ class RunanywhereProvider(
          * 获取SDK是否可用
          */
         fun isSdkAvailable(): Boolean {
-            return try {
-                Class.forName("ai.runanywhere.RunAnywhere")
-                isSdkInitialized
-            } catch (e: ClassNotFoundException) {
-                false
-            }
+            return isSdkInitialized
         }
 
         /**

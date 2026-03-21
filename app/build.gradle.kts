@@ -455,4 +455,12 @@ dependencies {
     // Glance for Widgets (Compose for Widgets)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+
+    // Runanywhere SDK for local AI inference
+    // Core SDK with native libraries
+    implementation("io.github.sanchitmonga22:runanywhere-sdk:0.16.1")
+    // LlamaCPP backend for LLM text generation
+    implementation("io.github.sanchitmonga22:runanywhere-llamacpp:0.16.1")
+    // ONNX backend for STT/TTS/VAD (optional, can be added if needed)
+    implementation("io.github.sanchitmonga22:runanywhere-onnx:0.16.1")
 }
