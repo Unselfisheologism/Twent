@@ -136,8 +136,9 @@ android {
     }
 
     packaging {
-        
+        // Pick first to resolve conflict between onnxruntime-android and runanywhere-onnx
         jniLibs {
+            pickFirsts += listOf("lib/arm64-v8a/libonnxruntime.so")
             useLegacyPackaging = true
         }
         resources {
@@ -460,5 +461,8 @@ dependencies {
     // LlamaCPP backend for LLM text generation
     implementation("io.github.sanchitmonga22:runanywhere-llamacpp:0.16.1")
     // ONNX backend for STT/TTS/VAD (optional, can be added if needed)
-    implementation("io.github.sanchitmonga22:runanywhere-onnx:0.16.1")
+    // Exclude ONNX runtime native libs to avoid conflict with standalone onnxruntime-android
+    implementation("io.github.sanchitmonga22:runanywhere-onnx:0.16.1") {
+        exclude(group = "com.microsoft.onnxruntime", module = "onnxruntime-android")
+    }
 }
