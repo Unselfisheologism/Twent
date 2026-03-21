@@ -262,6 +262,11 @@ dependencies {
     implementation(libs.jlatexmath)
     implementation(libs.renderx) // RenderX library for LaTeX rendering
     
+    // Coroutines dependencies
+    implementation(libs.coroutines.core)
+    implementation(libs.coroutines.android)
+    implementation(libs.coroutines.play.services)
+
     // Base Android dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

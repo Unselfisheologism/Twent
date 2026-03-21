@@ -185,13 +185,13 @@ fun IntegrationNodeConfigDialog(
                             IntegrationNodeConstants.TYPE_WEBHOOK -> {
                                 webhookUrl = ""
                                 webhookMethod = "GET"
-                                webhookHeaders = mutableStateOf(mutableMapOf<String, String>())
+                                // Note: webhookHeaders is already initialized with remember and mutableStateOf
                             }
                             IntegrationNodeConstants.TYPE_MCP -> {
                                 mcpServerName = ""
                                 mcpServerId = ""
                                 mcpToolName = ""
-                                mcpParameters = mutableStateOf(mutableMapOf<String, String>())
+                                // Note: mcpParameters is already initialized with remember and mutableStateOf
                             }
                             IntegrationNodeConstants.TYPE_OAUTH -> {
                                 selectedAccountId = null
@@ -246,7 +246,7 @@ fun IntegrationNodeConfigDialog(
                         authTypeExpanded = authTypeExpanded,
                         onUrlChange = { webhookUrl = it },
                         onMethodChange = { webhookMethod = it },
-                        onHeadersChange = { webhookHeaders = it },
+                        onHeadersChange = { webhookHeaders.value = it },
                         onAuthTypeChange = { webhookAuthType = it },
                         onApiKeyChange = { webhookApiKey = it },
                         onBearerTokenChange = { webhookBearerToken = it },
@@ -273,7 +273,7 @@ fun IntegrationNodeConfigDialog(
                             mcpServerId = id ?: ""
                         },
                         onToolNameChange = { mcpToolName = it },
-                        onParametersChange = { mcpParameters = it.toMutableMap() }
+                        onParametersChange = { mcpParameters.value = it.toMutableMap() }
                     )
                 }
 
