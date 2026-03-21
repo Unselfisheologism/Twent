@@ -952,18 +952,27 @@ fun ModelApiSettingsSection(
     if (showModelsDialog) {
         var searchQuery by remember { mutableStateOf("") }
         // 维护已选中的模型集合
-        val selectedModels = remember {
-            mutableStateOf(
-                modelNameInput.split(",")
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-                    .toSet()
-            )
+        // For Runanywhere, we need to map display names to IDs since modelNameInput contains display names
+        val selectedModels = remember(modelNameInput, modelsList, isRunanywhereProvider) {
+            val selectedNames = modelNameInput.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toSet()
+            
+            if (isRunanywhereProvider && selectedNames.isNotEmpty()) {
+                // For Runanywhere, map display names to IDs
+                val selectedIds = selectedNames.mapNotNull { name ->
+                    modelsList.find { it.name == name }?.id
+                }.toSet()
+                mutableStateOf(selectedIds)
+            } else {
+                mutableStateOf(selectedNames)
+            }
         }
         val filteredModelsList =
                 remember(searchQuery, modelsList) {
                     if (searchQuery.isEmpty()) modelsList
-                    else modelsList.filter { it.id.contains(searchQuery, ignoreCase = true) }
+                    else modelsList.filter { it.id.contains(searchQuery, ignoreCase = true) || it.name.contains(searchQuery, ignoreCase = true) }
                 }
 
         Dialog(onDismissRequest = { showModelsDialog = false }) {
@@ -1212,7 +1221,17 @@ fun ModelApiSettingsSection(
                                     // 将选中的模型用逗号连接
                                     val orderedSelection = modelsList.map { it.id }
                                         .filter { selectedModels.value.contains(it) }
-                                    modelNameInput = orderedSelection.joinToString(",")
+                                    
+                                    // For Runanywhere, also update the model slug
+                                    if (selectedApiProvider == ApiProviderType.RUNANYWHERE && orderedSelection.isNotEmpty()) {
+                                        runanywhereModelSlugInput = orderedSelection.first()
+                                        // Also update modelNameInput to display name
+                                        modelNameInput = modelsList.find { it.id == orderedSelection.first() }?.name ?: orderedSelection.first()
+                                        AppLogger.d(TAG, "选择Runanywhere模型: slug=$runanywhereModelSlugInput, name=$modelNameInput")
+                                    } else {
+                                        modelNameInput = orderedSelection.joinToString(",")
+                                    }
+                                    
                                     if (selectedApiProvider == ApiProviderType.MNN) {
                                         AppLogger.d(TAG, "选择MNN模型: $modelNameInput")
                                     }

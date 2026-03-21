@@ -158,6 +158,8 @@ class ChatViewModel(private val context: Context) : ViewModel() {
     val apiProviderType: StateFlow<ApiProviderType> by lazy { apiConfigDelegate.apiProviderType }
     val isConfigured: StateFlow<Boolean> by lazy { apiConfigDelegate.isConfigured }
     val isApiConfigInitialized: StateFlow<Boolean> by lazy { apiConfigDelegate.isInitialized }
+    // Runanywhere specific - model slug
+    val runanywhereModelSlug: StateFlow<String> by lazy { apiConfigDelegate.runanywhereModelSlug }
 
     private val _shouldShowConfigDialog = MutableStateFlow(false)
     val shouldShowConfigDialog: StateFlow<Boolean> = _shouldShowConfigDialog.asStateFlow()

@@ -121,6 +121,10 @@ class ApiConfigDelegate(
     private val _apiProviderType = MutableStateFlow(ApiProviderType.DEEPSEEK)
     val apiProviderType: StateFlow<ApiProviderType> = _apiProviderType.asStateFlow()
 
+    // Runanywhere specific - model slug
+    private val _runanywhereModelSlug = MutableStateFlow("")
+    val runanywhereModelSlug: StateFlow<String> = _runanywhereModelSlug.asStateFlow()
+
     private val _isInitialized = MutableStateFlow(false)
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
@@ -189,6 +193,8 @@ class ApiConfigDelegate(
         _enableSummary.value = config.enableSummary
         _enableSummaryByMessageCount.value = config.enableSummaryByMessageCount
         _summaryMessageCountThreshold.value = config.summaryMessageCountThreshold
+        // Load Runanywhere specific model slug
+        _runanywhereModelSlug.value = config.runanywhereModelSlug
     }
 
     private fun initializeSettingsCollection() {
@@ -292,6 +298,11 @@ class ApiConfigDelegate(
         _apiProviderType.value = providerType
     }
 
+    /** 更新Runanywhere模型标识符 */
+    fun updateRunanywhereModelSlug(slug: String) {
+        _runanywhereModelSlug.value = slug
+    }
+
     /** 保存API设置 */
     fun saveApiSettings() {
         coroutineScope.launch {
@@ -306,6 +317,15 @@ class ApiConfigDelegate(
                         _modelName.value,
                         _apiProviderType.value
                 )
+
+                // Also save Runanywhere specific settings
+                if (_apiProviderType.value == ApiProviderType.RUNANYWHERE) {
+                    modelConfigManager.updateRunanywhereSettings(
+                        configId = configId,
+                        runanywhereModelSlug = _runanywhereModelSlug.value
+                    )
+                    AppLogger.d(TAG, "Runanywhere配置已保存: modelSlug=${_runanywhereModelSlug.value}")
+                }
 
                 AppLogger.d(TAG, "API配置已保存到ModelConfigManager")
 

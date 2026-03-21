@@ -532,6 +532,20 @@ class ModelConfigManager(private val context: Context) {
     }
 
     /**
+     * 更新Runanywhere特定的设置
+     */
+    suspend fun updateRunanywhereSettings(
+            configId: String,
+            runanywhereModelSlug: String
+    ): ModelConfigData {
+        return updateConfigInternal(configId) {
+            it.copy(
+                    runanywhereModelSlug = runanywhereModelSlug
+            )
+        }
+    }
+
+    /**
      * 根据配置ID获取完整的模型参数列表（包括标准和自定义参数）
      * @param configId 配置ID
      * @return 模型参数列表
