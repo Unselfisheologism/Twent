@@ -235,7 +235,7 @@ fun IntegrationNodeConfigDialog(
                     WebhookConfigSection(
                         url = webhookUrl,
                         method = webhookMethod,
-                        headers = webhookHeaders.value,
+                        headers = webhookHeaders,
                         authType = webhookAuthType,
                         apiKey = webhookApiKey,
                         bearerToken = webhookBearerToken,
@@ -246,7 +246,7 @@ fun IntegrationNodeConfigDialog(
                         authTypeExpanded = authTypeExpanded,
                         onUrlChange = { webhookUrl = it },
                         onMethodChange = { webhookMethod = it },
-                        onHeadersChange = { webhookHeaders.value = it },
+                        onHeadersChange = { webhookHeaders = it }
                         onAuthTypeChange = { webhookAuthType = it },
                         onApiKeyChange = { webhookApiKey = it },
                         onBearerTokenChange = { webhookBearerToken = it },
@@ -264,7 +264,7 @@ fun IntegrationNodeConfigDialog(
                         serverName = mcpServerName,
                         serverId = mcpServerId,
                         toolName = mcpToolName,
-                        parameters = mcpParameters.value,
+                        parameters = mcpParameters,
                         availableMcpServers = availableMcpServers,
                         serverExpanded = mcpServerExpanded,
                         onServerExpandedChange = { mcpServerExpanded = it },
@@ -273,7 +273,7 @@ fun IntegrationNodeConfigDialog(
                             mcpServerId = id ?: ""
                         },
                         onToolNameChange = { mcpToolName = it },
-                        onParametersChange = { mcpParameters.value = it.toMutableMap() }
+                        onParametersChange = { mcpParameters = it.toMutableMap() }
                     )
                 }
 
@@ -339,7 +339,7 @@ fun IntegrationNodeConfigDialog(
                                 id = currentNode.webhookConfig?.id ?: UUID.randomUUID().toString(),
                                 url = webhookUrl,
                                 method = webhookMethod,
-                                headers = webhookHeaders.value,
+                                headers = webhookHeaders,
                                 apiKeyRequired = webhookAuthType != "none"
                             )
                         } else null,
@@ -348,7 +348,7 @@ fun IntegrationNodeConfigDialog(
                                 serverName = mcpServerName,
                                 serverId = mcpServerId,
                                 toolName = mcpToolName,
-                                parameters = mcpParameters.value
+                                parameters = mcpParameters
                             )
                         } else null
                     )
