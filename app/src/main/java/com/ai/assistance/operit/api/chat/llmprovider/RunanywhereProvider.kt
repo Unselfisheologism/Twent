@@ -15,6 +15,15 @@ import com.runanywhere.sdk.public.RunAnywhere
 import com.runanywhere.sdk.public.SDKEnvironment
 import com.runanywhere.sdk.public.extensions.Models.ModelCategory
 import com.runanywhere.sdk.public.extensions.registerModel
+import com.runanywhere.sdk.public.extensions.loadLLMModel
+import com.runanywhere.sdk.public.extensions.chat
+import com.runanywhere.sdk.public.extensions.streamChat
+import com.runanywhere.sdk.public.extensions.unloadLLMModel
+import com.runanywhere.sdk.public.extensions.availableModels
+import com.runanywhere.sdk.public.extensions.downloadedModels
+import com.runanywhere.sdk.public.extensions.downloadModel
+import com.runanywhere.sdk.public.extensions.isModelDownloaded
+import com.runanywhere.sdk.public.extensions.cancelDownload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +50,19 @@ class RunanywhereProvider(
     private val contextSize: Int,
     private val providerType: ApiProviderType = ApiProviderType.RUNANYWHERE
 ) : AIService {
+
+    init {
+        // Auto-initialize SDK if not already initialized when provider is created
+        if (!isSdkInitialized) {
+            try {
+                initializeSdk(context)
+                registerModels()
+                AppLogger.d(TAG, "Auto-initialized SDK for chat provider")
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "Failed to auto-initialize SDK: ${e.message}")
+            }
+        }
+    }
 
     /**
      * 下载进度数据类
@@ -297,31 +319,15 @@ class RunanywhereProvider(
          */
         @Suppress("UNCHECKED_CAST")
         suspend fun getAvailableModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
-            val ctx = sdkContext ?: run {
-                AppLogger.w(TAG, "SDK context not available")
-                return@withContext Result.success(getPredefinedModels())
-            }
-            
             if (isSdkInitialized) {
                 try {
-                    // 调用SDK的availableModels()方法
-                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, ctx)
+                    // Use the SDK extension function directly
+                    val modelList = RunAnywhere.availableModels()
                     
-                    val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
-                    val modelList = availableModelsMethod.invoke(instance) as? List<*>
-                    
-                    if (modelList != null) {
+                    if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
                             try {
-                                val idField = modelInfo?.javaClass?.getField("id")
-                                val nameField = modelInfo?.javaClass?.getField("name")
-                                val id = idField?.get(modelInfo) as? String
-                                val name = nameField?.get(modelInfo) as? String
-                                if (id != null && name != null) {
-                                    ModelOption(id = id, name = name)
-                                } else null
+                                ModelOption(id = modelInfo.id, name = modelInfo.name)
                             } catch (e: Exception) {
                                 AppLogger.w(TAG, "Failed to parse model info: ${e.message}")
                                 null
@@ -380,24 +386,13 @@ class RunanywhereProvider(
             
             if (isSdkInitialized) {
                 try {
-                    // 调用SDK的downloadedModels()方法
-                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, ctx)
-                    
-                    val downloadedModelsMethod = runAnywhereClass.getMethod("downloadedModels")
-                    val modelList = downloadedModelsMethod.invoke(instance) as? List<*>
+                    // Use the SDK extension function directly
+                    val modelList = RunAnywhere.downloadedModels()
                     
                     if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
                             try {
-                                val idField = modelInfo?.javaClass?.getField("id")
-                                val nameField = modelInfo?.javaClass?.getField("name")
-                                val id = idField?.get(modelInfo) as? String
-                                val name = nameField?.get(modelInfo) as? String
-                                if (id != null && name != null) {
-                                    ModelOption(id = id, name = name)
-                                } else null
+                                ModelOption(id = modelInfo.id, name = modelInfo.name)
                             } catch (e: Exception) {
                                 AppLogger.w(TAG, "Failed to parse downloaded model info: ${e.message}")
                                 null
@@ -444,30 +439,16 @@ class RunanywhereProvider(
             
             if (isSdkInitialized) {
                 try {
-                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, ctx)
+                    // Use the SDK extension function directly
+                    val isDownloaded = RunAnywhere.isModelDownloaded(modelId)
                     
-                    val isDownloadedMethod = runAnywhereClass.getMethod("isModelDownloaded", String::class.java)
-                    val isDownloaded = isDownloadedMethod.invoke(instance, modelId) as? Boolean
-                    
-                    if (isDownloaded == true) {
+                    if (isDownloaded) {
                         // Get model name if available
                         try {
-                            val availableModelsMethod = runAnywhereClass.getMethod("availableModels")
-                            val modelList = availableModelsMethod.invoke(instance) as? List<*>
-                            val modelInfo = modelList?.find { m ->
-                                try {
-                                    val idField = m?.javaClass?.getField("id")
-                                    idField?.get(m) == modelId
-                                } catch (e: Exception) {
-                                    false
-                                }
-                            }
+                            val modelList = RunAnywhere.availableModels()
+                            val modelInfo = modelList?.find { it.id == modelId }
                             if (modelInfo != null) {
-                                val nameField = modelInfo.javaClass.getField("name")
-                                val name = nameField.get(modelInfo) as? String ?: modelId
-                                markModelAsDownloaded(modelId, name)
+                                markModelAsDownloaded(modelId, modelInfo.name)
                             }
                         } catch (e: Exception) {
                             AppLogger.w(TAG, "Failed to get model name: ${e.message}")
@@ -485,28 +466,18 @@ class RunanywhereProvider(
 
         /**
          * 下载模型
-         * @return Flow<DownloadProgress> - 通过反射获取
+         * @return Flow<DownloadProgress>
          */
         @Suppress("UNCHECKED_CAST")
         fun downloadModel(modelId: String): Flow<DownloadProgress>? {
-            val ctx = sdkContext ?: run {
-                AppLogger.w(TAG, "Cannot download - SDK context not available")
-                return null
-            }
-            
             if (!isSdkInitialized) {
                 AppLogger.w(TAG, "Cannot download - SDK not initialized")
                 return null
             }
 
             return try {
-                val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                val instance = getInstanceMethod.invoke(null, ctx)
-                
-                val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
-                @Suppress("UNCHECKED_CAST")
-                val sdkFlow = downloadMethod.invoke(instance, modelId) as? Flow<Any>
+                // Use the SDK extension function directly
+                val sdkFlow = RunAnywhere.downloadModel(modelId)
                 
                 if (sdkFlow == null) {
                     return null
@@ -561,13 +532,8 @@ class RunanywhereProvider(
 
             Thread {
                 try {
-                    val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-                    val getInstanceMethod = runAnywhereClass.getMethod("getInstance", Context::class.java)
-                    val instance = getInstanceMethod.invoke(null, ctx)
-
-                    val downloadMethod = runAnywhereClass.getMethod("downloadModel", String::class.java)
-                    @Suppress("UNCHECKED_CAST")
-                    val flow = downloadMethod.invoke(instance, modelId) as? Flow<DownloadProgress>
+                    // Use the SDK extension function directly
+                    val flow = RunAnywhere.downloadModel(modelId)
 
                     if (flow == null) {
                         onComplete(false, "Failed to create download flow")
@@ -632,23 +598,15 @@ class RunanywhereProvider(
 
     override fun cancelStreaming() {
         isCancelled = true
-        // 使用 RunAnywhere.cancel() 取消当前推理
-        try {
-            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            val cancelMethod = runAnywhereClass.getMethod("cancel")
-            cancelMethod.invoke(null)
-            AppLogger.d(TAG, "推理已取消")
-        } catch (e: Exception) {
-            AppLogger.w(TAG, "取消推理失败: ${e.message}")
-        }
+        // Note: Kotlin SDK doesn't have a direct cancel for inference
+        // Setting isCancelled flag will stop the stream collection
+        AppLogger.d(TAG, "推理已取消")
     }
 
     override fun release() {
         // 使用 RunAnywhere.unloadLLMModel() 卸载模型
         try {
-            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            val unloadMethod = runAnywhereClass.getMethod("unloadLLMModel")
-            unloadMethod.invoke(null)
+            RunAnywhere.unloadLLMModel()
             AppLogger.d(TAG, "模型已卸载")
         } catch (e: Exception) {
             AppLogger.w(TAG, "卸载模型失败: ${e.message}")
@@ -671,13 +629,19 @@ class RunanywhereProvider(
         // Check if the selected model is downloaded
         val downloadedModels = getDownloadedModels()
         if (downloadedModels.isFailure) {
-            return@withContext Result.failure(Exception("无法获取已下载模型列表"))
+            AppLogger.w(TAG, "getDownloadedModels failed: ${downloadedModels.exceptionOrNull()?.message}")
+            return@withContext Result.failure(Exception("无法获取已下载模型列表: ${downloadedModels.exceptionOrNull()?.message}"))
         }
 
         val modelList = downloadedModels.getOrNull() ?: emptyList()
+        AppLogger.d(TAG, "Checking model $modelSlug against downloaded models: ${modelList.map { it.id }}")
+        
         if (modelList.none { it.id == modelSlug }) {
+            // Try to find similar models
+            val similarModels = modelList.filter { it.id.contains(modelSlug.takeWhile { c -> c.isLetterOrDigit() }) }
+            AppLogger.w(TAG, "Model $modelSlug not found. Similar: ${similarModels.map { it.id }}")
             return@withContext Result.failure(
-                Exception(context.getString(R.string.runanywhere_error_model_not_downloaded, modelSlug))
+                Exception(context.getString(R.string.runanywhere_error_model_not_downloaded, modelSlug) + ". Available: ${modelList.joinToString(",") { it.id }}"))
             )
         }
 
@@ -750,24 +714,31 @@ class RunanywhereProvider(
         // Check if model is downloaded
         val downloadedModels = getDownloadedModels()
         if (downloadedModels.isFailure) {
+            AppLogger.w(TAG, "getDownloadedModels failed in chat: ${downloadedModels.exceptionOrNull()?.message}")
             emit("${context.getString(R.string.runanywhere_error_prefix)}: 无法获取模型列表")
             return@stream
         }
 
         val modelList = downloadedModels.getOrNull() ?: emptyList()
+        AppLogger.d(TAG, "Chat: Checking model $modelSlug against downloaded: ${modelList.map { it.id }}")
+        
         if (modelList.none { it.id == modelSlug }) {
+            AppLogger.w(TAG, "Model $modelSlug not found in downloaded models")
             emit("${context.getString(R.string.runanywhere_error_prefix)}: ${context.getString(R.string.runanywhere_error_model_not_downloaded, modelSlug)}")
             return@stream
         }
 
         // Step 1: Load the model (loadLLMModel returns Unit, not a session)
+        AppLogger.d(TAG, "Loading model: $modelSlug")
         val loaded = withContext(Dispatchers.IO) {
             ensureModelLoaded(modelSlug)
         }
         if (!loaded) {
+            AppLogger.e(TAG, "Failed to load model: $modelSlug")
             emit(context.getString(R.string.runanywhere_error_model_load_failed))
             return@stream
         }
+        AppLogger.i(TAG, "Model loaded successfully: $modelSlug")
 
         // Build prompt from chat history
         val prompt = buildPrompt(chatHistory, message)
@@ -885,16 +856,18 @@ class RunanywhereProvider(
      */
     private fun loadLLMModel(modelId: String): Boolean {
         return try {
-            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            
-            // loadLLMModel(modelId: String) returns Unit
-            val loadLLMMethod = runAnywhereClass.getMethod("loadLLMModel", String::class.java)
-            loadLLMMethod.invoke(null, modelId)
+            // Use the SDK extension function directly
+            AppLogger.d(TAG, "Calling RunAnywhere.loadLLMModel($modelId)")
+            RunAnywhere.loadLLMModel(modelId)
             
             AppLogger.i(TAG, "Model loaded successfully: $modelId")
             true
         } catch (e: Exception) {
-            AppLogger.e(TAG, "加载模型失败: ${e.message}", e)
+            AppLogger.e(TAG, "加载模型失败 for $modelId: ${e.message}", e)
+            // Log the full stack trace for debugging
+            e.stackTrace.forEach { stackTraceElement ->
+                AppLogger.d(TAG, "  at ${stackTraceElement.className}.${stackTraceElement.methodName}(${stackTraceElement.fileName}:${stackTraceElement.lineNumber})")
+            }
             false
         }
     }
@@ -905,12 +878,8 @@ class RunanywhereProvider(
      */
     private fun streamChat(modelId: String, prompt: String): Flow<String>? {
         return try {
-            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            
-            // streamChat(prompt: String): Flow<String>
-            val streamChatMethod = runAnywhereClass.getMethod("streamChat", String::class.java)
-            @Suppress("UNCHECKED_CAST")
-            val flow = streamChatMethod.invoke(null, prompt) as? Flow<String>
+            // Use the SDK extension function directly
+            val flow = RunAnywhere.streamChat(prompt)
             
             flow
         } catch (e: Exception) {
@@ -925,11 +894,8 @@ class RunanywhereProvider(
      */
     private fun chat(modelId: String, prompt: String): String? {
         return try {
-            val runAnywhereClass = Class.forName("ai.runanywhere.RunAnywhere")
-            
-            // chat(prompt: String): String
-            val chatMethod = runAnywhereClass.getMethod("chat", String::class.java)
-            val result = chatMethod.invoke(null, prompt) as? String
+            // Use the SDK extension function directly
+            val result = RunAnywhere.chat(prompt)
             
             result
         } catch (e: Exception) {
