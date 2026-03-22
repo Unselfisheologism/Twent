@@ -30,6 +30,7 @@ enum class ApiProviderType {
         LLAMA_CPP, // llama.cpp 本地推理引擎
         RUNANYWHERE, // Runanywhere本地AI模型
         PPINFRA, // 派欧云
+        KILO_GATEWAY, // Kilo AI Gateway (OpenAI兼容)
         OTHER // 其他提供商（自定义端点）
 }
 

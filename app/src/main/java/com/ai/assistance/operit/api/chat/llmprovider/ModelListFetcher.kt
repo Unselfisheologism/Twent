@@ -90,6 +90,12 @@ object ModelListFetcher {
                     ApiProviderType.ALIPAY_BAILING -> "${extractBaseUrl(apiEndpoint)}/llm/v1/models"
                     ApiProviderType.LMSTUDIO -> "${extractBaseUrl(apiEndpoint)}/v1/models"
                     ApiProviderType.PPINFRA -> "${extractBaseUrl(apiEndpoint)}/v1/models"
+                    ApiProviderType.KILO_GATEWAY -> {
+                        // Kilo AI Gateway 使用 /api/gateway 基础路径，模型端点为 /models (不是 /v1/models)
+                        val baseUrl = extractBaseUrl(apiEndpoint)
+                        // 构造Kilo Gateway的models端点: https://api.kilo.ai/api/gateway/models
+                        "$baseUrl/api/gateway/models"
+                    }
                     // 其他API提供商可能需要特殊处理
                     else -> "${extractBaseUrl(apiEndpoint)}/v1/models" // 默认尝试OpenAI兼容格式
                 }
@@ -267,7 +273,8 @@ object ModelListFetcher {
                                     ApiProviderType.INFINIAI,
                                     ApiProviderType.ALIPAY_BAILING,
                                     ApiProviderType.LMSTUDIO,
-                                    ApiProviderType.PPINFRA -> parseOpenAIModelResponse(context, responseBody)
+                                    ApiProviderType.PPINFRA,
+                                    ApiProviderType.KILO_GATEWAY -> parseOpenAIModelResponse(context, responseBody)
                                     ApiProviderType.ANTHROPIC,
                                     ApiProviderType.ANTHROPIC_GENERIC -> parseAnthropicModelResponse(context, responseBody)
                                     ApiProviderType.GOOGLE,
