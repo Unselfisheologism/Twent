@@ -280,21 +280,12 @@ class WorkflowScheduler(private val context: Context) {
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val operation = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId))
-            // Wait for operation completion using coroutine extension
-            val state = operation.await()
-            // If operation succeeded, try to get work info
-            if (state == androidx.work.operation.Operation.State.SUCCESS) {
-                // Use internal API to get result - cast to implementation class
-                val future = operation as? com.google.common.util.concurrent.ListenableFuture<*>
-                if (future != null) {
-                    @Suppress("UNCHECKED_CAST")
-                    val result = (future as com.google.common.util.concurrent.ListenableFuture<List<WorkInfo>>).get()
-                    return@withContext result.any {
-                        it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
-                    }
-                }
+            // Wait for operation to complete - Operation.getResult() returns ListenableFuture
+            @Suppress("UNCHECKED_CAST")
+            val result = operation.result.await() as List<WorkInfo>
+            return@withContext result.any {
+                it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
             }
-            false
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error checking workflow schedule status", e)
             false
