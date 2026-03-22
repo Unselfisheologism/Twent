@@ -2146,6 +2146,7 @@ private fun getProviderColor(provider: ApiProviderType): androidx.compose.ui.gra
         ApiProviderType.LLAMA_CPP -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f)
         ApiProviderType.RUNANYWHERE -> MaterialTheme.colorScheme.tertiary
         ApiProviderType.PPINFRA -> MaterialTheme.colorScheme.primaryContainer
+        ApiProviderType.KILO_GATEWAY -> MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
         ApiProviderType.OTHER -> MaterialTheme.colorScheme.surfaceVariant
     }
 }
