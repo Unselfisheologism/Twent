@@ -393,6 +393,8 @@ class RunanywhereProvider(
                         RunAnywhere.downloadedModels()
                     }
                     
+                    AppLogger.d(TAG, "[MODELS] SDK downloadedModels() returned: ${modelList?.map { "${it.id} (${it.name})" }}")
+                    
                     if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
                             try {
@@ -404,9 +406,13 @@ class RunanywhereProvider(
                         }
                         // Also add any models we've tracked in memory
                         val memoryModels = downloadedModelInfo.values.toList()
+                        AppLogger.d(TAG, "[MODELS] Memory models: ${memoryModels.map { "${it.id} (${it.name})" }}")
+                        
                         val allModels = (models + memoryModels).distinctBy { it.id }
-                        AppLogger.d(TAG, "SDK returned ${models.size} + memory ${memoryModels.size} = ${allModels.size} downloaded models")
+                        AppLogger.d(TAG, "[MODELS] SDK returned ${models.size} + memory ${memoryModels.size} = ${allModels.size} downloaded models: ${allModels.map { it.id }}")
                         return@withContext Result.success(allModels)
+                    } else {
+                        AppLogger.d(TAG, "[MODELS] SDK downloadedModels() returned empty or null")
                     }
                 } catch (e: Exception) {
                     AppLogger.w(TAG, "Failed to get downloaded models from SDK: ${e.message}, using memory")
@@ -558,11 +564,24 @@ class RunanywhereProvider(
                                 
                                 // Check if download is complete - use status
                                 if (progress.status == DownloadStatus.COMPLETED) {
-                                    // Mark as downloaded in memory
-                                    val modelName = progress.modelId // SDK should have name in modelId
-                                    markModelAsDownloaded(progress.modelId, modelName)
+                                    // Mark as downloaded in memory - use the original modelId that was registered
+                                    // The SDK might have stored it with a different ID (from URL filename)
+                                    AppLogger.i(TAG, "[DOWNLOAD] Model download COMPLETED for modelId: ${progress.modelId}")
+                                    AppLogger.d(TAG, "[DOWNLOAD] Registered modelIds: $downloadedModelIds")
+                                    
+                                    // Mark with original modelId
+                                    markModelAsDownloaded(modelId, "Qwen 2.5 0.5B Q8_0")
+                                    AppLogger.i(TAG, "[DOWNLOAD] Marked $modelId as downloaded in memory")
+                                    
+                                    // Also try with the SDK's modelId if different
+                                    if (progress.modelId != modelId) {
+                                        markModelAsDownloaded(progress.modelId, progress.modelId)
+                                        AppLogger.i(TAG, "[DOWNLOAD] Also marked ${progress.modelId} as downloaded")
+                                    }
+                                    
                                     onComplete(true, null)
                                 } else if (progress.status == DownloadStatus.ERROR) {
+                                    AppLogger.e(TAG, "[DOWNLOAD] ERROR: ${progress.error}")
                                     onComplete(false, progress.error ?: "Unknown error")
                                 }
                             }
