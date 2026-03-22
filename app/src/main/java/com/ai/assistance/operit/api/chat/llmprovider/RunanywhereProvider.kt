@@ -633,6 +633,7 @@ class RunanywhereProvider(
             return@withContext Result.failure(Exception("无法获取已下载模型列表: ${downloadedModels.exceptionOrNull()?.message}"))
         }
 
+
         val modelList = downloadedModels.getOrNull() ?: emptyList()
         AppLogger.d(TAG, "Checking model $modelSlug against downloaded models: ${modelList.map { it.id }}")
         
@@ -641,7 +642,7 @@ class RunanywhereProvider(
             val similarModels = modelList.filter { it.id.contains(modelSlug.takeWhile { c -> c.isLetterOrDigit() }) }
             AppLogger.w(TAG, "Model $modelSlug not found. Similar: ${similarModels.map { it.id }}")
             return@withContext Result.failure(
-                Exception(context.getString(R.string.runanywhere_error_model_not_downloaded, modelSlug) + ". Available: ${modelList.joinToString(",") { it.id }}"))
+                Exception(context.getString(R.string.runanywhere_error_model_not_downloaded, modelSlug) + ". Available: ${modelList.joinToString(",") { it.id }}")
             )
         }
 
