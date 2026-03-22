@@ -280,10 +280,10 @@ class WorkflowScheduler(private val context: Context) {
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val operation = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId))
-            // Wait for operation to complete - Operation.getResult() returns ListenableFuture
+            // getResult() returns ListenableFuture<List<WorkInfo>>
             @Suppress("UNCHECKED_CAST")
-            val result = operation.result.await() as List<WorkInfo>
-            return@withContext result.any {
+            val workInfos = operation.getResult().get()
+            return@withContext workInfos.any {
                 it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
             }
         } catch (e: Exception) {
