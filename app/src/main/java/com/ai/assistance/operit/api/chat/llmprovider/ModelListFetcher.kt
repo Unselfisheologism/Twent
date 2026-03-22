@@ -121,9 +121,40 @@ object ModelListFetcher {
                 AppLogger.d(TAG, "从 $fullUrl 提取基本URL: $finalUrl (找到版本路径 ${match.value})")
                 finalUrl
             } else {
-                // 如果找不到版本路径，则返回原始URL的主机部分，这通常是安全的备选方案
-                val finalUrl = "${url.protocol}://${url.authority}"
-                AppLogger.d(TAG, "从 $fullUrl 提取基本URL: $finalUrl (未找到版本路径)")
+                // 如果找不到版本路径，尝试查找常见的API路径前缀模式
+                // 例如: /api/gateway/, /api/v1/, /api/, /gateway/ 等
+                val apiPathPatterns = listOf(
+                    "/api/gateway",    // kilo.ai and similar gateways
+                    "/api/v1",         // /api/v1/... 
+                    "/api",            // /api/...
+                    "/gateway",        // /gateway/...
+                    "/v1",             // just /v1 without trailing slash
+                    "/proxy",          // /proxy/...
+                    "/openai",         // /openai/...
+                    "/ai",             // /ai/...
+                )
+                
+                var foundApiPath = false
+                var finalUrl = "${url.protocol}://${url.authority}"
+                
+                for (pattern in apiPathPatterns) {
+                    if (path.startsWith(pattern)) {
+                        // 保留API路径前缀
+                        finalUrl = "${url.protocol}://${url.authority}$pattern"
+                        if (!finalUrl.endsWith("/") && !pattern.endsWith("/")) {
+                            finalUrl = "$finalUrl/"
+                        }
+                        foundApiPath = true
+                        AppLogger.d(TAG, "从 $fullUrl 提取基本URL: $finalUrl (找到API路径前缀 $pattern)")
+                        break
+                    }
+                }
+                
+                if (!foundApiPath) {
+                    // 如果找不到常见的API路径前缀，则返回原始URL的主机部分
+                    AppLogger.d(TAG, "从 $fullUrl 提取基本URL: $finalUrl (未找到版本路径，使用默认)")
+                }
+                
                 finalUrl
             }
         } catch (e: Exception) {
