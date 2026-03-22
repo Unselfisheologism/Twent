@@ -117,6 +117,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.MNN -> ""
             ApiProviderType.LLAMA_CPP -> ""
             ApiProviderType.PPINFRA -> "gpt-4o-mini"
+            ApiProviderType.KILO_GATEWAY -> "minimax/minimax-m2.5:free"
             ApiProviderType.OTHER -> ""
         }
     }
@@ -346,6 +347,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.MNN -> "" // MNN本地推理不需要endpoint
             ApiProviderType.LLAMA_CPP -> "" // llama.cpp本地推理不需要endpoint
             ApiProviderType.PPINFRA -> "https://api.ppinfra.com/openai/v1/chat/completions"
+            ApiProviderType.KILO_GATEWAY -> "https://api.kilo.ai/api/gateway/chat/completions"
             ApiProviderType.OPENAI_GENERIC -> ""
             ApiProviderType.OTHER -> ""
         }
@@ -1114,6 +1116,7 @@ private fun getProviderDisplayName(provider: ApiProviderType, context: android.c
         ApiProviderType.MNN -> context.getString(R.string.provider_mnn)
         ApiProviderType.LLAMA_CPP -> context.getString(R.string.provider_llama_cpp)
         ApiProviderType.PPINFRA -> context.getString(R.string.provider_ppinfra)
+        ApiProviderType.KILO_GATEWAY -> context.getString(R.string.provider_kilo_gateway)
         ApiProviderType.OTHER -> context.getString(R.string.provider_other)
     }
 }

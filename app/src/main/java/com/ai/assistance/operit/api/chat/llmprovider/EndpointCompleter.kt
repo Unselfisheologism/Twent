@@ -116,6 +116,40 @@ object EndpointCompleter {
                 return endpoint
             }
 
+            ApiProviderType.KILO_GATEWAY -> {
+                // Kilo AI Gateway 使用 /api/gateway 基础路径，chat端点为 /chat/completions (不是 /v1/chat/completions)
+                val trimmedEndpoint = endpoint.trim()
+                if (trimmedEndpoint.endsWith("#")) {
+                    return trimmedEndpoint.removeSuffix("#")
+                }
+
+                val endpointWithoutSlash = trimmedEndpoint.removeSuffix("/")
+
+                try {
+                    val url = URL(trimmedEndpoint)
+                    val path = url.path.removeSuffix("/")
+
+                    // 如果路径为空，添加 /api/gateway/chat/completions
+                    if (path.isEmpty()) {
+                        return "$endpointWithoutSlash/api/gateway/chat/completions"
+                    }
+
+                    // 如果路径以 /api/gateway 结尾，添加 /chat/completions
+                    if (path.endsWith("/api/gateway", ignoreCase = true)) {
+                        return "$endpointWithoutSlash/chat/completions"
+                    }
+
+                    // 如果路径已经是完整的chat completions路径，直接返回
+                    if (path.endsWith("/chat/completions", ignoreCase = true)) {
+                        return endpoint
+                    }
+                } catch (e: Exception) {
+                    // 如果不是一个有效的URL，则不进行任何操作
+                }
+
+                return endpoint
+            }
+
             else -> {
                 return completeEndpoint(endpoint)
             }
