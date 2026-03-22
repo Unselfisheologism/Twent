@@ -1126,10 +1126,8 @@ Provide usage examples here...
     private suspend fun updateMCPServer(tool: AITool): ToolResult {
         val name = tool.parameters.find { it.name == "name" }?.value ?: ""
         val description = tool.parameters.find { it.name == "description" }?.value
-        val command = tool.parameters.find { it.name == "command" }?.value
-        val args = tool.parameters.find { it.name == "args" }?.value
         val endpoint = tool.parameters.find { it.name == "endpoint" }?.value
-        val serverType = tool.parameters.find { it.name == "server_type" }?.value ?: "npx"
+        val serverType = tool.parameters.find { it.name == "server_type" }?.value ?: "local"
 
         if (name.isBlank()) {
             return ToolResult(
@@ -1156,13 +1154,11 @@ Provide usage examples here...
             // Update the server configuration
             val updatedServer = server.copy(
                 description = description ?: server.description,
-                command = command ?: server.command,
-                args = args ?: server.args,
                 endpoint = endpoint ?: server.endpoint,
                 type = serverType
             )
 
-            mcpLocalServer.savePluginMetadata(updatedServer)
+            mcpLocalServer.addOrUpdatePluginMetadata(updatedServer)
 
             ToolResult(
                 toolName = tool.name,
@@ -1391,18 +1387,23 @@ Provide usage examples here...
             }
 
             // Test if we can list tools
-            val toolsResult = client.listTools()
-            val toolsCount = if (toolsResult.isSuccess) {
-                toolsResult.getOrNull()?.size ?: 0
-            } else {
-                0
-            }
+            try {
+                val tools = client.getTools()
+                val toolsCount = tools.size
 
-            ToolResult(
-                toolName = tool.name,
-                success = true,
-                result = StringResultData("MCP Server '$name' is working! Available tools: $toolsCount")
-            )
+                ToolResult(
+                    toolName = tool.name,
+                    success = true,
+                    result = StringResultData("MCP Server '$name' is working! Available tools: $toolsCount")
+                )
+            } catch (e: Exception) {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to get tools from MCP Server '$name': ${e.message}"
+                )
+            }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to test MCP server", e)
             ToolResult(
@@ -1611,14 +1612,11 @@ Provide usage examples here...
             sb.appendLine("Type: ${server.type}")
             sb.appendLine("Description: ${server.description}")
             sb.appendLine("Installed: ${server.isInstalled}")
-            if (server.command.isNotBlank()) {
-                sb.appendLine("Command: ${server.command}")
-            }
-            if (server.args.isNotBlank()) {
-                sb.appendLine("Args: ${server.args}")
-            }
-            if (server.endpoint.isNotBlank()) {
+            if (!server.endpoint.isNullOrBlank()) {
                 sb.appendLine("Endpoint: ${server.endpoint}")
+            }
+            if (!server.repoUrl.isNullOrBlank()) {
+                sb.appendLine("Repository: ${server.repoUrl}")
             }
 
             ToolResult(
@@ -1735,7 +1733,7 @@ Provide usage examples here...
 
             // Mark as installed and save
             val updatedServer = server.copy(isInstalled = true)
-            mcpLocalServer.savePluginMetadata(updatedServer)
+            mcpLocalServer.addOrUpdatePluginMetadata(updatedServer)
 
             ToolResult(
                 toolName = tool.name,
@@ -1776,14 +1774,14 @@ Provide usage examples here...
                 return ToolResult(
                     toolName = tool.name,
                     success = false,
-                result = StringResultData(""),
+                    result = StringResultData(""),
                     error = "MCP Server '$name' not found"
                 )
             }
 
             // Mark as not installed
             val updatedServer = server.copy(isInstalled = false)
-            mcpLocalServer.savePluginMetadata(updatedServer)
+            mcpLocalServer.addOrUpdatePluginMetadata(updatedServer)
 
             ToolResult(
                 toolName = tool.name,
