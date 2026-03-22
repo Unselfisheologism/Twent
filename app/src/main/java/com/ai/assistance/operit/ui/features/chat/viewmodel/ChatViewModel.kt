@@ -25,6 +25,7 @@ import com.ai.assistance.operit.data.model.ChatHistory
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.data.preferences.ApiPreferences
+import com.ai.assistance.operit.data.preferences.FunctionalConfigManager
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.R
