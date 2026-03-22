@@ -274,12 +274,27 @@ class WorkflowScheduler(private val context: Context) {
 
     /**
      * Check if workflow is scheduled
+     * Uses WorkManager 2.8+ Operation API with coroutine support
      */
+    @Suppress("DEPRECATION")
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val operation = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId))
-            val workInfos = operation.result.get()
-            workInfos.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }
+            // Wait for operation completion using coroutine extension
+            val state = operation.await()
+            // If operation succeeded, try to get work info
+            if (state == androidx.work.operation.Operation.State.SUCCESS) {
+                // Use internal API to get result - cast to implementation class
+                val future = operation as? com.google.common.util.concurrent.ListenableFuture<*>
+                if (future != null) {
+                    @Suppress("UNCHECKED_CAST")
+                    val result = (future as com.google.common.util.concurrent.ListenableFuture<List<WorkInfo>>).get()
+                    return@withContext result.any {
+                        it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
+                    }
+                }
+            }
+            false
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error checking workflow schedule status", e)
             false
