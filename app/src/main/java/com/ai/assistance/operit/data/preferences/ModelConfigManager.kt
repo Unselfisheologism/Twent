@@ -49,8 +49,9 @@ class ModelConfigManager(private val context: Context) {
         const val DEFAULT_CONFIG_ID = "default"
         const val DEFAULT_CONFIG_NAME = "model_config_default_name"
 
-        // Default API provider type
-        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.DEEPSEEK
+        // Default API provider type - use OPENAI_GENERIC to avoid hardcoding a specific provider
+        // This allows the app to respect user-saved configurations instead of always defaulting to DeepSeek
+        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.OPENAI_GENERIC
     }
 
     // Json解析器，支持宽松模式

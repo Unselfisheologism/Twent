@@ -118,7 +118,9 @@ class ApiConfigDelegate(
     private val _modelName = MutableStateFlow("")
     val modelName: StateFlow<String> = _modelName.asStateFlow()
 
-    private val _apiProviderType = MutableStateFlow(ApiProviderType.DEEPSEEK)
+    // Use OPENAI_GENERIC as default instead of DEEPSEEK to avoid "DeepSeek obsession"
+    // The actual provider will be loaded from saved config via ModelConfigManager
+    private val _apiProviderType = MutableStateFlow(ApiProviderType.OPENAI_GENERIC)
     val apiProviderType: StateFlow<ApiProviderType> = _apiProviderType.asStateFlow()
 
     private val _isInitialized = MutableStateFlow(false)
