@@ -247,8 +247,8 @@ class RunanywhereProvider(
                     Quadruple("smollm2-360m-q8_0", "SmolLM2 360M Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-360M-GGUF/resolve/main/SmolLM2-360M.Q8_0.gguf", 400_000_000L),
                     Quadruple("smollm2-1.7b-q8_0", "SmolLM2 1.7B Q8_0", "https://huggingface.co/prithivMLmods/SmolLM2-1.7B-GGUF/resolve/main/SmolLM2-1.7B.Q8_0.gguf", 2_000_000_000L),
                     // Qwen2.5 models - good Chinese support
-                    Quadruple("qwen2.5-0.5b-q8_0", "Qwen 2.5 0.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0.5b-instruct-q5_k_m.gguf", 600_000_000L),
-                    Quadruple("qwen2.5-1.5b-q8_0", "Qwen 2.5 1.5B Q8_0", "https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1.5b-instruct-q5_k_m.gguf", 1_800_000_000L),
+                    Quadruple("qwen2.5-0.5b-q8_0", "Qwen 2.5 0.5B Q8_0", "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q8_0.gguf", 600_000_000L),
+                    Quadruple("qwen2.5-1.5b-q8_0", "Qwen 2.5 1.5B Q8_0", "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf", 1_800_000_000L),
                     // Llama 3.2 models - latest Llama
                     Quadruple("llama3.2-1b-q8_0", "Llama 3.2 1B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-1b-instruct-q8_0/resolve/main/llama-3.2-1b-instruct-q8_0.gguf", 1_200_000_000L),
                     Quadruple("llama3.2-3b-q8_0", "Llama 3.2 3B Q8_0", "https://huggingface.co/ggml-org/llama-3.2-3b-instruct-q8_0/resolve/main/llama-3.2-3b-instruct-q8_0.gguf", 3_500_000_000L),
