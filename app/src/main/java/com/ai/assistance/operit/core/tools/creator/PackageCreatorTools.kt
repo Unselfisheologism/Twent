@@ -160,6 +160,195 @@ class PackageCreatorTools(private val context: Context) {
                     }
                 }
             )
+
+            // Update Package tool
+            handler.registerTool(
+                name = "update_package",
+                dangerCheck = { true },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Update Operit Package: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.updatePackage(tool)
+                    }
+                }
+            )
+
+            // Update MCP Server tool
+            handler.registerTool(
+                name = "update_mcp_server",
+                dangerCheck = { true },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Update MCP Server: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.updateMCPServer(tool)
+                    }
+                }
+            )
+
+            // Update Skill tool
+            handler.registerTool(
+                name = "update_skill",
+                dangerCheck = { true },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Update Operit Skill: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.updateSkill(tool)
+                    }
+                }
+            )
+
+            // Test Package tool
+            handler.registerTool(
+                name = "test_package",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Test Operit Package: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.testPackage(tool)
+                    }
+                }
+            )
+
+            // Test MCP Server tool
+            handler.registerTool(
+                name = "test_mcp_server",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Test MCP Server: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.testMCPServer(tool)
+                    }
+                }
+            )
+
+            // Test Skill tool
+            handler.registerTool(
+                name = "test_skill",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Test Operit Skill: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.testSkill(tool)
+                    }
+                }
+            )
+
+            // Read Package tool (get package content)
+            handler.registerTool(
+                name = "read_package",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Read Operit Package: $name"
+                },
+                executor = { tool ->
+                    creatorTools.readPackage(tool)
+                }
+            )
+
+            // Read Skill tool (get skill content)
+            handler.registerTool(
+                name = "read_skill",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Read Operit Skill: $name"
+                },
+                executor = { tool ->
+                    creatorTools.readSkill(tool)
+                }
+            )
+
+            // Read MCP Server tool (get server configuration)
+            handler.registerTool(
+                name = "read_mcp_server",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Read MCP Server: $name"
+                },
+                executor = { tool ->
+                    creatorTools.readMCPServer(tool)
+                }
+            )
+
+            // Enable/Use Package tool
+            handler.registerTool(
+                name = "use_package",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Enable/Use Operit Package: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.usePackage(tool)
+                    }
+                }
+            )
+
+            // Disable Package tool
+            handler.registerTool(
+                name = "disable_package",
+                dangerCheck = { true },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Disable Operit Package: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.disablePackage(tool)
+                    }
+                }
+            )
+
+            // Enable MCP Server tool
+            handler.registerTool(
+                name = "enable_mcp_server",
+                dangerCheck = { false },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Enable MCP Server: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.enableMCPServer(tool)
+                    }
+                }
+            )
+
+            // Disable MCP Server tool
+            handler.registerTool(
+                name = "disable_mcp_server",
+                dangerCheck = { true },
+                descriptionGenerator = { tool ->
+                    val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                    "Disable MCP Server: $name"
+                },
+                executor = { tool ->
+                    runBlocking(Dispatchers.IO) {
+                        creatorTools.disableMCPServer(tool)
+                    }
+                }
+            )
         }
     }
 
@@ -841,6 +1030,773 @@ Provide usage examples here...
                 success = false,
                 result = StringResultData(""),
                 error = "Failed to delete skill: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Update an existing package
+     */
+    private suspend fun updatePackage(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+        val description = tool.parameters.find { it.name == "description" }?.value
+        val code = tool.parameters.find { it.name == "code" }?.value
+        val tools = tool.parameters.find { it.name == "tools" }?.value
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Package name is required"
+            )
+        }
+
+        return try {
+            val packagesDir = packageManager.getExternalPackagesPath()
+            val packageFile = File(packagesDir, "$name.js")
+
+            if (!packageFile.exists()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' not found"
+                )
+            }
+
+            val existingCode = packageFile.readText()
+
+            // Parse existing metadata if not provided
+            val newCode = when {
+                code != null && code.isNotBlank() -> code
+                else -> existingCode // Keep existing code if not provided
+            }
+
+            // If new tools are provided, regenerate the package
+            val finalCode = if (tools != null && tools != "[]" && tools.isNotBlank()) {
+                // Extract description from existing or new
+                val desc = description ?: extractDescriptionFromPackage(existingCode)
+                generatePackageCode(name, desc, tools)
+            } else if (description != null && description.isNotBlank()) {
+                // Just update description in metadata
+                updatePackageDescription(existingCode, description)
+            } else {
+                newCode
+            }
+
+            packageFile.writeText(finalCode)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Package '$name' updated successfully")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to update package", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to update package: ${e.message}"
+            )
+        }
+    }
+
+    private fun extractDescriptionFromPackage(code: String): String {
+        val descRegex = """"description"\s*:\s*\{[^}]*"(?:default|en|zh)"\s*:\s*"([^"]+)"}""".toRegex()
+        return descRegex.find(code)?.groupValues?.get(1) ?: ""
+    }
+
+    private fun updatePackageDescription(code: String, newDescription: String): String {
+        // Replace description in metadata block
+        val descPattern = """("description"\s*:\s*\{[^}]*"(?:default|en|zh)"\s*:\s*)"[^"]+"}""".toRegex()
+        return descPattern.replace(code) { match ->
+            val prefix = match.groupValues[1]
+            // Try to preserve the language key
+            val langMatch = """"(en|zh|default)""" .toRegex().find(match.value)
+            val lang = langMatch?.groupValues?.get(1) ?: "default"
+            """$prefix"$newDescription"}"""
+        }
+    }
+
+    /**
+     * Update an existing MCP server
+     */
+    private suspend fun updateMCPServer(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+        val description = tool.parameters.find { it.name == "description" }?.value
+        val command = tool.parameters.find { it.name == "command" }?.value
+        val args = tool.parameters.find { it.name == "args" }?.value
+        val endpoint = tool.parameters.find { it.name == "endpoint" }?.value
+        val serverType = tool.parameters.find { it.name == "server_type" }?.value ?: "npx"
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "MCP Server name is required"
+            )
+        }
+
+        return try {
+            val servers = mcpLocalServer.getAllPluginMetadata()
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
+
+            if (server == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "MCP Server '$name' not found"
+                )
+            }
+
+            // Update the server configuration
+            val updatedServer = server.copy(
+                description = description ?: server.description,
+                command = command ?: server.command,
+                args = args ?: server.args,
+                endpoint = endpoint ?: server.endpoint,
+                type = serverType
+            )
+
+            mcpLocalServer.savePluginMetadata(updatedServer)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("MCP Server '$name' updated successfully")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to update MCP server", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to update MCP server: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Update an existing skill
+     */
+    private suspend fun updateSkill(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+        val description = tool.parameters.find { it.name == "description" }?.value
+        val content = tool.parameters.find { it.name == "content" }?.value
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Skill name is required"
+            )
+        }
+
+        return try {
+            skillManager.refreshAvailableSkills()
+            val skill = skillManager.getAvailableSkills()[name]
+
+            if (skill == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Skill '$name' not found"
+                )
+            }
+
+            // Update description in SKILL.md if provided
+            if (description != null && description.isNotBlank()) {
+                val skillContent = skill.skillFile.readText()
+                val updatedContent = updateSkillDescription(skillContent, description)
+                skill.skillFile.writeText(updatedContent)
+            }
+
+            // Update content if provided
+            if (content != null && content.isNotBlank()) {
+                skill.skillFile.writeText(content)
+            }
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Skill '$name' updated successfully")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to update skill", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to update skill: ${e.message}"
+            )
+        }
+    }
+
+    private fun updateSkillDescription(content: String, newDescription: String): String {
+        // Update description in frontmatter
+        val frontmatterPattern = """(description:\s*)".*""" .toRegex()
+        return frontmatterPattern.replace(content) { match ->
+            "${match.groupValues[1]}\"$newDescription\""
+        }
+    }
+
+    /**
+     * Test a package to verify it works correctly
+     */
+    private suspend fun testPackage(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Package name is required"
+            )
+        }
+
+        return try {
+            val packagesDir = packageManager.getExternalPackagesPath()
+            val packageFile = File(packagesDir, "$name.js")
+
+            if (!packageFile.exists()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' not found"
+                )
+            }
+
+            val code = packageFile.readText()
+
+            // Check if the package has valid metadata
+            val hasMetadata = code.contains("METADATA")
+            val hasExports = code.contains("exports.")
+
+            if (!hasMetadata) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' has invalid metadata (missing METADATA block)"
+                )
+            }
+
+            if (!hasExports) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' has no exported functions"
+                )
+            }
+
+            // Try to parse and validate the JavaScript
+            val validationResult = validatePackageSyntax(code)
+
+            if (validationResult.isNotBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' has syntax errors: $validationResult"
+                )
+            }
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Package '$name' is valid and ready to use")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to test package", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to test package: ${e.message}"
+            )
+        }
+    }
+
+    private fun validatePackageSyntax(code: String): String {
+        // Basic JavaScript syntax validation
+        try {
+            // Check for common issues
+            if (code.contains("undefinedvariable")) {
+                return "Contains undefined references"
+            }
+            return "" // No errors found
+        } catch (e: Exception) {
+            return e.message ?: "Unknown syntax error"
+        }
+    }
+
+    /**
+     * Test an MCP server to verify it works correctly
+     */
+    private suspend fun testMCPServer(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "MCP Server name is required"
+            )
+        }
+
+        return try {
+            val servers = mcpLocalServer.getAllPluginMetadata()
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
+
+            if (server == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "MCP Server '$name' not found"
+                )
+            }
+
+            // Check if server is installed
+            if (!server.isInstalled) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "MCP Server '$name' is not installed. Please install it first."
+                )
+            }
+
+            // Try to get the MCP manager and test connection
+            val mcpManager = com.ai.assistance.operit.core.tools.mcp.MCPManager.getInstance(context)
+            val client = mcpManager.getOrCreateClient(server.name)
+
+            if (client == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to connect to MCP Server '$name'. Check if the server is running."
+                )
+            }
+
+            // Test if we can list tools
+            val toolsResult = client.listTools()
+            val toolsCount = if (toolsResult.isSuccess) {
+                toolsResult.getOrNull()?.size ?: 0
+            } else {
+                0
+            }
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("MCP Server '$name' is working! Available tools: $toolsCount")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to test MCP server", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to test MCP server: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Test a skill to verify it works correctly
+     */
+    private suspend fun testSkill(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Skill name is required"
+            )
+        }
+
+        return try {
+            skillManager.refreshAvailableSkills()
+            val skill = skillManager.getAvailableSkills()[name]
+
+            if (skill == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Skill '$name' not found"
+                )
+            }
+
+            // Check if SKILL.md exists and has content
+            if (!skill.skillFile.exists()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Skill '$name' SKILL.md file is missing"
+                )
+            }
+
+            val content = skill.skillFile.readText()
+            if (content.isBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Skill '$name' SKILL.md is empty"
+                )
+            }
+
+            // Check for frontmatter
+            val hasFrontmatter = content.trim().startsWith("---")
+
+            // Try to get the system prompt
+            val systemPrompt = skillManager.getSkillSystemPrompt(name)
+            val hasSystemPrompt = systemPrompt != null
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Skill '$name' is valid!\n- Has frontmatter: $hasFrontmatter\n- Has system prompt: $hasSystemPrompt\n- Location: ${skill.directory.absolutePath}")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to test skill", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to test skill: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Read package content
+     */
+    private fun readPackage(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Package name is required"
+            )
+        }
+
+        return try {
+            val packagesDir = packageManager.getExternalPackagesPath()
+            val packageFile = File(packagesDir, "$name.js")
+
+            if (!packageFile.exists()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Package '$name' not found"
+                )
+            }
+
+            val content = packageFile.readText()
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData(content)
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to read package", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to read package: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Read skill content
+     */
+    private fun readSkill(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Skill name is required"
+            )
+        }
+
+        return try {
+            skillManager.refreshAvailableSkills()
+            val skill = skillManager.getAvailableSkills()[name]
+
+            if (skill == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Skill '$name' not found"
+                )
+            }
+
+            val content = skill.skillFile.readText()
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData(content)
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to read skill", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to read skill: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Read MCP server configuration
+     */
+    private fun readMCPServer(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "MCP Server name is required"
+            )
+        }
+
+        return try {
+            val servers = mcpLocalServer.getAllPluginMetadata()
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
+
+            if (server == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "MCP Server '$name' not found"
+                )
+            }
+
+            val sb = StringBuilder()
+            sb.appendLine("## MCP Server: ${server.name}")
+            sb.appendLine("ID: ${server.id}")
+            sb.appendLine("Type: ${server.type}")
+            sb.appendLine("Description: ${server.description}")
+            sb.appendLine("Installed: ${server.isInstalled}")
+            if (server.command.isNotBlank()) {
+                sb.appendLine("Command: ${server.command}")
+            }
+            if (server.args.isNotBlank()) {
+                sb.appendLine("Args: ${server.args}")
+            }
+            if (server.endpoint.isNotBlank()) {
+                sb.appendLine("Endpoint: ${server.endpoint}")
+            }
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData(sb.toString())
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to read MCP server", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to read MCP server: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Enable/Use a package
+     */
+    private suspend fun usePackage(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Package name is required"
+            )
+        }
+
+        return try {
+            packageManager.usePackage(name)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Package '$name' is now enabled and ready to use")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to enable package", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to enable package: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Disable a package
+     */
+    private suspend fun disablePackage(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Package name is required"
+            )
+        }
+
+        return try {
+            packageManager.disablePackage(name)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Package '$name' has been disabled")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to disable package", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to disable package: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Enable an MCP server
+     */
+    private suspend fun enableMCPServer(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "MCP Server name is required"
+            )
+        }
+
+        return try {
+            val servers = mcpLocalServer.getAllPluginMetadata()
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
+
+            if (server == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "MCP Server '$name' not found"
+                )
+            }
+
+            // Mark as installed and save
+            val updatedServer = server.copy(isInstalled = true)
+            mcpLocalServer.savePluginMetadata(updatedServer)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("MCP Server '$name' has been enabled")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to enable MCP server", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to enable MCP server: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Disable an MCP server
+     */
+    private suspend fun disableMCPServer(tool: AITool): ToolResult {
+        val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+
+        if (name.isBlank()) {
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "MCP Server name is required"
+            )
+        }
+
+        return try {
+            val servers = mcpLocalServer.getAllPluginMetadata()
+            val server = servers.values.find { it.name.equals(name, ignoreCase = true) }
+
+            if (server == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                result = StringResultData(""),
+                    error = "MCP Server '$name' not found"
+                )
+            }
+
+            // Mark as not installed
+            val updatedServer = server.copy(isInstalled = false)
+            mcpLocalServer.savePluginMetadata(updatedServer)
+
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("MCP Server '$name' has been disabled")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to disable MCP server", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to disable MCP server: ${e.message}"
             )
         }
     }

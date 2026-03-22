@@ -587,6 +587,42 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
         return "Package not found: $packageName. Please import it first or register it as an MCP server."
     }
 
+    /**
+     * Disables a package so it won't be loaded or used in AI sessions
+     * @param packageName The name of the package to disable
+     * @return Success message or error
+     */
+    fun disablePackage(packageName: String): String {
+        ensureInitialized()
+        if (packageName.isBlank()) {
+            return "Package name is required"
+        }
+
+        // Check if package exists
+        val importedPackages = getImportedPackages()
+        if (!importedPackages.contains(packageName)) {
+            return "Package '$packageName' not found in imported packages"
+        }
+
+        return try {
+            val disabledPackages = getDisabledPackages().toMutableList()
+            if (!disabledPackages.contains(packageName)) {
+                disabledPackages.add(packageName)
+                saveDisabledPackages(disabledPackages)
+            }
+            // Unregister the package tools from AI handler
+            val packageTools = activePackageToolNames[packageName]
+            packageTools?.forEach { toolName ->
+                aiToolHandler.unregisterTool(toolName)
+            }
+            activePackageToolNames.remove(packageName)
+            "Package '$packageName' has been disabled"
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to disable package $packageName", e)
+            "Failed to disable package: ${e.message}"
+        }
+    }
+
     fun getActivePackageStateId(packageName: String): String? {
         return activePackageStateIds[packageName]
     }
