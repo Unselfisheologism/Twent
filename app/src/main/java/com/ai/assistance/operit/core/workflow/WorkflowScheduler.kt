@@ -279,10 +279,10 @@ class WorkflowScheduler(private val context: Context) {
     @Suppress("DEPRECATION")
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
-            val operation = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId))
-            // getResult() returns ListenableFuture<List<WorkInfo>>
+            @Suppress("DEPRECATION")
+            val future = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId)) as java.util.concurrent.ListenableFuture<*>
             @Suppress("UNCHECKED_CAST")
-            val workInfos = operation.getResult().get()
+            val workInfos = (future as java.util.concurrent.ListenableFuture<List<WorkInfo>>).get()
             return@withContext workInfos.any {
                 it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
             }
