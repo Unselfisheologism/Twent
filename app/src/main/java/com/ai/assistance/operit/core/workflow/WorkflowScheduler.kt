@@ -8,6 +8,7 @@ import com.ai.assistance.operit.data.model.Workflow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import com.google.common.util.concurrent.ListenableFuture
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -280,9 +281,9 @@ class WorkflowScheduler(private val context: Context) {
     suspend fun isWorkflowScheduled(workflowId: String): Boolean = withContext(Dispatchers.IO) {
         try {
             @Suppress("DEPRECATION")
-            val future = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId)) as java.util.concurrent.ListenableFuture<*>
+            val future = workManager.getWorkInfosForUniqueWork(getWorkName(workflowId)) as ListenableFuture<*>
             @Suppress("UNCHECKED_CAST")
-            val workInfos = (future as java.util.concurrent.ListenableFuture<List<WorkInfo>>).get()
+            val workInfos = (future as ListenableFuture<List<WorkInfo>>).get()
             return@withContext workInfos.any {
                 it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING
             }
