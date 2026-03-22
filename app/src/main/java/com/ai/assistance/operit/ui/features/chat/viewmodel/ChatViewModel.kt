@@ -1675,24 +1675,21 @@ class ChatViewModel(private val context: Context) : ViewModel() {
     private suspend fun checkConfigAndShowDialog() {
         // 初始化ModelConfigManager以检查所有配置
         val modelConfigManager = ModelConfigManager(context)
-        var hasDefaultKey = false
-
-        // 异步检查所有配置
+        val functionalConfigManager = FunctionalConfigManager(context)
+        
+        // 获取当前激活的配置ID（用于Chat功能的配置）
+        val activeConfigId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
+        
+        // 异步检查active配置
         withContext(Dispatchers.IO) {
-            // 获取所有配置ID
-            val configIds = modelConfigManager.configListFlow.first()
-
-            // 检查每个配置是否使用默认API key
-            for (id in configIds) {
-                val config = modelConfigManager.getModelConfigFlow(id).first()
-                if (config.apiKey == ApiPreferences.DEFAULT_API_KEY) {
-                    hasDefaultKey = true
-                    break
-                }
-            }
+            val activeConfig = modelConfigManager.getModelConfig(activeConfigId)
+            
+            // 只检查当前激活的配置是否使用默认API key
+            // 而不是检查所有配置，避免因其他未使用的默认配置而弹出配置对话框
+            val hasDefaultKey = activeConfig?.apiKey == ApiPreferences.DEFAULT_API_KEY
+            
+            _shouldShowConfigDialog.value = hasDefaultKey
         }
-
-        _shouldShowConfigDialog.value = hasDefaultKey
     }
     
     // 用于启动文件选择器并处理结果
