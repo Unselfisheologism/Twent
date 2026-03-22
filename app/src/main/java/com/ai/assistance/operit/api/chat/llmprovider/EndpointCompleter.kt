@@ -12,6 +12,7 @@ object EndpointCompleter {
      * 为类似OpenAI的服务自动补全API端点URL。
      * - 如果端点是一个基础URL（例如 https://api.example.com），它会自动附加通用的路径 `/v1/chat/completions`。
      * - 如果端点路径以 `/v1` 结尾（例如 https://my-proxy/custom/v1），则会自动附加 `/chat/completions`。
+     * - 如果端点是一个API网关路径（例如 https://api.example.com/api/gateway），则自动附加 `/chat/completions`。
      * 用户可以在URL末尾添加 '#' 来禁用此功能。
      *
      * @param endpoint 用户提供的端点URL。
@@ -39,6 +40,23 @@ object EndpointCompleter {
             // 2. 如果路径以 /v1 结尾 (e.g., https://api.example.com/custom/v1)，则仅补全后续部分
             if (path.endsWith("/v1", ignoreCase = true)) {
                 return "$endpointWithoutSlash/chat/completions"
+            }
+            
+            // 3. 如果路径是API网关路径（例如 /api/gateway, /gateway, /api 等），则补全为chat/completions
+            val gatewayPatterns = listOf(
+                "/api/gateway",
+                "/gateway", 
+                "/api/v1",
+                "/api",
+                "/proxy",
+                "/openai",
+                "/ai"
+            )
+            
+            for (pattern in gatewayPatterns) {
+                if (path.equals(pattern, ignoreCase = true) || path.startsWith("$pattern/")) {
+                    return "$endpointWithoutSlash/chat/completions"
+                }
             }
         } catch (e: Exception) {
             // 如果不是一个有效的URL，则不进行任何操作
