@@ -17,7 +17,7 @@ import com.runanywhere.sdk.public.extensions.Models.ModelCategory
 import com.runanywhere.sdk.public.extensions.registerModel
 import com.runanywhere.sdk.public.extensions.loadLLMModel
 import com.runanywhere.sdk.public.extensions.chat
-import com.runanywhere.sdk.public.extensions.streamChat
+import com.runanywhere.sdk.public.extensions.generateStream
 import com.runanywhere.sdk.public.extensions.unloadLLMModel
 import com.runanywhere.sdk.public.extensions.availableModels
 import com.runanywhere.sdk.public.extensions.downloadedModels
@@ -321,8 +321,10 @@ class RunanywhereProvider(
         suspend fun getAvailableModels(): Result<List<ModelOption>> = withContext(Dispatchers.IO) {
             if (isSdkInitialized) {
                 try {
-                    // Use the SDK extension function directly
-                    val modelList = RunAnywhere.availableModels()
+                    // Use runBlocking for suspend function
+                    val modelList = runBlocking {
+                        RunAnywhere.availableModels()
+                    }
                     
                     if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
@@ -386,8 +388,10 @@ class RunanywhereProvider(
             
             if (isSdkInitialized) {
                 try {
-                    // Use the SDK extension function directly
-                    val modelList = RunAnywhere.downloadedModels()
+                    // Use runBlocking for suspend function
+                    val modelList = runBlocking {
+                        RunAnywhere.downloadedModels()
+                    }
                     
                     if (modelList != null && modelList.isNotEmpty()) {
                         val models = modelList.mapNotNull { modelInfo ->
@@ -439,13 +443,17 @@ class RunanywhereProvider(
             
             if (isSdkInitialized) {
                 try {
-                    // Use the SDK extension function directly
-                    val isDownloaded = RunAnywhere.isModelDownloaded(modelId)
+                    // Use runBlocking for suspend function
+                    val isDownloaded = runBlocking {
+                        RunAnywhere.isModelDownloaded(modelId)
+                    }
                     
                     if (isDownloaded) {
                         // Get model name if available
                         try {
-                            val modelList = RunAnywhere.availableModels()
+                            val modelList = runBlocking {
+                                RunAnywhere.availableModels()
+                            }
                             val modelInfo = modelList?.find { it.id == modelId }
                             if (modelInfo != null) {
                                 markModelAsDownloaded(modelId, modelInfo.name)
@@ -543,10 +551,12 @@ class RunanywhereProvider(
                     // Collect the flow in a blocking way (Flow from SDK is cold)
                     try {
                         kotlinx.coroutines.runBlocking {
-                            flow.collect { progress ->
+                            flow.collect { sdkProgress ->
+                                // Convert SDK's DownloadProgress to local DownloadProgress
+                                val progress = convertSdkDownloadProgress(sdkProgress)
                                 onProgress(progress)
                                 
-                                // Check if download is complete - use status instead of state
+                                // Check if download is complete - use status
                                 if (progress.status == DownloadStatus.COMPLETED) {
                                     // Mark as downloaded in memory
                                     val modelName = progress.modelId // SDK should have name in modelId
@@ -606,7 +616,9 @@ class RunanywhereProvider(
     override fun release() {
         // 使用 RunAnywhere.unloadLLMModel() 卸载模型
         try {
-            RunAnywhere.unloadLLMModel()
+            runBlocking {
+                RunAnywhere.unloadLLMModel()
+            }
             AppLogger.d(TAG, "模型已卸载")
         } catch (e: Exception) {
             AppLogger.w(TAG, "卸载模型失败: ${e.message}")
@@ -857,9 +869,11 @@ class RunanywhereProvider(
      */
     private fun loadLLMModel(modelId: String): Boolean {
         return try {
-            // Use the SDK extension function directly
+            // Use runBlocking for suspend function
             AppLogger.d(TAG, "Calling RunAnywhere.loadLLMModel($modelId)")
-            RunAnywhere.loadLLMModel(modelId)
+            runBlocking {
+                RunAnywhere.loadLLMModel(modelId)
+            }
             
             AppLogger.i(TAG, "Model loaded successfully: $modelId")
             true
@@ -879,8 +893,8 @@ class RunanywhereProvider(
      */
     private fun streamChat(modelId: String, prompt: String): Flow<String>? {
         return try {
-            // Use the SDK extension function directly
-            val flow = RunAnywhere.streamChat(prompt)
+            // generateStream is not a suspend function, it returns Flow directly
+            val flow = RunAnywhere.generateStream(prompt)
             
             flow
         } catch (e: Exception) {
@@ -895,8 +909,10 @@ class RunanywhereProvider(
      */
     private fun chat(modelId: String, prompt: String): String? {
         return try {
-            // Use the SDK extension function directly
-            val result = RunAnywhere.chat(prompt)
+            // Use runBlocking for suspend function
+            val result = runBlocking {
+                RunAnywhere.chat(prompt)
+            }
             
             result
         } catch (e: Exception) {
