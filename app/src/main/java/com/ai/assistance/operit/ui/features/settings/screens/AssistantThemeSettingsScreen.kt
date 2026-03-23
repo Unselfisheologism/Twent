@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,8 +31,7 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.AssistantIconStyles
 import com.ai.assistance.operit.data.model.AssistantThemes
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
-import com.ai.assistance.operit.ui.features.settings.components.ColorPickerDialog
-import com.ai.assistance.operit.util.FileUtils
+import kotlinx.coroutines.launch
 
 /**
  * Assistant Theme Settings Screen
@@ -62,9 +61,6 @@ fun AssistantThemeSettingsScreen() {
     val useChatPageWallpaper by preferencesManager.useChatPageWallpaper.collectAsState(initial = false)
     val chatPageWallpaperUri by preferencesManager.chatPageWallpaperUri.collectAsState(initial = null)
     val chatPageWallpaperOpacity by preferencesManager.chatPageWallpaperOpacity.collectAsState(initial = 0.3f)
-    val chatPageWallpaperMediaType by preferencesManager.chatPageWallpaperMediaType.collectAsState(
-        initial = UserPreferencesManager.MEDIA_TYPE_IMAGE
-    )
     val chatPageWallpaperBlur by preferencesManager.chatPageWallpaperBlur.collectAsState(initial = false)
     val chatPageWallpaperBlurRadius by preferencesManager.chatPageWallpaperBlurRadius.collectAsState(initial = 10f)
 
@@ -78,25 +74,30 @@ fun AssistantThemeSettingsScreen() {
     val assistantCustomPrimaryColor by preferencesManager.assistantCustomPrimaryColor.collectAsState(initial = null)
     val assistantCustomSecondaryColor by preferencesManager.assistantCustomSecondaryColor.collectAsState(initial = null)
 
-    // Dialog states
-    var showColorPickerDialog by remember { mutableStateOf(false) }
+    // Simple color picker state
+    var showSimpleColorPicker by remember { mutableStateOf(false) }
     var colorPickerTarget by remember { mutableStateOf("primary") }
+
+    // Predefined colors for simple picker
+    val predefinedColors = listOf(
+        0xFF6650a4, 0xFF2196F3, 0xFF4CAF50, 0xFFFF9800,
+        0xFFF44336, 0xFF9C27B0, 0xFF00BCD4, 0xFF8BC34A,
+        0xFFFFEB3B, 0xFFFF5722, 0xFF795548, 0xFF607D8B,
+        0xFFE91E63, 0xFF3F51B5, 0xFF009688, 0xFFFFC107
+    )
 
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // Copy to internal storage
-            val internalUri = FileUtils.copyToInternalStorage(context, it, "chat_wallpaper")
-            internalUri?.let { path ->
-                scope.launch {
-                    preferencesManager.saveAssistantThemeSettings(
-                        useChatPageWallpaper = true,
-                        chatPageWallpaperUri = path,
-                        chatPageWallpaperMediaType = UserPreferencesManager.MEDIA_TYPE_IMAGE
-                    )
-                }
+            // Store the URI directly (similar to how ThemeSettingsScreen works)
+            scope.launch {
+                preferencesManager.saveAssistantThemeSettings(
+                    useChatPageWallpaper = true,
+                    chatPageWallpaperUri = it.toString(),
+                    chatPageWallpaperMediaType = UserPreferencesManager.MEDIA_TYPE_IMAGE
+                )
             }
         }
     }
@@ -314,7 +315,7 @@ fun AssistantThemeSettingsScreen() {
                             .fillMaxWidth()
                             .clickable {
                                 colorPickerTarget = "primary"
-                                showColorPickerDialog = true
+                                showSimpleColorPicker = true
                             }
                             .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -342,7 +343,7 @@ fun AssistantThemeSettingsScreen() {
                             .fillMaxWidth()
                             .clickable {
                                 colorPickerTarget = "secondary"
-                                showColorPickerDialog = true
+                                showSimpleColorPicker = true
                             }
                             .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -423,11 +424,11 @@ fun AssistantThemeSettingsScreen() {
                                 .height(120.dp)
                                 .clip(RoundedCornerShape(8.dp))
                         ) {
-                            Image(
+                            androidx.compose.foundation.Image(
                                 painter = rememberAsyncImagePainter(model = chatPageWallpaperUri),
                                 contentDescription = "Wallpaper preview",
                                 modifier = Modifier.fillMaxSize(),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                contentScale = ContentScale.Crop
                             )
 
                             // Remove button
@@ -537,31 +538,60 @@ fun AssistantThemeSettingsScreen() {
         Spacer(modifier = Modifier.height(32.dp))
     }
 
-    // Color picker dialog
-    if (showColorPickerDialog) {
-        ColorPickerDialog(
-            initialColor = when (colorPickerTarget) {
-                "primary" -> assistantCustomPrimaryColor?.let { Color(it) }
-                    ?: MaterialTheme.colorScheme.primary
-                "secondary" -> assistantCustomSecondaryColor?.let { Color(it) }
-                    ?: MaterialTheme.colorScheme.secondary
-                else -> MaterialTheme.colorScheme.primary
+    // Simple color picker dialog
+    if (showSimpleColorPicker) {
+        AlertDialog(
+            onDismissRequest = { showSimpleColorPicker = false },
+            title = {
+                Text(
+                    if (colorPickerTarget == "primary")
+                        stringResource(R.string.assistant_primary_color)
+                    else
+                        stringResource(R.string.assistant_secondary_color)
+                )
             },
-            onColorSelected = { color ->
-                scope.launch {
-                    if (colorPickerTarget == "primary") {
-                        preferencesManager.saveAssistantThemeSettings(
-                            assistantCustomPrimaryColor = color.toArgb()
-                        )
-                    } else {
-                        preferencesManager.saveAssistantThemeSettings(
-                            assistantCustomSecondaryColor = color.toArgb()
-                        )
+            text = {
+                Column {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(predefinedColors) { colorValue ->
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(colorValue))
+                                    .border(
+                                        2.dp,
+                                        if ((colorPickerTarget == "primary" && assistantCustomPrimaryColor == colorValue) ||
+                                            (colorPickerTarget == "secondary" && assistantCustomSecondaryColor == colorValue)
+                                        ) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        CircleShape
+                                    )
+                                    .clickable {
+                                        scope.launch {
+                                            if (colorPickerTarget == "primary") {
+                                                preferencesManager.saveAssistantThemeSettings(
+                                                    assistantCustomPrimaryColor = colorValue
+                                                )
+                                            } else {
+                                                preferencesManager.saveAssistantThemeSettings(
+                                                    assistantCustomSecondaryColor = colorValue
+                                                )
+                                            }
+                                        }
+                                        showSimpleColorPicker = false
+                                    }
+                            )
+                        }
                     }
                 }
-                showColorPickerDialog = false
             },
-            onDismiss = { showColorPickerDialog = false }
+            confirmButton = {
+                TextButton(onClick = { showSimpleColorPicker = false }) {
+                    Text("OK")
+                }
+            }
         )
     }
 }
