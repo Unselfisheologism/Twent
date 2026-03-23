@@ -17,6 +17,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.MediaType.Companion.toMediaType
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -236,7 +238,24 @@ object ModelListFetcher {
                     val request = requestBuilder.get().build()
 
                     AppLogger.d(TAG, "发送HTTP请求: ${request.url}")
-                    val response = client.newCall(request).execute()
+                    
+                    // 对于某些API（如Kilo Gateway），GET请求可能不支持，返回405错误
+                    // 添加特殊处理：如果是KILO_GATEWAY且GET失败，尝试POST请求
+                    var response = client.newCall(request).execute()
+                    
+                    // 如果是KILO_GATEWAY且收到405错误，尝试POST请求
+                    if (!response.isSuccessful && response.code == 405 && apiProviderType == ApiProviderType.KILO_GATEWAY) {
+                        response.close()
+                        AppLogger.d(TAG, "Kilo Gateway: GET请求失败(405)，尝试POST请求")
+                        
+                        val jsonBody = """{"limit":100}"""
+                        val postRequest = requestBuilder
+                            .post(RequestBody.create("application/json".toMediaType(), jsonBody))
+                            .build()
+                        
+                        response = client.newCall(postRequest).execute()
+                        AppLogger.d(TAG, "Kilo Gateway: POST请求结果: ${response.code}")
+                    }
 
                     if (!response.isSuccessful) {
                         val errorBody = response.body?.string() ?: context.getString(R.string.model_fetch_no_error_details)
