@@ -1195,19 +1195,21 @@ class ChatViewModel(private val context: Context) : ViewModel() {
     }
 
     fun sendUserMessage(promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT) {
-        // 检查API是否已配置
-        val functionalConfigManager = FunctionalConfigManager(context)
-        val modelConfigManager = ModelConfigManager(context)
-        val activeConfigId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
-        val activeConfig = modelConfigManager.getModelConfig(activeConfigId)
-        
-        // 检查是否有有效的API配置
-        if (activeConfig == null || activeConfig.apiKey.isBlank()) {
-            uiStateDelegate.showErrorMessage(context.getString(R.string.error_api_not_configured))
-            return
+        // 检查API是否已配置 - 使用协程进行异步检查
+        viewModelScope.launch {
+            val functionalConfigManager = FunctionalConfigManager(context)
+            val modelConfigManager = ModelConfigManager(context)
+            val activeConfigId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
+            val activeConfig = modelConfigManager.getModelConfig(activeConfigId)
+            
+            // 检查是否有有效的API配置
+            if (activeConfig == null || activeConfig.apiKey.isBlank()) {
+                uiStateDelegate.showErrorMessage(context.getString(R.string.error_api_not_configured))
+                return@launch
+            }
+            
+            messageCoordinationDelegate.sendUserMessage(promptFunctionType)
         }
-        
-        messageCoordinationDelegate.sendUserMessage(promptFunctionType)
     }
 
     fun cancelCurrentMessage() {
