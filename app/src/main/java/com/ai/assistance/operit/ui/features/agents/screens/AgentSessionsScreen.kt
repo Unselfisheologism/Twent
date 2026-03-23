@@ -33,7 +33,7 @@ import com.ai.assistance.operit.ui.features.agents.AgentWithStatus
 @Composable
 fun AgentSessionsScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToChat: (String, String) -> Unit = { _, _ -> },
+    onNavigateToChat: (String, String, String) -> Unit = { _, _, _ -> },
     onNavigateToCommands: (String) -> Unit = { _ -> }
 ) {
     val context = LocalContext.current
@@ -87,7 +87,7 @@ fun AgentSessionsScreen(
                     error = sessionsState.error,
                     onSessionClick = { session ->
                         val agent = viewModel.getAvailableAgents().find { it.id == session.agentId }
-                        onNavigateToChat(session.id, agent?.name ?: "Agent")
+                        onNavigateToChat(session.id, session.agentId, agent?.name ?: "Agent")
                     },
                     onSessionClose = { sessionId ->
                         viewModel.closeSession(sessionId)

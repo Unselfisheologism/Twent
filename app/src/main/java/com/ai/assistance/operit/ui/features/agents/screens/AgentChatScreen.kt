@@ -37,6 +37,7 @@ import com.ai.assistance.operit.ui.features.agents.ChatMessage
 @Composable
 fun AgentChatScreen(
     sessionId: String,
+    agentId: String,
     agentName: String,
     onNavigateBack: () -> Unit = {}
 ) {
@@ -45,11 +46,8 @@ fun AgentChatScreen(
         factory = AgentViewModel.Factory(context.applicationContext)
     )
     
-    // Find the agent ID from session
-    val agentId = remember(sessionId) {
-        // Get from repository - simplified for now
-        "hermes-agent" // Default to hermes for now
-    }
+    // Find the agent ID from session (passed from navigation)
+    // This will be used for getting commands
     
     // Initialize chat with this session on first composition
     LaunchedEffect(sessionId) {
@@ -122,7 +120,7 @@ fun AgentChatScreen(
                 onInputChange = { inputText = it },
                 onSend = {
                     if (inputText.isNotBlank()) {
-                        viewModel.sendMessage(inputText)
+                        viewModel.sendChatMessage(inputText)
                         inputText = ""
                     }
                 },

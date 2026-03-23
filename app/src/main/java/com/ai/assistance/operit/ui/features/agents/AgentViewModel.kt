@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ai.assistance.operit.data.model.AgentCommand
 import com.ai.assistance.operit.data.model.AgentDefinition
 import com.ai.assistance.operit.data.model.AgentInstallStatus
+import com.ai.assistance.operit.data.model.AgentRegistry
 import com.ai.assistance.operit.data.model.AgentSession
 import com.ai.assistance.operit.data.repository.AgentRepository
-import com.ai.assistance.operit.terminal.CommandExecutionEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,7 @@ data class AgentWithStatus(
  */
 data class AgentChatUiState(
     val sessionId: String = "",
+    val agentId: String = "",
     val agentName: String = "",
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
@@ -75,6 +77,13 @@ class AgentViewModel(
     // Current session output collector job
     private var outputCollectorJob: kotlinx.coroutines.Job? = null
 
+    // Command execution state
+    private val _commandOutput = MutableStateFlow<String?>(null)
+    val commandOutput: StateFlow<String?> = _commandOutput.asStateFlow()
+    
+    private val _isRunningCommand = MutableStateFlow(false)
+    val isRunningCommand: StateFlow<Boolean> = _isRunningCommand.asStateFlow()
+
     init {
         // Load sessions on init
         refreshSessions()
@@ -93,7 +102,7 @@ class AgentViewModel(
         
         // Observe installation states
         viewModelScope.launch {
-            repository.installationStates.collect { states ->
+            repository.installationStates.collect { _ ->
                 updateAgentsWithStatus()
             }
         }
@@ -154,9 +163,7 @@ class AgentViewModel(
         viewModelScope.launch {
             _sessionsState.value = _sessionsState.value.copy(isLoading = true, error = null)
             
-            val result = repository.installAgent(agentId) { output ->
-                // Could update UI with install output
-            }
+            val result = repository.installAgent(agentId) { _ -> }
             
             result.fold(
                 onSuccess = {
@@ -187,8 +194,7 @@ class AgentViewModel(
             result.fold(
                 onSuccess = { sessionId ->
                     _sessionsState.value = _sessionsState.value.copy(isLoading = false)
-                    // Switch to chat view
-                    switchToChat(sessionId, agentName)
+                    switchToChat(sessionId, agentId, agentName)
                 },
                 onFailure = { error ->
                     _sessionsState.value = _sessionsState.value.copy(
@@ -199,16 +205,60 @@ class AgentViewModel(
             )
         }
     }
-    
+
+    /**
+     * Switch to chat view for a specific session
+     */
+    fun switchToChat(sessionId: String, agentId: String, agentName: String) {
+        _chatState.value = AgentChatUiState(
+            sessionId = sessionId,
+            agentId = agentId,
+            agentName = agentName,
+            messages = listOf(
+                ChatMessage(
+                    content = "Session started. You can now interact with $agentName.",
+                    isFromUser = false
+                )
+            ),
+            isInputEnabled = true
+        )
+        
+        // Start collecting output
+        startOutputCollection(sessionId)
+    }
+
+    /**
+     * Send a message to the agent (including slash commands)
+     */
+    fun sendChatMessage(content: String) {
+        if (content.isBlank() || _chatState.value.sessionId.isEmpty()) return
+        
+        val sessionId = _chatState.value.sessionId
+        
+        // Add user message to chat
+        val userMessage = ChatMessage(content = content, isFromUser = true)
+        _chatState.value = _chatState.value.copy(
+            messages = _chatState.value.messages + userMessage,
+            isInputEnabled = false
+        )
+        
+        // Send to agent
+        viewModelScope.launch {
+            // Remove leading "/" if it's a slash command
+            val inputToSend = if (content.trim().startsWith("/")) {
+                content.trim().removePrefix("/").trim()
+            } else {
+                content
+            }
+            
+            repository.sendToAgent(sessionId, inputToSend)
+            _chatState.value = _chatState.value.copy(isInputEnabled = true)
+        }
+    }
+
     /**
      * Run a non-chat command
      */
-    private val _commandOutput = MutableStateFlow<String?>(null)
-    val commandOutput: StateFlow<String?> = _commandOutput.asStateFlow()
-    
-    private val _isRunningCommand = MutableStateFlow(false)
-    val isRunningCommand: StateFlow<Boolean> = _isRunningCommand.asStateFlow()
-    
     fun runAgentCommand(agentId: String, command: String) {
         viewModelScope.launch {
             _isRunningCommand.value = true
@@ -230,46 +280,7 @@ class AgentViewModel(
     }
     
     /**
-     * Send a message to the running agent (including slash commands)
-     * This handles both regular chat messages and slash commands like /help, /doctor
-     */
-    fun sendMessage(content: String) {
-        if (content.isBlank() || _chatState.value.sessionId.isEmpty()) return
-        
-        // Detect if it's a slash command (e.g., /help, /doctor, /mcp)
-        val isSlashCommand = content.trim().startsWith("/")
-        
-        val sessionId = _chatState.value.sessionId
-        
-        // Add user message to chat
-        val userMessage = ChatMessage(content = content, isFromUser = true)
-        _chatState.value = _chatState.value.copy(
-            messages = _chatState.value.messages + userMessage,
-            isInputEnabled = false
-        )
-        
-        // Send to agent - the agent CLI will handle slash commands in REPL mode
-        viewModelScope.launch {
-            // If it's a slash command, remove the leading "/" and send as-is
-            // The agent's REPL will handle it
-            val inputToSend = if (isSlashCommand) {
-                content.trim().removePrefix("/").trim()
-            } else {
-                content
-            }
-            
-            repository.sendToAgent(sessionId, inputToSend)
-            // Re-enable input after sending
-            _chatState.value = _chatState.value.copy(isInputEnabled = true)
-        }
-    }
-    
-    fun clearCommandOutput() {
-        _commandOutput.value = null
-    }
-    
-    /**
-     * Get commands for an agent (for displaying slash command buttons in chat)
+     * Get commands for an agent
      */
     fun getAgentCommands(agentId: String): List<AgentCommand> {
         val agent = AgentRegistry.getById(agentId) ?: return emptyList()
@@ -278,19 +289,17 @@ class AgentViewModel(
     
     /**
      * Run a slash command directly from button click
-     * This runs the command as a one-shot and shows output in chat
      */
     fun runSlashCommand(command: AgentCommand) {
         val sessionId = _chatState.value.sessionId
         if (sessionId.isEmpty()) return
         
-        // Add the command as a user message showing what was run
+        // Add the command as a user message
         val cmdMessage = ChatMessage(
             content = "/${command.command}",
             isFromUser = true
         )
         
-        // Send to agent
         viewModelScope.launch {
             _chatState.value = _chatState.value.copy(
                 messages = _chatState.value.messages + cmdMessage,
@@ -301,48 +310,9 @@ class AgentViewModel(
             _chatState.value = _chatState.value.copy(isInputEnabled = true)
         }
     }
-
-    /**
-     * Switch to chat view for a specific session
-     */
-    fun switchToChat(sessionId: String, agentName: String) {
-        _chatState.value = AgentChatUiState(
-            sessionId = sessionId,
-            agentName = agentName,
-            messages = listOf(
-                ChatMessage(
-                    content = "Session started. You can now interact with $agentName.",
-                    isFromUser = false
-                )
-            ),
-            isInputEnabled = true
-        )
-        
-        // Start collecting output
-        startOutputCollection(sessionId)
-    }
-
-    /**
-     * Send a message to the agent
-     */
-    fun sendMessage(content: String) {
-        if (content.isBlank() || _chatState.value.sessionId.isEmpty()) return
-        
-        val sessionId = _chatState.value.sessionId
-        
-        // Add user message to chat
-        val userMessage = ChatMessage(content = content, isFromUser = true)
-        _chatState.value = _chatState.value.copy(
-            messages = _chatState.value.messages + userMessage,
-            isInputEnabled = false
-        )
-        
-        // Send to agent
-        viewModelScope.launch {
-            repository.sendToAgent(sessionId, content)
-            // Re-enable input after sending
-            _chatState.value = _chatState.value.copy(isInputEnabled = true)
-        }
+    
+    fun clearCommandOutput() {
+        _commandOutput.value = null
     }
 
     /**
@@ -384,7 +354,6 @@ class AgentViewModel(
         viewModelScope.launch {
             repository.closeAgentSession(sessionId)
             
-            // If this was the current chat session, clear chat
             if (_chatState.value.sessionId == sessionId) {
                 outputCollectorJob?.cancel()
                 _chatState.value = AgentChatUiState()
