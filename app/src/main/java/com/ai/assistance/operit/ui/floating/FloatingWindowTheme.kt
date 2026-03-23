@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +101,8 @@ fun FloatingWindowTheme(
         } else if (useAssistantCustomColors && assistantCustomPrimaryColor != null) {
             // 使用自定义颜色
             val primary = Color(assistantCustomPrimaryColor!!)
-            val secondary = assistantCustomSecondaryColor?.let { Color(it) } ?: Color(0xFF625b71)
+            val secondaryColor = assistantCustomSecondaryColor
+            val secondary = if (secondaryColor != null) Color(secondaryColor) else Color(0xFF625b71)
 
             if (isDarkMode) {
                 darkColorScheme(
