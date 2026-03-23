@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
@@ -36,25 +35,31 @@ fun FloatingWindowTheme(
         context?.let { UserPreferencesManager.getInstance(it) }
     }
 
-    val assistantThemeMode by preferencesManager?.assistantThemeMode?.collectAsState(
+    // 如果没有preferencesManager，使用默认主题
+    if (preferencesManager == null) {
+        MaterialTheme(
+            colorScheme = colorScheme ?: getDefaultLightColorScheme(),
+            typography = typography ?: getDefaultTypography(),
+            content = content
+        )
+        return
+    }
+
+    val assistantThemeMode by preferencesManager.assistantThemeMode.collectAsState(
         initial = UserPreferencesManager.ASSISTANT_THEME_MODE_FOLLOW_SYSTEM
-    ) ?: remember { mutableStateOf(UserPreferencesManager.ASSISTANT_THEME_MODE_FOLLOW_SYSTEM) }
-
-    val assistantCustomThemeId by preferencesManager?.assistantCustomThemeId?.collectAsState(
+    )
+    val assistantCustomThemeId by preferencesManager.assistantCustomThemeId.collectAsState(
         initial = UserPreferencesManager.ASSISTANT_THEME_DEFAULT
-    ) ?: remember { mutableStateOf(UserPreferencesManager.ASSISTANT_THEME_DEFAULT) }
-
-    val useAssistantCustomColors by preferencesManager?.useAssistantCustomColors?.collectAsState(
+    )
+    val useAssistantCustomColors by preferencesManager.useAssistantCustomColors.collectAsState(
         initial = false
-    ) ?: remember { mutableStateOf(false) }
-
-    val assistantCustomPrimaryColor by preferencesManager?.assistantCustomPrimaryColor?.collectAsState(
+    )
+    val assistantCustomPrimaryColor by preferencesManager.assistantCustomPrimaryColor.collectAsState(
         initial = null
-    ) ?: remember { mutableStateOf<Int?>(null) }
-
-    val assistantCustomSecondaryColor by preferencesManager?.assistantCustomSecondaryColor?.collectAsState(
+    )
+    val assistantCustomSecondaryColor by preferencesManager.assistantCustomSecondaryColor.collectAsState(
         initial = null
-    ) ?: remember { mutableStateOf<Int?>(null) }
+    )
 
     // 确定是否使用暗色主题
     val systemDarkTheme = isSystemInDarkTheme()
@@ -68,9 +73,9 @@ fun FloatingWindowTheme(
     val selectedTheme = AssistantThemes.getThemeById(assistantCustomThemeId)
 
     // 计算最终的ColorScheme
-    val baseColorScheme = colorScheme ?: run {
+    val finalColorScheme = colorScheme ?: run {
         // 如果有选中主题且不是默认主题，使用主题颜色
-        if (selectedTheme != null && selectedTheme.id != UserPreferencesManager.ASSISTANT_THEME_DEFAULT) {
+        if (selectedTheme.id != UserPreferencesManager.ASSISTANT_THEME_DEFAULT) {
             if (isDarkMode) {
                 darkColorScheme(
                     primary = Color(selectedTheme.primaryColor),
@@ -94,7 +99,7 @@ fun FloatingWindowTheme(
             }
         } else if (useAssistantCustomColors && assistantCustomPrimaryColor != null) {
             // 使用自定义颜色
-            val primary = Color(assistantCustomPrimaryColor)
+            val primary = Color(assistantCustomPrimaryColor!!)
             val secondary = assistantCustomSecondaryColor?.let { Color(it) } ?: Color(0xFF625b71)
 
             if (isDarkMode) {
@@ -121,97 +126,123 @@ fun FloatingWindowTheme(
         } else {
             // 使用默认颜色
             if (isDarkMode) {
-                darkColorScheme(
-                    primary = Color(0xFF6650a4),
-                    onPrimary = Color.White,
-                    secondary = Color(0xFF625b71),
-                    background = Color(0xFF121212),
-                    surface = Color(0xFF1E1E1E),
-                    onBackground = Color(0xFFE0E0E0),
-                    onSurface = Color(0xFFE0E0E0)
-                )
+                getDefaultDarkColorScheme()
             } else {
-                lightColorScheme(
-                    primary = Color(0xFF6650a4),
-                    onPrimary = Color.White,
-                    secondary = Color(0xFF625b71),
-                    background = Color(0xFFFFFBFE),
-                    surface = Color(0xFFFFFBFE),
-                    onBackground = Color(0xFF1C1B1F),
-                    onSurface = Color(0xFF1C1B1F)
-                )
+                getDefaultLightColorScheme()
             }
         }
     }
 
-    val finalColorScheme = colorScheme ?: baseColorScheme
-    
-    // 创建调整大小后的默认Typography，如果没有传入typography参数则使用此默认值
-    val defaultSmallTypography = Typography(
-        // 正文大字号
-        bodyLarge = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            letterSpacing = 0.5.sp
-        ),
-        // 正文中字号 
-        bodyMedium = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            letterSpacing = 0.25.sp
-        ),
-        // 正文小字号 
-        bodySmall = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
-            fontSize = 10.sp,
-            lineHeight = 14.sp,
-            letterSpacing = 0.4.sp
-        ),
-        // 标签小字号
-        labelSmall = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Medium,
-            fontSize = 10.sp,
-            lineHeight = 14.sp,
-            letterSpacing = 0.5.sp
-        ),
-        // 标题小字号
-        titleSmall = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            letterSpacing = 0.5.sp
-        ),
-        // 按钮文本样式
-        labelMedium = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            letterSpacing = 0.5.sp
-        ),
-        // 按钮大文本样式
-        labelLarge = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            letterSpacing = 0.5.sp
-        )
-    )
+    // 创建调整大小后的默认Typography
+    val defaultTypography = typography ?: getDefaultTypography()
 
-    // 优先使用传入的typography，如果没有则使用默认的小型typography
-    val finalTypography = typography ?: defaultSmallTypography
-    
     MaterialTheme(
         colorScheme = finalColorScheme,
-        typography = finalTypography,
+        typography = defaultTypography,
         content = content
     )
-} 
+}
+
+private fun getDefaultLightColorScheme() = lightColorScheme(
+    primary = Color(0xFF6650a4),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFEADDFF),
+    onPrimaryContainer = Color(0xFF21005E),
+    secondary = Color(0xFF625b71),
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE8DEF8),
+    onSecondaryContainer = Color(0xFF1E192B),
+    tertiary = Color(0xFF7D5260),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFFFD8E4),
+    onTertiaryContainer = Color(0xFF370B1E),
+    error = Color(0xFFB3261E),
+    onError = Color.White,
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410E0B),
+    background = Color(0xFFFFFBFE),
+    onBackground = Color(0xFF1C1B1F),
+    surface = Color(0xFFFFFBFE),
+    onSurface = Color(0xFF1C1B1F),
+    surfaceVariant = Color(0xFFE7E0EC),
+    onSurfaceVariant = Color(0xFF49454F),
+    outline = Color(0xFF79747E)
+)
+
+private fun getDefaultDarkColorScheme() = darkColorScheme(
+    primary = Color(0xFF6650a4),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF4F378B),
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = Color(0xFFCCC2DC),
+    onSecondary = Color(0xFF332D41),
+    secondaryContainer = Color(0xFF4A4458),
+    onSecondaryContainer = Color(0xFFE8DEF8),
+    tertiary = Color(0xFFEFB8C8),
+    onTertiary = Color(0xFF492532),
+    tertiaryContainer = Color(0xFF633B48),
+    onTertiaryContainer = Color(0xFFFFD8E4),
+    error = Color(0xFFF2B8B5),
+    onError = Color(0xFF601410),
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC),
+    background = Color(0xFF1C1B1F),
+    onBackground = Color(0xFFE6E1E5),
+    surface = Color(0xFF1C1B1F),
+    onSurface = Color(0xFFE6E1E5),
+    surfaceVariant = Color(0xFF49454F),
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    outline = Color(0xFF938F99)
+)
+
+private fun getDefaultTypography() = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.5.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.25.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.4.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.5.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.5.sp
+    )
+)
