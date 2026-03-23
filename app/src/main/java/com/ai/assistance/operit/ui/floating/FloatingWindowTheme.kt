@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
@@ -31,13 +32,29 @@ fun FloatingWindowTheme(
     content: @Composable () -> Unit
 ) {
     // 如果提供了context，尝试从用户偏好读取主题设置
-    val preferencesManager = context?.let { remember { UserPreferencesManager.getInstance(it) } }
+    val preferencesManager = remember(context) {
+        context?.let { UserPreferencesManager.getInstance(it) }
+    }
 
-    val assistantThemeMode = preferencesManager?.assistantThemeMode?.collectAsState(initial = UserPreferencesManager.ASSISTANT_THEME_MODE_FOLLOW_SYSTEM)?.value
-    val assistantCustomThemeId = preferencesManager?.assistantCustomThemeId?.collectAsState(initial = UserPreferencesManager.ASSISTANT_THEME_DEFAULT)?.value
-    val useAssistantCustomColors = preferencesManager?.useAssistantCustomColors?.collectAsState(initial = false)?.value ?: false
-    val assistantCustomPrimaryColor = preferencesManager?.assistantCustomPrimaryColor?.collectAsState(initial = null)?.value
-    val assistantCustomSecondaryColor = preferencesManager?.assistantCustomSecondaryColor?.collectAsState(initial = null)?.value
+    val assistantThemeMode by preferencesManager?.assistantThemeMode?.collectAsState(
+        initial = UserPreferencesManager.ASSISTANT_THEME_MODE_FOLLOW_SYSTEM
+    ) ?: remember { mutableStateOf(UserPreferencesManager.ASSISTANT_THEME_MODE_FOLLOW_SYSTEM) }
+
+    val assistantCustomThemeId by preferencesManager?.assistantCustomThemeId?.collectAsState(
+        initial = UserPreferencesManager.ASSISTANT_THEME_DEFAULT
+    ) ?: remember { mutableStateOf(UserPreferencesManager.ASSISTANT_THEME_DEFAULT) }
+
+    val useAssistantCustomColors by preferencesManager?.useAssistantCustomColors?.collectAsState(
+        initial = false
+    ) ?: remember { mutableStateOf(false) }
+
+    val assistantCustomPrimaryColor by preferencesManager?.assistantCustomPrimaryColor?.collectAsState(
+        initial = null
+    ) ?: remember { mutableStateOf<Int?>(null) }
+
+    val assistantCustomSecondaryColor by preferencesManager?.assistantCustomSecondaryColor?.collectAsState(
+        initial = null
+    ) ?: remember { mutableStateOf<Int?>(null) }
 
     // 确定是否使用暗色主题
     val systemDarkTheme = isSystemInDarkTheme()
@@ -48,7 +65,7 @@ fun FloatingWindowTheme(
     }
 
     // 获取选中的主题
-    val selectedTheme = assistantCustomThemeId?.let { AssistantThemes.getThemeById(it) }
+    val selectedTheme = AssistantThemes.getThemeById(assistantCustomThemeId)
 
     // 计算最终的ColorScheme
     val baseColorScheme = colorScheme ?: run {
