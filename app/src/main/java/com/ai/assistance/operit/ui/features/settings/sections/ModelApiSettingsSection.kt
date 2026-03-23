@@ -612,11 +612,11 @@ fun ModelApiSettingsSection(
                     },
                         value = modelNameInput,
                         onValueChange = {
-                        if (!isMnnProvider && !isLlamaProvider && !isUsingDefaultApiKey) {
+                                if (!isMnnProvider && !isLlamaProvider && !isUsingDefaultApiKey) {
                                 modelNameInput = it.replace("\n", "").replace("\r", "")
                             }
                         },
-                    enabled = if (isMnnProvider || isLlamaProvider) false else !isUsingDefaultApiKey,
+                    enabled = if (isMnnProvider || isLlamaProvider) false else true,
                     trailingContent = {
                 IconButton(
                         onClick = {
@@ -684,10 +684,8 @@ fun ModelApiSettingsSection(
                             showNotification(gettingModelsText)
 
                             scope.launch {
-                                if (apiEndpointInput.isNotBlank() &&
-                                                apiKeyInput.isNotBlank() &&
-                                                !isUsingDefaultApiKey
-                                ) {
+                                // 即使使用默认API key也尝试获取模型，这样可以给出正确的错误提示
+                                if (apiEndpointInput.isNotBlank() && apiKeyInput.isNotBlank()) {
                                     isLoadingModels = true
                                     modelLoadError = null
                                     AppLogger.d(
@@ -724,9 +722,6 @@ fun ModelApiSettingsSection(
                                         isLoadingModels = false
                                         AppLogger.d(TAG, "模型列表获取流程完成")
                                     }
-                                } else if (isUsingDefaultApiKey) {
-                                    AppLogger.d(TAG, "使用默认配置，不获取模型列表")
-                                    showNotification(defaultConfigNoModelsText)
                                 } else {
                                     AppLogger.d(TAG, "API端点或密钥为空")
                                     showNotification(fillEndpointKeyText)
@@ -739,7 +734,7 @@ fun ModelApiSettingsSection(
                                 IconButtonDefaults.iconButtonColors(
                                         contentColor = MaterialTheme.colorScheme.primary
                                 ),
-                                enabled = if (isMnnProvider || isLlamaProvider) true else !isUsingDefaultApiKey
+                                enabled = if (isMnnProvider || isLlamaProvider) true else true
                 ) {
                     if (isLoadingModels) {
                         CircularProgressIndicator(
@@ -750,10 +745,7 @@ fun ModelApiSettingsSection(
                         Icon(
                                 imageVector = Icons.AutoMirrored.Filled.FormatListBulleted,
                                 contentDescription = stringResource(R.string.get_models_list),
-                                tint =
-                                                if (!isMnnProvider && !isLlamaProvider && isUsingDefaultApiKey)
-                                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                                else MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -845,9 +837,9 @@ fun ModelApiSettingsSection(
                         FilledIconButton(
                                 onClick = {
                                     scope.launch {
+                                        // 即使使用默认API key也允许刷新，以便给出正确的错误提示
                                         if (apiEndpointInput.isNotBlank() &&
-                                                        apiKeyInput.isNotBlank() &&
-                                                        !isUsingDefaultApiKey
+                                                        apiKeyInput.isNotBlank()
                                         ) {
                                             isLoadingModels = true
                                             try {
