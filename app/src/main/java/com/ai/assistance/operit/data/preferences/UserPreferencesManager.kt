@@ -192,7 +192,49 @@ class UserPreferencesManager private constructor(private val context: Context) {
         const val SYSTEM_FONT_SANS_SERIF = "sans-serif"
         const val SYSTEM_FONT_MONOSPACE = "monospace"
         const val SYSTEM_FONT_CURSIVE = "cursive"
+
+        // Assistant Theme 常量
+        const val ASSISTANT_THEME_MODE_FOLLOW_SYSTEM = "follow_system"
+        const val ASSISTANT_THEME_MODE_LIGHT = "light"
+        const val ASSISTANT_THEME_MODE_DARK = "dark"
+
+        // Assistant Theme ID 常量
+        const val ASSISTANT_THEME_DEFAULT = "default"
+        const val ASSISTANT_THEME_PASTEL_PINK = "pastel_pink"
+        const val ASSISTANT_THEME_OCEAN_BLUE = "ocean_blue"
+        const val ASSISTANT_THEME_FOREST_GREEN = "forest_green"
+        const val ASSISTANT_THEME_SUNSET_ORANGE = "sunset_orange"
+        const val ASSISTANT_THEME_SPACE_PURPLE = "space_purple"
+        const val ASSISTANT_THEME_COTTON_CANDY = "cotton_candy"
+        const val ASSISTANT_THEME_MIDNIGHT = "midnight"
+        const val ASSISTANT_THEME_ROSE_GOLD = "rose_gold"
+        const val ASSISTANT_THEME_NEON_NIGHTS = "neon_nights"
+        const val ASSISTANT_THEME_MINIMAL_WHITE = "minimal_white"
+
+        // Assistant Icon Style 常量
+        const val ASSISTANT_ICON_DEFAULT = "default"
+        const val ASSISTANT_ICON_ROBOT = "robot"
+        const val ASSISTANT_ICON_GHOST = "ghost"
+        const val ASSISTANT_ICON_CAT = "cat"
+        const val ASSISTANT_ICON_DOG = "dog"
+        const val ASSISTANT_ICON_UNICORN = "unicorn"
+        const val ASSISTANT_ICON_DRAGON = "dragon"
+        const val ASSISTANT_ICON_ALIEN = "alien"
     }
+
+    // Assistant Theme 偏好设置键
+    private val ASSISTANT_THEME_MODE = stringPreferencesKey("assistant_theme_mode")
+    private val ASSISTANT_CUSTOM_THEME_ID = stringPreferencesKey("assistant_custom_theme_id")
+    private val CHAT_PAGE_WALLPAPER_URI = stringPreferencesKey("chat_page_wallpaper_uri")
+    private val CHAT_PAGE_WALLPAPER_OPACITY = floatPreferencesKey("chat_page_wallpaper_opacity")
+    private val ASSISTANT_ICON_STYLE = stringPreferencesKey("assistant_icon_style")
+    private val USE_CHAT_PAGE_WALLPAPER = booleanPreferencesKey("use_chat_page_wallpaper")
+    private val CHAT_PAGE_WALLPAPER_MEDIA_TYPE = stringPreferencesKey("chat_page_wallpaper_media_type")
+    private val CHAT_PAGE_WALLPAPER_BLUR = booleanPreferencesKey("chat_page_wallpaper_blur")
+    private val CHAT_PAGE_WALLPAPER_BLUR_RADIUS = floatPreferencesKey("chat_page_wallpaper_blur_radius")
+    private val USE_ASSISTANT_CUSTOM_COLORS = booleanPreferencesKey("use_assistant_custom_colors")
+    private val ASSISTANT_CUSTOM_PRIMARY_COLOR = intPreferencesKey("assistant_custom_primary_color")
+    private val ASSISTANT_CUSTOM_SECONDARY_COLOR = intPreferencesKey("assistant_custom_secondary_color")
 
     // 获取应用语言设置
     val appLanguage: Flow<String> = 
@@ -509,6 +551,71 @@ class UserPreferencesManager private constructor(private val context: Context) {
             preferences[FONT_SCALE] ?: 1.0f
         }
 
+    // Assistant Theme 主题模式 Flow
+    val assistantThemeMode: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[ASSISTANT_THEME_MODE] ?: ASSISTANT_THEME_MODE_FOLLOW_SYSTEM
+        }
+
+    // Assistant Custom Theme ID Flow
+    val assistantCustomThemeId: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[ASSISTANT_CUSTOM_THEME_ID] ?: ASSISTANT_THEME_DEFAULT
+        }
+
+    // Chat Page Wallpaper 相关的 Flow
+    val useChatPageWallpaper: Flow<Boolean> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[USE_CHAT_PAGE_WALLPAPER] ?: false
+        }
+
+    val chatPageWallpaperUri: Flow<String?> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[CHAT_PAGE_WALLPAPER_URI]
+        }
+
+    val chatPageWallpaperOpacity: Flow<Float> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[CHAT_PAGE_WALLPAPER_OPACITY] ?: 0.3f
+        }
+
+    val chatPageWallpaperMediaType: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[CHAT_PAGE_WALLPAPER_MEDIA_TYPE] ?: MEDIA_TYPE_IMAGE
+        }
+
+    val chatPageWallpaperBlur: Flow<Boolean> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[CHAT_PAGE_WALLPAPER_BLUR] ?: false
+        }
+
+    val chatPageWallpaperBlurRadius: Flow<Float> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[CHAT_PAGE_WALLPAPER_BLUR_RADIUS] ?: 10f
+        }
+
+    // Assistant Icon Style Flow
+    val assistantIconStyle: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[ASSISTANT_ICON_STYLE] ?: ASSISTANT_ICON_DEFAULT
+        }
+
+    // Assistant Custom Colors Flow
+    val useAssistantCustomColors: Flow<Boolean> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[USE_ASSISTANT_CUSTOM_COLORS] ?: false
+        }
+
+    val assistantCustomPrimaryColor: Flow<Int?> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[ASSISTANT_CUSTOM_PRIMARY_COLOR]
+        }
+
+    val assistantCustomSecondaryColor: Flow<Int?> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[ASSISTANT_CUSTOM_SECONDARY_COLOR]
+        }
+
     // 布局调整设置
     val chatSettingsButtonEndPadding: Flow<Float> =
         context.userPreferencesDataStore.data.map { preferences ->
@@ -712,6 +819,37 @@ class UserPreferencesManager private constructor(private val context: Context) {
             systemFontName?.let { preferences[SYSTEM_FONT_NAME] = it }
             customFontPath?.let { preferences[CUSTOM_FONT_PATH] = it }
             fontScale?.let { preferences[FONT_SCALE] = it }
+        }
+    }
+
+    // 保存 Assistant Theme 设置
+    suspend fun saveAssistantThemeSettings(
+        assistantThemeMode: String? = null,
+        assistantCustomThemeId: String? = null,
+        useChatPageWallpaper: Boolean? = null,
+        chatPageWallpaperUri: String? = null,
+        chatPageWallpaperOpacity: Float? = null,
+        chatPageWallpaperMediaType: String? = null,
+        chatPageWallpaperBlur: Boolean? = null,
+        chatPageWallpaperBlurRadius: Float? = null,
+        assistantIconStyle: String? = null,
+        useAssistantCustomColors: Boolean? = null,
+        assistantCustomPrimaryColor: Int? = null,
+        assistantCustomSecondaryColor: Int? = null
+    ) {
+        context.userPreferencesDataStore.edit { preferences ->
+            assistantThemeMode?.let { preferences[ASSISTANT_THEME_MODE] = it }
+            assistantCustomThemeId?.let { preferences[ASSISTANT_CUSTOM_THEME_ID] = it }
+            useChatPageWallpaper?.let { preferences[USE_CHAT_PAGE_WALLPAPER] = it }
+            chatPageWallpaperUri?.let { preferences[CHAT_PAGE_WALLPAPER_URI] = it }
+            chatPageWallpaperOpacity?.let { preferences[CHAT_PAGE_WALLPAPER_OPACITY] = it }
+            chatPageWallpaperMediaType?.let { preferences[CHAT_PAGE_WALLPAPER_MEDIA_TYPE] = it }
+            chatPageWallpaperBlur?.let { preferences[CHAT_PAGE_WALLPAPER_BLUR] = it }
+            chatPageWallpaperBlurRadius?.let { preferences[CHAT_PAGE_WALLPAPER_BLUR_RADIUS] = it }
+            assistantIconStyle?.let { preferences[ASSISTANT_ICON_STYLE] = it }
+            useAssistantCustomColors?.let { preferences[USE_ASSISTANT_CUSTOM_COLORS] = it }
+            assistantCustomPrimaryColor?.let { preferences[ASSISTANT_CUSTOM_PRIMARY_COLOR] = it }
+            assistantCustomSecondaryColor?.let { preferences[ASSISTANT_CUSTOM_SECONDARY_COLOR] = it }
         }
     }
 
