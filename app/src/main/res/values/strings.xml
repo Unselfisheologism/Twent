@@ -429,6 +429,7 @@
     <string name="importing_model">正在导入模型...</string>
     <string name="processing">处理中...</string>
     <string name="error_occurred">发生错误: %1$s</string>
+    <string name="error_api_not_configured">API未配置，请在设置中配置API密钥和模型</string>
     <string name="avatar_config">虚拟形象配置</string>
     <string name="select_model">选择模型</string>
     <string name="current_model">当前模型</string>

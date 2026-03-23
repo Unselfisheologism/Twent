@@ -1195,6 +1195,18 @@ class ChatViewModel(private val context: Context) : ViewModel() {
     }
 
     fun sendUserMessage(promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT) {
+        // 检查API是否已配置
+        val functionalConfigManager = FunctionalConfigManager(context)
+        val modelConfigManager = ModelConfigManager(context)
+        val activeConfigId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
+        val activeConfig = modelConfigManager.getModelConfig(activeConfigId)
+        
+        // 检查是否有有效的API配置
+        if (activeConfig == null || activeConfig.apiKey.isBlank()) {
+            uiStateDelegate.showErrorMessage(context.getString(R.string.error_api_not_configured))
+            return
+        }
+        
         messageCoordinationDelegate.sendUserMessage(promptFunctionType)
     }
 
@@ -1672,25 +1684,12 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         _webViewRefreshCounter.value += 1
     }
 
-    // 判断是否正在使用默认API配置
+    // 判断是否需要显示配置对话框 - 现在总是返回false，用户可以直接访问聊天页面
+    // 如果需要配置，可以在设置中手动配置
     private suspend fun checkConfigAndShowDialog() {
-        // 初始化ModelConfigManager以检查所有配置
-        val modelConfigManager = ModelConfigManager(context)
-        val functionalConfigManager = FunctionalConfigManager(context)
-        
-        // 获取当前激活的配置ID（用于Chat功能的配置）
-        val activeConfigId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
-        
-        // 异步检查active配置
-        withContext(Dispatchers.IO) {
-            val activeConfig = modelConfigManager.getModelConfig(activeConfigId)
-            
-            // 只检查当前激活的配置是否使用默认API key
-            // 而不是检查所有配置，避免因其他未使用的默认配置而弹出配置对话框
-            val hasDefaultKey = activeConfig?.apiKey == ApiPreferences.DEFAULT_API_KEY
-            
-            _shouldShowConfigDialog.value = hasDefaultKey
-        }
+        // 不再自动弹出配置对话框
+        // 用户可以在设置中配置API，或者在聊天时如果未配置会收到错误提示
+        _shouldShowConfigDialog.value = false
     }
     
     // 用于启动文件选择器并处理结果

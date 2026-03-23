@@ -252,7 +252,7 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                         actualViewModel.updateApiKey(ApiPreferences.DEFAULT_API_KEY)
                         actualViewModel.updateApiEndpoint(ApiPreferences.DEFAULT_API_ENDPOINT)
                         actualViewModel.updateModelName(ApiPreferences.DEFAULT_MODEL_NAME)
-                        actualViewModel.updateApiProviderType(ApiProviderType.DEEPSEEK)
+                        actualViewModel.updateApiProviderType(ApiProviderType.KILO_GATEWAY)
                         actualViewModel.saveApiSettings()
 
                         // 新增：重置状态以重新显示配置界面
