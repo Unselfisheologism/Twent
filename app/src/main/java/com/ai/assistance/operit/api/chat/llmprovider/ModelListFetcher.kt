@@ -17,8 +17,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -44,6 +44,10 @@ object ModelListFetcher {
      */
     fun getModelsListUrl(apiEndpoint: String, apiProviderType: ApiProviderType): String {
         AppLogger.d(TAG, "生成模型列表URL，API端点: $apiEndpoint, 提供商类型: $apiProviderType")
+
+        // 先通过EndpointCompleter处理端点
+        val completedEndpoint = EndpointCompleter.completeEndpoint(apiEndpoint, apiProviderType)
+        AppLogger.d(TAG, "EndpointCompleter处理后的端点: $completedEndpoint")
 
         val modelsUrl =
                 when (apiProviderType) {
@@ -94,7 +98,7 @@ object ModelListFetcher {
                     ApiProviderType.PPINFRA -> "${extractBaseUrl(apiEndpoint)}/v1/models"
                     ApiProviderType.KILO_GATEWAY -> {
                         // Kilo AI Gateway 使用 /api/gateway 基础路径，模型端点为 /models (不是 /v1/models)
-                        val baseUrl = extractBaseUrl(apiEndpoint)
+                        val baseUrl = extractBaseUrl(completedEndpoint)
                         // 构造Kilo Gateway的models端点: https://api.kilo.ai/api/gateway/models
                         "$baseUrl/api/gateway/models"
                     }
@@ -238,29 +242,45 @@ object ModelListFetcher {
                     val request = requestBuilder.get().build()
 
                     AppLogger.d(TAG, "发送HTTP请求: ${request.url}")
-                    
-                    // 对于某些API（如Kilo Gateway），GET请求可能不支持，返回405错误
-                    // 添加特殊处理：如果是KILO_GATEWAY且GET失败，尝试POST请求
-                    var response = client.newCall(request).execute()
-                    
-                    // 如果是KILO_GATEWAY且收到405错误，尝试POST请求
-                    if (!response.isSuccessful && response.code == 405 && apiProviderType == ApiProviderType.KILO_GATEWAY) {
-                        response.close()
-                        AppLogger.d(TAG, "Kilo Gateway: GET请求失败(405)，尝试POST请求")
-                        
-                        val jsonBody = """{"limit":100}"""
-                        val postRequest = requestBuilder
-                            .post(RequestBody.create("application/json".toMediaType(), jsonBody))
-                            .build()
-                        
-                        response = client.newCall(postRequest).execute()
-                        AppLogger.d(TAG, "Kilo Gateway: POST请求结果: ${response.code}")
-                    }
+                    val response = client.newCall(request).execute()
 
+                    AppLogger.d(TAG, "HTTP响应状态码: ${response.code}")
                     if (!response.isSuccessful) {
                         val errorBody = response.body?.string() ?: context.getString(R.string.model_fetch_no_error_details)
                         val responseCode = response.code
                         response.close()
+                        
+                        // 对于KILO_GATEWAY，如果GET失败(405)，尝试POST请求
+                        if (apiProviderType == ApiProviderType.KILO_GATEWAY && responseCode == 405) {
+                            AppLogger.w(TAG, "Kilo Gateway: GET请求失败(405)，尝试POST请求")
+                            try {
+                                val postBody = """{"limit":100}"""
+                                val mediaType = "application/json".toMediaTypeOrNull()
+                                val requestBody = postBody.toRequestBody(mediaType)
+                                val postRequest = requestBuilder
+                                    .post(requestBody)
+                                    .build()
+                                val postResponse = client.newCall(postRequest).execute()
+                                AppLogger.d(TAG, "Kilo Gateway: POST请求响应码: ${postResponse.code}")
+                                
+                                if (postResponse.isSuccessful) {
+                                    val postResponseBody = postResponse.body?.string()
+                                    postResponse.close()
+                                    if (!postResponseBody.isNullOrEmpty()) {
+                                        val modelOptions = parseOpenAIModelResponse(context, postResponseBody)
+                                        AppLogger.d(TAG, "Kilo Gateway: POST成功解析模型列表，共获取 ${modelOptions.size} 个模型")
+                                        return@withContext Result.success(modelOptions)
+                                    }
+                                } else {
+                                    val postErrorBody = postResponse.body?.string()
+                                    postResponse.close()
+                                    AppLogger.e(TAG, "Kilo Gateway: POST请求也失败: $postErrorBody")
+                                }
+                            } catch (e: Exception) {
+                                AppLogger.e(TAG, "Kilo Gateway: POST请求异常: ${e.message}")
+                            }
+                        }
+                        
                         if ((apiProviderType == ApiProviderType.OPENAI || apiProviderType == ApiProviderType.OPENAI_RESPONSES || apiProviderType == ApiProviderType.OPENAI_GENERIC) &&
                                         modelsUrl.endsWith("/v1/models")) {
                             val fallbackUrl = modelsUrl.removeSuffix("/v1/models") + "/models"
