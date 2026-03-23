@@ -128,6 +128,13 @@ fun OperitTheme(content: @Composable () -> Unit) {
     val useBackgroundBlur by preferencesManager.useBackgroundBlur.collectAsState(initial = false)
     val backgroundBlurRadius by preferencesManager.backgroundBlurRadius.collectAsState(initial = 10f)
 
+    // 获取聊天页面壁纸设置
+    val useChatPageWallpaper by preferencesManager.useChatPageWallpaper.collectAsState(initial = false)
+    val chatPageWallpaperUri by preferencesManager.chatPageWallpaperUri.collectAsState(initial = null)
+    val chatPageWallpaperOpacity by preferencesManager.chatPageWallpaperOpacity.collectAsState(initial = 0.3f)
+    val chatPageWallpaperBlur by preferencesManager.chatPageWallpaperBlur.collectAsState(initial = false)
+    val chatPageWallpaperBlurRadius by preferencesManager.chatPageWallpaperBlurRadius.collectAsState(initial = 10f)
+
     // 获取字体设置
     val useCustomFont by preferencesManager.useCustomFont.collectAsState(initial = false)
     val fontType by preferencesManager.fontType.collectAsState(initial = UserPreferencesManager.FONT_TYPE_SYSTEM)

@@ -799,7 +799,48 @@
     <string name="ai_planning_desc">将会进行任务分解和触发多个子agent去搜集信息，最后汇总。子agent的工具调用能力和聊天用的agent相同。这会变得非常耗时，仅建议搜集信息的时候开启。</string>
     <string name="enhanced_service_not_initialized">增强AI服务未初始化，请检查设置</string>
     <string name="ui_automation_in_progress">正在执行界面任务...</string>
-    
+
+    <!-- Assistant Theme Settings -->
+    <string name="screen_title_assistant_theme_settings">助手主题</string>
+    <string name="assistant_theme_title">助手主题</string>
+    <string name="assistant_theme_desc">自定义AI助手的外观和风格</string>
+    <string name="assistant_theme_mode">助手主题模式</string>
+    <string name="assistant_theme_follow_system">跟随系统</string>
+    <string name="assistant_theme_light">浅色</string>
+    <string name="assistant_theme_dark">深色</string>
+    <string name="assistant_theme_select">选择助手主题</string>
+    <string name="assistant_theme_default">默认</string>
+    <string name="assistant_theme_pastel_pink">粉嫩粉红</string>
+    <string name="assistant_theme_ocean_blue">海洋蓝</string>
+    <string name="assistant_theme_forest_green">森林绿</string>
+    <string name="assistant_theme_sunset_orange">日落橙</string>
+    <string name="assistant_theme_space_purple">太空紫</string>
+    <string name="assistant_theme_cotton_candy">棉花糖</string>
+    <string name="assistant_theme_midnight">午夜</string>
+    <string name="assistant_theme_rose_gold">玫瑰金</string>
+    <string name="assistant_theme_neon_nights">霓虹之夜</string>
+    <string name="assistant_theme_minimal_white">简约白</string>
+    <string name="assistant_icon_style">助手图标风格</string>
+    <string name="assistant_icon_default">默认</string>
+    <string name="assistant_icon_robot">机器人</string>
+    <string name="assistant_icon_ghost">幽灵</string>
+    <string name="assistant_icon_cat">猫咪</string>
+    <string name="assistant_icon_dog">狗狗</string>
+    <string name="assistant_icon_unicorn">独角兽</string>
+    <string name="assistant_icon_dragon">龙</string>
+    <string name="assistant_icon_alien">外星人</string>
+    <string name="chat_page_wallpaper_title">聊天页面壁纸</string>
+    <string name="chat_page_wallpaper_desc">为AI聊天页面设置专属壁纸</string>
+    <string name="chat_page_use_wallpaper">使用聊天壁纸</string>
+    <string name="chat_page_wallpaper_opacity">壁纸不透明度: %1$d%%</string>
+    <string name="chat_page_wallpaper_blur">模糊壁纸</string>
+    <string name="chat_page_wallpaper_blur_radius">模糊程度</string>
+    <string name="assistant_custom_colors">自定义助手颜色</string>
+    <string name="assistant_use_custom_colors">使用自定义颜色</string>
+    <string name="assistant_use_custom_colors_desc">开启后可以为助手使用自定义颜色</string>
+    <string name="assistant_primary_color">助手主色</string>
+    <string name="assistant_secondary_color">助手次色</string>
+
     <!-- Settings Screen -->
     <string name="settings">设置</string>
     <string name="no_settings">暂无设置选项可用</string>
