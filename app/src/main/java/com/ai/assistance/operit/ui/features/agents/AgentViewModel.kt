@@ -322,20 +322,20 @@ class AgentViewModel(
         outputCollectorJob?.cancel()
         outputCollectorJob = viewModelScope.launch {
             repository.getAgentOutputFlow(sessionId).collect { event ->
-                if (event.output.isNotBlank()) {
+                if (event.outputChunk.isNotBlank() && event.sessionId == sessionId) {
                     val currentMessages = _chatState.value.messages.toMutableList()
                     
                     // Check if the last message is from agent (append) or new (add)
                     if (currentMessages.isNotEmpty() && !currentMessages.last().isFromUser) {
                         // Append to existing agent message
                         val lastMsg = currentMessages.removeLast()
-                        val updatedMsg = lastMsg.copy(content = lastMsg.content + event.output)
+                        val updatedMsg = lastMsg.copy(content = lastMsg.content + event.outputChunk)
                         currentMessages.add(updatedMsg)
                     } else {
                         // New agent message
                         currentMessages.add(
                             ChatMessage(
-                                content = event.output,
+                                content = event.outputChunk,
                                 isFromUser = false
                             )
                         )

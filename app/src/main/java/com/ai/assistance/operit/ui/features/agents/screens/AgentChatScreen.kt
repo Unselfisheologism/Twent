@@ -50,8 +50,8 @@ fun AgentChatScreen(
     // This will be used for getting commands
     
     // Initialize chat with this session on first composition
-    LaunchedEffect(sessionId) {
-        viewModel.switchToChat(sessionId, agentName)
+    LaunchedEffect(sessionId, agentId, agentName) {
+        viewModel.switchToChat(sessionId, agentId, agentName)
     }
     
     val chatState by viewModel.chatState.collectAsState()
