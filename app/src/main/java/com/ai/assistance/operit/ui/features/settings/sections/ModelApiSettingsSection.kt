@@ -122,6 +122,37 @@ fun ModelApiSettingsSection(
         }
     }
 
+    // 获取每个提供商的默认endpoint
+    fun getDefaultEndpointForProvider(providerType: ApiProviderType): String {
+        return when (providerType) {
+            ApiProviderType.OPENAI -> "https://api.openai.com/v1/chat/completions"
+            ApiProviderType.OPENAI_RESPONSES -> "https://api.openai.com/v1/chat/completions"
+            ApiProviderType.ANTHROPIC -> "https://api.anthropic.com/v1/messages"
+            ApiProviderType.GOOGLE -> "https://generativelanguage.googleapis.com/v1beta/models"
+            ApiProviderType.GEMINI_GENERIC -> ""
+            ApiProviderType.DEEPSEEK -> "https://api.deepseek.com/v1/chat/completions"
+            ApiProviderType.BAIDU -> "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions"
+            ApiProviderType.ALIYUN -> "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
+            ApiProviderType.XUNFEI -> "https://spark-api.xf-yun.com/v3.5/chat"
+            ApiProviderType.ZHIPU -> "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+            ApiProviderType.BAICHUAN -> "https://api.baichuan-ai.com/v1/chat/completions"
+            ApiProviderType.MOONSHOT -> "https://api.moonshot.cn/v1/chat/completions"
+            ApiProviderType.MISTRAL -> "https://api.mistral.ai/v1/chat/completions"
+            ApiProviderType.SILICONFLOW -> "https://api.siliconflow.cn/v1/chat/completions"
+            ApiProviderType.OPENROUTER -> "https://openrouter.ai/api/v1/chat/completions"
+            ApiProviderType.INFINIAI -> "https://cloud.infini.ai/v1/chat/completions"
+            ApiProviderType.ALIPAY_BILING -> "https://open-alipay.bailingu.com/openai/rpc/v1/messages"
+            ApiProviderType.DOUBAO -> "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+            ApiProviderType.LMSTUDIO -> "http://localhost:1234/v1/chat/completions"
+            ApiProviderType.MNN -> ""
+            ApiProviderType.LLAMA_CPP -> ""
+            ApiProviderType.PPINFRA -> "https://api.ppinfra.com/openai/v1/chat/completions"
+            ApiProviderType.KILO_GATEWAY -> "https://api.kilo.ai/api/gateway/chat/completions"
+            ApiProviderType.OPENAI_GENERIC -> ""
+            ApiProviderType.OTHER -> ""
+        }
+    }
+
     fun getEndpointOptions(providerType: ApiProviderType): List<Pair<String, String>>? {
         return when (providerType) {
             ApiProviderType.MOONSHOT -> listOf(
@@ -401,7 +432,8 @@ fun ModelApiSettingsSection(
     var modelLoadError by remember { mutableStateOf<String?>(null) }
 
     // 检查是否使用默认API密钥（仅用于UI显示）
-    val isUsingDefaultApiKey = apiKeyInput == ApiPreferences.DEFAULT_API_KEY
+    // 检查apiKeyInput是否等于默认的API Key（用于判断是否显示占位符）
+    val isUsingDefaultApiKey = apiKeyInput.isBlank() || apiKeyInput == ApiPreferences.DEFAULT_API_KEY
 
     // 移除了强制锁定模型名称的逻辑，允许用户自由修改
 
@@ -437,13 +469,24 @@ fun ModelApiSettingsSection(
                         onProviderSelected = { provider ->
                             selectedApiProvider = provider
 
-                            // 对有默认模型名的供应商，视为“有强制内容”：切换时总是重置为该供应商默认模型名
+                            // 对有默认模型名的供应商，视为"有强制内容"：切换时总是重置为该供应商默认模型名
                             val hasForcedModelName = getDefaultModelName(provider).isNotEmpty()
                             if (hasForcedModelName) {
                                 modelNameInput = getDefaultModelName(provider)
                             } else if (modelNameInput.isEmpty() || isDefaultModelName(modelNameInput)) {
                                 // 通用/无默认模型名的供应商仍沿用旧逻辑
                                 modelNameInput = getDefaultModelName(provider)
+                            }
+
+                            // 如果当前endpoint为空或使用的是其他提供商的endpoint，自动切换到当前提供商的默认endpoint
+                            // 通用提供商允许用户自定义endpoint
+                            val isGenericOrOtherProvider = provider == ApiProviderType.OPENAI_GENERIC || 
+                                                           provider == ApiProviderType.OTHER || 
+                                                           provider == ApiProviderType.GEMINI_GENERIC
+                            
+                            if (!isGenericOrOtherProvider) {
+                                // 非通用提供商，自动设置默认endpoint
+                                apiEndpointInput = getDefaultEndpointForProvider(provider)
                             }
 
                             showApiProviderDialog = false

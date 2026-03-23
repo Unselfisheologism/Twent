@@ -51,7 +51,7 @@ class ModelConfigManager(private val context: Context) {
 
         // Default API provider type - use OPENAI_GENERIC to avoid hardcoding a specific provider
         // This allows the app to respect user-saved configurations instead of always defaulting to DeepSeek
-        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.OPENAI_GENERIC
+        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.KILO_GATEWAY
     }
 
     // Json解析器，支持宽松模式
