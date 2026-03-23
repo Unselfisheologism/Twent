@@ -94,7 +94,8 @@ fun ToolboxScreen(
         onHtmlPackagerSelected: () -> Unit,
         onAutoGlmOneClickSelected: () -> Unit,
         onAutoGlmToolSelected: () -> Unit,
-        onSqlViewerSelected: () -> Unit
+        onSqlViewerSelected: () -> Unit,
+        onAgentSessionsSelected: () -> Unit
 ) {
         // 屏幕配置信息，用于响应式布局
         val configuration = LocalConfiguration.current
@@ -168,6 +169,13 @@ fun ToolboxScreen(
                                 description = stringResource(R.string.tool_terminal_desc),
                                 category = ToolCategory.DEVELOPMENT,
                                 onClick = onTerminalSelected
+                        ),
+                        Tool(
+                                name = stringResource(R.string.tool_agent_sessions),
+                                icon = Icons.Default.SmartToy,
+                                description = stringResource(R.string.tool_agent_sessions_desc),
+                                category = ToolCategory.DEVELOPMENT,
+                                onClick = onAgentSessionsSelected
                         ),
                         Tool(
                                 name = stringResource(R.string.tool_ui_debugger),
