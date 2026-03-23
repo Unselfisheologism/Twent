@@ -563,20 +563,21 @@ fun AssistantThemeSettingsScreen() {
                                     .background(Color(colorValue))
                                     .border(
                                         2.dp,
-                                        if ((colorPickerTarget == "primary" && assistantCustomPrimaryColor == colorValue) ||
-                                            (colorPickerTarget == "secondary" && assistantCustomSecondaryColor == colorValue)
+                                        if ((colorPickerTarget == "primary" && assistantCustomPrimaryColor == colorValue.toInt()) ||
+                                            (colorPickerTarget == "secondary" && assistantCustomSecondaryColor == colorValue.toInt())
                                         ) MaterialTheme.colorScheme.primary else Color.Transparent,
                                         CircleShape
                                     )
                                     .clickable {
                                         scope.launch {
+                                            val colorInt = colorValue.toInt()
                                             if (colorPickerTarget == "primary") {
                                                 preferencesManager.saveAssistantThemeSettings(
-                                                    assistantCustomPrimaryColor = colorValue
+                                                    assistantCustomPrimaryColor = colorInt
                                                 )
                                             } else {
                                                 preferencesManager.saveAssistantThemeSettings(
-                                                    assistantCustomSecondaryColor = colorValue
+                                                    assistantCustomSecondaryColor = colorInt
                                                 )
                                             }
                                         }
