@@ -1114,8 +1114,8 @@ sealed class Screen(
         ) {
             AgentSessionsScreen(
                 onNavigateBack = onGoBack,
-                onNavigateToChat = { sessionId, agentName ->
-                    navigateTo(Screen.AgentChat(sessionId, agentName))
+                onNavigateToChat = { sessionId, agentId, agentName ->
+                    navigateTo(Screen.AgentChat(sessionId, agentId, agentName))
                 },
                 onNavigateToCommands = { agentId ->
                     navigateTo(Screen.AgentCommands(agentId))
@@ -1125,7 +1125,7 @@ sealed class Screen(
     }
 
     // AI Agent Chat - interactive chat with running agent
-    data class AgentChat(val sessionId: String, val agentName: String) :
+    data class AgentChat(val sessionId: String, val agentId: String, val agentName: String) :
             Screen(parentScreen = AgentSessions, navItem = NavItem.Toolbox) {
         @Composable
         override fun Content(
@@ -1140,6 +1140,7 @@ sealed class Screen(
         ) {
             AgentChatScreen(
                 sessionId = sessionId,
+                agentId = agentId,
                 agentName = agentName,
                 onNavigateBack = onGoBack
             )
