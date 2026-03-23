@@ -425,6 +425,7 @@
     <string name="importing_model">Importing model...</string>
     <string name="processing">Processing...</string>
     <string name="error_occurred">Error occurred: %1$s</string>
+    <string name="error_api_not_configured">API not configured. Please configure API key and model in settings.</string>
     <string name="avatar_config">Avatar Configuration</string>
     <string name="dragon_bones_config">DragonBones Config</string>
     <string name="collapse">Collapse</string>
