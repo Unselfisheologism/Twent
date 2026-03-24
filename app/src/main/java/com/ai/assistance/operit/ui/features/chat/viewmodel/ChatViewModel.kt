@@ -1685,7 +1685,9 @@ class ChatViewModel(private val context: Context) : ViewModel() {
             // 检查每个配置是否使用默认API key
             for (id in configIds) {
                 val config = modelConfigManager.getModelConfigFlow(id).first()
-                if (config.apiKey == ApiPreferences.DEFAULT_API_KEY) {
+                // 不对Kilo Gateway显示配置对话框（默认已激活）
+                if (config.apiKey== ApiPreferences.DEFAULT_API_KEY && 
+                    config.apiProviderType != ApiProviderType.KILO_GATEWAY) {
                     hasDefaultKey = true
                     break
                 }

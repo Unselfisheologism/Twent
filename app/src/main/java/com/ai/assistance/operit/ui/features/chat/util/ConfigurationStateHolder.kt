@@ -5,6 +5,6 @@ package com.ai.assistance.operit.ui.features.chat.util
  * 注意：这个状态只在应用单次运行期间有效，应用关闭后将被重置
  */
 object ConfigurationStateHolder {
-    // 标记默认配置是否已确认过，默认为false
-    var hasConfirmedDefaultInSession: Boolean = false
+    // 标记默认配置是否已确认过，默认为true（UI已激活）
+    var hasConfirmedDefaultInSession: Boolean = true
 } 
