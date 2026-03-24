@@ -28,13 +28,14 @@ import com.ai.assistance.operit.ui.features.agents.AgentWithStatus
 
 /**
  * Agent Sessions Screen - Shows running agent sessions and agent marketplace
+ * Note: This screen now launches the native terminal instead of in-app chat sessions
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentSessionsScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToChat: (String, String, String) -> Unit = { _, _, _ -> },
-    onNavigateToCommands: (String) -> Unit = { _ -> }
+    onNavigateToCommands: (String) -> Unit = { _ -> },
+    onNavigateToTerminal: (String) -> Unit = { _ -> }
 ) {
     val context = LocalContext.current
     val viewModel: AgentViewModel = viewModel(
@@ -49,7 +50,7 @@ fun AgentSessionsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AI Agents") },
+                title = { Text("Agent CLIs") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -85,10 +86,6 @@ fun AgentSessionsScreen(
                     sessions = sessionsState.sessions,
                     isLoading = sessionsState.isLoading,
                     error = sessionsState.error,
-                    onSessionClick = { session ->
-                        val agent = viewModel.getAvailableAgents().find { it.id == session.agentId }
-                        onNavigateToChat(session.id, session.agentId, agent?.name ?: "Agent")
-                    },
                     onSessionClose = { sessionId ->
                         viewModel.closeSession(sessionId)
                     },
@@ -100,8 +97,10 @@ fun AgentSessionsScreen(
                     isLoading = sessionsState.isLoading,
                     error = sessionsState.error,
                     onInstall = { agentId -> viewModel.installAgent(agentId) },
-                    onStart = { agentId, agentName ->
-                        viewModel.startAgentSession(agentId, agentName)
+                    onLaunchTerminal = { agentId, agentName ->
+                        viewModel.launchNativeTerminal(agentId, agentName) { command ->
+                            onNavigateToTerminal(command)
+                        }
                     },
                     onCommands = { agentId -> onNavigateToCommands(agentId) }
                 )
@@ -115,7 +114,6 @@ private fun SessionsTab(
     sessions: List<AgentSession>,
     isLoading: Boolean,
     error: String?,
-    onSessionClick: (AgentSession) -> Unit,
     onSessionClose: (String) -> Unit,
     onStartNew: () -> Unit
 ) {
@@ -180,7 +178,6 @@ private fun SessionsTab(
                 items(sessions) { session ->
                     AgentSessionCard(
                         session = session,
-                        onClick = { onSessionClick(session) },
                         onClose = { onSessionClose(session.id) }
                     )
                 }
@@ -206,7 +203,7 @@ private fun AgentMarketTab(
     isLoading: Boolean,
     error: String?,
     onInstall: (String) -> Unit,
-    onStart: (String, String) -> Unit,
+    onLaunchTerminal: (String, String) -> Unit,
     onCommands: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -256,8 +253,8 @@ private fun AgentMarketTab(
                     agentWithStatus = agentWithStatus,
                     isLoading = isLoading,
                     onInstall = { onInstall(agentWithStatus.definition.id) },
-                    onStart = { 
-                        onStart(agentWithStatus.definition.id, agentWithStatus.definition.name) 
+                    onLaunchTerminal = { 
+                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name) 
                     },
                     onCommands = { onCommands(agentWithStatus.definition.id) }
                 )
@@ -276,7 +273,7 @@ private fun AgentMarketCard(
     agentWithStatus: AgentWithStatus,
     isLoading: Boolean,
     onInstall: () -> Unit,
-    onStart: () -> Unit,
+    onLaunchTerminal: () -> Unit,
     onCommands: () -> Unit
 ) {
     val agent = agentWithStatus.definition
@@ -444,10 +441,10 @@ private fun AgentMarketCard(
                             }
                         }
                         AgentInstallStatus.INSTALLED -> {
-                            Button(onClick = onStart) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Button(onClick = onLaunchTerminal) {
+                                Icon(Icons.Default.Terminal, contentDescription = null)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Start Chat")
+                                Text("Launch Terminal")
                             }
                         }
                     }
@@ -472,13 +469,10 @@ private fun AgentMarketCard(
 @Composable
 private fun AgentSessionCard(
     session: AgentSession,
-    onClick: () -> Unit,
     onClose: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

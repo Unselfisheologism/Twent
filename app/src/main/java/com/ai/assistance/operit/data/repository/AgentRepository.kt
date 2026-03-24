@@ -86,25 +86,14 @@ class AgentRepository(private val context: Context) {
         val agent = AgentRegistry.getById(agentId) ?: return@withContext false
         
         try {
-            // Create a temporary session to check installation
-            val sessionData = terminalManager.createNewSession("install-check-${agentId}")
-            val sessionId = sessionData.id
-            
-            // Run the check command - sendCommandToSession returns command ID (String)
-            terminalManager.sendCommandToSession(sessionId, agent.installCheckCommand)
-            
-            // Wait for command to execute
-            kotlinx.coroutines.delay(2000)
-            
-            // Simplified check - in production, parse output
-            val isInstalled = true
+            // Run the check command directly using shell
+            val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", agent.installCheckCommand))
+            val exitCode = process.waitFor()
+            val isInstalled = exitCode == 0
             
             if (isInstalled) {
                 installedAgentsCache[agentId] = true
             }
-            
-            // Clean up temp session
-            terminalManager.closeSession(sessionId)
             
             isInstalled
         } catch (e: Exception) {

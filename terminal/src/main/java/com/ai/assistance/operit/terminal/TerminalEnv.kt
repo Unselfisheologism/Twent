@@ -21,7 +21,8 @@ class TerminalEnv(
     isFullscreenState: State<Boolean>,
     terminalEmulatorState: State<AnsiTerminalEmulator>,
     private val terminalManager: TerminalManager,
-    val forceShowSetup: Boolean = false
+    val forceShowSetup: Boolean = false,
+    initialCommand: String? = null
 ) {
     val sessions by sessionsState
     val currentSessionId by currentSessionIdState
@@ -29,7 +30,7 @@ class TerminalEnv(
     val isFullscreen by isFullscreenState
     val terminalEmulator by terminalEmulatorState
 
-    var command by mutableStateOf("")
+    var command by mutableStateOf(initialCommand ?: "")
 
     fun onCommandChange(newCommand: String) {
         command = newCommand
@@ -78,7 +79,11 @@ class TerminalEnv(
 }
 
 @Composable
-fun rememberTerminalEnv(terminalManager: TerminalManager, forceShowSetup: Boolean = false): TerminalEnv {
+fun rememberTerminalEnv(
+    terminalManager: TerminalManager, 
+    forceShowSetup: Boolean = false,
+    initialCommand: String? = null
+): TerminalEnv {
     val sessionsState = terminalManager.sessions.collectAsState(initial = emptyList())
     val currentSessionIdState = terminalManager.currentSessionId.collectAsState(initial = null)
     val currentDirectoryState = terminalManager.currentDirectory.collectAsState(initial = "$ ")
@@ -86,7 +91,7 @@ fun rememberTerminalEnv(terminalManager: TerminalManager, forceShowSetup: Boolea
     val placeholderEmulator = remember { AnsiTerminalEmulator(screenWidth = 1, screenHeight = 1, historySize = 0) }
     val terminalEmulatorState = terminalManager.terminalEmulator.collectAsState(initial = placeholderEmulator)
 
-    return remember(terminalManager, forceShowSetup) {
+    return remember(terminalManager, forceShowSetup, initialCommand) {
         TerminalEnv(
             sessionsState = sessionsState,
             currentSessionIdState = currentSessionIdState,
@@ -94,7 +99,8 @@ fun rememberTerminalEnv(terminalManager: TerminalManager, forceShowSetup: Boolea
             isFullscreenState = isFullscreenState,
             terminalEmulatorState = terminalEmulatorState,
             terminalManager = terminalManager,
-            forceShowSetup = forceShowSetup
+            forceShowSetup = forceShowSetup,
+            initialCommand = initialCommand
         )
     }
 } 
