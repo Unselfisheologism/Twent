@@ -53,6 +53,7 @@ import com.ai.assistance.operit.ui.features.settings.screens.TagMarketScreen
 import com.ai.assistance.operit.ui.features.settings.screens.SettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.SpeechServicesSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ThemeSettingsScreen
+import com.ai.assistance.operit.ui.features.settings.screens.AssistantThemeSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ToolPermissionSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesGuideScreen
 import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesSettingsScreen
@@ -82,6 +83,9 @@ import com.ai.assistance.operit.ui.features.toolbox.screens.autoglm.AutoGlmToolS
 import com.ai.assistance.operit.ui.features.update.screens.UpdateScreen
 import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowListScreen
 import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowDetailScreen
+import com.ai.assistance.operit.ui.features.agents.screens.AgentSessionsScreen
+import com.ai.assistance.operit.ui.features.agents.screens.AgentChatScreen
+import com.ai.assistance.operit.ui.features.agents.screens.AgentCommandsScreen
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
@@ -398,7 +402,8 @@ sealed class Screen(
                     onHtmlPackagerSelected = { navigateTo(HtmlPackager) },
                     onAutoGlmOneClickSelected = { navigateTo(AutoGlmOneClick) },
                     onAutoGlmToolSelected = { navigateTo(AutoGlmTool) },
-                    onSqlViewerSelected = { navigateTo(SqlViewer) }
+                    onSqlViewerSelected = { navigateTo(SqlViewer) },
+                    onAgentSessionsSelected = { navigateTo(AgentSessions) }
             )
         }
     }
@@ -450,7 +455,8 @@ sealed class Screen(
                     navigateToWaifuModeSettings = { navigateTo(WaifuModeSettings) },
                     navigateToTokenUsageStatistics = { navigateTo(TokenUsageStatistics) },
                     navigateToContextSummarySettings = { navigateTo(ContextSummarySettings) },
-                    navigateToLayoutAdjustmentSettings = { navigateTo(LayoutAdjustmentSettings) }
+                    navigateToLayoutAdjustmentSettings = { navigateTo(LayoutAdjustmentSettings) },
+                    navigateToAssistantThemeSettings = { navigateTo(AssistantThemeSettings) }
             )
         }
     }
@@ -905,6 +911,23 @@ sealed class Screen(
         }
     }
 
+    data object AssistantThemeSettings :
+            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.assistant_theme_title) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AssistantThemeSettingsScreen()
+        }
+    }
+
     data object GlobalDisplaySettings :
             Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_global_display_settings) {
         @Composable
@@ -1091,6 +1114,76 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             TerminalAutoConfigToolScreen(navController = navController)
+        }
+    }
+
+    // AI Agent Sessions - list of running agent sessions
+    data object AgentSessions :
+            Screen(parentScreen = Toolbox, navItem = NavItem.Toolbox) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AgentSessionsScreen(
+                onNavigateBack = onGoBack,
+                onNavigateToChat = { sessionId, agentId, agentName ->
+                    navigateTo(Screen.AgentChat(sessionId, agentId, agentName))
+                },
+                onNavigateToCommands = { agentId ->
+                    navigateTo(Screen.AgentCommands(agentId))
+                }
+            )
+        }
+    }
+
+    // AI Agent Chat - interactive chat with running agent
+    data class AgentChat(val sessionId: String, val agentId: String, val agentName: String) :
+            Screen(parentScreen = AgentSessions, navItem = NavItem.Toolbox) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AgentChatScreen(
+                sessionId = sessionId,
+                agentId = agentId,
+                agentName = agentName,
+                onNavigateBack = onGoBack
+            )
+        }
+    }
+    
+    // AI Agent Commands - run non-chat commands like doctor, setup, mcp
+    data class AgentCommands(val agentId: String) :
+            Screen(parentScreen = AgentSessions, navItem = NavItem.Toolbox) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AgentCommandsScreen(
+                agentId = agentId,
+                onNavigateBack = onGoBack
+            )
         }
     }
 

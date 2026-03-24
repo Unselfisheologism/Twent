@@ -164,6 +164,12 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
     val showInputProcessingStatus by preferencesManager.showInputProcessingStatus.collectAsState(initial = true)
     val hasBackgroundImage = useBackgroundImage && backgroundImageUri != null
 
+    // Chat page wallpaper preferences
+    val useChatPageWallpaper by preferencesManager.useChatPageWallpaper.collectAsState(initial = false)
+    val chatPageWallpaperUri by preferencesManager.chatPageWallpaperUri.collectAsState(initial = null)
+    val chatPageWallpaperOpacity by preferencesManager.chatPageWallpaperOpacity.collectAsState(initial = 0.3f)
+    val hasChatPageWallpaper = useChatPageWallpaper && chatPageWallpaperUri != null
+
     // Collect chat style from preferences
     val chatStyleSetting by preferencesManager.chatStyle.collectAsState(initial = UserPreferencesManager.CHAT_STYLE_CURSOR)
     val chatStyle = remember(chatStyleSetting) {
@@ -298,7 +304,7 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
 
     // Modern chat UI colors - Cursor风格
     val backgroundColor =
-            if (hasBackgroundImage) Color.Transparent else MaterialTheme.colorScheme.background
+            if (hasBackgroundImage || hasChatPageWallpaper) Color.Transparent else MaterialTheme.colorScheme.background
     val userMessageColor = MaterialTheme.colorScheme.primaryContainer
     val aiMessageColor = MaterialTheme.colorScheme.surface
     val userTextColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -483,7 +489,7 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
     var bottomBarHeightPx by remember { mutableStateOf(0) }
     val inputSurfaceColor = when {
         chatInputTransparent -> colorScheme.surface.copy(alpha = 0f)
-        hasBackgroundImage -> colorScheme.surface.copy(alpha = 0.85f)
+        hasBackgroundImage || hasChatPageWallpaper -> colorScheme.surface.copy(alpha = 0.85f)
         else -> colorScheme.surface
     }
     Box(modifier = Modifier.fillMaxSize()) {

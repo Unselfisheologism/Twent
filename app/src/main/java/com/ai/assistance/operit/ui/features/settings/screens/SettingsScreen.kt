@@ -64,7 +64,8 @@ fun SettingsScreen(
         navigateToWaifuModeSettings: () -> Unit,
         navigateToTokenUsageStatistics: () -> Unit,
         navigateToContextSummarySettings: () -> Unit,
-        navigateToLayoutAdjustmentSettings: () -> Unit
+        navigateToLayoutAdjustmentSettings: () -> Unit,
+        navigateToAssistantThemeSettings: () -> Unit
 ) {
         val context = LocalContext.current
         val apiPreferences = remember { ApiPreferences.getInstance(context) }
@@ -174,6 +175,13 @@ fun SettingsScreen(
                                 subtitle = stringResource(id = R.string.settings_theme_subtitle),
                                 icon = Icons.Default.Palette,
                                 onClick = navigateToThemeSettings
+                        )
+
+                        CompactSettingsItem(
+                                title = stringResource(id = R.string.assistant_theme_title),
+                                subtitle = stringResource(id = R.string.assistant_theme_desc),
+                                icon = Icons.Default.Face,
+                                onClick = navigateToAssistantThemeSettings
                         )
                         
                         CompactSettingsItem(
