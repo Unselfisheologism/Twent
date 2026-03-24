@@ -51,7 +51,7 @@ Here's a complete overview of what you can do:
 ### 3. WEB & NETWORK TOOLS
 ════════════════════════════════════════════════════════════════════════
 
-• visit_web - Visit webpages and extract content (supports link following)
+• visit_web - Visit webpages and extract content (supports link following). **USE ONLY for scraping public data. For website interaction (login, click, navigate), use UI tools instead.**
 • http_request - Send HTTP requests (GET, POST, PUT, DELETE)
 • multipart_request - Upload files via multipart form data
 • manage_cookies - Manage browser cookies

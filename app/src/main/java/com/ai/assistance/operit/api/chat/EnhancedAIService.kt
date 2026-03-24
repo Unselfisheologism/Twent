@@ -1361,7 +1361,8 @@ class EnhancedAIService private constructor(private val context: Context) {
                 chatModelHasDirectAudio,
                 chatModelHasDirectVideo,
                 useToolCallApi,
-                chatModelHasDirectImage
+                chatModelHasDirectImage,
+                functionType
         )
     }
 
@@ -1421,6 +1422,12 @@ class EnhancedAIService private constructor(private val context: Context) {
             if (!enableTools && !enableMemoryQuery) {
                 AppLogger.d(TAG, "全局设置已禁用工具和记忆，本次调用不提供任何Tool Call工具")
                 return null
+            }
+
+            // UI_CONTROLLER模式：只提供UI自动化工具
+            if (functionType == FunctionType.UI_CONTROLLER) {
+                AppLogger.d(TAG, "UI_CONTROLLER模式：返回UI自动化工具列表")
+                return getUiAutomationTools()
             }
 
             // 获取对应功能类型的模型配置
@@ -1521,9 +1528,13 @@ class EnhancedAIService private constructor(private val context: Context) {
         // 工具列表从JavaScript包动态加载
         AppLogger.d(TAG, "UI_CONTROLLER模式: 将使用UI自动化系统提示")
         
-        // 返回一个包含UI自动化工具名的虚拟列表，让AI知道可用工具
-        // 实际的工具由JavaScript引擎在运行时提供
+        // 返回UI自动化工具列表，包含usage_advice作为第一个工具提供关键指导
         return listOf(
+            ToolPrompt(
+                name = "usage_advice",
+                description = "UI AUTOMATION CORE RULES (CRITICAL): When user asks to check x.com/Twitter/Instagram notifications, you MUST open the actual APP and navigate to notifications section - do NOT confuse with system notifications. Use app_launch → then UI automation to navigate. Only use web search when user explicitly asks 'search the web' or 'get news'.",
+                parameters = ""
+            ),
             ToolPrompt(
                 name = "tap",
                 description = "Tap on a specific coordinate or UI element on the screen",

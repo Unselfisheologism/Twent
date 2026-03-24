@@ -421,19 +421,20 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
             )
         }
 
-        val uiConfig = EnhancedAIService.getModelConfigForFunction(context, FunctionType.UI_CONTROLLER)
-        if (!uiConfig.enableDirectImageProcessing) {
+        // 使用与主AI agent相同的CHAT模型配置，确保API provider一致性
+        val chatConfig = EnhancedAIService.getModelConfigForFunction(context, FunctionType.CHAT)
+        if (!chatConfig.enableDirectImageProcessing) {
             return ToolResult(
                 toolName = tool.name,
                 success = false,
                 result = StringResultData(""),
-                error = "当前 UI 控制器模型未启用识图能力，请在设置-功能模型中为 UI 控制器功能选择支持图片理解的模型后再试。"
+                error = "当前聊天模型未启用识图能力，请在设置-功能模型中为聊天功能选择支持图片理解的模型后再试。"
             )
         }
 
         return try {
-            // 获取专用于 UI_CONTROLLER 的 AIService 实例
-            val uiService = EnhancedAIService.getAIServiceForFunction(context, FunctionType.UI_CONTROLLER)
+            // 使用与主AI agent相同的CHAT模型，确保API provider一致性
+            val uiService = EnhancedAIService.getAIServiceForFunction(context, FunctionType.CHAT)
             val systemPrompt = buildUiAutomationSystemPrompt()
 
             val metrics = context.resources.displayMetrics

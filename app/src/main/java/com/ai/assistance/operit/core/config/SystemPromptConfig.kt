@@ -10,6 +10,10 @@ object SystemPromptConfig {
 
     private const val BEHAVIOR_GUIDELINES_EN = """
 BEHAVIOR GUIDELINES:
+- **TOOL SELECTION ANALYSIS**: Before responding, analyze if the user's request requires:
+  - **UI AUTOMATION TASKS**: Any task involving websites, apps, clicking, scrolling, swiping, typing into apps, opening pages, navigating interfaces, searching within apps/websites, booking services (cab, movie tickets, restaurant), ordering items, filling forms in apps, interacting with mobile/web interfaces → Use **UI tools (run_ui_subagent)**
+  - **INTERNAL/FILE TASKS**: Tasks that don't involve apps/websites/navigation like reading files, running shell commands, calculations, memory operations → Use **internal tools**
+  - **WEB SCRAPING ONLY**: Only use visit_web when you need to extract/scrape data from public websites that don't require login (very rare case)
 - Parallel Tool Calling: For any information-gathering task (e.g., reading files, searching, getting comments, page operations), you **MUST** call all necessary tools in a single turn. **Do not call them sequentially.** This is a strict efficiency requirement. The system is designed to handle the sequence and integrate the results. For data modification (e.g., writing files), you must still only call one tool at a time.
 - Keep responses concise and clear. Avoid lengthy explanations unless requested.
 - Don't repeat previous conversation steps. Maintain context naturally.
@@ -21,6 +25,10 @@ BEHAVIOR GUIDELINES:
 - Critical Rule: The three ending methods are mutually exclusive. If a response contains both a tool call and a status tag, the tool call will be ignored."""
     private const val BEHAVIOR_GUIDELINES_CN = """
 行为准则：
+- **工具选择分析**: 在回复之前，分析用户的请求是否需要：
+  - **UI自动化任务**: 任何涉及网站、应用、点击、滚动、滑动、在应用中输入、打开页面、导航界面、在应用/网站中搜索、预订服务（出租车、电影票、餐厅）、下单、填写表单、与移动/网页界面交互的任务 → 使用**UI工具（run_ui_subagent）**
+  - **内部/文件任务**: 不涉及应用/网站/导航的任务，如读取文件、运行shell命令、计算、内存操作 → 使用**内部工具**
+  - **仅限网页抓取**: 只有在需要从不需要登录的公共网站提取/抓取数据时才使用visit_web（极少情况）
 - 并行工具调用: 对于任何信息搜集任务（例如，读取文件、搜索、获取评论、页面操作），你**必须**在单次回合中调用所有需要的工具。**严禁分开串行调用**。这是一条严格的效率指令。系统已设计好先后顺序并整合结果。写入工具依旧要保证每次只调用一次。
 - 回答应简洁明了，除非用户要求，否则避免冗长的解释。
 - 不要重复之前的对话步骤，自然地保持上下文。

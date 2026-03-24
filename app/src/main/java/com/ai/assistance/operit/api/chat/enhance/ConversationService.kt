@@ -242,7 +242,8 @@ class ConversationService(
             chatModelHasDirectAudio: Boolean = false,
             chatModelHasDirectVideo: Boolean = false,
             useToolCallApi: Boolean = false,
-            chatModelHasDirectImage: Boolean = false
+            chatModelHasDirectImage: Boolean = false,
+            functionType: FunctionType = FunctionType.CHAT
     ): List<Pair<String, String>> {
         val preparedHistory = mutableListOf<Pair<String, String>>()
         conversationMutex.withLock {
@@ -321,8 +322,16 @@ class ConversationService(
                 val desktopPetRulesText = if (promptFunctionType == PromptFunctionType.DESKTOP_PET) buildDesktopPetMoodRulesText() else ""
                 AppLogger.d("petRules", desktopPetRulesText)
 
+                // UI_CONTROLLER模式：添加专门的UI自动化系统提示
+                val uiAutomationRulesText = if (functionType == FunctionType.UI_CONTROLLER) {
+                    buildUiAutomationSystemPrompt()
+                } else {
+                    ""
+                }
+
                 // 构建最终的系统提示词
                 val finalSystemPrompt = buildString {
+                    append(uiAutomationRulesText)
                     append(desktopPetRulesText)
                     append(systemPrompt) 
                     append(waifuRulesText)
@@ -693,6 +702,51 @@ class ConversationService(
      */
     private fun buildDesktopPetMoodRulesText(): String {
         return FunctionalPrompts.desktopPetMoodRulesText()
+    }
+
+    /**
+     * 构建UI自动化模式的系统提示
+     * 当functionType为UI_CONTROLLER时，此提示会被添加到系统提示的最前面
+     * 告诉AI只使用UI自动化工具，不使用其他工具
+     */
+    private fun buildUiAutomationSystemPrompt(): String {
+        return """
+## UI Automation Mode
+
+You are currently in UI AUTOMATION mode. Your primary function is to interact with apps and websites on this device using native UI automation (tapping, swiping, scrolling, text input, etc.).
+
+### Available Tools
+You ONLY have access to UI automation tools:
+- tap: Tap on screen coordinates or elements
+- click: Click on UI elements by properties
+- swipe: Swipe in a direction
+- scroll: Scroll up/down/left/right
+- get_screen: Capture screen for analysis
+- get_screen_xml: Get screen hierarchy XML
+- launch_app: Launch applications
+- find_element: Find UI elements
+- input_text: Input text into fields
+- press_key: Press keys
+
+### Important Rules
+1. NEVER use web scraping or HTTP tools - use UI automation to navigate websites/apps
+2. When user asks to "check X notifications" or "check Instagram/Twitter/Facebook notifications",
+   - You MUST open the actual app and navigate to the notifications section
+   - Do NOT confuse with system notifications (NotificationListenerService)
+   - Use UI automation: launch the app → navigate to notifications → read actual in-app notifications
+3. Always analyze the current screen state before taking actions
+4. Use get_screen or get_screen_xml to understand the UI structure
+5. Perform actual UI interactions (tap, swipe, scroll) to complete tasks
+6. Never rely solely on web URLs - use the app directly for app-specific tasks
+
+### Examples
+- User: "Check my Twitter notifications" → Open Twitter app → Navigate to notifications tab → Read actual notifications
+- User: "Post on Instagram" → Open Instagram app → Tap the + button → Create post
+- User: "Open Chrome and search for X" → Launch Chrome → Tap search bar → Input search → Tap search result
+
+Remember: You are a UI automation assistant. Use native UI interactions, not web APIs.
+
+""".trimIndent()
     }
 
     /**
