@@ -96,12 +96,12 @@ class ModelConfigManager(private val context: Context) {
         return ModelConfigData(
                 id = DEFAULT_CONFIG_ID,
                 name = context.getString(R.string.model_config_default_name),
-                apiKey=ApiPre...KEY,
+                apiKey = ApiPreferences.DEFAULT_API_KEY,
                 apiEndpoint = defaultEndpoint,
                 modelName = defaultModelName,
                 apiProviderType = DEFAULT_API_PROVIDER_TYPE,
                 hasCustomParameters = false,
-                maxTokensEnabled=***
+                maxTokensEnabled = false,
                 temperatureEnabled = false,
                 topPEnabled = false,
                 topKEnabled = false,
