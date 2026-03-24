@@ -449,7 +449,7 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
             prompt = prompt
                 .replace("TOOL_USAGE_GUIDELINES_SECTION", if (useEnglish) TOOL_USAGE_GUIDELINES_EN else TOOL_USAGE_GUIDELINES_CN)
                 .replace("PACKAGE_SYSTEM_GUIDELINES_SECTION", if (useEnglish) PACKAGE_SYSTEM_GUIDELINES_EN else PACKAGE_SYSTEM_GUIDELINES_CN)
-                .replace("AVAILABLE_TOOLS_SECTION", if (useEnglish) availableToolsEn else availableToolsCn)
+                .replace("AVAILABLE_TOOLS_SECTION", ComprehensiveToolOverview.TOOL_OVERVIEW_EN + if (useEnglish) availableToolsEn else availableToolsCn)
         }
     } else {
         if (enableMemoryQuery) {
