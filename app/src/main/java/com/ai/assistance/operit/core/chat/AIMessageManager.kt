@@ -14,6 +14,7 @@ import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.AttachmentInfo
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.data.model.ToolParameter
+import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.ui.features.chat.webview.workspace.process.WorkspaceAttachmentProcessor
@@ -243,6 +244,7 @@ object AIMessageManager {
         chatHistory: List<ChatMessage>,
         workspacePath: String?,
         promptFunctionType: PromptFunctionType,
+        functionType: FunctionType = FunctionType.CHAT, // 添加functionType参数以支持UI Agent模式
         enableThinking: Boolean,
         thinkingGuidance: Boolean,
         enableMemoryQuery: Boolean,
@@ -337,6 +339,7 @@ object AIMessageManager {
                 chatId = chatId,
                 chatHistory = memoryForRequest, // Correct parameter name is chatHistory
                 workspacePath = workspacePath,
+                functionType = functionType, // 传递functionType参数以支持UI Agent模式
                 promptFunctionType = promptFunctionType,
                 enableThinking = enableThinking,
                 thinkingGuidance = thinkingGuidance,

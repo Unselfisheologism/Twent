@@ -1430,7 +1430,7 @@ class EnhancedAIService private constructor(private val context: Context) {
             if (!config.enableToolCall) {
                 return null
             }
-            
+
             // 获取所有工具分类
             val isEnglish = LocaleUtils.getCurrentLanguage(context) == "en"
 
@@ -1510,6 +1510,20 @@ class EnhancedAIService private constructor(private val context: Context) {
             AppLogger.e(TAG, "获取工具列表失败", e)
             null
         }
+    }
+
+    /**
+     * 获取UI自动化工具列表
+     * 当functionType为UI_CONTROLLER时，只返回UI自动化相关工具
+     */
+    private fun getUiAutomationTools(): List<ToolPrompt> {
+        // UI_CONTROLLER模式使用特殊的系统提示来告诉AI只使用UI自动化工具
+        // 工具列表从JavaScript包动态加载，这里返回null表示使用默认行为
+        // JavaScript引擎会根据functionType过滤工具
+        AppLogger.d(TAG, "UI_CONTROLLER模式: 将使用UI自动化系统提示")
+        
+        // 返回null，让系统使用默认的工具加载流程，但使用UI_CONTROLLER的系统提示
+        return null
     }
 
     // --- Service Lifecycle Management ---

@@ -570,6 +570,7 @@ class StandardChatManagerTool(private val context: Context) {
             val wakeLaunchedParam = tool.parameters.find { it.name == "wake_launched" }?.value?.trim()
             val timeoutMsParam = tool.parameters.find { it.name == "timeout_ms" }?.value?.trim()
             val keepIfExistsParam = tool.parameters.find { it.name == "keep_if_exists" }?.value?.trim()
+            val agentModeParam = tool.parameters.find { it.name == "agent_mode" }?.value?.trim()
 
             val initialMode =
                 initialModeParam
@@ -649,6 +650,9 @@ class StandardChatManagerTool(private val context: Context) {
             }
             if (keepIfExists == true) {
                 intent.putExtra(FloatingChatService.EXTRA_KEEP_IF_EXISTS, true)
+            }
+            if (agentModeParam != null) {
+                intent.putExtra(FloatingChatService.EXTRA_AGENT_MODE, agentModeParam)
             }
 
             val connected = ensureServiceConnected(intent)

@@ -104,12 +104,18 @@ class FloatingChatService : Service(), FloatingWindowCallback {
         const val EXTRA_WAKE_LAUNCHED = "WAKE_LAUNCHED"
         const val EXTRA_AUTO_EXIT_AFTER_MS = "AUTO_EXIT_AFTER_MS"
         const val EXTRA_KEEP_IF_EXISTS = "KEEP_IF_EXISTS"
+        const val EXTRA_AGENT_MODE = "AGENT_MODE"
 
         fun getInstance(): FloatingChatService? = instance
     }
 
     private val autoEnterVoiceChat = mutableStateOf(false)
     private val wakeLaunched = mutableStateOf(false)
+    private val agentMode = mutableStateOf<String?>(null)
+
+    fun isWakeLaunched(): Boolean = wakeLaunched.value
+
+    fun getAgentMode(): String? = agentMode.value
 
     private val autoExitHandler = Handler(Looper.getMainLooper())
     private var autoExitRunnable: Runnable? = null
@@ -460,6 +466,12 @@ class FloatingChatService : Service(), FloatingWindowCallback {
             }
             if (intent?.hasExtra(EXTRA_WAKE_LAUNCHED) == true) {
                 wakeLaunched.value = wakeLaunchedExtra
+            }
+
+            // Handle agent mode
+            val agentModeExtra = intent?.getStringExtra(EXTRA_AGENT_MODE)
+            if (agentModeExtra != null) {
+                agentMode.value = agentModeExtra
             }
 
             if (wakeLaunchedExtra) {

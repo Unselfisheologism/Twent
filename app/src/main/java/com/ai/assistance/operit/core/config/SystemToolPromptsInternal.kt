@@ -645,6 +645,12 @@ object SystemToolPromptsInternal {
                                         type = "boolean",
                                         description = "optional, if true and service already running, do not force floating window mode change",
                                         required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "agent_mode",
+                                        type = "string",
+                                        description = "optional, sets the agent mode: default (all tools) or ui_agent (only UI automation tools). Use 'ui_agent' when activated via voice or long-press home button for GUI automation tasks.",
+                                        required = false
                                     )
                                 )
                         ),

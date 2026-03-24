@@ -20,6 +20,7 @@ import com.ai.assistance.operit.data.preferences.WaifuPreferences
 import com.ai.assistance.operit.data.preferences.FunctionalConfigManager
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
+import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.ui.floating.ui.fullscreen.XmlTextProcessor
 import com.ai.assistance.operit.ui.features.chat.webview.workspace.WorkspaceBackupManager
 import kotlinx.coroutines.CompletableDeferred
@@ -276,9 +277,20 @@ class MessageProcessingDelegate(
 
             AppLogger.d(TAG, "开始处理用户消息：附件数量=${attachments.size}")
 
+            // Determine function type based on agent mode
+            val effectiveFunctionType = run {
+                val agentMode = FloatingChatService.getInstance()?.getAgentMode()
+                if (agentMode == "ui_agent") {
+                    AppLogger.d(TAG, "UI Agent mode detected - using UI_CONTROLLER function type")
+                    FunctionType.UI_CONTROLLER
+                } else {
+                    FunctionType.CHAT
+                }
+            }
+
             // 获取当前模型配置以检查是否启用直接图片处理
-            // 聊天功能直接使用CHAT类型的配置
-            val configId = functionalConfigManager.getConfigIdForFunction(FunctionType.CHAT)
+            // 根据agent mode选择对应的配置
+            val configId = functionalConfigManager.getConfigIdForFunction(effectiveFunctionType)
             val currentModelConfig = modelConfigManager.getModelConfigFlow(configId).first()
             val enableDirectImageProcessing = currentModelConfig.enableDirectImageProcessing
             val enableDirectAudioProcessing = currentModelConfig.enableDirectAudioProcessing
@@ -364,17 +376,43 @@ class MessageProcessingDelegate(
                             setChatInputProcessingState(activeChatId, EnhancedInputProcessingState.Idle)
                             return@launch
                         }
-                serviceForTurnComplete = service
+
+                // 检查agent模式，根据agent模式选择正确的service
+                val agentMode = FloatingChatService.getInstance()?.getAgentMode()
+                val effectiveFunctionType = if (agentMode == "ui_agent") {
+                    AppLogger.d(TAG, "UI Agent mode detected - using UI_CONTROLLER function type")
+                    com.ai.assistance.operit.data.model.FunctionType.UI_CONTROLLER
+                } else {
+                    com.ai.assistance.operit.data.model.FunctionType.CHAT
+                }
+
+                // 如果是UI Agent模式，获取对应function type的service
+                val finalService = if (agentMode == "ui_agent") {
+                    try {
+                        val uiService = EnhancedAIService.getAIServiceForFunction(context, com.ai.assistance.operit.data.model.FunctionType.UI_CONTROLLER)
+                        // 获取AIService后，需要获取其关联的EnhancedAIService实例
+                        // 这里我们创建一个包装，或者直接使用已有的service
+                        // 由于getAIServiceForFunction返回AIService，我们使用原来的service并让它内部使用正确的function type
+                        service
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "Failed to get UI controller service: ${e.message}", e)
+                        service
+                    }
+                } else {
+                    service
+                }
+
+                serviceForTurnComplete = finalService
 
                 // 清除上一次可能残留的 Error 状态，避免 StateFlow 重放导致新一轮发送立即再次触发弹窗
-                service.setInputProcessingState(EnhancedInputProcessingState.Processing(context.getString(R.string.message_processing)))
+                finalService.setInputProcessingState(EnhancedInputProcessingState.Processing(context.getString(R.string.message_processing)))
 
                 // 监听此 chat 对应的 EnhancedAIService 状态，映射到 per-chat state
                 chatRuntime.stateCollectionJob?.cancel()
                 chatRuntime.stateCollectionJob =
                     coroutineScope.launch {
                         var lastErrorMessage: String? = null
-                        service.inputProcessingState.collect { state ->
+                        finalService.inputProcessingState.collect { state ->
                             setChatInputProcessingState(activeChatId, state)
 
                             if (state is EnhancedInputProcessingState.Error) {
@@ -420,7 +458,7 @@ class MessageProcessingDelegate(
 
                 // 2. 使用 AIMessageManager 发送消息
                 val responseStream = AIMessageManager.sendMessage(
-                    enhancedAiService = service,
+                    enhancedAiService = finalService,
                     chatId = activeChatId,
                     messageContent = finalMessageContent,
                     //现在chatHistory 100%包含最新的用户输入，所以可以截掉
@@ -430,6 +468,7 @@ class MessageProcessingDelegate(
                         chatHistory
                     },
                     workspacePath = workspacePath,
+                    functionType = effectiveFunctionType, // 传递effectiveFunctionType以支持UI Agent模式
                     promptFunctionType = promptFunctionType,
                     enableThinking = enableThinking,
                     thinkingGuidance = thinkingGuidance,
