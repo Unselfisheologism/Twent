@@ -35,7 +35,8 @@ import com.ai.assistance.operit.ui.features.agents.AgentWithStatus
 @Composable
 fun AgentSessionsScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToCommands: (String) -> Unit = { _ -> }
+    onNavigateToCommands: (String) -> Unit = { _ -> },
+    onNavigateToTerminal: (String) -> Unit = { _ -> }
 ) {
     val context = LocalContext.current
     val viewModel: AgentViewModel = viewModel(
@@ -98,7 +99,7 @@ fun AgentSessionsScreen(
                     error = sessionsState.error,
                     onInstall = { agentId -> viewModel.installAgent(agentId) },
                     onLaunchTerminal = { agentId, agentName ->
-                        viewModel.launchNativeTerminal(agentId, agentName)
+                        viewModel.launchNativeTerminal(agentId, agentName, onNavigateToTerminal)
                     },
                     onCommands = { agentId -> onNavigateToCommands(agentId) }
                 )
@@ -201,7 +202,7 @@ private fun AgentMarketTab(
     isLoading: Boolean,
     error: String?,
     onInstall: (String) -> Unit,
-    onLaunchTerminal: (String, String) -> Unit,
+    onLaunchTerminal: (String, String, (String) -> Unit) -> Unit,
     onCommands: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -252,7 +253,7 @@ private fun AgentMarketTab(
                     isLoading = isLoading,
                     onInstall = { onInstall(agentWithStatus.definition.id) },
                     onLaunchTerminal = { 
-                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name) 
+                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name, onNavigateToTerminal) 
                     },
                     onCommands = { onCommands(agentWithStatus.definition.id) }
                 )
@@ -272,7 +273,8 @@ private fun AgentMarketCard(
     isLoading: Boolean,
     onInstall: () -> Unit,
     onLaunchTerminal: () -> Unit,
-    onCommands: () -> Unit
+    onCommands: () -> Unit,
+    onNavigateToTerminal: (String) -> Unit = { _ -> }
 ) {
     val agent = agentWithStatus.definition
     val status = agentWithStatus.installStatus
@@ -467,13 +469,10 @@ private fun AgentMarketCard(
 @Composable
 private fun AgentSessionCard(
     session: AgentSession,
-    onClick: () -> Unit,
     onClose: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

@@ -84,7 +84,6 @@ import com.ai.assistance.operit.ui.features.update.screens.UpdateScreen
 import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowListScreen
 import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowDetailScreen
 import com.ai.assistance.operit.ui.features.agents.screens.AgentSessionsScreen
-import com.ai.assistance.operit.ui.features.agents.screens.AgentChatScreen
 import com.ai.assistance.operit.ui.features.agents.screens.AgentCommandsScreen
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
@@ -137,6 +136,10 @@ sealed class Screen(
                 onNavigateBack = onGoBack,
                 onNavigateToCommands = { agentId ->
                     navigateTo(Screen.AgentCommands(agentId))
+                },
+                onNavigateToTerminal = { command ->
+                    // Navigate to Terminal screen with the command pre-filled
+                    navigateTo(Screen.Terminal(command))
                 }
             )
         }
@@ -408,7 +411,7 @@ sealed class Screen(
             ToolboxScreen(
                     navController = navController,
                     onFileManagerSelected = { navigateTo(FileManager) },
-                    onTerminalSelected = { navigateTo(Terminal) },
+                    onTerminalSelected = { navigateTo(Terminal()) },
                     onAppPermissionsSelected = { navigateTo(AppPermissions) },
                     onUIDebuggerSelected = { navigateTo(UIDebugger) },
                     onFFmpegToolboxSelected = { navigateTo(FFmpegToolbox) },
@@ -1087,7 +1090,8 @@ sealed class Screen(
         }
     }
 
-    data object Terminal :
+    // Terminal screen - can accept an optional initial command
+    data class Terminal(val initialCommand: String? = null) :
             Screen(parentScreen = Toolbox, navItem = NavItem.Toolbox, titleRes = R.string.screen_title_terminal) {
         @Composable
         override fun Content(
@@ -1100,7 +1104,7 @@ sealed class Screen(
                 onError: (String) -> Unit,
                 onGestureConsumed: (Boolean) -> Unit
         ) {
-            TerminalToolScreen(navController = navController)
+            TerminalToolScreen(navController = navController, initialCommand = initialCommand)
         }
     }
 
@@ -1138,7 +1142,7 @@ sealed class Screen(
         }
     }
 
-    // AI Agent Sessions - list of running agent sessions
+    // AI Agent Sessions - list of running agent sessions (nested under Toolbox)
     data object AgentSessions :
             Screen(parentScreen = Toolbox, navItem = NavItem.Toolbox) {
         @Composable
@@ -1154,35 +1158,12 @@ sealed class Screen(
         ) {
             AgentSessionsScreen(
                 onNavigateBack = onGoBack,
-                onNavigateToChat = { sessionId, agentId, agentName ->
-                    navigateTo(Screen.AgentChat(sessionId, agentId, agentName))
-                },
                 onNavigateToCommands = { agentId ->
                     navigateTo(Screen.AgentCommands(agentId))
+                },
+                onNavigateToTerminal = { command ->
+                    navigateTo(Screen.Terminal(command))
                 }
-            )
-        }
-    }
-
-    // AI Agent Chat - interactive chat with running agent
-    data class AgentChat(val sessionId: String, val agentId: String, val agentName: String) :
-            Screen(parentScreen = AgentSessions, navItem = NavItem.Toolbox) {
-        @Composable
-        override fun Content(
-                navController: NavController,
-                navigateTo: ScreenNavigationHandler,
-                updateNavItem: NavItemChangeHandler,
-                onGoBack: () -> Unit,
-                hasBackgroundImage: Boolean,
-                onLoading: (Boolean) -> Unit,
-                onError: (String) -> Unit,
-                onGestureConsumed: (Boolean) -> Unit
-        ) {
-            AgentChatScreen(
-                sessionId = sessionId,
-                agentId = agentId,
-                agentName = agentName,
-                onNavigateBack = onGoBack
             )
         }
     }

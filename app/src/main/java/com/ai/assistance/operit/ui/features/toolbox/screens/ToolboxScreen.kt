@@ -497,10 +497,18 @@ fun FileManagerToolScreen(navController: NavController) {
 /** 显示终端工具屏幕 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TerminalToolScreen(navController: NavController, forceShowSetup: Boolean = false) {
+fun TerminalToolScreen(
+    navController: NavController, 
+    forceShowSetup: Boolean = false,
+    initialCommand: String? = null
+) {
         val context = LocalContext.current
         val terminalManager = remember { TerminalManager.getInstance(context) }
-        val terminalEnv = rememberTerminalEnv(terminalManager = terminalManager, forceShowSetup = forceShowSetup)
+        val terminalEnv = rememberTerminalEnv(
+            terminalManager = terminalManager, 
+            forceShowSetup = forceShowSetup,
+            initialCommand = initialCommand
+        )
         CustomScaffold() { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) { TerminalViewScreen(env = terminalEnv) }
         }

@@ -183,26 +183,45 @@ class AgentViewModel(
 
     /**
      * Start a new agent session (only if installed)
+     * Note: This is now deprecated in favor of launchNativeTerminal
      */
     fun startAgentSession(agentId: String, agentName: String) {
-        viewModelScope.launch {
-            _sessionsState.value = _sessionsState.value.copy(isLoading = true, error = null)
-            
-            val title = "$agentName - Session ${System.currentTimeMillis() % 1000}"
-            val result = repository.startAgentSession(agentId, title)
-            
-            result.fold(
-                onSuccess = { sessionId ->
-                    _sessionsState.value = _sessionsState.value.copy(isLoading = false)
-                    switchToChat(sessionId, agentId, agentName)
-                },
-                onFailure = { error ->
-                    _sessionsState.value = _sessionsState.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to start session"
-                    )
-                }
+        // This is kept for backward compatibility but should not be used
+    }
+
+    /**
+     * Launch native terminal with the agent CLI command.
+     * Only works if the agent is installed.
+     */
+    fun launchNativeTerminal(
+        agentId: String, 
+        agentName: String, 
+        onNavigateToTerminal: (String) -> Unit
+    ) {
+        val agent = AgentRegistry.getById(agentId)
+        if (agent == null) {
+            _sessionsState.value = _sessionsState.value.copy(
+                error = "Unknown agent: $agentId"
             )
+            return
+        }
+
+        // Check if agent is installed
+        val agentWithStatus = repository.getAgentWithStatus(agentId)
+        if (agentWithStatus?.second != AgentInstallStatus.INSTALLED) {
+            _sessionsState.value = _sessionsState.value.copy(
+                error = "${agent.name} is not installed. Please install it first."
+            )
+            return
+        }
+
+        // Create a session for tracking purposes
+        viewModelScope.launch {
+            val title = "$agentName - Session ${System.currentTimeMillis() % 1000}"
+            repository.startAgentSession(agentId, title)
+            
+            // Navigate to terminal with the agent's start command
+            onNavigateToTerminal(agent.startCommand)
         }
     }
 
