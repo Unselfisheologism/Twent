@@ -5052,6 +5052,8 @@
     <string name="toolreg_ffmpeg_execute_desc">Execute FFmpeg command: %1$s</string>
     <string name="toolreg_ffmpeg_info_desc">Get FFmpeg info</string>
     <string name="toolreg_ffmpeg_convert_desc">Convert video: %1$s → %2$s</string>
+    <string name="toolreg_text_to_speech_desc">Speak text: %1$s</string>
+    <string name="toolreg_speech_to_text_desc">Speech recognition (language: %1$s)</string>
 
     <!-- AutoGLM One-Click Configuration -->
     <string name="autoglm_config_name">AutoGLM Configuration</string>
