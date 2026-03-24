@@ -198,4 +198,22 @@ object ToolGetter {
     fun getSSHRemoteConnectionTools(context: Context): SSHRemoteConnectionTools {
         return SSHRemoteConnectionTools(context)
     }
+
+    /**
+     * 获取文本转语音工具执行器
+     * @param context 应用上下文
+     * @return 文本转语音工具执行器实现（只有标准版本）
+     */
+    fun getTextToSpeechToolExecutor(context: Context): StandardTextToSpeechToolExecutor {
+        return StandardTextToSpeechToolExecutor(context)
+    }
+
+    /**
+     * 获取语音转文本工具执行器
+     * @param context 应用上下文
+     * @return 语音转文本工具执行器实现（只有标准版本）
+     */
+    fun getSpeechToTextToolExecutor(context: Context): StandardSpeechToTextToolExecutor {
+        return StandardSpeechToTextToolExecutor(context)
+    }
 }

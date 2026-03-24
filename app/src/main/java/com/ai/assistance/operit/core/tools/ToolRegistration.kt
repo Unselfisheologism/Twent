@@ -1439,6 +1439,33 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // 文本转语音工具 - 将文本转换为语音并播放
+    handler.registerTool(
+            name = "text_to_speech",
+            descriptionGenerator = { tool ->
+                val text = tool.parameters.find { it.name == "text" }?.value ?: ""
+                val preview = if (text.length > 30) "${text.take(30)}..." else text
+                s(R.string.toolreg_text_to_speech_desc, preview)
+            },
+            executor = { tool ->
+                val ttsTool = ToolGetter.getTextToSpeechToolExecutor(context)
+                runBlocking(Dispatchers.IO) { ttsTool.invoke(tool) }
+            }
+    )
+
+    // 语音转文本工具 - 将语音识别为文本
+    handler.registerTool(
+            name = "speech_to_text",
+            descriptionGenerator = { tool ->
+                val languageCode = tool.parameters.find { it.name == "language_code" }?.value ?: "zh-CN"
+                s(R.string.toolreg_speech_to_text_desc, languageCode)
+            },
+            executor = { tool ->
+                val sttTool = ToolGetter.getSpeechToTextToolExecutor(context)
+                runBlocking(Dispatchers.IO) { sttTool.invoke(tool) }
+            }
+    )
+
     // Register package creator tools (create packages, MCP servers, and skills)
     PackageCreatorTools.registerCreatorTools(handler, context)
 }
