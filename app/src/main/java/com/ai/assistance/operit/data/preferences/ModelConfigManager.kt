@@ -50,7 +50,7 @@ class ModelConfigManager(private val context: Context) {
         const val DEFAULT_CONFIG_NAME = "model_config_default_name"
 
         // Default API provider type
-        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.DEEPSEEK
+        private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.KILO_GATEWAY
     }
 
     // Json解析器，支持宽松模式
@@ -89,12 +89,16 @@ class ModelConfigManager(private val context: Context) {
 
     // 从原有ApiPreferences创建默认配置
     private fun createFreshDefaultConfig(): ModelConfigData {
+        // Kilo Gateway defaults
+        val defaultEndpoint = "https://api.kilo.ai/api/gateway/chat/completions"
+        val defaultModelName = "minimax/minimax-m2.5:free"
+        
         return ModelConfigData(
                 id = DEFAULT_CONFIG_ID,
                 name = context.getString(R.string.model_config_default_name),
                 apiKey = ApiPreferences.DEFAULT_API_KEY,
-                apiEndpoint = ApiPreferences.DEFAULT_API_ENDPOINT,
-                modelName = ApiPreferences.DEFAULT_MODEL_NAME,
+                apiEndpoint = defaultEndpoint,
+                modelName = defaultModelName,
                 apiProviderType = DEFAULT_API_PROVIDER_TYPE,
                 hasCustomParameters = false,
                 maxTokensEnabled = false,
