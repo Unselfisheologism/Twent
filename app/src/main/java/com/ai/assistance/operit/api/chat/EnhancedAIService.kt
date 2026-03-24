@@ -1518,12 +1518,68 @@ class EnhancedAIService private constructor(private val context: Context) {
      */
     private fun getUiAutomationTools(): List<ToolPrompt> {
         // UI_CONTROLLER模式使用特殊的系统提示来告诉AI只使用UI自动化工具
-        // 工具列表从JavaScript包动态加载，这里返回null表示使用默认行为
-        // JavaScript引擎会根据functionType过滤工具
+        // 工具列表从JavaScript包动态加载
         AppLogger.d(TAG, "UI_CONTROLLER模式: 将使用UI自动化系统提示")
         
-        // 返回null，让系统使用默认的工具加载流程，但使用UI_CONTROLLER的系统提示
-        return null
+        // 返回一个包含UI自动化工具名的虚拟列表，让AI知道可用工具
+        // 实际的工具由JavaScript引擎在运行时提供
+        return listOf(
+            ToolPrompt(
+                name = "tap",
+                description = "Tap on a specific coordinate or UI element on the screen",
+                parameters = "x, y"
+            ),
+            ToolPrompt(
+                name = "click",
+                description = "Click on a UI element identified by its properties",
+                parameters = "element_id, x, y"
+            ),
+            ToolPrompt(
+                name = "swipe",
+                description = "Swipe on the screen in a direction",
+                parameters = "direction, duration"
+            ),
+            ToolPrompt(
+                name = "scroll",
+                description = "Scroll the screen up, down, left or right",
+                parameters = "direction"
+            ),
+            ToolPrompt(
+                name = "get_screen",
+                description = "Get the current screen content as image for analysis",
+                parameters = ""
+            ),
+            ToolPrompt(
+                name = "get_screen_xml",
+                description = "Get the current screen XML hierarchy for element analysis",
+                parameters = ""
+            ),
+            ToolPrompt(
+                name = "launch_app",
+                description = "Launch an application by package name",
+                parameters = "package_name"
+            ),
+            ToolPrompt(
+                name = "find_element",
+                description = "Find a UI element by text, content description, or other properties",
+                parameters = "text, by"
+            ),
+            ToolPrompt(
+                name = "input_text",
+                description = "Input text into a focused text field",
+                parameters = "text"
+            ),
+            ToolPrompt(
+                name = "press_key",
+                description = "Press a hardware or software key",
+                parameters = "key_name"
+            ),
+            ToolPrompt(
+                name = "get_notification",
+                description = "Get the current system notifications",
+                parameters = ""
+            )
+        )
     }
 
     // --- Service Lifecycle Management ---
