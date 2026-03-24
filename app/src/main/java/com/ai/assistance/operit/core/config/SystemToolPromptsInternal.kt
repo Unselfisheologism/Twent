@@ -536,6 +536,49 @@ object SystemToolPromptsInternal {
                                 )
                         ),
                         ToolPrompt(
+                            name = "patch_workflow",
+                            description = "Incrementally update a workflow (patch). Use for adding, updating, or removing nodes and connections without replacing the entire workflow.",
+                            parametersStructured =
+                                listOf(
+                                    ToolParameterSchema(
+                                        name = "workflow_id",
+                                        type = "string",
+                                        description = "workflow id",
+                                        required = true
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "name",
+                                        type = "string",
+                                        description = "optional, new name for the workflow",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "description",
+                                        type = "string",
+                                        description = "optional, new description for the workflow",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "enabled",
+                                        type = "boolean",
+                                        description = "optional, enable or disable the workflow",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "node_patches",
+                                        type = "string",
+                                        description = "optional, JSON array of node patch operations. Each patch should have 'op' (add/update/remove), 'id' (node id for update/remove), and 'node' (node object for add/update). Example: [{\"op\":\"add\",\"node\":{\"name\":\"New Node\",\"type\":\"...\"}},{\"op\":\"update\",\"id\":\"node-id\",\"node\":{\"name\":\"Updated\"}},{\"op\":\"remove\",\"id\":\"node-id\"}]",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "connection_patches",
+                                        type = "string",
+                                        description = "optional, JSON array of connection patch operations. Each patch should have 'op' (add/update/remove), 'id' (connection id for update/remove), and 'connection' (connection object for add/update). Example: [{\"op\":\"add\",\"connection\":{\"fromNode\":\"...\",\"toNode\":\"...\"}},{\"op\":\"remove\",\"id\":\"conn-id\"}]",
+                                        required = false
+                                    )
+                                )
+                        ),
+                        ToolPrompt(
                             name = "delete_workflow",
                             description = "Delete a workflow.",
                             parametersStructured =
@@ -1957,6 +2000,49 @@ object SystemToolPromptsInternal {
                                         name = "enabled",
                                         type = "boolean",
                                         description = "可选",
+                                        required = false
+                                    )
+                                )
+                        ),
+                        ToolPrompt(
+                            name = "patch_workflow",
+                            description = "增量更新工作流 (patch)。用于添加、更新或移除节点和连接，而无需替换整个工作流。",
+                            parametersStructured =
+                                listOf(
+                                    ToolParameterSchema(
+                                        name = "workflow_id",
+                                        type = "string",
+                                        description = "工作流 ID",
+                                        required = true
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "name",
+                                        type = "string",
+                                        description = "可选，工作流新名称",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "description",
+                                        type = "string",
+                                        description = "可选，工作流新描述",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "enabled",
+                                        type = "boolean",
+                                        description = "可选，启用或禁用工作流",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "node_patches",
+                                        type = "string",
+                                        description = "可选，节点补丁操作 JSON 数组。每个补丁应包含 'op' (add/update/remove)、'id' (更新/移除时的节点 id)、'node' (添加/更新时的节点对象)。示例: [{\"op\":\"add\",\"node\":{\"name\":\"新节点\",\"type\":\"...\"}},{\"op\":\"update\",\"id\":\"节点id\",\"node\":{\"name\":\"已更新\"}},{\"op\":\"remove\",\"id\":\"节点id\"}]",
+                                        required = false
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "connection_patches",
+                                        type = "string",
+                                        description = "可选，连线补丁操作 JSON 数组。每个补丁应包含 'op' (add/update/remove)、'id' (更新/移除时的连线 id)、'connection' (添加/更新时的连线对象)。示例: [{\"op\":\"add\",\"connection\":{\"fromNode\":\"...\",\"toNode\":\"...\"}},{\"op\":\"remove\",\"id\":\"连线id\"}]",
                                         required = false
                                     )
                                 )
