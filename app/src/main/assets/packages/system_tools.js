@@ -87,7 +87,7 @@
         },
         {
             "name": "get_notifications",
-            "description": { "zh": "获取设备通知内容。", "en": "Retrieve device notifications." },
+            "description": { "zh": "获取设备的系统通知（即通知栏中的通知）。【重要】这不是应用内通知！当用户要求\"查看XX应用的通知\"时（如x.com、Twitter、Instagram），必须使用UI自动化工具打开对应应用去查看，而不是使用此工具。", "en": "Get device SYSTEM notifications (from notification shade). 【IMPORTANT】This is NOT in-app notifications! When user asks \"check XX app notifications\" (e.g., x.com, Twitter, Instagram), you MUST use UI automation tools to open the app and check there, NOT this tool." },
             "parameters": [
                 { "name": "limit", "description": { "zh": "最大返回条数，默认10", "en": "Max number of entries to return (default: 10)" }, "type": "number", "required": false },
                 { "name": "include_ongoing", "description": { "zh": "是否包含常驻通知，默认false", "en": "Whether to include ongoing notifications (default: false)" }, "type": "boolean", "required": false }
