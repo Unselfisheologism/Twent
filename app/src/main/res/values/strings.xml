@@ -109,6 +109,7 @@
     <string name="chathistory_external_storage">外部存储</string>
 
     <string name="nav_workflow">工作流</string>
+    <string name="nav_agent_clis">Agent CLIs</string>
     <string name="nav_group_ai_features">AI 功能</string>
     <string name="nav_group_tools">工具</string>
     <string name="nav_group_system">系统</string>
@@ -1973,7 +1974,7 @@
     <string name="tool_default_assistant_guide_desc">设置Operit语音悬浮为系统默认助手</string>
     <string name="tool_terminal">命令终端</string>
     <string name="tool_terminal_desc">功能强大的命令行终端，执行系统指令</string>
-    <string name="tool_agent_sessions">AI 代理</string>
+    <string name="tool_agent_sessions">Agent CLIs</string>
     <string name="tool_agent_sessions_desc">运行 AI 代理程序，如 hermes-agent、Claude Code 等</string>
     <string name="tool_terminal_auto_config">终端自动配置</string>
     <string name="tool_terminal_auto_config_desc">自动安装配置Python、PIP等开发工具</string>

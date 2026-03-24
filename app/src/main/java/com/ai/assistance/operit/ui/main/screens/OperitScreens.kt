@@ -121,6 +121,27 @@ sealed class Screen(
     }
 
     // Main screens (primary)
+    data object AgentCLIs : Screen(navItem = NavItem.AgentCLIs) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AgentSessionsScreen(
+                onNavigateBack = onGoBack,
+                onNavigateToCommands = { agentId ->
+                    navigateTo(Screen.AgentCommands(agentId))
+                }
+            )
+        }
+    }
+
     data object AiChat : Screen(navItem = NavItem.AiChat) {
         @Composable
         override fun Content(
@@ -1504,6 +1525,7 @@ object OperitRouter {
             NavItem.Agreement -> Screen.Agreement
             NavItem.UpdateHistory -> Screen.UpdateHistory
             NavItem.Workflow -> Screen.Workflow
+            NavItem.AgentCLIs -> Screen.AgentCLIs
             else -> Screen.AiChat
         }
     }
