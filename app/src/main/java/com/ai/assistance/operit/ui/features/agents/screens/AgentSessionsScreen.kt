@@ -1,6 +1,5 @@
 package com.ai.assistance.operit.ui.features.agents.screens
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -99,7 +98,9 @@ fun AgentSessionsScreen(
                     error = sessionsState.error,
                     onInstall = { agentId -> viewModel.installAgent(agentId) },
                     onLaunchTerminal = { agentId, agentName ->
-                        viewModel.launchNativeTerminal(agentId, agentName, onNavigateToTerminal)
+                        viewModel.launchNativeTerminal(agentId, agentName) { command ->
+                            onNavigateToTerminal(command)
+                        }
                     },
                     onCommands = { agentId -> onNavigateToCommands(agentId) }
                 )
@@ -202,7 +203,7 @@ private fun AgentMarketTab(
     isLoading: Boolean,
     error: String?,
     onInstall: (String) -> Unit,
-    onLaunchTerminal: (String, String, (String) -> Unit) -> Unit,
+    onLaunchTerminal: (String, String) -> Unit,
     onCommands: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -253,7 +254,7 @@ private fun AgentMarketTab(
                     isLoading = isLoading,
                     onInstall = { onInstall(agentWithStatus.definition.id) },
                     onLaunchTerminal = { 
-                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name, onNavigateToTerminal) 
+                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name) 
                     },
                     onCommands = { onCommands(agentWithStatus.definition.id) }
                 )
@@ -273,8 +274,7 @@ private fun AgentMarketCard(
     isLoading: Boolean,
     onInstall: () -> Unit,
     onLaunchTerminal: () -> Unit,
-    onCommands: () -> Unit,
-    onNavigateToTerminal: (String) -> Unit = { _ -> }
+    onCommands: () -> Unit
 ) {
     val agent = agentWithStatus.definition
     val status = agentWithStatus.installStatus
