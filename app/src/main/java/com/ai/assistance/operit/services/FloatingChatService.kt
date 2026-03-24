@@ -118,6 +118,7 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     fun getAgentMode(): String? = agentMode.value
 
     private val autoExitHandler = Handler(Looper.getMainLooper())
+    private var autoExitRunnable: Runnable? = null
 
     private val wakePrefs by lazy { WakeWordPreferences(applicationContext) }
 
