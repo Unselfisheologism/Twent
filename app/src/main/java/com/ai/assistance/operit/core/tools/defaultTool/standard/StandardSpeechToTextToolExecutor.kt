@@ -46,7 +46,7 @@ class StandardSpeechToTextToolExecutor(private val context: Context) {
                 val maxResults = tool.parameters.find { it.name == "max_results" }?.value?.toIntOrNull() ?: 1
 
                 // Initialize the speech service if not already initialized
-                if (!speechService.isInitialized) {
+                if (!speechService.isInitialized.value) {
                     val initialized = speechService.initialize()
                     if (!initialized) {
                         return@withContext ToolResult(
@@ -149,7 +149,7 @@ class StandardSpeechToTextToolExecutor(private val context: Context) {
     suspend fun getSupportedLanguages(): List<String> {
         return withContext(Dispatchers.IO) {
             try {
-                if (!speechService.isInitialized) {
+                if (!speechService.isInitialized.value) {
                     speechService.initialize()
                 }
                 speechService.getSupportedLanguages()
