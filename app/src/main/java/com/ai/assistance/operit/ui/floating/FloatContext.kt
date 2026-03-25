@@ -123,6 +123,12 @@ fun rememberFloatContext(
         floatContext.currentX = currentX
         floatContext.currentY = currentY
         floatContext.attachments = attachments
+        
+        // Sync UI Agent mode state from FloatingChatService
+        val service = floatContext.chatService
+        if (service != null && !floatContext.isUiAgentMode && service.isInUiAgentMode()) {
+            floatContext.isUiAgentMode = true
+        }
     }
 
     return floatContext
@@ -194,4 +200,19 @@ class FloatContext(
     
      // 标识是否刚完成了屏幕圈选，用于返回全屏模式时自动勾选"屏幕内容"
     var pendingScreenSelection: Boolean by mutableStateOf(false)
-}
+    
+    // UI Agent模式：当启用时，所有用户消息将发送到run_ui_subagent而不是AI
+    // 激活方式：语音启动或主页按钮长按，或用户手动切换
+    var isUiAgentMode by mutableStateOf(false) {
+        // Sync with FloatingChatService when changed
+        didSet {
+            chatService?.setUiAgentMode(isUiAgentMode)
+        }
+    }
+    
+    // UI Agent模式的agent ID（用于持续操作同一虚拟屏幕会话）
+    var uiAgentId by mutableStateOf<String?>(null) {
+        didSet {
+            chatService?.setUiAgentId(uiAgentId)
+        }
+    }

@@ -61,6 +61,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Smartphone
 
 /**
  * 全屏模式主屏幕
@@ -241,6 +243,25 @@ fun FloatingFullscreenMode(floatContext: FloatContext) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // UI Agent mode toggle button
+            val chatService = floatContext.chatService
+            val isUiAgentMode = chatService?.isInUiAgentMode() == true
+            
+            IconButton(
+                onClick = {
+                    val newMode = !isUiAgentMode
+                    chatService?.setUiAgentMode(newMode)
+                    floatContext.isUiAgentMode = newMode
+                }
+            ) {
+                Icon(
+                    imageVector = if (isUiAgentMode) Icons.Default.Smartphone else Icons.Default.Android,
+                    contentDescription = if (isUiAgentMode) "Switch to AI Mode" else "Switch to UI Agent Mode",
+                    tint = if (isUiAgentMode) Color(0xFF4CAF50) else Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
             // 返回窗口模式
             IconButton(onClick = {
                 floatContext.onModeChange(FloatingMode.WINDOW)

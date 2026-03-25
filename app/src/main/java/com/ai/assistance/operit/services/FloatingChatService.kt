@@ -116,6 +116,105 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     fun isWakeLaunched(): Boolean = wakeLaunched.value
 
     fun getAgentMode(): String? = agentMode.value
+    
+    // UI Agent mode state
+    private val _isUiAgentMode = mutableStateOf(false)
+    val isUiAgentMode: State<Boolean> = _isUiAgentMode
+    
+    // UI Agent ID for session continuity
+    private val _uiAgentId = mutableStateOf<String?>(null)
+    val uiAgentId: State<String?> = _uiAgentId
+    
+    fun setUiAgentMode(enabled: Boolean) {
+        _isUiAgentMode.value = enabled
+        AppLogger.d(TAG, "UI Agent mode set to: $enabled")
+        
+        // Start or stop proactive screenshot capture based on mode
+        if (enabled) {
+            startProactiveScreenshotCapture()
+        } else {
+            stopProactiveScreenshotCapture()
+        }
+    }
+    
+    fun setUiAgentId(agentId: String?) {
+        _uiAgentId.value = agentId
+        AppLogger.d(TAG, "UI Agent ID set to: $agentId")
+    }
+    
+    // Check if in UI Agent mode
+    fun isInUiAgentMode(): Boolean = _isUiAgentMode.value
+    
+    // Proactive screenshot capture for UI Agent mode
+    private var screenshotJob: Job? = null
+    private val SCREENSHOT_INTERVAL_MS = 2000L // 2 seconds
+    
+    /**
+     * Start proactive screenshot capture in UI Agent mode
+     * This captures screenshots automatically every 2 seconds without user permission
+     */
+    fun startProactiveScreenshotCapture() {
+        if (!_isUiAgentMode.value) {
+            AppLogger.d(TAG, "Not in UI Agent mode, skipping proactive screenshot")
+            return
+        }
+        
+        // Cancel any existing screenshot job
+        screenshotJob?.cancel()
+        
+        screenshotJob = serviceScope.launch {
+            while (isActive && _isUiAgentMode.value) {
+                try {
+                    captureAndStoreScreenshot()
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Error capturing proactive screenshot", e)
+                }
+                delay(SCREENSHOT_INTERVAL_MS)
+            }
+        }
+        AppLogger.d(TAG, "Started proactive screenshot capture")
+    }
+    
+    /**
+     * Stop proactive screenshot capture
+     */
+    fun stopProactiveScreenshotCapture() {
+        screenshotJob?.cancel()
+        screenshotJob = null
+        AppLogger.d(TAG, "Stopped proactive screenshot capture")
+    }
+    
+    /**
+     * Capture screenshot and store it for UI Agent use
+     */
+    private suspend fun captureAndStoreScreenshot() {
+        try {
+            val toolHandler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(applicationContext)
+            val tool = com.ai.assistance.operit.data.model.AITool(
+                name = "capture_screenshot",
+                parameters = emptyList()
+            )
+            val result = toolHandler.executeTool(tool)
+            if (result.success) {
+                AppLogger.d(TAG, "Proactive screenshot captured: ${result.result}")
+            } else {
+                AppLogger.e(TAG, "Failed to capture proactive screenshot: ${result.error}")
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Exception capturing screenshot", e)
+        }
+    }
+    
+    /**
+     * Capture screenshot after an action is taken by the UI Agent
+     */
+    fun captureScreenshotAfterAction() {
+        if (!_isUiAgentMode.value) return
+        
+        serviceScope.launch {
+            captureAndStoreScreenshot()
+        }
+    }
 
     private val autoExitHandler = Handler(Looper.getMainLooper())
     private var autoExitRunnable: Runnable? = null
@@ -470,6 +569,13 @@ class FloatingChatService : Service(), FloatingWindowCallback {
             val agentModeExtra = intent?.getStringExtra(EXTRA_AGENT_MODE)
             if (agentModeExtra != null) {
                 agentMode.value = agentModeExtra
+                // If agent mode is "ui_agent", automatically enable UI Agent mode
+                if (agentModeExtra == "ui_agent") {
+                    _isUiAgentMode.value = true
+                    AppLogger.d(TAG, "UI Agent mode enabled from voice activation")
+                    // Start proactive screenshot capture immediately
+                    startProactiveScreenshotCapture()
+                }
             }
 
             if (wakeLaunchedExtra) {
@@ -769,7 +875,13 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     }
 
     override fun onSendMessage(message: String, promptType: PromptFunctionType) {
-        AppLogger.d(TAG, "onSendMessage: $message, promptType: $promptType")
+        AppLogger.d(TAG, "onSendMessage: $message, promptType: $promptType, isUiAgentMode: $_isUiAgentMode")
+        
+        // If in UI Agent mode, send message to run_ui_subagent instead of AI
+        if (_isUiAgentMode.value) {
+            sendMessageToUiAgent(message)
+            return
+        }
         
         // 直接使用 chatCore 发送消息，不再通过 SharedFlow
         serviceScope.launch {
@@ -783,6 +895,60 @@ class FloatingChatService : Service(), FloatingWindowCallback {
                 AppLogger.d(TAG, "消息已通过 chatCore 发送")
             } catch (e: Exception) {
                 AppLogger.e(TAG, "发送消息时出错", e)
+            }
+        }
+    }
+    
+    /**
+     * Send message to UI Agent (run_ui_subagent tool) instead of the main AI
+     */
+    private fun sendMessageToUiAgent(intent: String) {
+        serviceScope.launch {
+            try {
+                AppLogger.d(TAG, "Sending message to UI Agent: $intent")
+                
+                // Get the tool handler to execute run_ui_subagent
+                val toolHandler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(applicationContext)
+                
+                // Build parameters for run_ui_subagent
+                val params = mutableMapOf<String, Any>("intent" to intent)
+                val currentAgentId = _uiAgentId.value
+                if (currentAgentId != null) {
+                    params["agent_id"] = currentAgentId
+                }
+                params["max_steps"] = "30" // Default max steps
+                
+                // Execute the tool
+                val tool = com.ai.assistance.operit.data.model.AITool(
+                    name = "run_ui_subagent",
+                    parameters = params.entries.map { 
+                        com.ai.assistance.operit.data.model.AIParameter(it.key, it.value.toString()) 
+                    }
+                )
+                
+                val result = toolHandler.executeTool(tool)
+                
+                if (result.success) {
+                    // Parse result to get agent_id for session continuity
+                    val resultStr = result.result?.toString() ?: ""
+                    // Try to extract agent_id from result if present
+                    try {
+                        val jsonResult = com.google.gson.JsonParser.parseString(resultStr).asJsonObject
+                        if (jsonResult.has("agentId")) {
+                            _uiAgentId.value = jsonResult.get("agentId").asString
+                            AppLogger.d(TAG, "UI Agent ID updated: ${_uiAgentId.value}")
+                        }
+                    } catch (e: Exception) {
+                        // Ignore JSON parsing errors
+                    }
+                    AppLogger.d(TAG, "UI Agent executed successfully: $resultStr")
+                } else {
+                    AppLogger.e(TAG, "UI Agent execution failed: ${result.error}")
+                }
+                
+                AppLogger.d(TAG, "Message sent to UI Agent")
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Error sending message to UI Agent", e)
             }
         }
     }
