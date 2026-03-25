@@ -135,6 +135,7 @@ fun AssistantThemeSettingsScreen() {
     }
 
     var expandedVoiceSelector by remember { mutableStateOf(false) }
+    var expandedThemeMode by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
