@@ -216,3 +216,4 @@ class FloatContext(
             chatService?.setUiAgentId(uiAgentId)
         }
     }
+}
