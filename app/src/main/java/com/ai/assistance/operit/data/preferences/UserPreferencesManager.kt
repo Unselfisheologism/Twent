@@ -219,7 +219,34 @@ class UserPreferencesManager private constructor(private val context: Context) {
         const val ASSISTANT_ICON_UNICORN = "unicorn"
         const val ASSISTANT_ICON_DRAGON = "dragon"
         const val ASSISTANT_ICON_ALIEN = "alien"
+
+        // Agent Voice 预设常量 (local TTS variations)
+        const val AGENT_VOICE_DEFAULT = "default"
+        const val AGENT_VOICE_FEMALE_GENTLE = "female_gentle"
+        const val AGENT_VOICE_MALE_DEEP = "male_deep"
+        const val AGENT_VOICE_ROBOTIC = "robotic"
+        const val AGENT_VOICE_CHEERFUL = "cheerful"
+        const val AGENT_VOICE_PROFESSIONAL = "professional"
+        const val AGENT_VOICE_CASUAL = "casual"
+        const val AGENT_VOICE_CUSTOM = "custom"
+
+        // Agent Name 预设常量
+        const val AGENT_NAME_DEFAULT = "AI Assistant"
+
+        // Agent Avatar 预设常量
+        const val AGENT_AVATAR_DEFAULT = "default"
+        const val AGENT_AVATAR_ROBOT = "robot"
+        const val AGENT_AVATAR_CAT = "cat"
+        const val AGENT_AVATAR_GHOST = "ghost"
+        const val AGENT_AVATAR_ALIEN = "alien"
+        const val AGENT_AVATAR_CUSTOM = "custom"
     }
+
+    // Agent Customization 偏好设置键
+    private val AGENT_VOICE = stringPreferencesKey("agent_voice")
+    private val AGENT_NAME = stringPreferencesKey("agent_name")
+    private val AGENT_AVATAR = stringPreferencesKey("agent_avatar")
+    private val AGENT_AVATAR_URI = stringPreferencesKey("agent_avatar_uri")
 
     // Assistant Theme 偏好设置键
     private val ASSISTANT_THEME_MODE = stringPreferencesKey("assistant_theme_mode")
@@ -600,7 +627,28 @@ class UserPreferencesManager private constructor(private val context: Context) {
             preferences[ASSISTANT_ICON_STYLE] ?: ASSISTANT_ICON_DEFAULT
         }
 
-    // Assistant Custom Colors Flow
+    // Agent Customization Flows (voice/name/avatar)
+    val agentVoice: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[AGENT_VOICE] ?: AGENT_VOICE_DEFAULT
+        }
+
+    val agentName: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[AGENT_NAME] ?: AGENT_NAME_DEFAULT
+        }
+
+    val agentAvatar: Flow<String> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[AGENT_AVATAR] ?: AGENT_AVATAR_DEFAULT
+        }
+
+    val agentAvatarUri: Flow<String?> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[AGENT_AVATAR_URI]
+        }
+
+    // Custom Colors Flows
     val useAssistantCustomColors: Flow<Boolean> =
         context.userPreferencesDataStore.data.map { preferences ->
             preferences[USE_ASSISTANT_CUSTOM_COLORS] ?: false
@@ -822,7 +870,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         }
     }
 
-    // 保存 Assistant Theme 设置
+    // 保存 Assistant Theme 设置 (including agent voice/name/avatar)
     suspend fun saveAssistantThemeSettings(
         assistantThemeMode: String? = null,
         assistantCustomThemeId: String? = null,
@@ -835,7 +883,11 @@ class UserPreferencesManager private constructor(private val context: Context) {
         assistantIconStyle: String? = null,
         useAssistantCustomColors: Boolean? = null,
         assistantCustomPrimaryColor: Int? = null,
-        assistantCustomSecondaryColor: Int? = null
+        assistantCustomSecondaryColor: Int? = null,
+        agentVoice: String? = null,
+        agentName: String? = null,
+        agentAvatar: String? = null,
+        agentAvatarUri: String? = null
     ) {
         context.userPreferencesDataStore.edit { preferences ->
             assistantThemeMode?.let { preferences[ASSISTANT_THEME_MODE] = it }
@@ -850,6 +902,10 @@ class UserPreferencesManager private constructor(private val context: Context) {
             useAssistantCustomColors?.let { preferences[USE_ASSISTANT_CUSTOM_COLORS] = it }
             assistantCustomPrimaryColor?.let { preferences[ASSISTANT_CUSTOM_PRIMARY_COLOR] = it }
             assistantCustomSecondaryColor?.let { preferences[ASSISTANT_CUSTOM_SECONDARY_COLOR] = it }
+            agentVoice?.let { preferences[AGENT_VOICE] = it }
+            agentName?.let { preferences[AGENT_NAME] = it }
+            agentAvatar?.let { preferences[AGENT_AVATAR] = it }
+            agentAvatarUri?.let { preferences[AGENT_AVATAR_URI] = it }
         }
     }
 

@@ -281,3 +281,199 @@ object AssistantIconStyles {
         return ALL_STYLES.find { it.id == id } ?: DEFAULT
     }
 }
+
+/**
+ * Agent Voice data model - represents a voice preset for TTS
+ */
+data class AgentVoice(
+    val id: String,
+    val name: String,
+    val description: String,
+    val emoji: String,
+    val ttsSpeed: Float = 1.0f,      // Speech rate multiplier
+    val ttsPitch: Float = 1.0f,       // Pitch multiplier
+    val ttsVolume: Float = 1.0f       // Volume level
+)
+
+/**
+ * Predefined agent voice presets for local TTS variations
+ */
+object AgentVoices {
+    val DEFAULT = AgentVoice(
+        id = "default",
+        name = "Default",
+        description = "Default assistant voice",
+        emoji = "🎤",
+        ttsSpeed = 1.0f,
+        ttsPitch = 1.0f,
+        ttsVolume = 1.0f
+    )
+
+    val FEMALE_GENTLE = AgentVoice(
+        id = "female_gentle",
+        name = "Gentle Female",
+        description = "Soft and gentle female voice",
+        emoji = "👩",
+        ttsSpeed = 0.9f,
+        ttsPitch = 1.1f,
+        ttsVolume = 0.9f
+    )
+
+    val MALE_DEEP = AgentVoice(
+        id = "male_deep",
+        name = "Deep Male",
+        description = "Deep and commanding male voice",
+        emoji = "👨",
+        ttsSpeed = 0.95f,
+        ttsPitch = 0.85f,
+        ttsVolume = 1.0f
+    )
+
+    val ROBOTIC = AgentVoice(
+        id = "robotic",
+        name = "Robotic",
+        description = "Mechanical robot voice",
+        emoji = "🤖",
+        ttsSpeed = 1.0f,
+        ttsPitch = 0.9f,
+        ttsVolume = 1.0f
+    )
+
+    val CHEERFUL = AgentVoice(
+        id = "cheerful",
+        name = "Cheerful",
+        description = "Happy and energetic voice",
+        emoji = "😊",
+        ttsSpeed = 1.1f,
+        ttsPitch = 1.15f,
+        ttsVolume = 1.0f
+    )
+
+    val PROFESSIONAL = AgentVoice(
+        id = "professional",
+        name = "Professional",
+        description = "Clear and professional voice",
+        emoji = "💼",
+        ttsSpeed = 1.0f,
+        ttsPitch = 1.0f,
+        ttsVolume = 1.0f
+    )
+
+    val CASUAL = AgentVoice(
+        id = "casual",
+        name = "Casual",
+        description = "Relaxed and casual voice",
+        emoji = "😎",
+        ttsSpeed = 0.95f,
+        ttsPitch = 1.05f,
+        ttsVolume = 0.95f
+    )
+
+    val ALL_VOICES = listOf(
+        DEFAULT,
+        FEMALE_GENTLE,
+        MALE_DEEP,
+        ROBOTIC,
+        CHEERFUL,
+        PROFESSIONAL,
+        CASUAL
+    )
+
+    fun getVoiceById(id: String): AgentVoice {
+        return ALL_VOICES.find { it.id == id } ?: DEFAULT
+    }
+}
+
+/**
+ * Agent Avatar data model - represents a preset avatar for the AI assistant
+ */
+data class AgentAvatar(
+    val id: String,
+    val name: String,
+    val description: String,
+    val emoji: String
+)
+
+/**
+ * Predefined agent avatar presets
+ */
+object AgentAvatars {
+    val DEFAULT = AgentAvatar(
+        id = "default",
+        name = "Default",
+        description = "Default assistant avatar",
+        emoji = "🤖"
+    )
+
+    val ROBOT = AgentAvatar(
+        id = "robot",
+        name = "Robot",
+        description = "Classic robot assistant",
+        emoji = "🤖"
+    )
+
+    val CAT = AgentAvatar(
+        id = "cat",
+        name = "Cat",
+        description = "Cute cat companion",
+        emoji = "🐱"
+    )
+
+    val GHOST = AgentAvatar(
+        id = "ghost",
+        name = "Ghost",
+        description = "Friendly ghost",
+        emoji = "👻"
+    )
+
+    val ALIEN = AgentAvatar(
+        id = "alien",
+        name = "Alien",
+        description = "Extraterrestrial AI",
+        emoji = "👽"
+    )
+
+    val DRAGON = AgentAvatar(
+        id = "dragon",
+        name = "Dragon",
+        description = "Wise dragon",
+        emoji = "🐉"
+    )
+
+    val UNICORN = AgentAvatar(
+        id = "unicorn",
+        name = "Unicorn",
+        description = "Magical unicorn",
+        emoji = "🦄"
+    )
+
+    val DOG = AgentAvatar(
+        id = "dog",
+        name = "Dog",
+        description = "Loyal dog friend",
+        emoji = "🐕"
+    )
+
+    val CUSTOM = AgentAvatar(
+        id = "custom",
+        name = "Custom",
+        description = "Custom image avatar",
+        emoji = "📷"
+    )
+
+    val ALL_AVATARS = listOf(
+        DEFAULT,
+        ROBOT,
+        CAT,
+        GHOST,
+        ALIEN,
+        DRAGON,
+        UNICORN,
+        DOG,
+        CUSTOM
+    )
+
+    fun getAvatarById(id: String): AgentAvatar {
+        return ALL_AVATARS.find { it.id == id } ?: DEFAULT
+    }
+}

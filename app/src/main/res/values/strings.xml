@@ -842,6 +842,25 @@
     <string name="assistant_primary_color">助手主色</string>
     <string name="assistant_secondary_color">助手次色</string>
 
+    <!-- Agent Customization (Voice/Name/Avatar) -->
+    <string name="agent_personalization">智能体个性化</string>
+    <string name="agent_personalization_desc">自定义AI助手的名称、声音和头像</string>
+    <string name="agent_voice">助手声音</string>
+    <string name="agent_voice_desc">选择AI助手的声音风格</string>
+    <string name="agent_voice_default">默认</string>
+    <string name="agent_voice_female_gentle">温柔女声</string>
+    <string name="agent_voice_male_deep">低沉男声</string>
+    <string name="agent_voice_robotic">机器人</string>
+    <string name="agent_voice_cheerful">活泼可爱</string>
+    <string name="agent_voice_professional">专业正式</string>
+    <string name="agent_voice_casual">轻松随意</string>
+    <string name="agent_name">助手名称</string>
+    <string name="agent_name_hint">输入自定义名称</string>
+    <string name="agent_avatar">助手头像</string>
+    <string name="agent_avatar_desc">选择AI助手的头像或上传自定义图片</string>
+    <string name="agent_avatar_choose_image">选择图片</string>
+    <string name="agent_avatar_remove_custom">移除自定义头像</string>
+
     <!-- Settings Screen -->
     <string name="settings">设置</string>
     <string name="no_settings">暂无设置选项可用</string>

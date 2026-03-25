@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.model.AgentAvatars
+import com.ai.assistance.operit.data.model.AgentVoices
 import com.ai.assistance.operit.data.model.AssistantIconStyles
 import com.ai.assistance.operit.data.model.AssistantThemes
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
@@ -74,6 +76,22 @@ fun AssistantThemeSettingsScreen() {
     val assistantCustomPrimaryColor by preferencesManager.assistantCustomPrimaryColor.collectAsState(initial = null)
     val assistantCustomSecondaryColor by preferencesManager.assistantCustomSecondaryColor.collectAsState(initial = null)
 
+    // Agent customization state (voice/name/avatar)
+    val agentVoice by preferencesManager.agentVoice.collectAsState(
+        initial = UserPreferencesManager.AGENT_VOICE_DEFAULT
+    )
+    val agentName by preferencesManager.agentName.collectAsState(
+        initial = UserPreferencesManager.AGENT_NAME_DEFAULT
+    )
+    val agentAvatar by preferencesManager.agentAvatar.collectAsState(
+        initial = UserPreferencesManager.AGENT_AVATAR_DEFAULT
+    )
+    val agentAvatarUri by preferencesManager.agentAvatarUri.collectAsState(initial = null)
+
+    // Agent name editing state
+    var agentNameInput by remember(agentName) { mutableStateOf(agentName) }
+    var isEditingName by remember { mutableStateOf(false) }
+
     // Simple color picker state
     var showSimpleColorPicker by remember { mutableStateOf(false) }
     var colorPickerTarget by remember { mutableStateOf("primary") }
@@ -86,7 +104,7 @@ fun AssistantThemeSettingsScreen() {
         0xFFE91E63, 0xFF3F51B5, 0xFF009688, 0xFFFFC107
     )
 
-    // Image picker launcher
+    // Image picker launcher for chat wallpaper
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -102,7 +120,21 @@ fun AssistantThemeSettingsScreen() {
         }
     }
 
-    var expandedThemeMode by remember { mutableStateOf(false) }
+    // Image picker launcher for agent avatar
+    val avatarImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            scope.launch {
+                preferencesManager.saveAssistantThemeSettings(
+                    agentAvatar = UserPreferencesManager.AGENT_AVATAR_CUSTOM,
+                    agentAvatarUri = it.toString()
+                )
+            }
+        }
+    }
+
+    var expandedVoiceSelector by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -124,6 +156,276 @@ fun AssistantThemeSettingsScreen() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+
+        // Agent Personalization Section (Voice/Name/Avatar)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = stringResource(R.string.agent_personalization),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = stringResource(R.string.agent_personalization_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                )
+
+                // Agent Name
+                Text(
+                    text = stringResource(R.string.agent_name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (isEditingName) {
+                    OutlinedTextField(
+                        value = agentNameInput,
+                        onValueChange = { agentNameInput = it },
+                        placeholder = { Text(stringResource(R.string.agent_name_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TextButton(
+                            onClick = {
+                                agentNameInput = agentName
+                                isEditingName = false
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    preferencesManager.saveAssistantThemeSettings(
+                                        agentName = agentNameInput.ifBlank { UserPreferencesManager.AGENT_NAME_DEFAULT }
+                                    )
+                                }
+                                isEditingName = false
+                            }
+                        ) {
+                            Text("Save")
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = agentName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        IconButton(
+                            onClick = {
+                                agentNameInput = agentName
+                                isEditingName = true
+                            }
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit name")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Agent Voice Selector
+                Text(
+                    text = stringResource(R.string.agent_voice),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expandedVoiceSelector,
+                    onExpandedChange = { expandedVoiceSelector = it }
+                ) {
+                    val selectedVoice = AgentVoices.getVoiceById(agentVoice)
+                    OutlinedTextField(
+                        value = selectedVoice.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedVoiceSelector) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedVoiceSelector,
+                        onDismissRequest = { expandedVoiceSelector = false }
+                    ) {
+                        AgentVoices.ALL_VOICES.forEach { voice ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(voice.emoji)
+                                        Text(voice.name)
+                                    }
+                                },
+                                onClick = {
+                                    scope.launch {
+                                        preferencesManager.saveAssistantThemeSettings(
+                                            agentVoice = voice.id
+                                        )
+                                    }
+                                    expandedVoiceSelector = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Agent Avatar Selector
+                Text(
+                    text = stringResource(R.string.agent_avatar),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(AgentAvatars.ALL_AVATARS.filter { it.id != "custom" }) { avatar ->
+                        val isSelected = agentAvatar == avatar.id
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .clickable {
+                                    scope.launch {
+                                        preferencesManager.saveAssistantThemeSettings(
+                                            agentAvatar = avatar.id,
+                                            agentAvatarUri = null
+                                        )
+                                    }
+                                }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .border(
+                                        2.dp,
+                                        if (isSelected) MaterialTheme.colorScheme.primary
+                                        else Color.Transparent,
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = avatar.emoji,
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = avatar.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Custom avatar option
+                    item {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable {
+                                avatarImagePickerLauncher.launch("image/*")
+                            }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(
+                                        2.dp,
+                                        if (agentAvatar == "custom") MaterialTheme.colorScheme.primary
+                                        else Color.Transparent,
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (agentAvatarUri != null) {
+                                    androidx.compose.foundation.Image(
+                                        painter = rememberAsyncImagePainter(model = agentAvatarUri),
+                                        contentDescription = "Custom avatar",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.AddPhotoAlternate,
+                                        contentDescription = "Add custom avatar",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.agent_avatar_choose_image),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Remove custom avatar button
+                if (agentAvatarUri != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                preferencesManager.saveAssistantThemeSettings(
+                                    agentAvatar = UserPreferencesManager.AGENT_AVATAR_DEFAULT,
+                                    agentAvatarUri = null
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.agent_avatar_remove_custom))
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Theme Mode Section
         Card(
