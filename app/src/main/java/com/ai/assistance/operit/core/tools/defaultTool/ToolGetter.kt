@@ -8,6 +8,8 @@ import com.ai.assistance.operit.core.tools.defaultTool.root.*
 import com.ai.assistance.operit.core.tools.defaultTool.standard.*
 import com.ai.assistance.operit.core.tools.system.AndroidPermissionLevel
 import com.ai.assistance.operit.data.preferences.androidPermissionPreferences
+import com.ai.assistance.operit.data.repository.UIHierarchyManager
+import com.ai.assistance.operit.util.AppLogger
 
 /** 工具获取器 - 根据首选权限级别获取对应的工具实现 如果特定权限级别下没有对应工具实现，则回退到标准权限级别的工具 */
 object ToolGetter {
@@ -40,22 +42,33 @@ object ToolGetter {
     /**
      * 获取UI工具
      * @param context 应用上下文
-     * @return 根据首选权限级别的UI工具实现
+     * @return 根据实际Android权限级别的UI工具实现（优先检查系统级无障碍权限）
      */
     fun getUITools(context: Context): StandardUITools {
-        val level = androidPermissionPreferences.getPreferredPermissionLevel()
-        AppLogger.d("ToolGetter", "getUITools: preferred level = $level")
+        // 优先检查系统级无障碍服务是否已启用并连接
+        // 这比检查内部偏好设置更可靠，因为用户可能在系统设置中直接授予权限
+        val isAccessibilityServiceEnabled = UIHierarchyManager.isAccessibilityServiceEnabled(context)
+        AppLogger.d("ToolGetter", "System accessibility service enabled: $isAccessibilityServiceEnabled")
         
-        // Debug: check if the value was saved correctly
-        if (level == null) {
-            AppLogger.w("ToolGetter", "getUITools: permission level is null, checking DataStore directly...")
+        // 如果系统级无障碍服务已启用，直接使用AccessibilityUITools
+        if (isAccessibilityServiceEnabled) {
+            AppLogger.d("ToolGetter", "Using AccessibilityUITools (system permission granted)")
+            return AccessibilityUITools(context)
         }
+        
+        // 如果系统级无障碍服务未启用，检查内部偏好设置
+        val level = androidPermissionPreferences.getPreferredPermissionLevel()
+        AppLogger.d("ToolGetter", "getUITools: internal preference level = $level")
         
         return when (level) {
             AndroidPermissionLevel.ROOT -> RootUITools(context).also { AppLogger.d("ToolGetter", "Using RootUITools") }
             AndroidPermissionLevel.ADMIN -> AdminUITools(context).also { AppLogger.d("ToolGetter", "Using AdminUITools") }
             AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context).also { AppLogger.d("ToolGetter", "Using DebuggerUITools") }
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools") }
+            AndroidPermissionLevel.ACCESSIBILITY -> {
+                // 如果偏好设置为ACCESSIBILITY但系统服务未启用，给出提示
+                AppLogger.w("ToolGetter", "ACCESSIBILITY level set but service not enabled - falling back to Standard")
+                StandardUITools(context)
+            }
             AndroidPermissionLevel.STANDARD -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools") }
             null -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools (null fallback)") }
         }
