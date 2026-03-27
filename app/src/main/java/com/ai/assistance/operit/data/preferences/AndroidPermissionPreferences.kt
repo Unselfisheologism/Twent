@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.data.preferences
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.ai.assistance.operit.util.AppLogger
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -29,9 +30,18 @@ fun initAndroidPermissionPreferences(context: Context) {
 class AndroidPermissionPreferences(private val context: Context) {
     companion object {
         private const val TAG = "AndroidPermissionPrefs"
+        
+        // SharedPreferences keys as backup
+        private const val PREFS_NAME = "android_permission_prefs"
+        private const val KEY_PERMISSION_LEVEL = "permission_level"
 
-        // 权限相关键
+        // 权限相关键 (DataStore)
         private val PREFERRED_PERMISSION_LEVEL = stringPreferencesKey("preferred_permission_level")
+    }
+    
+    // SharedPreferences for synchronous access
+    private val prefs: SharedPreferences by lazy {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
     /** 首选权限级别Flow 返回用户配置的首选Android权限级别，如果未设置则返回null */
@@ -42,31 +52,73 @@ class AndroidPermissionPreferences(private val context: Context) {
             }
 
     /**
-     * 保存首选权限级别
+     * 获取当前首选的权限级别 - 先尝试从DataStore读取，如果失败则使用SharedPreferences
+     * 这是一个阻塞调用，应在非UI线程使用或谨慎使用
+     * @return 当前配置的首选权限级别，如果未设置则返回STANDARD
+     */
+    fun getPreferredPermissionLevel(): AndroidPermissionLevel? {
+        // First try DataStore
+        try {
+            val level = runBlocking {
+                try {
+                    preferredPermissionLevelFlow.first()
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "DataStore read failed, falling back to SharedPreferences", e)
+                    null
+                }
+            }
+            if (level != null) {
+                AppLogger.d(TAG, "getPreferredPermissionLevel: from DataStore = $level")
+                // Sync to SharedPreferences for backup
+                prefs.edit().putString(KEY_PERMISSION_LEVEL, level.name).apply()
+                return level
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error reading from DataStore", e)
+        }
+        
+        // Fallback to SharedPreferences
+        val savedLevel = prefs.getString(KEY_PERMISSION_LEVEL, null)
+        if (savedLevel != null) {
+            val level = AndroidPermissionLevel.fromString(savedLevel)
+            AppLogger.d(TAG, "getPreferredPermissionLevel: from SharedPreferences = $level")
+            return level
+        }
+        
+        AppLogger.d(TAG, "getPreferredPermissionLevel: no value found, returning null")
+        return null
+    }
+
+    /**
+     * 保存首选权限级别 - 同时写入DataStore和SharedPreferences
      * @param permissionLevel 要设置的权限级别
      */
     suspend fun savePreferredPermissionLevel(permissionLevel: AndroidPermissionLevel) {
         AppLogger.d(TAG, "Saving preferred permission level: $permissionLevel")
-        context.androidPermissionDataStore.edit { preferences ->
-            preferences[PREFERRED_PERMISSION_LEVEL] = permissionLevel.name
+        
+        // Save to SharedPreferences immediately (synchronous, for backup)
+        prefs.edit().putString(KEY_PERMISSION_LEVEL, permissionLevel.name).apply()
+        AppLogger.d(TAG, "Saved to SharedPreferences: ${permissionLevel.name}")
+        
+        // Also save to DataStore (async)
+        try {
+            context.androidPermissionDataStore.edit { preferences ->
+                preferences[PREFERRED_PERMISSION_LEVEL] = permissionLevel.name
+            }
+            AppLogger.d(TAG, "Saved to DataStore: ${permissionLevel.name}")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to save to DataStore, SharedPreferences backup exists", e)
         }
     }
 
     /**
-     * 获取当前首选的权限级别 这是一个阻塞调用，应在非UI线程使用或谨慎使用
-     * @return 当前配置的首选权限级别，如果未设置则返回null
+     * 同步保存首选权限级别 - 可在主线程调用
+     * @param permissionLevel 要设置的权限级别
      */
-    fun getPreferredPermissionLevel(): AndroidPermissionLevel? {
-        return runBlocking {
-            try {
-                val level = preferredPermissionLevelFlow.first()
-                AppLogger.d(TAG, "getPreferredPermissionLevel: retrieved level = $level")
-                level
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "Error getting preferred permission level", e)
-                null
-            }
-        }
+    fun savePreferredPermissionLevelSync(permissionLevel: AndroidPermissionLevel) {
+        AppLogger.d(TAG, "Saving preferred permission level (sync): $permissionLevel")
+        prefs.edit().putString(KEY_PERMISSION_LEVEL, permissionLevel.name).apply()
+        AppLogger.d(TAG, "Saved to SharedPreferences (sync): ${permissionLevel.name}")
     }
 
     /**
@@ -74,6 +126,11 @@ class AndroidPermissionPreferences(private val context: Context) {
      * @return 是否已设置权限级别
      */
     fun isPermissionLevelSet(): Boolean {
+        // Check SharedPreferences first (synchronous)
+        val hasSharedPrefs = prefs.getString(KEY_PERMISSION_LEVEL, null) != null
+        if (hasSharedPrefs) return true
+        
+        // Fallback to DataStore check
         return runBlocking {
             try {
                 preferredPermissionLevelFlow.first() != null
@@ -87,8 +144,14 @@ class AndroidPermissionPreferences(private val context: Context) {
     /** 重置权限级别（清除设置） */
     suspend fun resetPermissionLevel() {
         AppLogger.d(TAG, "Resetting permission level")
-        context.androidPermissionDataStore.edit { preferences ->
-            preferences.remove(PREFERRED_PERMISSION_LEVEL)
+        // Clear both DataStore and SharedPreferences
+        prefs.edit().remove(KEY_PERMISSION_LEVEL).apply()
+        try {
+            context.androidPermissionDataStore.edit { preferences ->
+                preferences.remove(PREFERRED_PERMISSION_LEVEL)
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error resetting DataStore", e)
         }
     }
 }
