@@ -43,13 +43,21 @@ object ToolGetter {
      * @return 根据首选权限级别的UI工具实现
      */
     fun getUITools(context: Context): StandardUITools {
-        return when (androidPermissionPreferences.getPreferredPermissionLevel()) {
-            AndroidPermissionLevel.ROOT -> RootUITools(context)
-            AndroidPermissionLevel.ADMIN -> AdminUITools(context)
-            AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context)
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityUITools(context)
-            AndroidPermissionLevel.STANDARD -> StandardUITools(context)
-            null -> StandardUITools(context) // 默认使用标准权限级别
+        val level = androidPermissionPreferences.getPreferredPermissionLevel()
+        AppLogger.d("ToolGetter", "getUITools: preferred level = $level")
+        
+        // Debug: check if the value was saved correctly
+        if (level == null) {
+            AppLogger.w("ToolGetter", "getUITools: permission level is null, checking DataStore directly...")
+        }
+        
+        return when (level) {
+            AndroidPermissionLevel.ROOT -> RootUITools(context).also { AppLogger.d("ToolGetter", "Using RootUITools") }
+            AndroidPermissionLevel.ADMIN -> AdminUITools(context).also { AppLogger.d("ToolGetter", "Using AdminUITools") }
+            AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context).also { AppLogger.d("ToolGetter", "Using DebuggerUITools") }
+            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools") }
+            AndroidPermissionLevel.STANDARD -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools") }
+            null -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools (null fallback)") }
         }
     }
 

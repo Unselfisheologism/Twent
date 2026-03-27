@@ -59,7 +59,9 @@ class AndroidPermissionPreferences(private val context: Context) {
     fun getPreferredPermissionLevel(): AndroidPermissionLevel? {
         return runBlocking {
             try {
-                preferredPermissionLevelFlow.first()
+                val level = preferredPermissionLevelFlow.first()
+                AppLogger.d(TAG, "getPreferredPermissionLevel: retrieved level = $level")
+                level
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Error getting preferred permission level", e)
                 null
