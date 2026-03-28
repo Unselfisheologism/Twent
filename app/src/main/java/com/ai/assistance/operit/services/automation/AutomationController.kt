@@ -21,7 +21,7 @@ import com.ai.assistance.operit.core.agent.perception.ScreenAnalysis
 import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.data.model.ChatMessage
-import com.ai.assistance.operit.data.model.MessageRole
+import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.*
@@ -170,7 +170,7 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
         isRunning = true
         onStatusChange?.invoke("Starting automation: $task")
         
-        val prefs = UserPreferencesManager.getPreferences(context)
+        val prefs = UserPreferencesManager.getInstance(context)
         val userName = prefs.getString("user_name", "User") ?: "User"
         
         val modifiedPrompt = systemPrompt.replace("{user_name}", userName)

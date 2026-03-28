@@ -14,6 +14,8 @@ import com.ai.assistance.operit.core.tools.system.MediaProjectionCaptureManager
 import com.ai.assistance.operit.core.tools.system.MediaProjectionHolder
 import com.ai.assistance.operit.core.tools.system.ScreenCaptureActivity
 import kotlinx.coroutines.delay
+import com.ai.assistance.operit.core.tools.ToolImplementations
+import com.ai.assistance.operit.core.tools.SimplifiedUINode
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.data.model.ToolParameter

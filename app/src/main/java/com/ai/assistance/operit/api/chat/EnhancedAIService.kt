@@ -1668,4 +1668,22 @@ class EnhancedAIService private constructor(private val context: Context) {
     suspend fun analyzeVideoWithIntent(videoPath: String, userIntent: String?): String {
         return conversationService.analyzeVideoWithIntent(videoPath, userIntent, multiServiceManager)
     }
+
+    suspend fun completions(prompt: String, imageUris: List<String>, toolInvocations: List<String>): String {
+        return try {
+            val result = sendMessage(
+                message = prompt,
+                maxTokens = 4096,
+                tokenUsageThreshold = 0.8,
+                stream = false
+            )
+            var fullResponse = ""
+            result.collect { chunk ->
+                fullResponse += chunk
+            }
+            fullResponse
+        } catch (e: Exception) {
+            ""
+        }
+    }
 }
