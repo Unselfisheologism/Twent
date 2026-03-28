@@ -1512,7 +1512,6 @@ class EnhancedAIService private constructor(private val context: Context) {
             null
         }
     }
-}
 
     // --- Service Lifecycle Management ---
 
