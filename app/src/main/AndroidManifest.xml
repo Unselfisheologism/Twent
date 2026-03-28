@@ -378,9 +378,9 @@
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:exported="true" />
         
-        <!-- Accessibility Service -->
+        <!-- Automation Accessibility Service -->
         <service
-            android:name=".services.OperitAccessibilityService"
+            android:name=".services.automation.OperitAutomationService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:label="@string/accessibility_service_label"
             android:exported="true">
@@ -391,6 +391,11 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+        
+        <!-- Legacy accessibility service alias for backward compatibility -->
+        <service
+            android:name=".services.OperitAccessibilityService"
+            android:exported="false" />
         
     </application>
 

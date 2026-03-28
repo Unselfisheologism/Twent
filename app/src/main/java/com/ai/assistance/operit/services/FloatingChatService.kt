@@ -897,22 +897,25 @@ class FloatingChatService : Service(), FloatingWindowCallback {
      * 获取 ChatServiceCore 实例
      * @return ChatServiceCore 聊天服务核心实例
      */
-    fun getChatCore(): ChatServiceCore = chatCore
-
+    fun getChatServiceCore(): ChatServiceCore? {
+        return if (::chatCore.isInitialized) chatCore else null
+    }
+    
     /**
-     * 重新加载聊天消息（从数据库加载并智能合并）
-     * 用于在流完成时同步消息，保持已存在消息的实例不变
+     * 获取 EnhancedAIService 实例
+     * @return EnhancedAIService AI服务实例
      */
-    fun reloadChatMessages() {
-        serviceScope.launch {
+    fun getAiService(): EnhancedAIService? {
+        return chatCore?.let { core ->
             try {
-                val chatId = chatCore.currentChatId.value
-                if (chatId != null) {
-                    AppLogger.d(TAG, "重新加载聊天消息，chatId: $chatId")
-                    chatCore.reloadChatMessagesSmart(chatId)
-                } else {
-                    AppLogger.w(TAG, "当前没有活跃对话，无法重新加载消息")
-                }
+                val field = core.javaClass.getDeclaredMethod("getEnhancedAiService")
+                field.invoke(core) as? EnhancedAIService
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+}
             } catch (e: Exception) {
                 AppLogger.e(TAG, "重新加载聊天消息失败", e)
             }

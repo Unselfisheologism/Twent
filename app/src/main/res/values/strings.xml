@@ -5064,6 +5064,8 @@
     <string name="toolreg_ffmpeg_convert_desc">转换视频: %1$s → %2$s</string>
     <string name="toolreg_text_to_speech_desc">朗读文本: %1$s</string>
     <string name="toolreg_speech_to_text_desc">语音识别 (语言: %1$s)</string>
+    <string name="toolreg_start_automation_desc">启动UI自动化任务: %1$s</string>
+    <string name="toolreg_get_screen_state_desc">获取当前屏幕状态和UI元素</string>
 
     <string name="screen_ocr_capture_failed">截图失败</string>
     <string name="screen_ocr_load_failed">无法加载截图</string>

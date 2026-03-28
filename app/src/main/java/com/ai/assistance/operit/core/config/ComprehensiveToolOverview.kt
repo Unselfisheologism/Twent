@@ -97,13 +97,28 @@ Here's a complete overview of what you can do:
 • get_device_location - Get GPS location
 
 ### 8. MATHEMATICS & CALCULATION
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
 
 • calculate - Evaluate mathematical expressions
 
-════════════════════════════════════════════════════════════════════════
-### 9. WORKFLOW TOOLS
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
+### 9. UI AUTOMATION TOOLS
+═══════════════════════════════════════════════════════════════════════
+
+• start_automation - Start an autonomous UI automation task
+• stop_automation - Stop currently running automation
+• get_automation_status - Check if automation is running
+• get_screen_state - Get current screen UI elements and state
+
+When to use UI automation:
+• Use start_automation when user asks to perform multi-step tasks like "打开微信发消息"
+• The automation can navigate apps, click elements, type text, scroll, etc.
+• Each automation step analyzes the screen and decides what action to take
+• Automation continues until task is complete or max_steps reached
+
+═══════════════════════════════════════════════════════════════════════
+### 10. WORKFLOW TOOLS
+═══════════════════════════════════════════════════════════════════════
 
 • get_all_workflows - List all available workflows
 • get_workflow - Get workflow details
@@ -113,8 +128,8 @@ Here's a complete overview of what you can do:
 • delete_workflow - Delete workflow
 • trigger_workflow - Execute a workflow
 
-════════════════════════════════════════════════════════════════════════
-### 10. CHAT & CONVERSATION TOOLS
+═══════════════════════════════════════════════════════════════════════
+### 11. CHAT & CONVERSATION TOOLS
 ════════════════════════════════════════════════════════════════════════
 
 • start_chat_service - Start floating chat interface
@@ -128,22 +143,22 @@ Here's a complete overview of what you can do:
 • get_chat_messages - Retrieve messages from chat history
 • agent_status - Check chat processing status
 
-════════════════════════════════════════════════════════════════════════
-### 11. TASKER INTEGRATION
-════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════
+### 12. TASKER INTEGRATION
+═══════════════════════════════════════════════════════════════════════
 
 • trigger_tasker_event - Trigger Tasker events for automation
 
-════════════════════════════════════════════════════════════════════════
-### 12. MEDIA PROCESSING
+═══════════════════════════════════════════════════════════════════════
+### 13. MEDIA PROCESSING
 ════════════════════════════════════════════════════════════════════════
 
 • ffmpeg_execute - Execute FFmpeg commands
 • ffmpeg_info - Get FFmpeg capabilities info
 • ffmpeg_convert - Convert video/audio formats
 
-════════════════════════════════════════════════════════════════════════
-### 13. PACKAGE SYSTEM (EXTENSIBILITY)
+═══════════════════════════════════════════════════════════════════════
+### 14. PACKAGE SYSTEM (EXTENSIBILITY)
 ════════════════════════════════════════════════════════════════════════
 
 Additional functionality is available through packages:
