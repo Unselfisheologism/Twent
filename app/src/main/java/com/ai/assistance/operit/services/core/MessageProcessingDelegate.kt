@@ -373,14 +373,14 @@ class MessageProcessingDelegate(
                 serviceForTurnComplete = service
 
                 // 清除上一次可能残留的 Error 状态，避免 StateFlow 重放导致新一轮发送立即再次触发弹窗
-                finalService.setInputProcessingState(EnhancedInputProcessingState.Processing(context.getString(R.string.message_processing)))
+                serviceForTurnComplete?.setInputProcessingState(EnhancedInputProcessingState.Processing(context.getString(R.string.message_processing)))
 
                 // 监听此 chat 对应的 EnhancedAIService 状态，映射到 per-chat state
                 chatRuntime.stateCollectionJob?.cancel()
                 chatRuntime.stateCollectionJob =
                     coroutineScope.launch {
                         var lastErrorMessage: String? = null
-                        finalService.inputProcessingState.collect { state ->
+                        serviceForTurnComplete?.inputProcessingState?.collect { state ->
                             setChatInputProcessingState(activeChatId, state)
 
                             if (state is EnhancedInputProcessingState.Error) {
@@ -426,7 +426,7 @@ class MessageProcessingDelegate(
 
                 // 2. 使用 AIMessageManager 发送消息
                 val responseStream = AIMessageManager.sendMessage(
-                    enhancedAiService = finalService,
+                    enhancedAiService = serviceForTurnComplete ?: service,
                     chatId = activeChatId,
                     messageContent = finalMessageContent,
                     //现在chatHistory 100%包含最新的用户输入，所以可以截掉

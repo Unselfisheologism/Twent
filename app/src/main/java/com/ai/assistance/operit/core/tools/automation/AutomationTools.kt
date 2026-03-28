@@ -3,7 +3,7 @@ package com.ai.assistance.operit.core.tools.automation
 import android.content.Context
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
-import com.ai.assistance.operit.data.model.StringResultData
+import com.ai.assistance.operit.core.tools.StringResultData
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking

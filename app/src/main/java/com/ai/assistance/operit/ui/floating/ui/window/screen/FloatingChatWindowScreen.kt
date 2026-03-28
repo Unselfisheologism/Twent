@@ -76,6 +76,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
+import com.ai.assistance.operit.services.ChatServiceCore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 

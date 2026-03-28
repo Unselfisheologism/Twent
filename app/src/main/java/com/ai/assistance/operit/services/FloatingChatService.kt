@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import com.ai.assistance.operit.core.application.ForegroundServiceCompat
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.api.chat.AIForegroundService
+import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.api.speech.SpeechServiceFactory
 import com.ai.assistance.operit.api.voice.VoiceServiceFactory
 import com.ai.assistance.operit.data.model.AttachmentInfo
@@ -155,7 +156,8 @@ class FloatingChatService : Service(), FloatingWindowCallback {
         private var chatStatsCallback: ((String?, Int, Int, Int) -> Unit)? = null
         
         fun getService(): FloatingChatService = this@FloatingChatService
-        fun getChatCore(): ChatServiceCore = chatCore
+        fun getChatCore(): ChatServiceCore? = chatCore
+        fun getChatServiceCore(): ChatServiceCore? = chatCore
         
         fun setCloseCallback(callback: () -> Unit) {
             closeCallbacks.add(callback)

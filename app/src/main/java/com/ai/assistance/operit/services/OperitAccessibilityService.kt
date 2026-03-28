@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.services
 
 import android.graphics.Bitmap
+import com.ai.assistance.operit.services.automation.OperitAutomationService
 
 class OperitAccessibilityService {
     companion object {

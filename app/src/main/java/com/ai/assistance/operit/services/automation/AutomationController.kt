@@ -170,8 +170,7 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
         isRunning = true
         onStatusChange?.invoke("Starting automation: $task")
         
-        val prefs = UserPreferencesManager.getInstance(context)
-        val userName = prefs.getString("user_name", "User") ?: "User"
+        val userName = context.getString(R.string.default_user_name)
         
         val modifiedPrompt = systemPrompt.replace("{user_name}", userName)
         val messageManager = MessageManager(modifiedPrompt)
