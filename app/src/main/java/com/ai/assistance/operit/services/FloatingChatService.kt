@@ -902,6 +902,12 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     fun getChatServiceCore(): ChatServiceCore? {
         return if (::chatCore.isInitialized) chatCore else null
     }
+
+    /**
+     * 获取 ChatServiceCore 实例（别名方法）
+     * @return ChatServiceCore 聊天服务核心实例
+     */
+    fun getChatCore(): ChatServiceCore? = getChatServiceCore()
     
     /**
      * 获取 EnhancedAIService 实例
@@ -914,6 +920,23 @@ class FloatingChatService : Service(), FloatingWindowCallback {
                 field.invoke(core) as? EnhancedAIService
             } catch (e: Exception) {
                 null
+            }
+        }
+    }
+
+    /**
+     * 重新加载聊天消息（从数据库刷新）
+     */
+    fun reloadChatMessages() {
+        serviceScope.launch {
+            try {
+                val currentChatId = chatCore?.currentChatId?.first()
+                if (currentChatId != null) {
+                    chatCore?.reloadChatMessagesSmart(currentChatId)
+                    AppLogger.d(TAG, "Reload chat messages for chat: $currentChatId")
+                }
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Failed to reload chat messages", e)
             }
         }
     }

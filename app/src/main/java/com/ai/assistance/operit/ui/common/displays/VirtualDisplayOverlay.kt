@@ -18,4 +18,9 @@ object VirtualDisplayOverlay {
     fun release() {
         displayManager = null
     }
+
+    @JvmStatic
+    fun hideAll() {
+        AppLogger.d(TAG, "hideAll called - Virtual display overlay hide")
+    }
 }

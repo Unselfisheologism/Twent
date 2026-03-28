@@ -12,6 +12,7 @@ class OperitAccessibilityService {
             instance = service
         }
     }
+    }
 
     fun getUIHierarchyXml(): String {
         return instance?.getWindowHierarchySignature() ?: ""
