@@ -948,33 +948,6 @@ object SystemToolPromptsInternal {
                 tools =
                     listOf(
                         ToolPrompt(
-                            name = "get_page_info",
-                            description = "Get current page/window UI information.",
-                            parametersStructured =
-                                listOf(
-                                    ToolParameterSchema(
-                                        name = "format",
-                                        type = "string",
-                                        description = "optional, xml/json",
-                                        required = false,
-                                        default = "xml"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "detail",
-                                        type = "string",
-                                        description = "optional",
-                                        required = false,
-                                        default = "summary"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "display",
-                                        type = "string",
-                                        description = "optional, display id for multi-display",
-                                        required = false
-                                    )
-                                )
-                        ),
-                        ToolPrompt(
                             name = "tap",
                             description = "Tap at screen coordinates.",
                             parametersStructured =
@@ -1161,38 +1134,6 @@ object SystemToolPromptsInternal {
                             name = "capture_screenshot",
                             description = "Capture a screenshot and return a file path.",
                             parametersStructured = listOf()
-                        ),
-                        ToolPrompt(
-                            name = "run_ui_subagent",
-                            description = "Run a lightweight UI automation subagent.",
-                            parametersStructured =
-                                listOf(
-                                    ToolParameterSchema(
-                                        name = "intent",
-                                        type = "string",
-                                        description = "task description",
-                                        required = true
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "max_steps",
-                                        type = "integer",
-                                        description = "optional",
-                                        required = false,
-                                        default = "20"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "agent_id",
-                                        type = "string",
-                                        description = "optional, reuse agent session id. If omitted or 'default', uses the main screen. If provided and not 'default', the requested virtual screen session must be active/available; otherwise the run fails.",
-                                        required = false
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "target_app",
-                                        type = "string",
-                                        description = "optional, target app package name",
-                                        required = false
-                                    )
-                                )
                         )
                     )
             ),
@@ -2417,33 +2358,6 @@ object SystemToolPromptsInternal {
                 tools =
                     listOf(
                         ToolPrompt(
-                            name = "get_page_info",
-                            description = "获取当前页面/窗口 UI 信息。",
-                            parametersStructured =
-                                listOf(
-                                    ToolParameterSchema(
-                                        name = "format",
-                                        type = "string",
-                                        description = "可选，xml/json",
-                                        required = false,
-                                        default = "xml"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "detail",
-                                        type = "string",
-                                        description = "可选",
-                                        required = false,
-                                        default = "summary"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "display",
-                                        type = "string",
-                                        description = "可选，多屏 display id",
-                                        required = false
-                                    )
-                                )
-                        ),
-                        ToolPrompt(
                             name = "tap",
                             description = "点击屏幕坐标。",
                             parametersStructured =
@@ -2630,38 +2544,6 @@ object SystemToolPromptsInternal {
                             name = "capture_screenshot",
                             description = "截取屏幕截图并返回文件路径。",
                             parametersStructured = listOf()
-                        ),
-                        ToolPrompt(
-                            name = "run_ui_subagent",
-                            description = "运行轻量 UI 自动化子代理。",
-                            parametersStructured =
-                                listOf(
-                                    ToolParameterSchema(
-                                        name = "intent",
-                                        type = "string",
-                                        description = "任务描述",
-                                        required = true
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "max_steps",
-                                        type = "integer",
-                                        description = "可选",
-                                        required = false,
-                                        default = "20"
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "agent_id",
-                                        type = "string",
-                                        description = "可选，可复用的 agent 会话 ID。不传或传 'default' 时使用主屏幕；传入且不为 'default' 时表示请求使用对应的虚拟屏幕会话，虚拟屏幕必须处于可用状态，否则本次运行将失败。",
-                                        required = false
-                                    ),
-                                    ToolParameterSchema(
-                                        name = "target_app",
-                                        type = "string",
-                                        description = "可选，目标应用包名",
-                                        required = false
-                                    )
-                                )
                         )
                     )
             ),

@@ -6,7 +6,7 @@
     "tools": [
         {
             "name": "usage_advice",
-            "description": { "zh": "UI自动化核心原则（非常重要，请务必遵守）：\n\n【必须使用UI自动化的场景】\n当用户要求以下操作时，必须使用UI自动化工具（tap/click_element/swipe等），而非网络搜索或爬虫工具：\n1. 打开某个应用并在其中进行操作（如\"打开微信发消息\"、\"打开抖音刷视频\"）\n2. 访问网站并与之交互（如\"打开Chrome访问x.com并登录\"、\"在浏览器中打开网页并点击\"）\n3. 查看应用内的内容（如\"查看Twitter/X的最新推文\"、\"查看Instagram的通知\"）\n4. 在应用内导航（如\"打开设置并关闭WiFi\"、\"进入相册删除照片\"）\n5. 操作手机屏幕上的任何元素\n\n【关键区分】\n- 用户说\"检查x.com/ Twitter/ Instagram的通知\" → 是指打开对应APP查看应用内通知，不是系统通知！\n- 用户说\"打开Chrome去x.com\" → 必须用app_launch启动Chrome，然后用UI自动化工具点击地址栏、输入URL、导航\n- 只有当用户明确要求\"搜索网页\"、\"查资料\"、\"获取新闻\"时才使用网络搜索工具\n\n【操作流程】\n1. 先用 app_launch 启动目标应用\n2. 用 get_page_info 获取当前页面UI结构\n3. 用 click_element/tap 点击需要的元素\n4. 用 set_input_text 输入内容\n5. 用 swipe 滚动页面\n6. 重复步骤2-5直到完成任务\n\n【元素定位技巧】\n- 列表：使用index参数（例如，\"点击索引为2的列表项\"）\n- 文本：使用partialMatch进行模糊匹配（例如，\"点击包含'登录'文字的按钮\"）\n- 坐标：使用tap(x, y)进行精确点击\n\n【重要】组合调用：强烈建议在一次响应中组合调用2~3个工具，例如：app_launch → get_page_info → click_element。软件会自动按顺序执行。", "en": "UI AUTOMATION CORE RULES (CRITICAL - MUST READ):\n\n【WHEN TO USE UI AUTOMATION】\nYou MUST use UI automation tools (tap/click_element/swipe/etc.) instead of web search/scraping tools when user asks for:\n1. Opening an app and doing something inside it (e.g., \"open WeChat and send message\", \"open TikTok and browse videos\")\n2. Visiting websites and interacting with them (e.g., \"open Chrome and go to x.com and login\", \"open browser and click on elements\")\n3. Checking in-app content (e.g., \"check Twitter/X's latest tweets\", \"check Instagram's notifications\")\n4. Navigating within apps (e.g., \"open Settings and turn off WiFi\", \"go to gallery and delete photos\")\n5. Operating any elements on the phone screen\n\n【KEY DISTINCTIONS】\n- User says \"check x.com/Twitter/Instagram notifications\" → means open the APP and check in-app notifications, NOT system notifications!\n- User says \"open Chrome and go to x.com\" → MUST use app_launch to start Chrome, then use UI automation to click address bar, enter URL, navigate\n- Only use web search tools when user explicitly asks \"search the web\", \"get information\", \"find news\"\n\n【WORKFLOW】\n1. First use app_launch to start the target app\n2. Use get_page_info to get current page UI structure\n3. Use click_element/tap to click needed elements\n4. Use set_input_text to enter content\n5. Use swipe to scroll the page\n6. Repeat steps 2-5 until task is complete\n\n【Element Targeting】\n- Lists: use index parameter (e.g., tap list item at index 2)\n- Text: use partialMatch for fuzzy matching (e.g., tap button containing 'Login')\n- Coordinates: use tap(x, y) for precise clicks\n\n【IMPORTANT】Combined calls: strongly recommend combining 2~3 tools in one response, e.g. app_launch → get_page_info → click_element. The system will execute sequentially." },
+            "description": { "zh": "UI自动化核心原则（非常重要，请务必遵守）：\n\n【必须使用UI自动化的场景】\n当用户要求以下操作时，必须使用UI自动化工具（tap/click_element/swipe等），而非网络搜索或爬虫工具：\n1. 打开某个应用并在其中进行操作（如\"打开微信发消息\"、\"打开抖音刷视频\"）\n2. 访问网站并与之交互（如\"打开Chrome访问x.com并登录\"、\"在浏览器中打开网页并点击\"）\n3. 查看应用内的内容（如\"查看Twitter/X的最新推文\"、\"查看Instagram的通知\"）\n4. 在应用内导航（如\"打开设置并关闭WiFi\"、\"进入相册删除照片\"）\n5. 操作手机屏幕上的任何元素\n\n【关键区分】\n- 用户说\"检查x.com/ Twitter/ Instagram的通知\" → 是指打开对应APP查看应用内通知，不是系统通知！\n- 用户说\"打开Chrome去x.com\" → 必须用app_launch启动Chrome，然后用UI自动化工具点击地址栏、输入URL、导航\n- 只有当用户明确要求\"搜索网页\"、\"查资料\"、\"获取新闻\"时才使用网络搜索工具\n\n【重要执行规则】（必须严格遵守）\n1. 每次只执行一个UI操作 - 等待截图结果后再进行下一个操作\n2. 使用任何UI自动化工具（tap, long_press, swipe, click_element, set_input_text, press_key）后，必须立即使用capture_screenshot获取截图查看结果\n3. 严禁将工具语法或参数作为纯文本输出 - 必须通过工具调用界面实际调用工具\n4. 正确的操作流程：app_launch → tap/click_element → capture_screenshot → 分析截图 → 下一个操作", "en": "UI AUTOMATION CORE RULES (CRITICAL - MUST READ):\n\n【WHEN TO USE UI AUTOMATION】\nYou MUST use UI automation tools (tap/click_element/swipe/etc.) instead of web search/scraping tools when user asks for:\n1. Opening an app and doing something inside it (e.g., \"open WeChat and send message\", \"open TikTok and browse videos\")\n2. Visiting websites and interacting with them (e.g., \"open Chrome and go to x.com and login\", \"open browser and click on elements\")\n3. Checking in-app content (e.g., \"check Twitter/X's latest tweets\", \"check Instagram's notifications\")\n4. Navigating within apps (e.g., \"open Settings and turn off WiFi\", \"go to gallery and delete photos\")\n5. Operating any elements on the phone screen\n\n【KEY DISTINCTIONS】\n- User says \"check x.com/Twitter/Instagram notifications\" → means open the APP and check in-app notifications, NOT system notifications!\n- User says \"open Chrome and go to x.com\" → MUST use app_launch to start Chrome, then use UI automation to click address bar, enter URL, navigate\n- Only use web search when user explicitly says \"search the web\", \"look up information\", \"get news\"\n\n【CRITICAL EXECUTION RULES】 (MUST STRICTLY FOLLOW)\n1. Execute ONLY ONE UI action at a time - wait for screenshot result before proceeding to next action\n2. After ANY UI automation tool (tap, long_press, swipe, click_element, set_input_text, press_key), you MUST immediately take a screenshot using capture_screenshot to see the result\n3. NEVER output tool syntax or parameters as plain text - you MUST actually CALL the tools via tool calling interface\n4. Correct workflow: app_launch → tap/click_element → capture_screenshot → analyze screenshot → next action" },
             "parameters": [],
             "advice": true
         },
@@ -32,7 +32,7 @@
         },
         {
             "name": "tap",
-            "description": { "zh": "在特定坐标模拟点击。用于精确点击屏幕上的某个位置。", "en": "Simulate a tap at the specified coordinates. Use for precise clicks on screen positions." },
+            "description": { "zh": "在特定坐标模拟点击。用于精确点击屏幕上的某个位置。\n\n【重要】每次点击后必须使用capture_screenshot获取截图查看结果。", "en": "Simulate a tap at the specified coordinates. Use for precise clicks on screen positions.\n\n【IMPORTANT】After tapping, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "x", "description": { "zh": "X坐标", "en": "X coordinate." }, "type": "number", "required": true },
                 { "name": "y", "description": { "zh": "Y坐标", "en": "Y coordinate." }, "type": "number", "required": true }
@@ -40,7 +40,7 @@
         },
         {
             "name": "double_tap",
-            "description": { "zh": "在特定坐标模拟双击（快速连续点击两次）。用于放大图片等操作。", "en": "Simulate a double tap at the specified coordinates (two quick taps). Use for zooming images, etc." },
+            "description": { "zh": "在特定坐标模拟双击（快速连续点击两次）。用于放大图片等操作。\n\n【重要】每次双击后必须使用capture_screenshot获取截图查看结果。", "en": "Simulate a double tap at the specified coordinates (two quick taps). Use for zooming images, etc.\n\n【IMPORTANT】After double tapping, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "x", "description": { "zh": "X坐标", "en": "X coordinate." }, "type": "number", "required": true },
                 { "name": "y", "description": { "zh": "Y坐标", "en": "Y coordinate." }, "type": "number", "required": true }
@@ -48,7 +48,7 @@
         },
         {
             "name": "long_press",
-            "description": { "zh": "在特定坐标模拟长按操作。适用于呼出上下文菜单、拖拽、长按选择等场景。", "en": "Simulate a long press at the specified coordinates. Useful for context menus, dragging, long-press selection, etc." },
+            "description": { "zh": "在特定坐标模拟长按操作。适用于呼出上下文菜单、拖拽、长按选择等场景。\n\n【重要】每次长按后必须使用capture_screenshot获取截图查看结果。", "en": "Simulate a long press at the specified coordinates. Useful for context menus, dragging, long-press selection, etc.\n\n【IMPORTANT】After long pressing, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "x", "description": { "zh": "X坐标", "en": "X coordinate." }, "type": "number", "required": true },
                 { "name": "y", "description": { "zh": "Y坐标", "en": "Y coordinate." }, "type": "number", "required": true }
@@ -56,7 +56,7 @@
         },
         {
             "name": "click_element",
-            "description": { "zh": "点击由资源ID、类名或文本标识的元素。通过UI层次结构定位元素，比坐标点击更可靠。\n\n【使用场景】\n- 点击按钮：提供className='android.widget.Button'或resourceId\n- 点击列表项：提供className和index\n- 点击包含特定文字的元素：使用partialMatch=true", "en": "Click an element identified by resourceId, className, or text. Locates elements through UI hierarchy, more reliable than coordinate taps.\n\n【Usage】\n- Click button: provide className='android.widget.Button' or resourceId\n- Click list item: provide className and index\n- Click element with specific text: use partialMatch=true" },
+            "description": { "zh": "点击由资源ID、类名或文本标识的元素。通过UI层次结构定位元素，比坐标点击更可靠。\n\n【使用场景】\n- 点击按钮：提供className='android.widget.Button'或resourceId\n- 点击列表项：提供className和index\n- 点击包含特定文字的元素：使用partialMatch=true\n\n【重要】每次点击后必须使用capture_screenshot获取截图查看结果。", "en": "Click an element identified by resourceId, className, or text. Locates elements through UI hierarchy, more reliable than coordinate taps.\n\n【Usage】\n- Click button: provide className='android.widget.Button' or resourceId\n- Click list item: provide className and index\n- Click element with specific text: use partialMatch=true\n\n【IMPORTANT】After clicking, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "resourceId", "description": { "zh": "元素资源ID", "en": "Element resourceId." }, "type": "string", "required": false },
                 { "name": "className", "description": { "zh": "元素类名", "en": "Element class name." }, "type": "string", "required": false },
@@ -67,21 +67,21 @@
         },
         {
             "name": "set_input_text",
-            "description": { "zh": "在输入字段中设置文本。在使用此工具前，应先点击输入框使其获得焦点。", "en": "Set text in the current input field. Before using this, click on the input field to give it focus." },
+            "description": { "zh": "在输入字段中设置文本。在使用此工具前，应先点击输入框使其获得焦点。\n\n【重要】每次输入后必须使用capture_screenshot获取截图查看结果。", "en": "Set text in the current input field. Before using this, click on the input field to give it focus.\n\n【IMPORTANT】After inputting text, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "text", "description": { "zh": "要输入的文本", "en": "Text to input." }, "type": "string", "required": true }
             ]
         },
         {
             "name": "press_key",
-            "description": { "zh": "模拟按键。用于返回、主页、任务切换等系统操作。", "en": "Simulate a key press. Use for system operations like back, home, task switch." },
+            "description": { "zh": "模拟按键。用于返回、主页、任务切换等系统操作。\n\n【重要】每次按键后必须使用capture_screenshot获取截图查看结果。", "en": "Simulate a key press. Use for system operations like back, home, task switch.\n\n【IMPORTANT】After pressing key, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "key_code", "description": { "zh": "键码，例如'KEYCODE_BACK'（返回）、'KEYCODE_HOME'（主页）、'KEYCODE_APP_SWITCH'（任务切换）、'KEYCODE_ENTER'（确认）", "en": "Key code, e.g. 'KEYCODE_BACK' (back), 'KEYCODE_HOME' (home), 'KEYCODE_APP_SWITCH' (task switch), 'KEYCODE_ENTER' (confirm)." }, "type": "string", "required": true }
             ]
         },
         {
             "name": "swipe",
-            "description": { "zh": "模拟滑动手势。用于滚动页面、上滑、下滑、左滑、右滑等操作。", "en": "Simulate a swipe gesture. Use for scrolling pages, swipe up/down/left/right." },
+            "description": { "zh": "模拟滑动手势。用于滚动页面、上滑、下滑、左滑、右滑等操作。\n\n【重要】每次滑动后必须使用capture_screenshot获取截图查看结果。", "en": "Simulate a swipe gesture. Use for scrolling pages, swipe up/down/left/right.\n\n【IMPORTANT】After swiping, you MUST use capture_screenshot to see the result." },
             "parameters": [
                 { "name": "start_x", "description": { "zh": "起始X坐标", "en": "Start X coordinate." }, "type": "number", "required": true },
                 { "name": "start_y", "description": { "zh": "起始Y坐标", "en": "Start Y coordinate." }, "type": "number", "required": true },

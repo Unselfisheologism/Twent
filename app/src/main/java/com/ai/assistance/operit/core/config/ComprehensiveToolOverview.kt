@@ -100,15 +100,19 @@ Here's a complete overview of what you can do:
 ### 7. UI AUTOMATION TOOLS
 ════════════════════════════════════════════════════════════════════════
 
-• get_page_info - Get current screen UI hierarchy (XML/JSON)
-• tap - Tap at screen coordinates
-• long_press - Long press at coordinates
-• swipe - Swipe gestures between coordinates
-• click_element - Click UI element by resource ID/class/content-desc
-• set_input_text - Input text in focused field
-• press_key - Press hardware/system keys
-• capture_screenshot - Take screenshot
-• run_ui_subagent - Run UI automation subagent for complex tasks
+**CRITICAL EXECUTION RULES:**
+1. Execute ONLY ONE UI action at a time - wait for the screenshot result before proceeding to the next action
+2. After ANY UI automation tool (tap, long_press, swipe, click_element, set_input_text, press_key, capture_screenshot), you MUST take a screenshot using capture_screenshot to see the result
+3. NEVER output tool syntax or parameters as plain text - you MUST actually CALL the tools via the tool calling interface
+4. NEVER execute multiple commands in batch - wait for screenshot feedback after each action
+
+• tap - Tap at screen coordinates (AFTER using: take screenshot with capture_screenshot)
+• long_press - Long press at coordinates (AFTER using: take screenshot with capture_screenshot)
+• swipe - Swipe gestures between coordinates (AFTER using: take screenshot with capture_screenshot)
+• click_element - Click UI element by resource ID/class/content-desc (AFTER using: take screenshot with capture_screenshot)
+• set_input_text - Input text in focused field (AFTER using: take screenshot with capture_screenshot)
+• press_key - Press hardware/system keys (AFTER using: take screenshot with capture_screenshot)
+• capture_screenshot - Take screenshot to see current screen state
 
 ════════════════════════════════════════════════════════════════════════
 ### 8. MATHEMATICS & CALCULATION
