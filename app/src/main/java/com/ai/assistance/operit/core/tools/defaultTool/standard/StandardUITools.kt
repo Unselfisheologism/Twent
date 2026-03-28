@@ -6,9 +6,6 @@ import android.graphics.BitmapFactory
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjection
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.core.config.FunctionalPrompts
-import com.ai.assistance.operit.core.tools.AutomationExecutionResult
-import com.ai.assistance.operit.core.tools.SimplifiedUINode
 import com.ai.assistance.operit.core.tools.StringResultData
 import com.ai.assistance.operit.core.tools.UIPageResultData
 import com.ai.assistance.operit.core.tools.AppListData
@@ -23,17 +20,10 @@ import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.ui.common.displays.UIOperationOverlay
-import com.ai.assistance.operit.ui.common.displays.UIAutomationProgressOverlay
-import com.ai.assistance.operit.ui.common.displays.VirtualDisplayOverlay
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.util.ImagePoolManager
 import com.ai.assistance.operit.util.LocaleUtils
 import com.ai.assistance.operit.util.OperitPaths
-import com.ai.assistance.operit.core.tools.agent.ActionHandler
-import com.ai.assistance.operit.core.tools.agent.AgentConfig
-import com.ai.assistance.operit.core.tools.agent.PhoneAgent
-import com.ai.assistance.operit.core.tools.agent.ShowerController
-import com.ai.assistance.operit.core.tools.agent.ToolImplementations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -399,167 +389,6 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
                     result = StringResultData(""),
                 error = OPERATION_NOT_SUPPORTED
         )
-    }
-
-    /**
-     * Executes a lightweight UI automation subagent loop using the UI_CONTROLLER function type.
-     * This subagent uses the UI_AUTOMATION_AGENT_PROMPT and returns an AutomationExecutionResult
-     * that contains a log of all <think>/<answer> pairs and parsed actions.
-     */
-    open suspend fun runUiSubAgent(tool: AITool): ToolResult {
-        val intent = tool.parameters.find { it.name == "intent" }?.value
-        val maxSteps = tool.parameters.find { it.name == "max_steps" }?.value?.toIntOrNull() ?: 20
-        val requestedAgentId = tool.parameters.find { it.name == "agent_id" }?.value
-        val targetApp = tool.parameters.find { it.name == "target_app" }?.value
-
-        if (intent.isNullOrBlank()) {
-            return ToolResult(
-                toolName = tool.name,
-                success = false,
-                result = StringResultData(""),
-                error = "Missing required parameter: intent"
-            )
-        }
-
-        // 使用与主AI agent相同的CHAT模型配置，确保API provider一致性
-        val chatConfig = EnhancedAIService.getModelConfigForFunction(context, FunctionType.CHAT)
-        if (!chatConfig.enableDirectImageProcessing) {
-            return ToolResult(
-                toolName = tool.name,
-                success = false,
-                result = StringResultData(""),
-                error = "当前聊天模型未启用识图能力，请在设置-功能模型中为聊天功能选择支持图片理解的模型后再试。"
-            )
-        }
-
-        return try {
-            // 使用与主AI agent相同的CHAT模型，确保API provider一致性
-            val uiService = EnhancedAIService.getAIServiceForFunction(context, FunctionType.CHAT)
-            val systemPrompt = buildUiAutomationSystemPrompt()
-
-            val metrics = context.resources.displayMetrics
-            val screenWidth = metrics.widthPixels
-            val screenHeight = metrics.heightPixels
-
-            val agentConfig = AgentConfig(maxSteps = maxSteps)
-            val actionHandler = ActionHandler(
-                context = context,
-                screenWidth = screenWidth,
-                screenHeight = screenHeight,
-                toolImplementations = this
-            )
-
-            val agentId = if (!requestedAgentId.isNullOrBlank()) requestedAgentId else "default"
-            val agent = PhoneAgent(
-                context = context,
-                config = agentConfig,
-                uiService = uiService, // 传递专用的 AIService
-                actionHandler = actionHandler,
-                agentId = agentId,
-                cleanupOnFinish = false
-            )
-
-            val pausedState = MutableStateFlow(false)
-
-            val finalMessage = agent.run(
-                task = intent,
-                systemPrompt = systemPrompt,
-                isPausedFlow = pausedState,
-                targetApp = targetApp
-            )
-
-            val displayId = try {
-                ShowerController.getDisplayId(agentId)
-            } catch (_: Exception) {
-                null
-            }
-
-            val success = !finalMessage.contains("Max steps reached") && !finalMessage.contains("Error")
-            val executionMessage = buildString {
-                appendLine("UI automation subagent run summary:")
-                appendLine("Intent: $intent")
-                appendLine("Steps executed: ${agent.stepCount} / ${agentConfig.maxSteps}")
-                appendLine("Finished: $success")
-                appendLine("Final message: $finalMessage")
-                appendLine()
-                appendLine("Full conversation history:")
-                agent.contextHistory.forEach { (role, content) ->
-                    appendLine("[$role]: ${content.take(200)}")
-                }
-            }
-
-            val resultData = AutomationExecutionResult(
-                functionName = "UIAutomationSubAgent",
-                providedParameters = buildMap {
-                    put("intent", intent)
-                    put("max_steps", maxSteps.toString())
-                    if (!targetApp.isNullOrBlank()) {
-                        put("target_app", targetApp)
-                    }
-                    if (!requestedAgentId.isNullOrBlank()) {
-                        put("agent_id", requestedAgentId)
-                    }
-                },
-                agentId = agentId,
-                displayId = displayId,
-                executionSuccess = success,
-                executionMessage = executionMessage,
-                executionError = if (!success) finalMessage else null,
-                finalState = null,
-                executionSteps = agent.stepCount
-            )
-
-            ToolResult(toolName = tool.name, success = true, result = resultData, error = "")
-        } catch (e: CancellationException) {
-            AppLogger.e(TAG, "UI subagent cancelled", e)
-            ToolResult(
-                toolName = tool.name,
-                success = false,
-                result = StringResultData(""),
-                error = "Error running UI subagent: ${e.message}"
-            )
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Error running UI subagent", e)
-            ToolResult(
-                toolName = tool.name,
-                success = false,
-                result = StringResultData(""),
-                error = "Error running UI subagent: ${e.message}"
-            )
-        }
-    }
-
-    /**
-     * Default screenshot implementation for the UI subagent.
-     *
-     * It captures the current screen to /sdcard/Download/Operit/cleanOnExit,
-     * then registers the image in ImagePoolManager and returns a <link type="image" ...> tag.
-     *
-     * Subclasses can override this method if they have a more specialized screenshot pipeline.
-     */
-    private fun buildUiAutomationSystemPrompt(): String {
-        val useEnglish = LocaleUtils.getCurrentLanguage(context).lowercase().startsWith("en")
-        val formattedDate =
-            if (useEnglish) {
-                SimpleDateFormat("yyyy-MM-dd EEEE", Locale.ENGLISH).format(Date())
-            } else {
-                val calendar = Calendar.getInstance()
-                val sdf = SimpleDateFormat("yyyy年MM月dd日", Locale.getDefault())
-                val datePart = sdf.format(Date())
-                val weekdayNames =
-                    arrayOf(
-                        "星期日",
-                        "星期一",
-                        "星期二",
-                        "星期三",
-                        "星期四",
-                        "星期五",
-                        "星期六"
-                    )
-                val weekday = weekdayNames[calendar.get(Calendar.DAY_OF_WEEK) - 1]
-                "$datePart $weekday"
-            }
-        return FunctionalPrompts.buildUiAutomationAgentPrompt(formattedDate, useEnglish)
     }
 
     protected open suspend fun captureScreenshotToFile(tool: AITool): Pair<String?, Pair<Int, Int>?> {

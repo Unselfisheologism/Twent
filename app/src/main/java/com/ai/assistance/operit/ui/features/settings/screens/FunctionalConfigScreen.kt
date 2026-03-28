@@ -593,26 +593,6 @@ fun FunctionConfigCard(
                                                         .collect { chunk -> buffer.append(chunk) }
                                                     buffer.toString()
                                                 }
-                                                FunctionType.UI_CONTROLLER -> {
-                                                    val systemPrompt = FunctionalPrompts.uiControllerPrompt(useEnglish)
-                                                    val userPrompt =
-                                                        if (useEnglish) {
-                                                            "Current UI State: [Button(label=\"OK\", bounds=\"[0,0][100,50]\")]\nTask Goal: Tap OK.\nExecution History: []"
-                                                        } else {
-                                                            "当前 UI 状态: [Button(label=\"确定\", bounds=\"[0,0][100,50]\")]\n任务目标: 点击确定。\n执行历史: []"
-                                                        }
-                                                    val parameters =
-                                                        modelConfigManager.getModelParametersForConfig(configWithSelectedModel.id)
-                                                    val buffer = StringBuilder()
-                                                    service.sendMessage(
-                                                        context,
-                                                        userPrompt,
-                                                        listOf("system" to systemPrompt),
-                                                        parameters,
-                                                        stream = false
-                                                    ).collect { chunk -> buffer.append(chunk) }
-                                                    buffer.toString()
-                                                }
                                                 FunctionType.PROBLEM_LIBRARY -> {
                                                     val existingMemoriesPrompt =
                                                         FunctionalPrompts.knowledgeGraphNoExistingMemoriesMessage(useEnglish)
@@ -887,7 +867,6 @@ fun getFunctionDisplayName(functionType: FunctionType): String {
         FunctionType.CHAT -> stringResource(id = R.string.function_type_chat)
         FunctionType.SUMMARY -> stringResource(id = R.string.function_type_summary)
         FunctionType.PROBLEM_LIBRARY -> stringResource(id = R.string.function_type_problem_library)
-        FunctionType.UI_CONTROLLER -> stringResource(id = R.string.function_type_ui_controller)
         FunctionType.TRANSLATION -> stringResource(id = R.string.function_type_translation)
         FunctionType.GREP -> stringResource(id = R.string.function_type_grep)
         FunctionType.IMAGE_RECOGNITION -> stringResource(id = R.string.function_type_image_recognition)
@@ -903,7 +882,6 @@ fun getFunctionDescription(functionType: FunctionType): String {
         FunctionType.CHAT -> stringResource(id = R.string.function_desc_chat)
         FunctionType.SUMMARY -> stringResource(id = R.string.function_desc_summary)
         FunctionType.PROBLEM_LIBRARY -> stringResource(id = R.string.function_desc_problem_library)
-        FunctionType.UI_CONTROLLER -> stringResource(id = R.string.function_desc_ui_controller)
         FunctionType.TRANSLATION -> stringResource(id = R.string.function_desc_translation)
         FunctionType.GREP -> stringResource(id = R.string.function_desc_grep)
         FunctionType.IMAGE_RECOGNITION -> stringResource(id = R.string.function_desc_image_recognition)

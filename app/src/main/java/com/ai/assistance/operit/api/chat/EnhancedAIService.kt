@@ -1424,12 +1424,6 @@ class EnhancedAIService private constructor(private val context: Context) {
                 return null
             }
 
-            // UI_CONTROLLER模式：只提供UI自动化工具
-            if (functionType == FunctionType.UI_CONTROLLER) {
-                AppLogger.d(TAG, "UI_CONTROLLER模式：返回UI自动化工具列表")
-                return getUiAutomationTools()
-            }
-
             // 获取对应功能类型的模型配置
             val config = multiServiceManager.getModelConfigForFunction(functionType)
             
@@ -1518,80 +1512,7 @@ class EnhancedAIService private constructor(private val context: Context) {
             null
         }
     }
-
-    /**
-     * 获取UI自动化工具列表
-     * 当functionType为UI_CONTROLLER时，只返回UI自动化相关工具
-     */
-    private fun getUiAutomationTools(): List<ToolPrompt> {
-        // UI_CONTROLLER模式使用特殊的系统提示来告诉AI只使用UI自动化工具
-        // 工具列表从JavaScript包动态加载
-        AppLogger.d(TAG, "UI_CONTROLLER模式: 将使用UI自动化系统提示")
-        
-        // 返回UI自动化工具列表，包含usage_advice作为第一个工具提供关键指导
-        return listOf(
-            ToolPrompt(
-                name = "usage_advice",
-                description = "UI AUTOMATION CORE RULES (CRITICAL): When user asks to check x.com/Twitter/Instagram notifications, you MUST open the actual APP and navigate to notifications section - do NOT confuse with system notifications. Use app_launch → then UI automation to navigate. Only use web search when user explicitly asks 'search the web' or 'get news'.",
-                parameters = ""
-            ),
-            ToolPrompt(
-                name = "tap",
-                description = "Tap on a specific coordinate or UI element on the screen",
-                parameters = "x, y"
-            ),
-            ToolPrompt(
-                name = "click",
-                description = "Click on a UI element identified by its properties",
-                parameters = "element_id, x, y"
-            ),
-            ToolPrompt(
-                name = "swipe",
-                description = "Swipe on the screen in a direction",
-                parameters = "direction, duration"
-            ),
-            ToolPrompt(
-                name = "scroll",
-                description = "Scroll the screen up, down, left or right",
-                parameters = "direction"
-            ),
-            ToolPrompt(
-                name = "get_screen",
-                description = "Get the current screen content as image for analysis",
-                parameters = ""
-            ),
-            ToolPrompt(
-                name = "get_screen_xml",
-                description = "Get the current screen XML hierarchy for element analysis",
-                parameters = ""
-            ),
-            ToolPrompt(
-                name = "launch_app",
-                description = "Launch an application by package name",
-                parameters = "package_name"
-            ),
-            ToolPrompt(
-                name = "find_element",
-                description = "Find a UI element by text, content description, or other properties",
-                parameters = "text, by"
-            ),
-            ToolPrompt(
-                name = "input_text",
-                description = "Input text into a focused text field",
-                parameters = "text"
-            ),
-            ToolPrompt(
-                name = "press_key",
-                description = "Press a hardware or software key",
-                parameters = "key_name"
-            ),
-            ToolPrompt(
-                name = "get_notification",
-                description = "Get the current system notifications",
-                parameters = ""
-            )
-        )
-    }
+}
 
     // --- Service Lifecycle Management ---
 

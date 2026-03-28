@@ -69,8 +69,6 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
                     putExtra("INITIAL_MODE", FloatingMode.FULLSCREEN.name)
                     putExtra(FloatingChatService.EXTRA_AUTO_ENTER_VOICE_CHAT, true)
                     putExtra(FloatingChatService.EXTRA_WAKE_LAUNCHED, true)
-                    // 语音激活启动时使用UI Agent模式，以便只使用UI自动化工具
-                    putExtra(FloatingChatService.EXTRA_AGENT_MODE, "ui_agent")
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent)

@@ -11,15 +11,8 @@ object SystemPromptConfig {
     private const val BEHAVIOR_GUIDELINES_EN = """
 BEHAVIOR GUIDELINES:
 - **TOOL SELECTION ANALYSIS**: Before responding, analyze if the user's request requires:
-  - **UI AUTOMATION TASKS**: Any task involving websites, apps, clicking, scrolling, swiping, typing into apps, opening pages, navigating interfaces, searching within apps/websites, booking services (cab, movie tickets, restaurant), ordering items, filling forms in apps, interacting with mobile/web interfaces → Use **UI tools (tap, click_element, swipe, set_input_text, press_key, capture_screenshot)**
   - **INTERNAL/FILE TASKS**: Tasks that don't involve apps/websites/navigation like reading files, running shell commands, calculations, memory operations → Use **internal tools**
   - **WEB SCRAPING ONLY**: Only use visit_web when you need to extract/scrape data from public websites that don't require login (very rare case)
-- **UI AUTOMATION EXECUTION RULES (CRITICAL)**:
-  - Execute ONLY ONE UI action at a time - wait for the screenshot result before proceeding to the next action
-  - After ANY UI automation tool (tap, long_press, swipe, click_element, set_input_text, press_key), you MUST immediately take a screenshot using capture_screenshot to see the result before continuing
-  - NEVER output tool syntax or parameters as plain text - you MUST actually CALL the tools via the tool calling interface
-  - NEVER execute multiple commands in batch - wait for screenshot feedback after each action
-  - Example correct workflow: tap(x,y) → capture_screenshot → analyze screenshot → next action
 - Parallel Tool Calling: For any information-gathering task (e.g., reading files, searching, getting comments, page operations), you **MUST** call all necessary tools in a single turn. **Do not call them sequentially.** This is a strict efficiency requirement. The system is designed to handle the sequence and integrate the results. For data modification (e.g., writing files), you must still only call one tool at a time.
 - Keep responses concise and clear. Avoid lengthy explanations unless requested.
 - Don't repeat previous conversation steps. Maintain context naturally.
@@ -32,15 +25,8 @@ BEHAVIOR GUIDELINES:
     private const val BEHAVIOR_GUIDELINES_CN = """
 行为准则：
 - **工具选择分析**: 在回复之前，分析用户的请求是否需要：
-  - **UI自动化任务**: 任何涉及网站、应用、点击、滚动、滑动、在应用中输入、打开页面、导航界面、在应用/网站中搜索、预订服务（出租车、电影票、餐厅）、下单、填写表单、与移动/网页界面交互的任务 → 使用**UI工具（tap, click_element, swipe, set_input_text, press_key, capture_screenshot）**
   - **内部/文件任务**: 不涉及应用/网站/导航的任务，如读取文件、运行shell命令、计算、内存操作 → 使用**内部工具**
   - **仅限网页抓取**: 只有在需要从不需要登录的公共网站提取/抓取数据时才使用visit_web（极少情况）
-- **UI自动化执行规则（关键）**:
-  - 每次只执行一个UI操作 - 等待截图结果后再进行下一个操作
-  - 使用任何UI自动化工具（tap, long_press, swipe, click_element, set_input_text, press_key）后，必须立即使用capture_screenshot获取截图，查看结果后再继续
-  - 严禁将工具语法或参数作为纯文本输出 - 必须通过工具调用界面实际调用工具
-  - 严禁批量执行多个命令 - 每个操作后必须等待截图反馈
-  - 正确的操作流程示例：tap(x,y) → capture_screenshot → 分析截图 → 下一个操作
 - 并行工具调用: 对于任何信息搜集任务（例如，读取文件、搜索、获取评论、页面操作），你**必须**在单次回合中调用所有需要的工具。**严禁分开串行调用**。这是一条严格的效率指令。系统已设计好先后顺序并整合结果。写入工具依旧要保证每次只调用一次。
 - 回答应简洁明了，除非用户要求，否则避免冗长的解释。
 - 不要重复之前的对话步骤，自然地保持上下文。

@@ -7,7 +7,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.core.chat.AIMessageManager
-import com.ai.assistance.operit.core.tools.agent.PhoneAgentJobRegistry
 import com.ai.assistance.operit.data.model.*
 import com.ai.assistance.operit.data.model.InputProcessingState as EnhancedInputProcessingState
 import com.ai.assistance.operit.data.model.PromptFunctionType
@@ -278,15 +277,7 @@ class MessageProcessingDelegate(
             AppLogger.d(TAG, "开始处理用户消息：附件数量=${attachments.size}")
 
             // Determine function type based on agent mode
-            val effectiveFunctionType = run {
-                val agentMode = FloatingChatService.getInstance()?.getAgentMode()
-                if (agentMode == "ui_agent") {
-                    AppLogger.d(TAG, "UI Agent mode detected - using UI_CONTROLLER function type")
-                    FunctionType.UI_CONTROLLER
-                } else {
-                    FunctionType.CHAT
-                }
-            }
+            val effectiveFunctionType = FunctionType.CHAT
 
             // 获取当前模型配置以检查是否启用直接图片处理
             // 根据agent mode选择对应的配置
@@ -377,32 +368,9 @@ class MessageProcessingDelegate(
                             return@launch
                         }
 
-                // 检查agent模式，根据agent模式选择正确的service
-                val agentMode = FloatingChatService.getInstance()?.getAgentMode()
-                val effectiveFunctionType = if (agentMode == "ui_agent") {
-                    AppLogger.d(TAG, "UI Agent mode detected - using UI_CONTROLLER function type")
-                    com.ai.assistance.operit.data.model.FunctionType.UI_CONTROLLER
-                } else {
-                    com.ai.assistance.operit.data.model.FunctionType.CHAT
-                }
-
-                // 如果是UI Agent模式，获取对应function type的service
-                val finalService = if (agentMode == "ui_agent") {
-                    try {
-                        val uiService = EnhancedAIService.getAIServiceForFunction(context, com.ai.assistance.operit.data.model.FunctionType.UI_CONTROLLER)
-                        // 获取AIService后，需要获取其关联的EnhancedAIService实例
-                        // 这里我们创建一个包装，或者直接使用已有的service
-                        // 由于getAIServiceForFunction返回AIService，我们使用原来的service并让它内部使用正确的function type
-                        service
-                    } catch (e: Exception) {
-                        AppLogger.e(TAG, "Failed to get UI controller service: ${e.message}", e)
-                        service
-                    }
-                } else {
-                    service
-                }
-
-                serviceForTurnComplete = finalService
+                // Use CHAT function type
+                val effectiveFunctionType = com.ai.assistance.operit.data.model.FunctionType.CHAT
+                serviceForTurnComplete = service
 
                 // 清除上一次可能残留的 Error 状态，避免 StateFlow 重放导致新一轮发送立即再次触发弹窗
                 finalService.setInputProcessingState(EnhancedInputProcessingState.Processing(context.getString(R.string.message_processing)))

@@ -51,7 +51,7 @@ Here's a complete overview of what you can do:
 ### 3. WEB & NETWORK TOOLS
 ════════════════════════════════════════════════════════════════════════
 
-• visit_web - Visit webpages and extract content (supports link following). **USE ONLY for scraping public data. For website interaction (login, click, navigate), use UI tools instead.**
+• visit_web - Visit webpages and extract content (supports link following)
 • http_request - Send HTTP requests (GET, POST, PUT, DELETE)
 • multipart_request - Upload files via multipart form data
 • manage_cookies - Manage browser cookies
@@ -96,25 +96,6 @@ Here's a complete overview of what you can do:
 • send_notification - Send system notifications
 • get_device_location - Get GPS location
 
-════════════════════════════════════════════════════════════════════════
-### 7. UI AUTOMATION TOOLS
-════════════════════════════════════════════════════════════════════════
-
-**CRITICAL EXECUTION RULES:**
-1. Execute ONLY ONE UI action at a time - wait for the screenshot result before proceeding to the next action
-2. After ANY UI automation tool (tap, long_press, swipe, click_element, set_input_text, press_key, capture_screenshot), you MUST take a screenshot using capture_screenshot to see the result
-3. NEVER output tool syntax or parameters as plain text - you MUST actually CALL the tools via the tool calling interface
-4. NEVER execute multiple commands in batch - wait for screenshot feedback after each action
-
-• tap - Tap at screen coordinates (AFTER using: take screenshot with capture_screenshot)
-• long_press - Long press at coordinates (AFTER using: take screenshot with capture_screenshot)
-• swipe - Swipe gestures between coordinates (AFTER using: take screenshot with capture_screenshot)
-• click_element - Click UI element by resource ID/class/content-desc (AFTER using: take screenshot with capture_screenshot)
-• set_input_text - Input text in focused field (AFTER using: take screenshot with capture_screenshot)
-• press_key - Press hardware/system keys (AFTER using: take screenshot with capture_screenshot)
-• capture_screenshot - Take screenshot to see current screen state
-
-════════════════════════════════════════════════════════════════════════
 ### 8. MATHEMATICS & CALCULATION
 ════════════════════════════════════════════════════════════════════════
 
@@ -186,11 +167,6 @@ SEARCHING THE WEB:
 
 SEARCHING MEMORY:
   • query_memory(query="keywords", folder_path="/optional/folder")
-
-ANDROID UI AUTOMATION:
-  • get_page_info() → get UI hierarchy
-  • tap(x=500, y=300) → tap coordinates
-  • click_element(resourceId="com.app:id/button") → element by ID
 
 GETTING HELP:
   • For any tool, you can infer the parameters from this overview
