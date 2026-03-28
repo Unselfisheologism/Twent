@@ -171,7 +171,7 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
         isRunning = true
         onStatusChange?.invoke("Starting automation: $task")
         
-        val userName = context.getString(R.string.default_user_name)
+        val userName = "User"
         
         val modifiedPrompt = systemPrompt.replace("{user_name}", userName)
         val messageManager = MessageManager(modifiedPrompt)
@@ -304,23 +304,10 @@ class OperitLlmApi(private val context: Context) : LlmApi {
         }
     }
     
-    private fun getAiService(): AIService? {
+    private fun getAiService(): com.ai.assistance.operit.api.chat.EnhancedAIService? {
         // Try to get from FloatingChatService
         val chatService = com.ai.assistance.operit.services.FloatingChatService.getInstance()
-        return chatService?.let { service ->
-            try {
-                val core = service.getChatServiceCore()
-                core?.getEnhancedAiService()?.let { enhancedService ->
-                    // Get the underlying AIService from EnhancedAIService
-                    val field = enhancedService.javaClass.getDeclaredField("currentService")
-                    field.isAccessible = true
-                    field.get(enhancedService) as? AIService
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to get AI service", e)
-                null
-            }
-        }
+        return chatService?.getAiService()
     }
     
     private fun parseAgentOutput(response: String): AgentOutput? {

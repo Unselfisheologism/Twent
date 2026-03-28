@@ -461,7 +461,7 @@ private fun TitleBar(
                                 if (context != null) {
                                     runBlocking {
                                         try {
-                                            context.getChatCore().syncCurrentChatIdToGlobal()
+                                            context.getChatCore()?.syncCurrentChatIdToGlobal()
                                         } catch (_: Exception) {
                                         }
                                     }

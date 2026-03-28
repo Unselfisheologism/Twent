@@ -5,7 +5,7 @@ import com.ai.assistance.operit.services.automation.OperitAutomationService
 
 class OperitAccessibilityService {
     companion object {
-        var instance: OperitAccessibilityService? = null
+        var instance: OperitAutomationService? = null
             private set
 
         fun setInstance(service: OperitAutomationService?) {
