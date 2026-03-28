@@ -916,9 +916,3 @@ class FloatingChatService : Service(), FloatingWindowCallback {
         }
     }
 }
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "重新加载聊天消息失败", e)
-            }
-        }
-    }
-}

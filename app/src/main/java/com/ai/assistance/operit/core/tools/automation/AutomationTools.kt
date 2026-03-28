@@ -6,15 +6,16 @@ import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.data.model.StringResultData
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 /**
- * Tool for starting UI automation tasks
+ * Tool for UI automation tasks
  * This tool allows the AI to start an automation task that will interact with the phone
  */
-object AutomationTools {
+class AutomationTools(private val context: Context) {
 
-    private const val TAG = "AutomationTools"
+    private val TAG = "AutomationTools"
 
     /**
      * Start an automation task
@@ -22,7 +23,7 @@ object AutomationTools {
      * - task: The task description (e.g., "打开微信并给朋友发消息")
      * - max_steps: Maximum steps to take (default 150)
      */
-    suspend fun startAutomation(tool: AITool): ToolResult {
+    fun startAutomation(tool: AITool): ToolResult {
         val task = tool.parameters.find { it.name == "task" }?.value ?: run {
             return ToolResult(
                 toolName = tool.name,
@@ -35,28 +36,26 @@ object AutomationTools {
         val maxSteps = tool.parameters.find { it.name == "max_steps" }?.value?.toIntOrNull() ?: 150
 
         return try {
-            withContext(Dispatchers.Main) {
-                val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
-                    tool.context
-                )
-                
-                controller.startAutomation(
-                    task = task,
-                    maxSteps = maxSteps,
-                    onStatusChange = { status ->
-                        AppLogger.d(TAG, "Automation status: $status")
-                    },
-                    onComplete = { success, message ->
-                        AppLogger.d(TAG, "Automation complete: success=$success, message=$message")
-                    }
-                )
-                
-                ToolResult(
-                    toolName = tool.name,
-                    success = true,
-                    result = StringResultData("Automation started: $task")
-                )
-            }
+            val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
+                context
+            )
+            
+            controller.startAutomation(
+                task = task,
+                maxSteps = maxSteps,
+                onStatusChange = { status ->
+                    AppLogger.d(TAG, "Automation status: $status")
+                },
+                onComplete = { success, message ->
+                    AppLogger.d(TAG, "Automation complete: success=$success, message=$message")
+                }
+            )
+            
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Automation started: $task")
+            )
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to start automation", e)
             ToolResult(
@@ -71,20 +70,18 @@ object AutomationTools {
     /**
      * Stop the current automation
      */
-    suspend fun stopAutomation(tool: AITool): ToolResult {
+    fun stopAutomation(tool: AITool): ToolResult {
         return try {
-            withContext(Dispatchers.Main) {
-                val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
-                    tool.context
-                )
-                controller.stopAutomation()
-                
-                ToolResult(
-                    toolName = tool.name,
-                    success = true,
-                    result = StringResultData("Automation stopped")
-                )
-            }
+            val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
+                context
+            )
+            controller.stopAutomation()
+            
+            ToolResult(
+                toolName = tool.name,
+                success = true,
+                result = StringResultData("Automation stopped")
+            )
         } catch (e: Exception) {
             ToolResult(
                 toolName = tool.name,
@@ -98,10 +95,10 @@ object AutomationTools {
     /**
      * Check if automation is currently running
      */
-    suspend fun isAutomationRunning(tool: AITool): ToolResult {
+    fun isAutomationRunning(tool: AITool): ToolResult {
         return try {
             val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
-                tool.context
+                context
             )
             val running = controller.isRunning()
             
@@ -123,13 +120,15 @@ object AutomationTools {
     /**
      * Get current screen analysis
      */
-    suspend fun getScreenState(tool: AITool): ToolResult {
+    fun getScreenState(tool: AITool): ToolResult {
         return try {
             val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
-                tool.context
+                context
             )
             
-            val screenState = controller.getScreenAnalysis()
+            val screenState = runBlocking(Dispatchers.IO) {
+                controller.getScreenAnalysis()
+            }
             
             if (screenState != null) {
                 val stateText = buildString {
