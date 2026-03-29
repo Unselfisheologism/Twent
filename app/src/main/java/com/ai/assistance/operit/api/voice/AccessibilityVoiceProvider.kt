@@ -283,8 +283,6 @@ class SimpleVoiceProvider(private val context: Context) : VoiceService {
             }
         }
     }
-        }
-    }
 
     /** 获取可用的语音列表 */
     override suspend fun getAvailableVoices(): List<VoiceService.Voice> =
