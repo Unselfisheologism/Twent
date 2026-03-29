@@ -274,9 +274,7 @@ class OperitAutomationService : AccessibilityService() {
         mainHandler.post {
             glowBorderView?.let { view ->
                 try {
-                    if (view.isAttachedToWindow) {
-                        wm.removeView(view)
-                    }
+                    if (view.isAttachedToWindow) wm.removeView(view)
                 } catch (e: Exception) {
                     Log.e("OperitAutomation", "Error removing glow border", e)
                 }
