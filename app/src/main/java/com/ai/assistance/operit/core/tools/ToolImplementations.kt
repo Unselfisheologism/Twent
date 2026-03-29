@@ -5,6 +5,7 @@ import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
 
 interface ToolImplementations {
+    suspend fun getPageInfo(tool: AITool): ToolResult
     suspend fun tap(tool: AITool): ToolResult
     suspend fun longPress(tool: AITool): ToolResult
     suspend fun clickElement(tool: AITool): ToolResult
