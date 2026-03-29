@@ -8,8 +8,7 @@ interface LlmApi {
 
 data class LlmMessage(
     val role: MessageRole,
-    val content: String,
-    val imageUri: String? = null
+    val content: String
 )
 
 enum class MessageRole {
