@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.ai.assistance.operit.core.agent.UIAgentModeManager
@@ -152,7 +153,7 @@ private fun BottomInputBar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Smartphone,
+                            imageVector = Icons.Default.Smartphone,
                         contentDescription = "UI Agent Mode",
                         modifier = Modifier.size(14.dp)
                     )

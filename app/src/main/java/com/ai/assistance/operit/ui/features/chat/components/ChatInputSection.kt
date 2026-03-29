@@ -48,10 +48,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.ai.assistance.operit.data.model.AttachmentInfo
+import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.core.tools.ToolProgressBus
 import com.ai.assistance.operit.core.agent.UIAgentModeManager
-import androidx.compose.material.icons.automirrored.filled.Smartphone
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.FilterChip
 import com.ai.assistance.operit.ui.common.animations.SimpleAnimatedVisibility
 import com.ai.assistance.operit.ui.features.chat.viewmodel.ChatViewModel
@@ -375,7 +376,7 @@ fun ChatInputSection(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Smartphone,
+                            imageVector = Icons.Default.Smartphone,
                             contentDescription = "UI Agent Mode",
                             modifier = Modifier.size(16.dp)
                         )
