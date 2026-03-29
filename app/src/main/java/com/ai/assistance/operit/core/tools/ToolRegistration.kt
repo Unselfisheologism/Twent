@@ -777,7 +777,200 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
     )
 
     // UI自动化工具
-    val uiTools = ToolGetter.getUITools(context    )
+    val uiTools = ToolGetter.getUITools(context)
+
+    // === Coordinate-based UI Tools ===
+    handler.registerTool(
+        name = "tap",
+        descriptionGenerator = { tool ->
+            val x = tool.parameters.find { it.name == "x" }?.value ?: "?"
+            val y = tool.parameters.find { it.name == "y" }?.value ?: "?"
+            "Tap at coordinates ($x, $y)"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.tap(tool) } }
+    )
+
+    handler.registerTool(
+        name = "long_press",
+        descriptionGenerator = { tool ->
+            val x = tool.parameters.find { it.name == "x" }?.value ?: "?"
+            val y = tool.parameters.find { it.name == "y" }?.value ?: "?"
+            "Long press at coordinates ($x, $y)"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.longPress(tool) } }
+    )
+
+    handler.registerTool(
+        name = "double_tap",
+        descriptionGenerator = { tool ->
+            val x = tool.parameters.find { it.name == "x" }?.value ?: "?"
+            val y = tool.parameters.find { it.name == "y" }?.value ?: "?"
+            "Double tap at ($x, $y)"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.doubleTap(tool) } }
+    )
+
+    handler.registerTool(
+        name = "click_element",
+        descriptionGenerator = { tool ->
+            val index = tool.parameters.find { it.name == "index" }?.value
+            val text = tool.parameters.find { it.name == "text" }?.value
+            val desc = tool.parameters.find { it.name == "content_description" }?.value
+            when {
+                index != null -> "Click element at index $index"
+                text != null -> "Click element containing text: $text"
+                desc != null -> "Click element: $desc"
+                else -> "Click element on screen"
+            }
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.clickElement(tool) } }
+    )
+
+    handler.registerTool(
+        name = "swipe",
+        descriptionGenerator = { tool ->
+            val sx = tool.parameters.find { it.name == "start_x" }?.value ?: "?"
+            val sy = tool.parameters.find { it.name == "start_y" }?.value ?: "?"
+            val ex = tool.parameters.find { it.name == "end_x" }?.value ?: "?"
+            val ey = tool.parameters.find { it.name == "end_y" }?.value ?: "?"
+            "Swipe from ($sx, $sy) to ($ex, $ey)"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.swipe(tool) } }
+    )
+
+    handler.registerTool(
+        name = "swipe_left",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Swipe left by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.swipeLeft(tool) } }
+    )
+
+    handler.registerTool(
+        name = "swipe_right",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Swipe right by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.swipeRight(tool) } }
+    )
+
+    handler.registerTool(
+        name = "swipe_up",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Swipe up by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.swipeUp(tool) } }
+    )
+
+    handler.registerTool(
+        name = "swipe_down",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Swipe down by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.swipeDown(tool) } }
+    )
+
+    handler.registerTool(
+        name = "scroll_left",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Scroll left by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.scrollLeft(tool) } }
+    )
+
+    handler.registerTool(
+        name = "scroll_right",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Scroll right by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.scrollRight(tool) } }
+    )
+
+    handler.registerTool(
+        name = "scroll_up",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Scroll up by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.scrollUp(tool) } }
+    )
+
+    handler.registerTool(
+        name = "scroll_down",
+        descriptionGenerator = { tool ->
+            val pixels = tool.parameters.find { it.name == "pixels" }?.value ?: "500"
+            "Scroll down by $pixels pixels"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.scrollDown(tool) } }
+    )
+
+    handler.registerTool(
+        name = "hold",
+        descriptionGenerator = { tool ->
+            val x = tool.parameters.find { it.name == "x" }?.value ?: "?"
+            val y = tool.parameters.find { it.name == "y" }?.value ?: "?"
+            "Hold at ($x, $y)"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.hold(tool) } }
+    )
+
+    handler.registerTool(
+        name = "press_key",
+        descriptionGenerator = { tool ->
+            val key = tool.parameters.find { it.name == "key" }?.value ?: "?"
+            "Press key: $key"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.pressKey(tool) } }
+    )
+
+    handler.registerTool(
+        name = "type_text",
+        descriptionGenerator = { tool ->
+            val text = tool.parameters.find { it.name == "text" }?.value ?: ""
+            "Type: \"${text.take(30)}${if (text.length > 30) "..." else ""}\""
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.setInputText(tool) } }
+    )
+
+    handler.registerTool(
+        name = "open_app",
+        descriptionGenerator = { tool ->
+            val name = tool.parameters.find { it.name == "package_name" }?.value
+                ?: tool.parameters.find { it.name == "app_name" }?.value ?: "?"
+            "Open app: $name"
+        },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.openApp(tool) } }
+    )
+
+    handler.registerTool(
+        name = "back",
+        descriptionGenerator = { _ -> "Press back button" },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.back(tool) } }
+    )
+
+    handler.registerTool(
+        name = "home",
+        descriptionGenerator = { _ -> "Press home button" },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.home(tool) } }
+    )
+
+    handler.registerTool(
+        name = "get_page_info",
+        descriptionGenerator = { _ -> "Get current UI page information" },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.getPageInfo(tool) } }
+    )
+
+    handler.registerTool(
+        name = "get_current_activity",
+        descriptionGenerator = { _ -> "Get current foreground activity name" },
+        executor = { tool -> runBlocking(Dispatchers.IO) { uiTools.getCurrentActivity(tool) } }
+    )
 
     // HTTP请求工具
     val httpTools = ToolGetter.getHttpTools(context)

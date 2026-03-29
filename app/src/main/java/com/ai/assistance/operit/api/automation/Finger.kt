@@ -107,4 +107,60 @@ class Finger(private val context: Context) {
             false
         }
     }
+
+    fun swipeLeft(pixels: Int, duration: Int = 500) {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val startX = (screenWidth * 0.8).toInt()
+        val startY = screenHeight / 2
+        val endX = startX - pixels
+        val endY = startY
+
+        Log.d(TAG, "Swiping left: from ($startX, $startY) to ($endX, $endY)")
+        swipe(startX, startY, endX, endY, duration)
+    }
+
+    fun swipeRight(pixels: Int, duration: Int = 500) {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val startX = (screenWidth * 0.2).toInt()
+        val startY = screenHeight / 2
+        val endX = startX + pixels
+        val endY = startY
+
+        Log.d(TAG, "Swiping right: from ($startX, $startY) to ($endX, $endY)")
+        swipe(startX, startY, endX, endY, duration)
+    }
+
+    fun swipeUp(pixels: Int, duration: Int = 500) {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val startX = screenWidth / 2
+        val startY = (screenHeight * 0.8).toInt()
+        val endX = startX
+        val endY = (startY - pixels).coerceAtLeast(0)
+
+        Log.d(TAG, "Swiping up: from ($startX, $startY) to ($endX, $endY)")
+        swipe(startX, startY, endX, endY, duration)
+    }
+
+    fun swipeDown(pixels: Int, duration: Int = 500) {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val startX = screenWidth / 2
+        val startY = (screenHeight * 0.2).toInt()
+        val endX = startX
+        val endY = (startY + pixels).coerceAtMost(screenHeight)
+
+        Log.d(TAG, "Swiping down: from ($startX, $startY) to ($endX, $endY)")
+        swipe(startX, startY, endX, endY, duration)
+    }
 }

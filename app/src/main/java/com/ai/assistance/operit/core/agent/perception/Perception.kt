@@ -1,5 +1,6 @@
 package com.ai.assistance.operit.core.agent.perception
 
+import android.graphics.Bitmap
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -13,8 +14,9 @@ class Perception(
     private val eyes: Eyes,
     private val semanticParser: SemanticParser
 ) {
+    private var lastScreenshot: Bitmap? = null
 
-    suspend fun analyze(previousState: Set<String>? = null, all: Boolean? = false): ScreenAnalysis {
+    suspend fun analyze(previousState: Set<String>? = null, all: Boolean? = false, includeScreenshot: Boolean = true): ScreenAnalysis {
         return coroutineScope {
             val rawDataDeferred = if (all == true) {
                 async { eyes.getAllRawScreenData() }
@@ -23,11 +25,22 @@ class Perception(
             }
             val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
             val currentActivity = async { eyes.getCurrentActivityName() }
+            val screenshotDeferred = if (includeScreenshot) {
+                async { eyes.openEyes() }
+            } else {
+                null
+            }
 
             val rawTree = rawDataDeferred.await() ?: RawScreenData(null, 0, 0, 0, 0)
             val isKeyboardOpen = keyboardStatusDeferred.await()
             val activityName = currentActivity.await()
             val rootNode = rawTree.rootNode
+
+            val screenshot = screenshotDeferred?.await()
+
+            if (screenshot != null) {
+                lastScreenshot = screenshot
+            }
 
             if (rootNode != null) {
                 var (uiRepresentation, elementMap) = semanticParser.parseNodeTree(
@@ -61,7 +74,8 @@ class Perception(
                     activityName = activityName,
                     elementMap = elementMap,
                     scrollUp = rawTree.pixelsAbove,
-                    scrollDown = rawTree.pixelsBelow
+                    scrollDown = rawTree.pixelsBelow,
+                    screenshot = screenshot
                 )
             } else {
                 ScreenAnalysis(
@@ -70,9 +84,12 @@ class Perception(
                     activityName = activityName,
                     elementMap = mutableMapOf(),
                     scrollUp = rawTree.pixelsAbove,
-                    scrollDown = rawTree.pixelsBelow
+                    scrollDown = rawTree.pixelsBelow,
+                    screenshot = screenshot
                 )
             }
         }
     }
+
+    fun getLastScreenshot(): Bitmap? = lastScreenshot
 }

@@ -401,20 +401,58 @@ class OperitLlmApi(private val context: Context) : LlmApi {
     
     private fun parseAction(name: String, params: org.json.JSONObject?): Action? {
         return when (name) {
+            // Element-based actions
             "tap_element" -> Action.TapElement(params?.optInt("element_id") ?: 0)
             "long_press_element" -> Action.LongPressElement(params?.optInt("element_id") ?: 0)
-            "type" -> Action.InputText(params?.optString("text") ?: "")
             "tap_element_input_text_and_enter" -> Action.TapElementInputTextPressEnter(
                 params?.optInt("index") ?: 0,
                 params?.optString("text") ?: ""
             )
-            "swipe_down" -> Action.ScrollDown(params?.optInt("amount") ?: 500)
-            "swipe_up" -> Action.ScrollUp(params?.optInt("amount") ?: 500)
-            "open_app" -> Action.OpenApp(params?.optString("app_name") ?: "")
+            
+            // Coordinate-based actions
+            "tap" -> Action.TapAt(
+                params?.optInt("x") ?: 0,
+                params?.optInt("y") ?: 0
+            )
+            "tap_at" -> Action.TapAt(
+                params?.optInt("x") ?: 0,
+                params?.optInt("y") ?: 0
+            )
+            "long_press" -> Action.LongPressAt(
+                params?.optInt("x") ?: 0,
+                params?.optInt("y") ?: 0,
+                params?.optLong("duration_ms") ?: 1500
+            )
+            "double_tap" -> Action.DoubleTapAt(
+                params?.optInt("x") ?: 0,
+                params?.optInt("y") ?: 0
+            )
+            "swipe" -> Action.Swipe(
+                params?.optInt("start_x") ?: 0,
+                params?.optInt("start_y") ?: 0,
+                params?.optInt("end_x") ?: 0,
+                params?.optInt("end_y") ?: 0,
+                params?.optLong("duration_ms") ?: 500
+            )
+            "swipe_left" -> Action.SwipeLeft(params?.optInt("pixels") ?: 500)
+            "swipe_right" -> Action.SwipeRight(params?.optInt("pixels") ?: 500)
+            "swipe_up" -> Action.SwipeUp(params?.optInt("pixels") ?: 500)
+            "swipe_down" -> Action.SwipeDown(params?.optInt("pixels") ?: 500)
+            
+            // Text input
+            "type" -> Action.InputText(params?.optString("text") ?: "")
+            "input_text" -> Action.InputText(params?.optString("text") ?: "")
+            
+            // System actions
+            "open_app" -> Action.OpenApp(params?.optString("package_name") ?: params?.optString("app_name") ?: "")
             "back" -> Action.Back
             "home" -> Action.Home
             "switch_app" -> Action.SwitchApp
+            "press_enter" -> Action.PressEnter
+            
+            // Meta actions
             "speak" -> Action.Speak(params?.optString("message") ?: "")
+            "wait" -> Action.Wait
             "done" -> Action.Done(params?.optString("text") ?: "Task completed")
             else -> null
         }

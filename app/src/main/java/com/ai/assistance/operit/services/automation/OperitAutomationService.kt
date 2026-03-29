@@ -57,6 +57,11 @@ data class RawScreenData(
     val screenHeight: Int
 )
 
+private data class BoundingBoxView(
+    val boxView: View,
+    val labelView: TextView
+)
+
 class OperitAutomationService : AccessibilityService() {
 
     companion object {
@@ -70,6 +75,11 @@ class OperitAutomationService : AccessibilityService() {
     private var statusBarHeight = -1
     private var currentActivityName: String? = null
 
+    private val boundingBoxViews = mutableListOf<BoundingBoxView>()
+    private var glowBorderView: View? = null
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
@@ -80,10 +90,6 @@ class OperitAutomationService : AccessibilityService() {
 
     fun getForegroundAppPackageName(): String? {
         return rootInActiveWindow?.packageName?.toString()
-    }
-
-    private fun hideGlowingBorder() {
-        // Placeholder for future visual effects
     }
 
     fun showDebugTap(tapX: Float, tapY: Float) {
@@ -111,14 +117,208 @@ class OperitAutomationService : AccessibilityService() {
             y = tapY.toInt() - 50
         }
 
-        Handler(Looper.getMainLooper()).post {
+        mainHandler.post {
             try {
                 windowManager.addView(overlayView, params)
-                Handler(Looper.getMainLooper()).postDelayed({
+                mainHandler.postDelayed({
                     if (overlayView.isAttachedToWindow) windowManager.removeView(overlayView)
                 }, 500L)
             } catch (e: Exception) {
                 Log.e("OperitAutomation", "Failed to add debug tap view", e)
+            }
+        }
+    }
+
+    /**
+     * Draws labeled bounding boxes for each element on the screen.
+     */
+    fun drawDebugBoundingBoxes(elements: List<SimplifiedElement>, durationMs: Long = 5000) {
+        if (!Settings.canDrawOverlays(this)) {
+            Log.w("OperitAutomation", "Cannot draw bounding boxes: 'Draw over other apps' permission not granted.")
+            return
+        }
+
+        clearBoundingBoxes()
+
+        if (statusBarHeight < 0) {
+            val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+            statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
+        }
+
+        val wm = this.windowManager ?: getSystemService(WINDOW_SERVICE) as WindowManager
+
+        mainHandler.post {
+            elements.forEach { element ->
+                try {
+                    val boxView = View(this).apply {
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.RECTANGLE
+                            val color = if (element.isClickable) 0xFF00FF00.toInt() else 0xFFFFFF00.toInt()
+                            setStroke(4, color)
+                        }
+                    }
+                    val boxParams = WindowManager.LayoutParams(
+                        element.bounds.width(), element.bounds.height(),
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        PixelFormat.TRANSLUCENT
+                    ).apply {
+                        gravity = Gravity.TOP or Gravity.START
+                        x = element.bounds.left
+                        y = element.bounds.top - statusBarHeight
+                    }
+                    wm.addView(boxView, boxParams)
+
+                    val labelView = TextView(this).apply {
+                        text = element.description
+                        setBackgroundColor(0xAA000000.toInt())
+                        setTextColor(0xFFFFFFFF.toInt())
+                        textSize = 10f
+                        setPadding(4, 2, 4, 2)
+                    }
+                    val labelParams = WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        PixelFormat.TRANSLUCENT
+                    ).apply {
+                        gravity = Gravity.TOP or Gravity.START
+                        x = element.bounds.left
+                        y = (element.bounds.top - 35).coerceAtLeast(0) - statusBarHeight
+                    }
+                    wm.addView(labelView, labelParams)
+
+                    boundingBoxViews.add(BoundingBoxView(boxView, labelView))
+
+                } catch (e: Exception) {
+                    Log.e("OperitAutomation", "Failed to add debug bounding box for: ${element.description}", e)
+                }
+            }
+
+            mainHandler.postDelayed({
+                clearBoundingBoxes()
+            }, durationMs)
+        }
+    }
+
+    /**
+     * Clears all bounding box overlays.
+     */
+    fun clearBoundingBoxes() {
+        val wm = this.windowManager ?: return
+        mainHandler.post {
+            boundingBoxViews.forEach { (boxView, labelView) ->
+                try {
+                    if (boxView.isAttachedToWindow) wm.removeView(boxView)
+                    if (labelView.isAttachedToWindow) wm.removeView(labelView)
+                } catch (e: Exception) {
+                    Log.e("OperitAutomation", "Error removing bounding box views", e)
+                }
+            }
+            boundingBoxViews.clear()
+        }
+    }
+
+    /**
+     * Shows a glowing border around the entire screen.
+     */
+    fun showGlowBorder(durationMs: Long = 300) {
+        if (!Settings.canDrawOverlays(this)) {
+            Log.w("OperitAutomation", "Cannot show glow border: 'Draw over other apps' permission not granted.")
+            return
+        }
+
+        clearGlowBorder()
+
+        val wm = this.windowManager ?: getSystemService(WINDOW_SERVICE) as WindowManager
+
+        mainHandler.post {
+            try {
+                val borderView = View(this).apply {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        setColor(Color.TRANSPARENT)
+                        setStroke(8, Color.WHITE)
+                    }
+                }
+
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    PixelFormat.TRANSLUCENT
+                )
+
+                wm.addView(borderView, params)
+                glowBorderView = borderView
+
+                mainHandler.postDelayed({
+                    clearGlowBorder()
+                }, durationMs)
+
+            } catch (e: Exception) {
+                Log.e("OperitAutomation", "Failed to show glow border", e)
+            }
+        }
+    }
+
+    /**
+     * Clears the glow border overlay.
+     */
+    fun clearGlowBorder() {
+        val wm = this.windowManager ?: return
+        mainHandler.post {
+            glowBorderView?.let { view ->
+                try {
+                    if (view.isAttachedToWindow) wm.removeView(view)
+                } catch (e: Exception) {
+                    Log.e("OperitAutomation", "Error removing glow border", e)
+                }
+            }
+            glowBorderView = null
+        }
+    }
+
+    /**
+     * Shows tap indicator at coordinates with animation.
+     */
+    fun showTapIndicator(x: Int, y: Int, durationMs: Long = 1000) {
+        if (!Settings.canDrawOverlays(this)) return
+
+        val wm = this.windowManager ?: getSystemService(WINDOW_SERVICE) as WindowManager
+
+        mainHandler.post {
+            try {
+                val tapView = View(this).apply {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(0x802196F3.toInt())
+                        setStroke(4, 0xFF2196F3.toInt())
+                    }
+                }
+
+                val params = WindowManager.LayoutParams(
+                    80, 80,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.START
+                    x = x - 40
+                    y = y - 40
+                }
+
+                wm.addView(tapView, params)
+
+                mainHandler.postDelayed({
+                    if (tapView.isAttachedToWindow) wm.removeView(tapView)
+                }, durationMs)
+
+            } catch (e: Exception) {
+                Log.e("OperitAutomation", "Failed to show tap indicator", e)
             }
         }
     }
@@ -334,8 +534,9 @@ class OperitAutomationService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        clearBoundingBoxes()
+        clearGlowBorder()
         instance = null
-        hideGlowingBorder()
         Log.d("OperitAutomation", "Accessibility Service destroyed.")
     }
 

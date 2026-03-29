@@ -296,100 +296,148 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
     private var cachedMediaProjection: MediaProjection? = null
     private var cachedMediaProjectionCaptureManager: MediaProjectionCaptureManager? = null
 
-    /** Gets the current UI page/window information */
-    open suspend fun getPageInfo(tool: AITool): ToolResult {
-            return ToolResult(
-                    toolName = tool.name,
-                    success = false,
-                    result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    @RequiresApi(Build.VERSION_CODES.R)
+    override suspend fun getPageInfo(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    data class UINode(
-            val className: String?,
-            val text: String?,
-            val contentDesc: String?,
-            val resourceId: String?,
-            val bounds: String?,
-            val isClickable: Boolean,
-            val children: MutableList<UINode> = mutableListOf()
-    )
-
-    protected fun UINode.toUINode(): SimplifiedUINode {
-        return SimplifiedUINode(
-                className = className,
-                text = text,
-                contentDesc = contentDesc,
-                resourceId = resourceId,
-                bounds = bounds,
-                isClickable = isClickable,
-                children = children.map { it.toUINode() }
+    override suspend fun clickElement(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    protected data class FocusInfo(
-            var packageName: String? = null,
-            var activityName: String? = null
-    )
-
-    /** Simulates a tap/click at specific coordinates */
-    override suspend fun tap(tool: AITool): ToolResult {
-            return ToolResult(
-                    toolName = tool.name,
-                    success = false,
-                    result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun doubleTap(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    /** Simulates a long press at specific coordinates */
-    override suspend fun longPress(tool: AITool): ToolResult {
-            return ToolResult(
-                    toolName = tool.name,
-                    success = false,
-                    result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun swipeLeft(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    /** Simulates a click on an element identified by resource ID or class name */
-    open suspend fun clickElement(tool: AITool): ToolResult {
-                    return ToolResult(
-                            toolName = tool.name,
-                            success = false,
-                            result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun swipeRight(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    /** Sets text in an input field */
-    override suspend fun setInputText(tool: AITool): ToolResult {
-                return ToolResult(
-                        toolName = tool.name,
-                        success = false,
-                        result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun swipeUp(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    /** Simulates pressing a specific key */
-    override suspend fun pressKey(tool: AITool): ToolResult {
-            return ToolResult(
-                    toolName = tool.name,
-                    success = false,
-                    result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun swipeDown(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
-    /** Performs a swipe gesture */
-    override suspend fun swipe(tool: AITool): ToolResult {
-            return ToolResult(
-                    toolName = tool.name,
-                    success = false,
-                    result = StringResultData(""),
-                error = OPERATION_NOT_SUPPORTED
+    override suspend fun scrollLeft(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun scrollRight(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun scrollUp(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun scrollDown(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun hold(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun openApp(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun back(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun home(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun getCurrentActivity(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
         )
     }
 
