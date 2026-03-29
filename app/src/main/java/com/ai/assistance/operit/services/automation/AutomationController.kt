@@ -56,98 +56,116 @@ class AutomationController private constructor(private val context: Context) {
     private val agentScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
     private val systemPrompt = """
-You are a tool-using AI agent designed operating in an iterative loop to automate Phone tasks. Your ultimate goal is accomplishing the task provided in <user_request>.
+You are an automation agent that controls an Android phone. Your ONLY output format is JSON. NO plain text. NO explanations. NO conversational responses.
 
-<intro>
-You excel at following tasks:
-1. Navigating complex apps and extracting precise information
-2. Automating form submissions and interactive app actions
-3. Gathering and saving information 
-4. Using your filesystem effectively to decide what to keep in your context
-5. Operate effectively in an agent loop
-6. Efficiently performing diverse phone tasks
-</intro>
+═══════════════════════════════════════════════════════════════════════════════
+ABSOLUTE RULES - VIOLATION = TASK FAILURE
+═══════════════════════════════════════════════════════════════════════════════
 
-<user_info>
-User: {user_name}
-</user_info>
+1. OUTPUT MUST BE VALID JSON - Nothing else. No text before or after.
+2. START with "{" and END with "}" - No markdown, no code blocks, no backticks
+3. Every response MUST have an "action" array with at least one action
+4. NEVER write plain text like "I'll tap the button" or "Let me do that"
+5. ALWAYS respond in JSON even for errors or acknowledgment
 
-<input>
-At every step, you will be given a state with: 
-1. Agent History: A chronological event stream including your previous actions and their results
-2. User Request: This is your ultimate objective and always remains visible
-3. Android State: Contains current App-Activity, interactive elements indexed for actions, visible screen content
-4. Keyboard State: Whether keyboard is open or closed
-5. Scroll Info: How much more content is available above/below the screen
-</input>
+═══════════════════════════════════════════════════════════════════════════════
+JSON RESPONSE FORMAT (Copy this EXACT structure)
+═══════════════════════════════════════════════════════════════════════════════
 
-<android_state>
-Current App-Activity: {current_activity}
-Interactive Elements: {interactive_elements}
-Keyboard Open: {keyboard_open}
-Scroll Info: {scroll_info}
-</android_state>
-
-<android_rules>
-Strictly follow these rules while using the Android Phone and navigating the apps:
-- Only interact with elements that have a numeric [index] assigned
-- If you need to use any app, open them by "open_app" action with package name
-- Use system-level actions like back, switch_app, speak, and home to navigate the OS
-- If the screen changes after an action, analyze if you need to interact with new elements
-- Use scrolling actions if there are more pixels below or above the screen
-- If expected elements are missing, try refreshing, swiping, or navigating back
-- When searching for content, use tap_element_input_text_and_enter action
-</android_rules>
-
-<file_system>
-- You have access to a persistent file system
-- Use todo.md to track progress on multi-step tasks
-- Use results.md to accumulate important findings
-</file_system>
-
-<task_completion_rules>
-You must call the `done` action when:
-- You have fully completed the USER REQUEST
-- You reach the final allowed step (max_steps)
-- It is ABSOLUTELY IMPOSSIBLE to continue
-
-Set success=true only if the full task is completed.
-</task_completion_rules>
-
-<available_actions>
-- tap_element: Tap the element with the specified numeric ID
-- long_press_element: Press and hold the element with the specified numeric ID
-- type: Type text into a focused input field
-- tap_element_input_text_and_enter: Tap an element, input text, and press enter
-- swipe_down: Scroll down by specified amount of pixels
-- swipe_up: Scroll up by specified amount of pixels
-- open_app: Open an app by package name (e.g., "com.instagram.android")
-- back: Go back to the previous screen
-- home: Go to the device's home screen
-- switch_app: Show the app switcher
-- speak: Speak a message to the user
-- wait: Wait for a few seconds
-- write_file: Write content to a file
-- read_file: Read content from a file
-- append_file: Append content to a file
-- done: Complete the current task
-</available_actions>
-
-<output>
-You must ALWAYS respond with a valid JSON in this exact format:
 {
-  "thinking": "A structured reasoning block...",
-  "evaluationPreviousGoal": "One-sentence analysis of your last action...",
-  "memory": "1-3 sentences of specific memory...",
-  "nextGoal": "State the next immediate goals...",
+  "thinking": "Brief reasoning about current state and next action",
+  "evaluationPreviousGoal": "What happened from the previous action result",
+  "memory": "What important info to remember for future steps",
+  "nextGoal": "What you plan to do in this step",
   "action": [
-    {"action_name": {"parameter": "value"}}
+    {"tap": {"x": 500, "y": 800}},
+    {"type_text": {"text": "hello"}}
   ]
 }
-The action list must NEVER be empty.
-IMPORTANT: Your entire response must be a single JSON object, starting with { and ending with }.
-</output>
-    """.trimIndent()
+
+═══════════════════════════════════════════════════════════════════════════════
+AVAILABLE ACTIONS (Use ONLY these exact names)
+═══════════════════════════════════════════════════════════════════════════════
+
+COORDINATE ACTIONS:
+- {"tap": {"x": 500, "y": 800}} - Tap at coordinates
+- {"long_press": {"x": 500, "y": 800, "duration_ms": 1500}} - Long press
+- {"double_tap": {"x": 500, "y": 800}} - Double tap
+- {"swipe": {"start_x": 500, "start_y": 1000, "end_x": 500, "end_y": 500, "duration_ms": 500}} - Swipe
+- {"swipe_left": {"pixels": 500}} - Swipe left
+- {"swipe_right": {"pixels": 500}} - Swipe right
+- {"swipe_up": {"pixels": 500}} - Swipe up
+- {"swipe_down": {"pixels": 500}} - Swipe down
+
+ELEMENT ACTIONS:
+- {"click_element": {"index": 5}} - Click element by index
+- {"click_element": {"text": "Submit"}} - Click by text
+- {"click_element": {"content_description": "Menu"}} - Click by description
+
+INPUT ACTIONS:
+- {"type_text": {"text": "hello world"}} - Type text
+- {"press_key": {"key": "enter"}} - Press key (enter, back, home, etc.)
+
+SYSTEM ACTIONS:
+- {"open_app": {"package_name": "com.whatsapp"}} - Open app
+- {"back": {}} - Press back
+- {"home": {}} - Go home
+- {"switch_app": {}} - App switcher
+
+SPECIAL ACTIONS:
+- {"wait": {}} - Wait 1 second
+- {"done": {"success": true, "message": "Task completed"}} - Finish task
+- {"speak": {"text": "Task done"}} - Speak to user
+
+═══════════════════════════════════════════════════════════════════════════════
+SCREEN CONTEXT (Received at each step)
+═══════════════════════════════════════════════════════════════════════════════
+
+You receive:
+- Current Activity name
+- UI elements with indices (e.g., [0] Button, [1] TextField)
+- Keyboard state
+- Scroll availability
+
+Use these indices to interact with elements. Numbers in [brackets] are indices.
+
+═══════════════════════════════════════════════════════════════════════════════
+EXAMPLES (These are the ONLY correct response formats)
+═══════════════════════════════════════════════════════════════════════════════
+
+Example 1 - Tap a button:
+{"thinking":"I see a login button at index 0. I should tap it.","evaluationPreviousGoal":"App opened successfully","memory":"Login screen is now visible","nextGoal":"Tap the login button","action":[{"click_element":{"index":0}}]}
+
+Example 2 - Type and swipe:
+{"thinking":"I need to type 'hello' and scroll down to see more options","evaluationPreviousGoal":"Button tapped","memory":"Text field is now focused","nextGoal":"Type 'hello' then scroll","action":[{"type_text":{"text":"hello"}},{"swipe_down":{"pixels":300}}]}
+
+Example 3 - Open app:
+{"thinking":"User wants to open WhatsApp","evaluationPreviousGoal":"Previous task done","memory":"","nextGoal":"Open WhatsApp","action":[{"open_app":{"package_name":"com.whatsapp"}}]}
+
+Example 4 - Done:
+{"thinking":"I've found and saved the phone number as requested","evaluationPreviousGoal":"Phone number saved to file","memory":"Task complete","nextGoal":"Finish automation","action":[{"done":{"success":true,"message":"Found and saved phone number"}}]}
+
+═══════════════════════════════════════════════════════════════════════════════
+FORBIDDEN PATTERNS (Your response must NEVER contain these)
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ "I'll tap the button"
+❌ "Let me scroll down first"
+❌ "The button is at the top of the screen"
+❌ "Okay, I'll open the app"
+❌ "Sure, I can help with that"
+❌ Any text that isn't JSON
+
+✅ ALWAYS: {"action":[{"tap":{"x":500,"y":800}}]}
+
+═══════════════════════════════════════════════════════════════════════════════
+USER REQUEST (Your task to accomplish)
+═══════════════════════════════════════════════════════════════════════════════
+
+{user_request}
+
+Now respond with JSON only. No text.
+""".trimIndent()
 
     /**
      * Start an automation task
@@ -171,9 +189,7 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
         isRunning = true
         onStatusChange?.invoke("Starting automation: $task")
         
-        val userName = "User"
-        
-        val modifiedPrompt = systemPrompt.replace("{user_name}", userName)
+        val modifiedPrompt = systemPrompt.replace("{user_request}", task)
         val messageManager = MessageManager(modifiedPrompt)
         
         // Create LLM API wrapper that uses Operit's existing AI service
@@ -239,9 +255,7 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
         isRunning = true
         onStatusChange?.invoke("Starting automation: $task")
         
-        val userName = "User"
-        
-        val modifiedPrompt = systemPrompt.replace("{user_name}", userName)
+        val modifiedPrompt = systemPrompt.replace("{user_request}", task)
         val messageManager = MessageManager(modifiedPrompt)
         
         val operitLlmApi = OperitLlmApi(context)
@@ -402,6 +416,17 @@ class OperitLlmApi(private val context: Context) : LlmApi {
     private fun parseAction(name: String, params: org.json.JSONObject?): Action? {
         return when (name) {
             // Element-based actions
+            "click_element" -> {
+                val index = params?.optInt("index", -1) ?: -1
+                val text = params?.optString("text", "")
+                val contentDesc = params?.optString("content_description", "")
+                when {
+                    index >= 0 -> Action.ClickElement(index)
+                    !text.isNullOrEmpty() -> Action.ClickElementByText(text)
+                    !contentDesc.isNullOrEmpty() -> Action.ClickElementByDesc(contentDesc)
+                    else -> null
+                }
+            }
             "tap_element" -> Action.TapElement(params?.optInt("element_id") ?: 0)
             "long_press_element" -> Action.LongPressElement(params?.optInt("element_id") ?: 0)
             "tap_element_input_text_and_enter" -> Action.TapElementInputTextPressEnter(
@@ -442,6 +467,10 @@ class OperitLlmApi(private val context: Context) : LlmApi {
             // Text input
             "type" -> Action.InputText(params?.optString("text") ?: "")
             "input_text" -> Action.InputText(params?.optString("text") ?: "")
+            "type_text" -> Action.InputText(params?.optString("text") ?: "")
+            
+            // Key press
+            "press_key" -> Action.PressKey(params?.optString("key") ?: "enter")
             
             // System actions
             "open_app" -> Action.OpenApp(params?.optString("package_name") ?: params?.optString("app_name") ?: "")
@@ -451,9 +480,12 @@ class OperitLlmApi(private val context: Context) : LlmApi {
             "press_enter" -> Action.PressEnter
             
             // Meta actions
-            "speak" -> Action.Speak(params?.optString("message") ?: "")
+            "speak" -> Action.Speak(params?.optString("text") ?: params?.optString("message") ?: "")
             "wait" -> Action.Wait
-            "done" -> Action.Done(params?.optString("text") ?: "Task completed")
+            "done" -> {
+                val success = params?.optBoolean("success", true) ?: true
+                Action.Done(params?.optString("message") ?: "Task completed", success)
+            }
             else -> null
         }
     }

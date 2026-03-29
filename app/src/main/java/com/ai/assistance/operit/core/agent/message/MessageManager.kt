@@ -11,6 +11,7 @@ class MessageManager(
     private val systemPrompt: String
 ) {
     private val messages = mutableListOf<LlmMessage>()
+    private var currentTask: String = ""
 
     init {
         messages.add(LlmMessage(MessageRole.SYSTEM, systemPrompt))
@@ -18,8 +19,8 @@ class MessageManager(
 
     fun addNewTask(task: String) {
         messages.clear()
+        currentTask = task
         messages.add(LlmMessage(MessageRole.SYSTEM, systemPrompt))
-        messages.add(LlmMessage(MessageRole.USER, task))
     }
 
     fun createStateMessage(
@@ -29,34 +30,39 @@ class MessageManager(
         screenState: ScreenAnalysis
     ) {
         val contextBuilder = StringBuilder()
-        contextBuilder.append("Current Screen:\n${screenState.uiRepresentation}\n\n")
         
-        contextBuilder.append("Current Activity: ${screenState.activityName}\n")
+        contextBuilder.append("═══ SCREEN CONTEXT ═══\n")
+        contextBuilder.append("Activity: ${screenState.activityName}\n")
         
         if (screenState.isKeyboardOpen) {
-            contextBuilder.append("Keyboard is open\n")
+            contextBuilder.append("Keyboard: OPEN\n")
+        } else {
+            contextBuilder.append("Keyboard: CLOSED\n")
         }
         
         if (screenState.scrollUp > 0) {
-            contextBuilder.append("Can scroll up ${screenState.scrollUp} pixels\n")
+            contextBuilder.append("Can scroll UP: ${screenState.scrollUp}px\n")
         }
         if (screenState.scrollDown > 0) {
-            contextBuilder.append("Can scroll down ${screenState.scrollDown} pixels\n")
+            contextBuilder.append("Can scroll DOWN: ${screenState.scrollDown}px\n")
         }
-
+        
+        contextBuilder.append("\n═══ UI ELEMENTS ═══\n")
+        contextBuilder.append("${screenState.uiRepresentation}\n")
+        
         if (modelOutput != null && result != null) {
-            contextBuilder.append("\nPrevious Action Results:\n")
+            contextBuilder.append("\n═══ PREVIOUS RESULT ═══\n")
             result.forEach { actionResult ->
                 if (actionResult.error != null) {
-                    contextBuilder.append("- Error: ${actionResult.error}\n")
+                    contextBuilder.append("ERROR: ${actionResult.error}\n")
                 } else if (actionResult.longTermMemory != null) {
-                    contextBuilder.append("- ${actionResult.longTermMemory}\n")
+                    contextBuilder.append("RESULT: ${actionResult.longTermMemory}\n")
                 }
             }
         }
-
-        contextBuilder.append("\nStep ${stepInfo.currentStep}/${stepInfo.maxSteps}")
-
+        
+        contextBuilder.append("\n═══ STEP ${stepInfo.currentStep}/${stepInfo.maxSteps} ═══")
+        
         messages.add(LlmMessage(MessageRole.USER, contextBuilder.toString()))
     }
 

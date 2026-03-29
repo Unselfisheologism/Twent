@@ -11,6 +11,9 @@ sealed class Action {
     data class TapElement(val index: Int) : Action()
     data class LongPressElement(val index: Int) : Action()
     data class TapElementInputTextPressEnter(val index: Int, val text: String) : Action()
+    data class ClickElement(val index: Int) : Action()
+    data class ClickElementByText(val text: String) : Action()
+    data class ClickElementByDesc(val contentDescription: String) : Action()
     
     // Coordinate-based actions (more reliable)
     data class TapAt(val x: Int, val y: Int) : Action()
@@ -24,6 +27,7 @@ sealed class Action {
     
     // System actions
     data class InputText(val text: String) : Action()
+    data class PressKey(val key: String) : Action()
     data class OpenApp(val packageName: String) : Action()
     object Back : Action()
     object Home : Action()
@@ -33,7 +37,7 @@ sealed class Action {
     // Meta actions
     data class Speak(val text: String) : Action()
     data class Ask(val question: String) : Action()
-    data class Done(val result: String) : Action()
+    data class Done(val result: String, val success: Boolean = true) : Action()
     object Wait : Action()
     object Unknown : Action()
 }
@@ -100,6 +104,46 @@ object ActionExecutor {
                     ActionResult(longTermMemory = "Tapped element ${action.index} and typed: ${action.text}")
                 } else {
                     ActionResult(error = "Element ${action.index} not found")
+                }
+            }
+
+            is Action.ClickElement -> {
+                val node = screenState.elementMap[action.index]
+                if (node != null) {
+                    executeWithFallback(node, finger, screenState) { centerX, centerY ->
+                        finger.tap(centerX, centerY)
+                    }
+                    ActionResult(longTermMemory = "Clicked element ${action.index}")
+                } else {
+                    ActionResult(error = "Element ${action.index} not found")
+                }
+            }
+
+            is Action.ClickElementByText -> {
+                val node = screenState.orderedNodes.find { n ->
+                    n.text?.toString()?.contains(action.text, ignoreCase = true) == true
+                }
+                if (node != null) {
+                    executeWithFallback(node, finger, screenState) { centerX, centerY ->
+                        finger.tap(centerX, centerY)
+                    }
+                    ActionResult(longTermMemory = "Clicked element with text: ${action.text}")
+                } else {
+                    ActionResult(error = "Element with text '${action.text}' not found")
+                }
+            }
+
+            is Action.ClickElementByDesc -> {
+                val node = screenState.orderedNodes.find { n ->
+                    n.contentDescription?.toString()?.contains(action.contentDescription, ignoreCase = true) == true
+                }
+                if (node != null) {
+                    executeWithFallback(node, finger, screenState) { centerX, centerY ->
+                        finger.tap(centerX, centerY)
+                    }
+                    ActionResult(longTermMemory = "Clicked element with description: ${action.contentDescription}")
+                } else {
+                    ActionResult(error = "Element with description '${action.contentDescription}' not found")
                 }
             }
 
@@ -176,6 +220,16 @@ object ActionExecutor {
             is Action.PressEnter -> {
                 finger.enter()
                 ActionResult(longTermMemory = "Pressed enter")
+            }
+
+            is Action.PressKey -> {
+                when (action.key.lowercase()) {
+                    "enter" -> finger.enter()
+                    "back" -> finger.back()
+                    "home" -> finger.home()
+                    else -> finger.enter()
+                }
+                ActionResult(longTermMemory = "Pressed key: ${action.key}")
             }
 
             is Action.Speak -> {
