@@ -1504,7 +1504,7 @@
     <string name="no_mirrors_found">No available mirror sources found</string>
 
     <!-- Accessibility Wizard -->
-    <string name="accessibility_service_label">Operit Accessibility Service</string>
+    <string name="accessibility_service_label">Operit</string>
     <string name="accessibility_wizard_title">Accessibility Service Setup</string>
     <string name="accessibility_wizard_step2">Enable Service</string>
     <string name="accessibility_wizard_completed">Setup Complete</string>
