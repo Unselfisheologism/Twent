@@ -41,7 +41,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             val rootNode = rawData.rootNode
 
             if (rootNode == null) {
-                return ToolResult(toolName = tool.name, success = true, result = UIPageResultData("No content", emptyList()))
+                return ToolResult(toolName = tool.name, success = true, result = UIPageResultData("No content", "Unknown", emptyList()))
             }
 
             val nodes = mutableListOf<SimplifiedUINode>()
@@ -49,7 +49,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
 
             val simplifiedNodes = nodes.take(50)
 
-            ToolResult(toolName = tool.name, success = true, result = UIPageResultData(rawData.activityName ?: "Unknown", simplifiedNodes))
+            ToolResult(toolName = tool.name, success = true, result = UIPageResultData(rawData.activityName ?: "Unknown", rawData.activityName ?: "Unknown", simplifiedNodes))
         } catch (e: Exception) {
             AppLogger.e(TAG, "getPageInfo failed", e)
             ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)

@@ -274,7 +274,9 @@ class OperitAutomationService : AccessibilityService() {
         mainHandler.post {
             glowBorderView?.let { view ->
                 try {
-                    if (view.isAttachedToWindow) wm.removeView(view)
+                    if (view.isAttachedToWindow) {
+                        wm.removeView(view)
+                    }
                 } catch (e: Exception) {
                     Log.e("OperitAutomation", "Error removing glow border", e)
                 }
@@ -423,7 +425,7 @@ class OperitAutomationService : AccessibilityService() {
             if (rootNode != null) {
                 Log.d("OperitAutomation", "Analyzing window: ${rootNode.packageName}")
                 val (pixelsAbove, pixelsBelow) = findScrollableNodeAndGetInfo(rootNode)
-                return RawScreenData(rootNode, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
+                return RawScreenData(rootNode, rootNode.packageName?.toString(), pixelsAbove, pixelsBelow, screenWidth, screenHeight)
             }
 
             if (attempt < maxRetries) {
@@ -432,7 +434,7 @@ class OperitAutomationService : AccessibilityService() {
         }
 
         Log.e("OperitAutomation", "Failed to get any valid root node after $maxRetries attempts.")
-        return RawScreenData(null, 0, 0, screenWidth, screenHeight)
+        return RawScreenData(null, null, 0, 0, screenWidth, screenHeight)
     }
 
     suspend fun dumpWindowHierarchy(pureXML: Boolean = false): String {

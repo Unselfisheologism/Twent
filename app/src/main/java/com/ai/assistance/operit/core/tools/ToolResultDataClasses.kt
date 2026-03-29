@@ -462,15 +462,16 @@ data class SimplifiedUINode(
 data class UIPageResultData(
         val packageName: String,
         val activityName: String,
-        val uiElements: SimplifiedUINode
+        val uiElements: List<SimplifiedUINode>
 ) : ToolResultData() {
     override fun toString(): String {
+        val treeStrings = uiElements.take(50).joinToString("\n") { it.toTreeString() }
         return """
             |Current Application: $packageName
             |Current Activity: $activityName
             |
             |UI Elements:
-            |${uiElements.toTreeString()}
+            |$treeStrings
             """.trimMargin()
     }
 }

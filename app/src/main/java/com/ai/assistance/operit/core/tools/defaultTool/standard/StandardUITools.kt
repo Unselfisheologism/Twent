@@ -342,6 +342,24 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
         )
     }
 
+    override suspend fun setInputText(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun pressKey(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
     override suspend fun doubleTap(tool: AITool): ToolResult {
         return ToolResult(
             toolName = tool.name,
