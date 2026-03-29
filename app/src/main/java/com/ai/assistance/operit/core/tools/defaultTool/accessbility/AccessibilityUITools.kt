@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.core.tools.StringResultData
+import com.ai.assistance.operit.core.tools.SimplifiedUINode
 import com.ai.assistance.operit.core.tools.UIPageResultData
 import com.ai.assistance.operit.core.tools.defaultTool.standard.StandardUITools
 import com.ai.assistance.operit.data.model.AITool
@@ -43,10 +44,10 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
                 return ToolResult(toolName = tool.name, success = true, result = UIPageResultData("No content", emptyList()))
             }
 
-            val nodes = mutableListOf<UINode>()
+            val nodes = mutableListOf<SimplifiedUINode>()
             extractNodes(rootNode, nodes, 0)
 
-            val simplifiedNodes = nodes.take(50).map { it.toUINode() }
+            val simplifiedNodes = nodes.take(50)
 
             ToolResult(toolName = tool.name, success = true, result = UIPageResultData(rawData.activityName ?: "Unknown", simplifiedNodes))
         } catch (e: Exception) {
@@ -55,16 +56,17 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         }
     }
 
-    private fun extractNodes(node: AccessibilityNodeInfo?, list: MutableList<UINode>, depth: Int) {
+    private fun extractNodes(node: AccessibilityNodeInfo?, list: MutableList<SimplifiedUINode>, depth: Int) {
         if (node == null || depth > 10) return
 
-        val uiNode = UINode(
+        val uiNode = SimplifiedUINode(
             className = node.className?.toString(),
             text = node.text?.toString(),
             contentDesc = node.contentDescription?.toString(),
             resourceId = node.viewIdResourceName,
             bounds = getNodeBounds(node)?.toShortString(),
-            isClickable = node.isClickable || node.isLongClickable
+            isClickable = node.isClickable || node.isLongClickable,
+            children = emptyList()
         )
 
         list.add(uiNode)
@@ -267,7 +269,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         }
     }
 
-    suspend fun swipeLeft(tool: AITool): ToolResult {
+    override suspend fun swipeLeft(tool: AITool): ToolResult {
         val pixels = tool.parameters.find { it.name == "pixels" }?.value?.toIntOrNull() ?: 500
         val duration = tool.parameters.find { it.name == "duration_ms" }?.value?.toLongOrNull() ?: 500L
 
@@ -289,7 +291,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped left $pixels pixels"))
     }
 
-    suspend fun swipeRight(tool: AITool): ToolResult {
+    override suspend fun swipeRight(tool: AITool): ToolResult {
         val pixels = tool.parameters.find { it.name == "pixels" }?.value?.toIntOrNull() ?: 500
         val duration = tool.parameters.find { it.name == "duration_ms" }?.value?.toLongOrNull() ?: 500L
 
@@ -311,7 +313,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped right $pixels pixels"))
     }
 
-    suspend fun swipeUp(tool: AITool): ToolResult {
+    override suspend fun swipeUp(tool: AITool): ToolResult {
         val pixels = tool.parameters.find { it.name == "pixels" }?.value?.toIntOrNull() ?: 500
         val duration = tool.parameters.find { it.name == "duration_ms" }?.value?.toLongOrNull() ?: 500L
 
@@ -333,7 +335,7 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped up $pixels pixels"))
     }
 
-    suspend fun swipeDown(tool: AITool): ToolResult {
+    override suspend fun swipeDown(tool: AITool): ToolResult {
         val pixels = tool.parameters.find { it.name == "pixels" }?.value?.toIntOrNull() ?: 500
         val duration = tool.parameters.find { it.name == "duration_ms" }?.value?.toLongOrNull() ?: 500L
 
@@ -355,12 +357,12 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped down $pixels pixels"))
     }
 
-    suspend fun scrollDown(tool: AITool): ToolResult = swipeDown(tool)
-    suspend fun scrollUp(tool: AITool): ToolResult = swipeUp(tool)
-    suspend fun scrollLeft(tool: AITool): ToolResult = swipeLeft(tool)
-    suspend fun scrollRight(tool: AITool): ToolResult = swipeRight(tool)
+    override suspend fun scrollDown(tool: AITool): ToolResult = swipeDown(tool)
+    override suspend fun scrollUp(tool: AITool): ToolResult = swipeUp(tool)
+    override suspend fun scrollLeft(tool: AITool): ToolResult = swipeLeft(tool)
+    override suspend fun scrollRight(tool: AITool): ToolResult = swipeRight(tool)
 
-    suspend fun doubleTap(tool: AITool): ToolResult {
+    override suspend fun doubleTap(tool: AITool): ToolResult {
         val x = tool.parameters.find { it.name == "x" }?.value?.toIntOrNull() ?: return missingParam("x")
         val y = tool.parameters.find { it.name == "y" }?.value?.toIntOrNull() ?: return missingParam("y")
 
@@ -377,10 +379,10 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Double tapped at ($x, $y)"))
     }
 
-    suspend fun hold(tool: AITool): ToolResult = longPress(tool)
+    override suspend fun hold(tool: AITool): ToolResult = longPress(tool)
 
     @RequiresApi(Build.VERSION_CODES.R)
-    suspend fun openApp(tool: AITool): ToolResult {
+    override suspend fun openApp(tool: AITool): ToolResult {
         val packageName = tool.parameters.find { it.name == "package_name" }?.value
             ?: tool.parameters.find { it.name == "app_name" }?.value
             ?: return missingParam("package_name")
@@ -401,19 +403,19 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         }
     }
 
-    suspend fun back(tool: AITool): ToolResult {
+    override suspend fun back(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         svc.performBack()
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Back"))
     }
 
-    suspend fun home(tool: AITool): ToolResult {
+    override suspend fun home(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         svc.performHome()
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Home"))
     }
 
-    suspend fun getCurrentActivity(tool: AITool): ToolResult {
+    override suspend fun getCurrentActivity(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         val activity = svc.getCurrentActivityName()
         return ToolResult(toolName = tool.name, success = true, result = StringResultData("Current activity: $activity"))

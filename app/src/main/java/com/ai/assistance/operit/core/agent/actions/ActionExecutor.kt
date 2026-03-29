@@ -201,7 +201,7 @@ object ActionExecutor {
         }
     }
 
-    private fun executeWithFallback(
+    private suspend fun executeWithFallback(
         node: AccessibilityNodeInfo,
         finger: Finger,
         screenState: ScreenAnalysis,

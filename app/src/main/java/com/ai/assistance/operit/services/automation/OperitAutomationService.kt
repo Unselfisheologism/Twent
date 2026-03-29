@@ -41,7 +41,7 @@ import java.io.StringWriter
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-private data class SimplifiedElement(
+data class SimplifiedElement(
     val description: String,
     val bounds: Rect,
     val center: Point,
@@ -51,6 +51,7 @@ private data class SimplifiedElement(
 
 data class RawScreenData(
     val rootNode: AccessibilityNodeInfo?,
+    val activityName: String?,
     val pixelsAbove: Int,
     val pixelsBelow: Int,
     val screenWidth: Int,
@@ -307,8 +308,8 @@ class OperitAutomationService : AccessibilityService() {
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.TOP or Gravity.START
-                    x = x - 40
-                    y = y - 40
+                    this.x = x - 40
+                    this.y = y - 40
                 }
 
                 wm.addView(tapView, params)
@@ -757,7 +758,8 @@ class OperitAutomationService : AccessibilityService() {
             if (rootNode != null) {
                 Log.d("OperitAutomation", "Got rootInActiveWindow on attempt $attempt.")
                 val (pixelsAbove, pixelsBelow) = findScrollableNodeAndGetInfo(rootNode)
-                return RawScreenData(rootNode, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
+                val activityName = rootNode.packageName?.toString()
+                return RawScreenData(rootNode, activityName, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
             }
 
             if (attempt < maxRetries) {
@@ -767,7 +769,7 @@ class OperitAutomationService : AccessibilityService() {
         }
 
         Log.e("OperitAutomation", "Failed to get rootInActiveWindow after $maxRetries attempts.")
-        return RawScreenData(null, 0, 0, screenWidth, screenHeight)
+        return RawScreenData(null, null, 0, 0, screenWidth, screenHeight)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)

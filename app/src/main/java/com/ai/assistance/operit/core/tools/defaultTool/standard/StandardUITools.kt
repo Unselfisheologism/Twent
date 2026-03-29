@@ -315,6 +315,33 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
         )
     }
 
+    override suspend fun tap(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun longPress(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
+    override suspend fun swipe(tool: AITool): ToolResult {
+        return ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = OPERATION_NOT_SUPPORTED
+        )
+    }
+
     override suspend fun doubleTap(tool: AITool): ToolResult {
         return ToolResult(
             toolName = tool.name,
