@@ -23,12 +23,12 @@ import java.util.concurrent.ConcurrentLinkedQueue
 @RequiresApi(Build.VERSION_CODES.R)
 class AutomationForegroundService : Service() {
 
-    private val TAG = "AutomationForegroundService"
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     
     private val taskQueue: Queue<AutomationTask> = ConcurrentLinkedQueue()
     
     companion object {
+        private const val TAG = "AutomationForegroundService"
         private const val NOTIFICATION_CHANNEL_ID = "AutomationServiceChannel"
         private const val NOTIFICATION_ID = 2001
         private const val EXTRA_TASK = "automation_task"
