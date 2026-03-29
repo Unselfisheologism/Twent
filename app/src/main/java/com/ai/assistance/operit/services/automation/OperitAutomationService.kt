@@ -271,12 +271,11 @@ class OperitAutomationService : AccessibilityService() {
      */
     fun clearGlowBorder() {
         val wm = this.windowManager ?: return
+        val view = glowBorderView ?: return
         mainHandler.post {
-            glowBorderView?.let { view ->
+            if (view.isAttachedToWindow) {
                 try {
-                    if (view.isAttachedToWindow) {
-                        wm.removeView(view)
-                    }
+                    wm.removeView(view)
                 } catch (e: Exception) {
                     Log.e("OperitAutomation", "Error removing glow border", e)
                 }
@@ -339,7 +338,11 @@ class OperitAutomationService : AccessibilityService() {
                     val boundsString = parser.getAttributeValue(null, "bounds")
                     val bounds = try {
                         val numbers = boundsString?.replace(Regex("[\\[\\]]"), ",")?.split(",")?.filter { it.isNotEmpty() }
-                        if (numbers?.size == 4) Rect(numbers[0].toInt(), numbers[1].toInt(), numbers[2].toInt(), numbers[3].toInt()) else Rect()
+                        if (numbers != null && numbers.size == 4) {
+                            Rect(numbers[0].toInt(), numbers[1].toInt(), numbers[2].toInt(), numbers[3].toInt())
+                        } else {
+                            Rect()
+                        }
                     } catch (e: Exception) { Rect() }
 
                     if (bounds.width() <= 0 || bounds.height() <= 0) {
