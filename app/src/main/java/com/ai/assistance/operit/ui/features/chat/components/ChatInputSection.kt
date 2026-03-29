@@ -48,9 +48,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.ai.assistance.operit.data.model.AttachmentInfo
-import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.core.tools.ToolProgressBus
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
+import androidx.compose.material.icons.automirrored.filled.Smartphone
+import androidx.compose.material3.FilterChip
 import com.ai.assistance.operit.ui.common.animations.SimpleAnimatedVisibility
 import com.ai.assistance.operit.ui.features.chat.viewmodel.ChatViewModel
 import com.ai.assistance.operit.ui.floating.FloatingMode
@@ -351,6 +353,39 @@ fun ChatInputSection(
                 }
             }
 
+
+            // UI Agent Mode toggle row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val uiAgentEnabled by UIAgentModeManager.isEnabled.collectAsState()
+                
+                FilterChip(
+                    selected = uiAgentEnabled,
+                    onClick = { UIAgentModeManager.toggle() },
+                    label = { 
+                        Text(
+                            text = "UI Agent",
+                            style = MaterialTheme.typography.labelSmall
+                        ) 
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Smartphone,
+                            contentDescription = "UI Agent Mode",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
 
             Row(
                 modifier =

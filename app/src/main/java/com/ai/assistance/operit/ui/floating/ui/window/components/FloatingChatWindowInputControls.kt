@@ -25,6 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Smartphone
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,6 +133,37 @@ private fun BottomInputBar(
             }
         }
         
+        // UI Agent Mode toggle row
+        val uiAgentEnabled by UIAgentModeManager.isEnabled.collectAsState()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilterChip(
+                selected = uiAgentEnabled,
+                onClick = { UIAgentModeManager.toggle() },
+                label = { 
+                    Text(
+                        text = "UI Agent",
+                        style = MaterialTheme.typography.labelSmall
+                    ) 
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Smartphone,
+                        contentDescription = "UI Agent Mode",
+                        modifier = Modifier.size(14.dp)
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+        
         // 输入栏（参考 ChatInputSection 的布局）
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -157,18 +193,29 @@ private fun BottomInputBar(
                     onSend = {
                         when {
                             isProcessing -> {
-                                // 与右侧“取消”按钮行为保持一致：取消生成，不清空当前输入
+                                // 与右侧"取消"按钮行为保持一致：取消生成，不清空当前输入
                                 floatContext.onCancelMessage?.invoke()
                             }
                             hasContent || floatContext.attachments.isNotEmpty() -> {
-                                floatContext.onSendMessage?.invoke(
-                                    floatContext.userMessage,
-                                    PromptFunctionType.CHAT
-                                )
-                                floatContext.userMessage = ""
-                                floatContext.showAttachmentPanel = false
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
+                                if (UIAgentModeManager.isEnabled.value) {
+                                    // UI Agent mode - start automation
+                                    val task = floatContext.userMessage
+                                    viewModel.startUIAutomation(task)
+                                    floatContext.userMessage = ""
+                                    floatContext.showAttachmentPanel = false
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                } else {
+                                    // Normal chat mode
+                                    floatContext.onSendMessage?.invoke(
+                                        floatContext.userMessage,
+                                        PromptFunctionType.CHAT
+                                    )
+                                    floatContext.userMessage = ""
+                                    floatContext.showAttachmentPanel = false
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                }
                             }
                         }
                     }

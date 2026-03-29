@@ -68,6 +68,7 @@ import com.ai.assistance.operit.services.core.AttachmentDelegate
 import com.ai.assistance.operit.services.core.MessageCoordinationDelegate
 import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.ui.features.chat.util.MessageImageGenerator
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
 
 enum class ChatHistoryDisplayMode {
     BY_CHARACTER_CARD,
@@ -1195,6 +1196,29 @@ class ChatViewModel(private val context: Context) : ViewModel() {
 
     fun sendUserMessage(promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT) {
         messageCoordinationDelegate.sendUserMessage(promptFunctionType)
+    }
+    
+    fun startUIAutomation(task: String) {
+        viewModelScope.launch {
+            val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(context)
+            controller.runAutomationTask(
+                task = task,
+                maxSteps = 150,
+                onStatusChange = { status ->
+                    AppLogger.d(TAG, "UI Automation: $status")
+                },
+                onComplete = { success, message ->
+                    AppLogger.d(TAG, "UI Automation complete: success=$success, message=$message")
+                    // Disable UI Agent mode after completion
+                    UIAgentModeManager.setEnabled(false)
+                    UIAgentModeManager.setRunning(false)
+                    // Notify completion
+                    UIAgentModeManager.notifyComplete(success)
+                }
+            )
+            // Mark as running
+            UIAgentModeManager.setRunning(true)
+        }
     }
 
     fun cancelCurrentMessage() {

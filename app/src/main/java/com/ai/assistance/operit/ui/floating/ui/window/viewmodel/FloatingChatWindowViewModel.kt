@@ -1,10 +1,17 @@
 package com.ai.assistance.operit.ui.floating.ui.window.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.ui.floating.FloatContext
 import com.ai.assistance.operit.ui.floating.ui.window.models.ResizeEdge
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
+import com.ai.assistance.operit.services.automation.AutomationController
+import com.ai.assistance.operit.util.AppLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /** 窗口模式的状态数据类 */
 data class DraggableWindowState(
@@ -17,6 +24,23 @@ data class DraggableWindowState(
 class FloatingChatWindowModeViewModel(
     private val floatContext: FloatContext
 ) {
+    private val context: Context
+        get() = floatContext.chatService?.let {
+            try {
+                val field = it.javaClass.getDeclaredMethod("getApplicationContext")
+                field.invoke(it) as? Context
+            } catch (e: Exception) {
+                null
+            }
+        } ?: floatContext.chatService?.let {
+            try {
+                val field = it.javaClass.getDeclaredMethod("getApplication")
+                field.invoke(it) as? Context
+            } catch (e: Exception) {
+                null
+            }
+        } ?: android.app.Application()
+
     // 窗口状态
     var windowState by mutableStateOf(
         DraggableWindowState(
@@ -165,6 +189,34 @@ class FloatingChatWindowModeViewModel(
     fun hideInputDialog() {
         floatContext.showInputDialog = false
         floatContext.showAttachmentPanel = false
+    }
+
+    /**
+     * 启动UI自动化
+     */
+    fun startUIAutomation(task: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val controller = AutomationController.getInstance(context)
+                controller.runAutomationTask(
+                    task = task,
+                    maxSteps = 150,
+                    onStatusChange = { status ->
+                        AppLogger.d("UIAgent", "UI Automation: $status")
+                    },
+                    onComplete = { success, message ->
+                        AppLogger.d("UIAgent", "UI Automation complete: success=$success, message=$message")
+                        UIAgentModeManager.setEnabled(false)
+                        UIAgentModeManager.setRunning(false)
+                        UIAgentModeManager.notifyComplete(success)
+                    }
+                )
+                UIAgentModeManager.setRunning(true)
+            } catch (e: Exception) {
+                AppLogger.e("UIAgent", "Failed to start UI automation", e)
+                UIAgentModeManager.setEnabled(false)
+            }
+        }
     }
 }
 

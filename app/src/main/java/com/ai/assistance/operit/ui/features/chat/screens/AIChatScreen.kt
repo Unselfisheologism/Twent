@@ -510,14 +510,24 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                                     userMessage = userMessage,
                                     onUserMessageChange = { actualViewModel.updateUserMessage(it) },
                                     onSendMessage = {
-                                        // 清除焦点，收起软键盘
-                                        focusManager.clearFocus()
-
-                                        actualViewModel.sendUserMessage()
-                                        // 在发送消息后重置附件面板状态
-                                        actualViewModel.resetAttachmentPanelState()
-                                        // 发送新问题时，恢复自动滚动到底部
-                                        autoScrollToBottom = true
+                                        // Check if UI Agent mode is enabled
+                                        if (UIAgentModeManager.isEnabled.value) {
+                                            val message = userMessage.text
+                                            // Clear focus and hide keyboard
+                                            focusManager.clearFocus()
+                                            // Start UI automation
+                                            actualViewModel.startUIAutomation(message)
+                                            // Reset attachment panel state
+                                            actualViewModel.resetAttachmentPanelState()
+                                            // Auto scroll to bottom
+                                            autoScrollToBottom = true
+                                        } else {
+                                            // Normal chat mode
+                                            focusManager.clearFocus()
+                                            actualViewModel.sendUserMessage()
+                                            actualViewModel.resetAttachmentPanelState()
+                                            autoScrollToBottom = true
+                                        }
                                     },
                                     onCancelMessage = { actualViewModel.cancelCurrentMessage() },
                                     isLoading = isLoading,
