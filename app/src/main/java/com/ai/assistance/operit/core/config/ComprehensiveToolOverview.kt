@@ -104,37 +104,74 @@ Here's a complete overview of what you can do:
 ═══════════════════════════════════════════════════════════════════════
 ### 9. UI AUTOMATION TOOLS
 ══════════════════════════════════════════════════════════════════════
+### 9. UI AUTOMATION TOOLS
+══════════════════════════════════════════════════════════════════════
 
-• start_automation - Start an autonomous UI automation task
-• stop_automation - Stop currently running automation
-• get_automation_status - Check if automation is running
-• get_screen_state - Get current screen UI elements and state
+These are coordinate-based tools for direct UI interaction. Use these instead of code-based automation.
+
+• tap - Tap at coordinates (x, y)
+• double_tap - Double tap at coordinates
+• long_press - Long press at coordinates
+• click_element - Click element by index, text, or content_description
+• swipe - Custom swipe from (start_x, start_y) to (end_x, end_y)
+• swipe_left/right/up/down - Swipe in direction by pixels
+• scroll_left/right/up/down - Scroll in direction by pixels
+• hold - Hold at coordinates (same as long_press)
+• press_key - Press key (back, home, enter, recents)
+• type_text - Type text into focused input
+• open_app - Open app by package_name or app_name
+• back - Press back button
+• home - Press home button
+• get_page_info - Get current UI page information
+• get_current_activity - Get current foreground activity
 
 When to use UI automation:
-• Use start_automation when user asks to perform multi-step tasks like "打开微信发消息"
-• The automation can navigate apps, click elements, type text, scroll, etc.
-• Each automation step analyzes the screen and decides what action to take
-• Automation continues until task is complete or max_steps reached
+• Use these granular tools for direct control - no hallucination risk
+• The agent can chain multiple actions together
+• Each tool has explicit parameters (coordinates, text, etc.)
 
-Example - How to call start_automation tool correctly:
+Example - Tap at coordinates:
 ```
 {
-  "name": "start_automation",
+  "name": "tap",
   "parameters": [
-    {
-      "name": "task",
-      "value": "打开微信，点击右上角的+按钮，选择发起群聊，输入群名称'测试群'，然后点击完成"
-    },
-    {
-      "name": "max_steps",
-      "value": "100"
-    }
+    {"name": "x", "value": "540"},
+    {"name": "y", "value": "1200"}
   ]
 }
 ```
-Note: The 'task' parameter is REQUIRED and should be a detailed, step-by-step description of what you want the automation to do. Be as specific as possible - include exact app names, button texts, and expected actions. The 'max_steps' parameter is optional (default 150) and limits how many automation steps can be performed.
 
-═══════════════════════════════════════════════════════════════════════
+Example - Swipe up to scroll:
+```
+{
+  "name": "swipe_up",
+  "parameters": [
+    {"name": "pixels", "value": "500"}
+  ]
+}
+```
+
+Example - Open an app:
+```
+{
+  "name": "open_app",
+  "parameters": [
+    {"name": "app_name", "value": "微信"}
+  ]
+}
+```
+
+Example - Type text:
+```
+{
+  "name": "type_text",
+  "parameters": [
+    {"name": "text", "value": "Hello World"}
+  ]
+}
+```
+
+══════════════════════════════════════════════════════════════════════
 ### 10. WORKFLOW TOOLS
 ═══════════════════════════════════════════════════════════════════════
 

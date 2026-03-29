@@ -1479,45 +1479,6 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-    // Create automation tools instance
-    val automationTools = com.ai.assistance.operit.core.tools.automation.AutomationTools(context)
-
-    // Register UI automation tools
-    handler.registerTool(
-        name = "start_automation",
-        descriptionGenerator = { tool ->
-            val task = tool.parameters.find { it.name == "task" }?.value ?: ""
-            s(R.string.toolreg_start_automation_desc, task)
-        },
-        executor = { tool ->
-            automationTools.startAutomation(tool)
-        }
-    )
-
-    handler.registerTool(
-        name = "stop_automation",
-        executor = { tool ->
-            automationTools.stopAutomation(tool)
-        }
-    )
-
-    handler.registerTool(
-        name = "get_automation_status",
-        executor = { tool ->
-            automationTools.isAutomationRunning(tool)
-        }
-    )
-
-    handler.registerTool(
-        name = "get_screen_state",
-        descriptionGenerator = { tool ->
-            s(R.string.toolreg_get_screen_state_desc)
-        },
-        executor = { tool ->
-            automationTools.getScreenState(tool)
-        }
-    )
-
     // Register package creator tools (create packages, MCP servers, and skills)
     PackageCreatorTools.registerCreatorTools(handler, context)
 }
