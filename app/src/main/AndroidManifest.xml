@@ -397,6 +397,12 @@
             android:name=".services.OperitAccessibilityService"
             android:exported="false" />
         
+        <!-- Automation Foreground Service -->
+        <service
+            android:name=".services.automation.AutomationForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false" />
+        
     </application>
 
 </manifest>

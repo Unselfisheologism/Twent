@@ -36,25 +36,17 @@ class AutomationTools(private val context: Context) {
         val maxSteps = tool.parameters.find { it.name == "max_steps" }?.value?.toIntOrNull() ?: 150
 
         return try {
-            val controller = com.ai.assistance.operit.services.automation.AutomationController.getInstance(
-                context
-            )
-            
-            controller.startAutomation(
+            // Use foreground service to run automation in foreground
+            com.ai.assistance.operit.services.automation.AutomationForegroundService.start(
+                context = context,
                 task = task,
-                maxSteps = maxSteps,
-                onStatusChange = { status ->
-                    AppLogger.d(TAG, "Automation status: $status")
-                },
-                onComplete = { success, message ->
-                    AppLogger.d(TAG, "Automation complete: success=$success, message=$message")
-                }
+                maxSteps = maxSteps
             )
             
             ToolResult(
                 toolName = tool.name,
                 success = true,
-                result = StringResultData("Automation started: $task")
+                result = StringResultData("Automation started in foreground: $task")
             )
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to start automation", e)

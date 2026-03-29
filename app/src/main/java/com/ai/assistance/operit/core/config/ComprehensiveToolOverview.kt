@@ -103,7 +103,7 @@ Here's a complete overview of what you can do:
 
 ═══════════════════════════════════════════════════════════════════════
 ### 9. UI AUTOMATION TOOLS
-═══════════════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════════════
 
 • start_automation - Start an autonomous UI automation task
 • stop_automation - Stop currently running automation
@@ -115,6 +115,24 @@ When to use UI automation:
 • The automation can navigate apps, click elements, type text, scroll, etc.
 • Each automation step analyzes the screen and decides what action to take
 • Automation continues until task is complete or max_steps reached
+
+Example - How to call start_automation tool correctly:
+```
+{
+  "name": "start_automation",
+  "parameters": [
+    {
+      "name": "task",
+      "value": "打开微信，点击右上角的+按钮，选择发起群聊，输入群名称'测试群'，然后点击完成"
+    },
+    {
+      "name": "max_steps",
+      "value": "100"
+    }
+  ]
+}
+```
+Note: The 'task' parameter is REQUIRED and should be a detailed, step-by-step description of what you want the automation to do. Be as specific as possible - include exact app names, button texts, and expected actions. The 'max_steps' parameter is optional (default 150) and limits how many automation steps can be performed.
 
 ═══════════════════════════════════════════════════════════════════════
 ### 10. WORKFLOW TOOLS

@@ -222,6 +222,58 @@ IMPORTANT: Your entire response must be a single JSON object, starting with { an
     fun isRunning(): Boolean = isRunning
 
     /**
+     * Run automation task synchronously - waits for completion
+     */
+    fun runAutomationTask(
+        task: String,
+        maxSteps: Int = 150,
+        onStatusChange: ((String) -> Unit)? = null,
+        onComplete: ((Boolean, String) -> Unit)? = null
+    ) {
+        if (isRunning) {
+            Log.w(TAG, "Automation already running")
+            onComplete?.invoke(false, "Automation already running")
+            return
+        }
+
+        isRunning = true
+        onStatusChange?.invoke("Starting automation: $task")
+        
+        val userName = "User"
+        
+        val modifiedPrompt = systemPrompt.replace("{user_name}", userName)
+        val messageManager = MessageManager(modifiedPrompt)
+        
+        val operitLlmApi = OperitLlmApi(context)
+        
+        val settings = AgentSettings(maxSteps = maxSteps)
+        
+        agent = Agent(
+            settings = settings,
+            messageManager = messageManager,
+            perception = perception,
+            llmApi = operitLlmApi,
+            actionExecutor = ActionExecutor,
+            fileSystem = fileSystem,
+            context = context
+        )
+
+        agentScope.launch {
+            try {
+                Log.d(TAG, "Starting agent loop for task: $task")
+                agent?.run(task, maxSteps)
+                Log.d(TAG, "Automation completed successfully")
+                onComplete?.invoke(true, "Task completed")
+            } catch (e: Exception) {
+                Log.e(TAG, "Automation failed", e)
+                onComplete?.invoke(false, "Error: ${e.message}")
+            } finally {
+                isRunning = false
+            }
+        }
+    }
+
+    /**
      * Get current screen analysis
      */
     suspend fun getScreenAnalysis(): ScreenAnalysis? {
