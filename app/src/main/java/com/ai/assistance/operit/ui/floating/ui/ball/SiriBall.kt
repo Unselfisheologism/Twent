@@ -88,7 +88,6 @@ fun SiriBall(
     val particleSystem = rememberParticleSystem()
     
     // 语音交互管理器
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val speechManager = remember(context, scope) {
         SpeechInteractionManager(

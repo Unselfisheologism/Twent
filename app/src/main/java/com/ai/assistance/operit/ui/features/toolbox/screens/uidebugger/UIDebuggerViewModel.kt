@@ -159,7 +159,9 @@ class UIDebuggerViewModel : ViewModel() {
                         if (resultData is UIPageResultData) {
                             val currentActivityName = resultData.activityName
                             val currentPackageName = resultData.packageName
-                            val elements = convertToUIElements(resultData.uiElements, currentActivityName, currentPackageName)
+                            val elements = resultData.uiElements.flatMap { 
+                                convertToUIElements(it, currentActivityName, currentPackageName) 
+                            }
                             Pair(elements, Pair(currentActivityName, currentPackageName))
                         } else {
                             throw Exception(context.getString(R.string.uidebugger_error_wrong_result_type))

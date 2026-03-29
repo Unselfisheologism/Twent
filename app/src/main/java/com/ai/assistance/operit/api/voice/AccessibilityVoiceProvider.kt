@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * 基于Android系统TextToSpeech API的语音服务实现
@@ -124,7 +126,11 @@ class SimpleVoiceProvider(private val context: Context) : VoiceService {
                             }
 
                     // 如果协程被取消，关闭TTS
-                    continuation.invokeOnCancellation { shutdown() }
+                    continuation.invokeOnCancellation {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            shutdown()
+                        }
+                    }
                 }
             }
 

@@ -561,7 +561,7 @@ class ConversationService(
             }
         }
 
-        traverse(pageInfo.uiElements)
+        pageInfo.uiElements.forEach { traverse(it) }
 
         // Use distinct to remove duplicate text entries from non-clickable elements.
         val distinctScreenTexts = screenTexts.distinct()

@@ -60,7 +60,7 @@ interface VoiceService {
     suspend fun resume(): Boolean
 
     /** 释放语音引擎资源 */
-    fun shutdown()
+    suspend fun shutdown()
 
     /**
      * 获取当前可用的语音列表
