@@ -78,7 +78,7 @@ object VoiceServiceFactory {
         val selectedType = runBlocking { prefs.ttsServiceTypeFlow.first() }
 
         if (instance == null || selectedType != currentType) {
-            instance?.shutdown()
+            runBlocking { instance?.shutdown() }
             instance = createVoiceService(context)
             currentType = selectedType
         }
@@ -87,7 +87,7 @@ object VoiceServiceFactory {
 
     /** 重置单例实例 在需要更改语音服务类型或释放资源时调用 */
     fun resetInstance() {
-        instance?.shutdown()
+        runBlocking { instance?.shutdown() }
         instance = null
         currentType = null
     }

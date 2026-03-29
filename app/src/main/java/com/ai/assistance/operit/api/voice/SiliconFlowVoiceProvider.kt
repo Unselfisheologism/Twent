@@ -426,7 +426,7 @@ class SiliconFlowVoiceProvider(
         }
     }
 
-    override fun shutdown() {
+    override suspend fun shutdown() {
         stopGeneration.incrementAndGet()
         speakScope.cancel()
         clearPendingRequests()

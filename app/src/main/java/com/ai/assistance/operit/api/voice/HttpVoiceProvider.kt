@@ -320,7 +320,7 @@ class HttpVoiceProvider(
     }
 
     /** 释放TTS引擎资源 */
-    override fun shutdown() {
+    override suspend fun shutdown() {
         try {
             speakScope.cancel()
             speakQueue.close()

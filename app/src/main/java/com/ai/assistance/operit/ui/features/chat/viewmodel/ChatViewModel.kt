@@ -1788,7 +1788,9 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         floatingWindowDelegate.cleanup()
         
         // 清理语音服务资源
-        voiceService?.shutdown()
+        viewModelScope.launch {
+            voiceService?.shutdown()
+        }
 
         // 不再在这里停止Web服务器，因为使用的是单例模式
         // 服务器应在应用退出时由Application类或专门的服务管理类关闭

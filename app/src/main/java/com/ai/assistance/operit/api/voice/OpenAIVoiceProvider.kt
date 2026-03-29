@@ -342,7 +342,7 @@ class OpenAIVoiceProvider(
         }
     }
 
-    override fun shutdown() {
+    override suspend fun shutdown() {
         synchronized(playerLock) {
             mediaPlayer?.release()
             mediaPlayer = null
