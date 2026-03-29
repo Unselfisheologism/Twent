@@ -120,7 +120,7 @@ object ActionExecutor {
             }
 
             is Action.ClickElementByText -> {
-                val node = screenState.orderedNodes.find { n ->
+                val node = screenState.elementMap.values.find { n ->
                     n.text?.toString()?.contains(action.text, ignoreCase = true) == true
                 }
                 if (node != null) {
@@ -134,7 +134,7 @@ object ActionExecutor {
             }
 
             is Action.ClickElementByDesc -> {
-                val node = screenState.orderedNodes.find { n ->
+                val node = screenState.elementMap.values.find { n ->
                     n.contentDescription?.toString()?.contains(action.contentDescription, ignoreCase = true) == true
                 }
                 if (node != null) {
