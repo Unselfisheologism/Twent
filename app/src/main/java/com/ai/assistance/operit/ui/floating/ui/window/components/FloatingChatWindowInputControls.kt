@@ -25,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.automirrored.filled.Smartphone
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -153,7 +153,7 @@ private fun BottomInputBar(
                 },
                 leadingIcon = {
                     Icon(
-                            imageVector = Icons.Default.Smartphone,
+                            imageVector = Icons.Default.TouchApp,
                         contentDescription = "UI Agent Mode",
                         modifier = Modifier.size(14.dp)
                     )

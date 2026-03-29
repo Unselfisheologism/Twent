@@ -52,7 +52,7 @@ import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.core.tools.ToolProgressBus
 import com.ai.assistance.operit.core.agent.UIAgentModeManager
-import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.FilterChip
 import com.ai.assistance.operit.ui.common.animations.SimpleAnimatedVisibility
 import com.ai.assistance.operit.ui.features.chat.viewmodel.ChatViewModel
@@ -376,7 +376,7 @@ fun ChatInputSection(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.Smartphone,
+                            imageVector = Icons.Default.TouchApp,
                             contentDescription = "UI Agent Mode",
                             modifier = Modifier.size(16.dp)
                         )
