@@ -297,7 +297,6 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
     private var cachedMediaProjection: MediaProjection? = null
     private var cachedMediaProjectionCaptureManager: MediaProjectionCaptureManager? = null
 
-    @RequiresApi(Build.VERSION_CODES.R)
     override suspend fun getPageInfo(tool: AITool): ToolResult {
         return ToolResult(
             toolName = tool.name,
