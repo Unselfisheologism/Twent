@@ -65,7 +65,8 @@ fun SettingsScreen(
         navigateToTokenUsageStatistics: () -> Unit,
         navigateToContextSummarySettings: () -> Unit,
         navigateToLayoutAdjustmentSettings: () -> Unit,
-        navigateToAssistantThemeSettings: () -> Unit
+        navigateToAssistantThemeSettings: () -> Unit,
+        navigateToAgentPersonalitySettings: () -> Unit
 ) {
         val context = LocalContext.current
         val apiPreferences = remember { ApiPreferences.getInstance(context) }
@@ -182,6 +183,13 @@ fun SettingsScreen(
                                 subtitle = stringResource(id = R.string.assistant_theme_desc),
                                 icon = Icons.Default.Face,
                                 onClick = navigateToAssistantThemeSettings
+                        )
+
+                        CompactSettingsItem(
+                                title = stringResource(id = R.string.agent_personality_title),
+                                subtitle = stringResource(id = R.string.agent_personality_desc),
+                                icon = Icons.Default.Psychology,
+                                onClick = navigateToAgentPersonalitySettings
                         )
                         
                         CompactSettingsItem(

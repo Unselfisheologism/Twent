@@ -54,6 +54,7 @@ import com.ai.assistance.operit.ui.features.settings.screens.SettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.SpeechServicesSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ThemeSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.AssistantThemeSettingsScreen
+import com.ai.assistance.operit.ui.features.settings.screens.AgentPersonalitySettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ToolPermissionSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesGuideScreen
 import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesSettingsScreen
@@ -480,7 +481,8 @@ sealed class Screen(
                     navigateToTokenUsageStatistics = { navigateTo(TokenUsageStatistics) },
                     navigateToContextSummarySettings = { navigateTo(ContextSummarySettings) },
                     navigateToLayoutAdjustmentSettings = { navigateTo(LayoutAdjustmentSettings) },
-                    navigateToAssistantThemeSettings = { navigateTo(AssistantThemeSettings) }
+                    navigateToAssistantThemeSettings = { navigateTo(AssistantThemeSettings) },
+                    navigateToAgentPersonalitySettings = { navigateTo(AgentPersonalitySettings) }
             )
         }
     }
@@ -949,6 +951,23 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             AssistantThemeSettingsScreen()
+        }
+    }
+
+    data object AgentPersonalitySettings :
+            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.agent_personality_title) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AgentPersonalitySettingsScreen()
         }
     }
 

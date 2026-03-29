@@ -600,20 +600,106 @@ class UserPreferencesManager private constructor(private val context: Context) {
             preferences[ASSISTANT_ICON_STYLE] ?: ASSISTANT_ICON_DEFAULT
         }
 
-    // Assistant Custom Colors Flow
-    val useAssistantCustomColors: Flow<Boolean> =
-        context.userPreferencesDataStore.data.map { preferences ->
-            preferences[USE_ASSISTANT_CUSTOM_COLORS] ?: false
-        }
+        // Assistant Custom Colors Flow
+        val useAssistantCustomColors: Flow<Boolean> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[USE_ASSISTANT_CUSTOM_COLORS] ?: false
+            }
 
-    val assistantCustomPrimaryColor: Flow<Int?> =
-        context.userPreferencesDataStore.data.map { preferences ->
-            preferences[ASSISTANT_CUSTOM_PRIMARY_COLOR]
-        }
+        val assistantCustomPrimaryColor: Flow<Int?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[ASSISTANT_CUSTOM_PRIMARY_COLOR]
+            }
 
-    val assistantCustomSecondaryColor: Flow<Int?> =
-        context.userPreferencesDataStore.data.map { preferences ->
-            preferences[ASSISTANT_CUSTOM_SECONDARY_COLOR]
+        val assistantCustomSecondaryColor: Flow<Int?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[ASSISTANT_CUSTOM_SECONDARY_COLOR]
+            }
+
+        // Agent Personality Preferences
+        private val AGENT_PERSONALITY_ID = stringPreferencesKey("agent_personality_id")
+        private val CUSTOM_AGENT_NAME = stringPreferencesKey("custom_agent_name")
+        private val CUSTOM_AGENT_AVATAR_URI = stringPreferencesKey("custom_agent_avatar_uri")
+        private val AGENT_VOICE_VARIANT_ID = stringPreferencesKey("agent_voice_variant_id")
+        private val AGENT_VOICE_PITCH = floatPreferencesKey("agent_voice_pitch")
+        private val AGENT_VOICE_RATE = floatPreferencesKey("agent_voice_rate")
+        private val AGENT_USE_LOCAL_TTS = booleanPreferencesKey("agent_use_local_tts")
+        private val AGENT_TTS_VOICE_ID = stringPreferencesKey("agent_tts_voice_id")
+        private val AGENT_CUSTOM_EMOJI = stringPreferencesKey("agent_custom_emoji")
+
+        // Agent Personality Flow properties
+        val agentPersonalityId: Flow<String> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_PERSONALITY_ID] ?: "default"
+            }
+
+        val customAgentName: Flow<String?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[CUSTOM_AGENT_NAME]
+            }
+
+        val customAgentAvatarUri: Flow<String?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[CUSTOM_AGENT_AVATAR_URI]
+            }
+
+        val agentVoiceVariantId: Flow<String> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_VOICE_VARIANT_ID] ?: "default"
+            }
+
+        val agentVoicePitch: Flow<Float> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_VOICE_PITCH] ?: 1.0f
+            }
+
+        val agentVoiceRate: Flow<Float> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_VOICE_RATE] ?: 1.0f
+            }
+
+        val agentUseLocalTTS: Flow<Boolean> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_USE_LOCAL_TTS] ?: true
+            }
+
+        val agentTTSVoiceId: Flow<String?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_TTS_VOICE_ID]
+            }
+
+        val agentCustomEmoji: Flow<String?> =
+            context.userPreferencesDataStore.data.map { preferences ->
+                preferences[AGENT_CUSTOM_EMOJI]
+            }
+
+        // Agent Personality Save function
+        suspend fun saveAgentPersonalitySettings(
+            personalityId: String? = null,
+            customAgentName: String? = null,
+            customAgentAvatarUri: String? = null,
+            voiceVariantId: String? = null,
+            voicePitch: Float? = null,
+            voiceRate: Float? = null,
+            useLocalTTS: Boolean? = null,
+            ttsVoiceId: String? = null,
+            customEmoji: String? = null
+        ) {
+            context.userPreferencesDataStore.edit { preferences ->
+                personalityId?.let { preferences[AGENT_PERSONALITY_ID] = it }
+                customAgentName?.let { preferences[CUSTOM_AGENT_NAME] = it }
+                if (customAgentAvatarUri != null) {
+                    preferences[CUSTOM_AGENT_AVATAR_URI] = customAgentAvatarUri
+                } else {
+                    preferences.remove(CUSTOM_AGENT_AVATAR_URI)
+                }
+                voiceVariantId?.let { preferences[AGENT_VOICE_VARIANT_ID] = it }
+                voicePitch?.let { preferences[AGENT_VOICE_PITCH] = it }
+                voiceRate?.let { preferences[AGENT_VOICE_RATE] = it }
+                useLocalTTS?.let { preferences[AGENT_USE_LOCAL_TTS] = it }
+                ttsVoiceId?.let { preferences[AGENT_TTS_VOICE_ID] = it }
+                customEmoji?.let { preferences[AGENT_CUSTOM_EMOJI] = it }
+            }
         }
 
     // 布局调整设置

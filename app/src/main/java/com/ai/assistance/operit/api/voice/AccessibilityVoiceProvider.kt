@@ -247,18 +247,42 @@ class SimpleVoiceProvider(private val context: Context) : VoiceService {
             }
 
     /** 释放TTS引擎资源 */
-    override fun shutdown() {
-        tts?.let {
-            try {
-                it.stop()
-                it.shutdown()
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "关闭TTS引擎失败", e)
-            } finally {
+    override suspend fun shutdown() =
+            withContext(Dispatchers.IO) {
+                tts?.stop()
+                tts?.shutdown()
                 tts = null
                 _isInitialized.value = false
                 _isSpeaking.value = false
             }
+
+    /** 应用自定义语音参数（用于Agent Personality设置） */
+    suspend fun applyCustomVoiceSettings(
+        pitch: Float,
+        rate: Float,
+        voiceId: String?
+    ) = withContext(Dispatchers.IO) {
+        currentPitch = pitch
+        currentRate = rate
+        currentVoiceId = voiceId
+
+        tts?.let { textToSpeech ->
+            textToSpeech.setPitch(pitch)
+            textToSpeech.setSpeechRate(rate)
+
+            if (!voiceId.isNullOrEmpty()) {
+                try {
+                    val voices = textToSpeech.voices
+                    val selectedVoice = voices?.find { it.name.contains(voiceId, ignoreCase = true) }
+                    selectedVoice?.let {
+                        textToSpeech.voice = it
+                    }
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "无法设置语音: ${e.message}")
+                }
+            }
+        }
+    }
         }
     }
 

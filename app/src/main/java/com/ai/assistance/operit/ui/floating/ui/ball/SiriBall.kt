@@ -28,8 +28,10 @@ import kotlin.math.*
 
 import androidx.compose.ui.platform.LocalContext
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.model.AgentPersonalities
 import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.PromptFunctionType
+import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.ui.floating.voice.SpeechInteractionManager
 import kotlinx.coroutines.launch
 
@@ -49,8 +51,33 @@ fun SiriBall(
     onClick: () -> Unit,
     onTriggerResult: () -> Unit
 ) {
-    // Siri配色 - 精简为4个主色调（蓝、紫、粉、青）
-    val mainColor = Color(0xFF0A84FF)      // 主蓝色
+    // Get preferences manager for agent personality
+    val context = LocalContext.current
+    val preferencesManager = remember { UserPreferencesManager.getInstance(context) }
+    val personalityId by preferencesManager.agentPersonalityId.collectAsState(initial = "default")
+    val customEmoji by preferencesManager.agentCustomEmoji.collectAsState(initial = null)
+    val assistantIconStyle by preferencesManager.assistantIconStyle.collectAsState(initial = "default")
+    val assistantCustomThemeId by preferencesManager.assistantCustomThemeId.collectAsState(initial = "default")
+    
+    // Get the selected personality
+    val selectedPersonality = remember(personalityId) {
+        AgentPersonalities.getPersonalityById(personalityId)
+    }
+    
+    // Determine the emoji to show - custom emoji takes precedence
+    val displayEmoji = customEmoji ?: selectedPersonality.avatarEmoji
+    
+    // Siri配色 - 基于personality选择颜色
+    val mainColor = when (personalityId) {
+        "ghost" -> Color(0xFFBA68C8)    // 粉紫色
+        "cat" -> Color(0xFFFFB6C1)       // 粉红色
+        "robot" -> Color(0xFF5C6BC0)     // 深蓝色
+        "unicorn" -> Color(0xFF4CAF50)   // 绿色
+        "dragon" -> Color(0xFF4A90D9)    // 蓝色
+        "alien" -> Color(0xFF7E57C2)     // 紫色
+        "dog" -> Color(0xFFFF7043)       // 橙色
+        else -> Color(0xFF0A84FF)       // 默认蓝色
+    }
     val accentColor1 = Color(0xFFBF5AF2)   // 紫色
     val accentColor2 = Color(0xFFFF375F)   // 粉红色
     val accentColor3 = Color(0xFF00D4FF)   // 青色
@@ -478,7 +505,7 @@ fun SiriBall(
                 drawFrontParticles(center, baseRadius * 0.5f)
             }
             
-            // 8. 绘制 Loading (只在 Loading 状态)
+             // 8. 绘制 Loading (只在 Loading 状态)
             if (ballState == StateLoading) {
                  drawArc(
                      color = Color.White,
@@ -490,6 +517,21 @@ fun SiriBall(
                      style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
                  )
             }
+            
+            // 9. 绘制Emoji (只在 Idle 状态且有自定义 emoji 时)
+            if (ballState == StateIdle && displayEmoji.isNotEmpty()) {
+                // 在中心绘制 emoji (这里我们用文字替代，因为 Canvas 不直接支持 emoji)
+                // 实际渲染会在外部 Box 的 Text 组件中处理
+            }
+        }
+        
+        // 在 Canvas 上面显示 emoji (当 Idle 状态且有 emoji 时)
+        if (ballState == StateIdle && displayEmoji.isNotEmpty()) {
+            Text(
+                text = displayEmoji,
+                fontSize = (floatContext.ballSize.value * 0.8f).sp,
+                color = Color.White.copy(alpha = 0.9f)
+            )
         }
     }
 }
