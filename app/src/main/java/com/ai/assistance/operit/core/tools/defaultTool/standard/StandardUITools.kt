@@ -487,6 +487,18 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
     }
 
     protected open suspend fun captureScreenshotToFile(tool: AITool): Pair<String?, Pair<Int, Int>?> {
+        // Hide floating window before capturing screenshot
+        val floatingService = FloatingChatService.getInstance()
+        val wasFloatingVisible = floatingService != null
+        if (wasFloatingVisible) {
+            try {
+                floatingService?.setFloatingWindowVisible(false)
+                delay(100)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Failed to hide floating window", e)
+            }
+        }
+
         return try {
             val screenshotDir = OperitPaths.cleanOnExitDir()
 
@@ -574,6 +586,15 @@ open class StandardUITools(protected val context: Context) : ToolImplementations
         } catch (e: Exception) {
             AppLogger.e(TAG, "captureScreenshotToFile failed", e)
             Pair(null, null)
+        } finally {
+            // Restore floating window visibility
+            if (wasFloatingVisible) {
+                try {
+                    floatingService?.setFloatingWindowVisible(true)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Failed to restore floating window visibility", e)
+                }
+            }
         }
     }
 
