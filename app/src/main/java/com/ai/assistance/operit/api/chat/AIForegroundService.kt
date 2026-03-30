@@ -29,6 +29,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.api.speech.PersonalWakeListener
 import com.ai.assistance.operit.api.speech.SpeechPrerollStore
 import com.ai.assistance.operit.api.speech.SpeechService
@@ -472,6 +474,13 @@ class AIForegroundService : Service() {
             types = ForegroundServiceCompat.buildTypes(dataSync = true)
         )
         startWakeMonitoring()
+        
+        // Initialize Blurr-style overlay system for UI automation
+        val overlayManager = OverlayManager.getInstance(this)
+        OverlayDispatcher.clearAll()
+        overlayManager.startObserving()
+        AppLogger.d(TAG, "Overlay system initialized for UI automation")
+        
         AppLogger.d(TAG, "AI 前台服务已启动。")
     }
 
@@ -685,6 +694,12 @@ class AIForegroundService : Service() {
         isRunning.set(false)
         hideKeepAliveOverlay()
         stopWakeMonitoring()
+        
+        // Clean up Blurr-style overlay system
+        OverlayDispatcher.clearAll()
+        val overlayManager = OverlayManager.getInstance(this)
+        overlayManager.stopObserving()
+        
         AppLogger.d(TAG, "AI 前台服务已销毁。")
     }
 
