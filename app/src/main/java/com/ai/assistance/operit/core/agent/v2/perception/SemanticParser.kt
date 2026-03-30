@@ -8,10 +8,6 @@ data class XmlNode(
     val children: MutableList<XmlNode> = mutableListOf(),
     var parent: XmlNode? = null
 ) {
-    val attributes: MutableMap<String, String> = mutableMapOf(),
-    val children: MutableList<XmlNode> = mutableListOf(),
-    var parent: XmlNode? = null
-) {
 
     override fun toString(): String {
         val text = getVisibleText().let { if (it.isNotBlank()) "text='$it'" else "" }

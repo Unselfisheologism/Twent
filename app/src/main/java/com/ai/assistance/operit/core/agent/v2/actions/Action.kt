@@ -1,25 +1,10 @@
 package com.ai.assistance.operit.core.agent.v2.actions
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.*
 import kotlin.reflect.KClass
 
-// Data class to hold parameter metadata without reflection
 data class ParamSpec(val name: String, val type: KClass<*>, val description: String)
 
-/** 
- * A sealed class representing all possible type-safe commands the agent can execute.
- * It is annotated to use the custom, data-driven ActionSerializer.
- */
-@Serializable(with = Action.ActionSerializer::class)
 sealed class Action {
-    // Each action is a data class (if it has args) or an object (if it doesn't).
-    // Note: Property names here follow Kotlin's camelCase convention.
     data class LongPressElement(val elementId: Int) : Action()
     data class TapElement(val elementId: Int) : Action()
     data object SwitchApp : Action()
@@ -38,57 +23,19 @@ sealed class Action {
     data class AppendFile(val fileName: String, val content: String) : Action()
     data class ReadFile(val fileName: String) : Action()
     data class Done(val success: Boolean, val text: String, val filesToDisplay: List<String>? = null) : Action()
-    // New: Launch an Android AppIntent by name with parameters
     data class LaunchIntent(val intentName: String, val parameters: Map<String, String>) : Action()
+    
+    // Coordinate-based actions
+    data class TapAt(val x: Int, val y: Int) : Action()
+    data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
+    data class DoubleTapAt(val x: Int, val y: Int) : Action()
+    data class Swipe(val startX: Int, val startY: Int, val endX: Int, val endY: Int, val durationMs: Long = 500) : Action()
+    data class SwipeLeft(val pixels: Int = 500) : Action()
+    data class SwipeRight(val pixels: Int = 500) : Action()
+    data class SwipeUp(val pixels: Int = 500) : Action()
+    data class SwipeDown(val pixels: Int = 500) : Action()
+    data class PressKey(val key: String) : Action()
 
-    // --- The Custom Serializer ---
-    // This serializer is now data-driven, using the `allSpecs` map as its source of truth.
-    object ActionSerializer : KSerializer<Action> {
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Action")
-
-        override fun serialize(encoder: Encoder, value: Action) {
-            throw NotImplementedError("Serialization is not supported for this agent.")
-        }
-
-        override fun deserialize(decoder: Decoder): Action {
-            val jsonInput = (decoder as JsonDecoder).decodeJsonElement().jsonObject
-            val actionName = jsonInput.keys.first()
-            val paramsJson = jsonInput[actionName]?.jsonObject
-
-            // Look up the action's specification from our single source of truth.
-            val spec = allSpecs[actionName]
-                ?: throw IllegalArgumentException("Unknown action received from LLM: $actionName")
-
-            val args = mutableMapOf<String, Any?>()
-
-            // If the action has parameters, parse them according to the spec.
-            paramsJson?.let {
-                for (paramSpec in spec.params) {
-                    val paramName = paramSpec.name
-                    val jsonValue = it[paramName]
-                        ?: continue // Allow optional parameters
-
-                    // Convert JSON element to the correct Kotlin type.
-                    val value = when (paramSpec.type) {
-                        Int::class -> jsonValue.jsonPrimitive.int
-                        String::class -> jsonValue.jsonPrimitive.content
-                        Boolean::class -> jsonValue.jsonPrimitive.boolean
-                        List::class -> jsonValue.jsonArray.map { el -> el.jsonPrimitive.content }
-                        Map::class -> jsonValue.jsonObject.mapValues { entry ->
-                            // We coerce all values to string for intent parameter passing
-                            entry.value.jsonPrimitive.content
-                        }
-                        else -> throw IllegalStateException("Unsupported parameter type in Spec: ${paramSpec.type}")
-                    }
-                    args[paramName] = value
-                }
-            }
-            // Use the 'build' lambda from the spec to construct the final, type-safe Action object.
-            return spec.build(args)
-        }
-    }
-
-    // --- Companion Object: The Registry and Single Source of Truth ---
     companion object {
         data class Spec(
             val name: String,
@@ -97,14 +44,21 @@ sealed class Action {
             val build: (args: Map<String, Any?>) -> Action
         )
 
-        // The single source of truth for all actions.
-        // Keys and names are now consistently in snake_case for the LLM.
         private val allSpecs: Map<String, Spec> = mapOf(
             "tap_element" to Spec(
                 name = "tap_element",
                 description = "Tap the element with the specified numeric ID.",
                 params = listOf(ParamSpec("element_id", Int::class, "The numeric ID of the element.")),
                 build = { args -> TapElement(args["element_id"] as Int) }
+            ),
+            "tap" to Spec(
+                name = "tap",
+                description = "Tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> TapAt(args["x"] as Int, args["y"] as Int) }
             ),
             "switch_app" to Spec("switch_app", "Show the App switcher.", emptyList()) { SwitchApp },
             "back" to Spec("back", "Go back to the previous screen.", emptyList()) { Back },
@@ -136,7 +90,7 @@ sealed class Action {
             ),
             "long_press_element" to Spec(
                 name = "long_press_element",
-                description = "Press and hold the element with the specified numeric ID. Useful for context menus, selecting text, etc.",
+                description = "Press and hold the element with the specified numeric ID.",
                 params = listOf(ParamSpec("element_id", Int::class, "The numeric ID of the element to long press.")),
                 build = { args -> LongPressElement(args["element_id"] as Int) }
             ),
@@ -154,7 +108,7 @@ sealed class Action {
             ),
             "tap_element_input_text_and_enter" to Spec(
                 name = "tap_element_input_text_and_enter",
-                description = "Taps an element, inputs text, and presses enter. Useful for search bars.",
+                description = "Taps an element, inputs text, and presses enter.",
                 params = listOf(
                     ParamSpec("index", Int::class, "The numerical index of the input element."),
                     ParamSpec("text", String::class, "The text to be typed into the element.")
@@ -165,25 +119,17 @@ sealed class Action {
                 name = "done",
                 description = "Completes the current task.",
                 params = listOf(
-                    ParamSpec("success", Boolean::class, "True if the task was completed successfully, False otherwise."),
-                    ParamSpec("text", String::class, "A summary of the results or a final message for the user."),
-                    ParamSpec("files_to_display", List::class, "A list of filenames (e.g., ['report.pdf']) to show the user.")
+                    ParamSpec("success", Boolean::class, "True if the task was completed successfully."),
+                    ParamSpec("text", String::class, "A summary of the results.")
                 ),
-                build = { args ->
-                    @Suppress("UNCHECKED_CAST")
-                    Done(
-                        args["success"] as Boolean,
-                        args["text"] as String,
-                        args["files_to_display"] as? List<String>
-                    )
-                }
+                build = { args -> Done(args["success"] as Boolean, args["text"] as String, null) }
             ),
             "write_file" to Spec(
                 name = "write_file",
                 description = "Write content to a file, overwriting existing content.",
                 params = listOf(
-                    ParamSpec("file_name", String::class, "The name of the file (e.g., 'notes.txt')."),
-                    ParamSpec("content", String::class, "The content to write to the file.")
+                    ParamSpec("file_name", String::class, "The name of the file."),
+                    ParamSpec("content", String::class, "The content to write.")
                 ),
                 build = { args -> WriteFile(args["file_name"] as String, args["content"] as String) }
             ),
@@ -202,19 +148,46 @@ sealed class Action {
                 params = listOf(ParamSpec("file_name", String::class, "The name of the file to read.")),
                 build = { args -> ReadFile(args["file_name"] as String) }
             ),
+            "type_text" to Spec(
+                name = "type_text",
+                description = "Type text into a focused input field.",
+                params = listOf(ParamSpec("text", String::class, "The text to type.")),
+                build = { args -> InputText(args["text"] as String) }
+            ),
             "type" to Spec(
                 name = "type",
                 description = "Type text into a focused input field.",
                 params = listOf(ParamSpec("text", String::class, "The text to type.")),
                 build = { args -> InputText(args["text"] as String) }
             ),
-            // New action spec: launch_intent
+            "long_press" to Spec(
+                name = "long_press",
+                description = "Long press at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> LongPressAt(args["x"] as Int, args["y"] as Int, (args["duration_ms"] as? Int ?: 1500).toLong()) }
+            ),
+            "swipe_left" to Spec(
+                name = "swipe_left",
+                description = "Swipe left.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe.")),
+                build = { args -> SwipeLeft(args["pixels"] as Int) }
+            ),
+            "swipe_right" to Spec(
+                name = "swipe_right",
+                description = "Swipe right.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe.")),
+                build = { args -> SwipeRight(args["pixels"] as Int) }
+            ),
             "launch_intent" to Spec(
                 name = "launch_intent",
-                description = "Launch an Android AppIntent by name with parameters. Use this for OS-level actions like Dial, Share, etc.",
+                description = "Launch an Android AppIntent by name with parameters.",
                 params = listOf(
-                    ParamSpec("intent_name", String::class, "The name of the intent to launch (see intents catalog)."),
-                    ParamSpec("parameters", Map::class, "A map of parameter names to their string values as required by the intent.")
+                    ParamSpec("intent_name", String::class, "The name of the intent."),
+                    ParamSpec("parameters", Map::class, "A map of parameter names to values.")
                 ),
                 build = { args ->
                     @Suppress("UNCHECKED_CAST")
@@ -226,23 +199,6 @@ sealed class Action {
             ),
         )
 
-//        /**
-//         * Returns the specifications for all actions, respecting the agent's configuration.
-//         */
-//        fun getAvailableSpecs(config: AgentConfig, infoPool: InfoPool): List<Spec> {
-//            return allSpecs.values.filter { spec ->
-//                when (spec.name) {
-//                    "open_app" -> config.enableDirectAppOpening
-//                    "type" -> infoPool.keyboardPre
-//                    else -> true
-//                }
-//            }
-//        }
-
-        // Add this function inside the companion object in v2/actions/Action.kt
-
-        fun getAllSpecs(): Collection<Spec> {
-            return allSpecs.values
-        }
+        fun getAllSpecs(): Collection<Spec> = allSpecs.values
     }
 }

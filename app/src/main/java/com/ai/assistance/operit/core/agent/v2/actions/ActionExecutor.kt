@@ -392,11 +392,41 @@ class ActionExecutor(private val finger: Finger) {
                 val params = action.parameters
                 ActionResult(error = "Intent '$name' not supported in this version. Parameters: $params")
             }
-        }
-    }
-}
-                    }
+            is Action.TapAt -> {
+                finger.tap(action.x, action.y)
+                ActionResult(longTermMemory = "Tapped at (${action.x}, ${action.y})")
+            }
+            is Action.LongPressAt -> {
+                finger.longPress(action.x, action.y)
+                ActionResult(longTermMemory = "Long pressed at (${action.x}, ${action.y})")
+            }
+            is Action.Swipe -> {
+                finger.swipe(action.startX, action.startY, action.endX, action.endY, action.durationMs.toInt())
+                ActionResult(longTermMemory = "Swiped from (${action.startX}, ${action.startY}) to (${action.endX}, ${action.endY})")
+            }
+            is Action.SwipeUp -> {
+                finger.swipeUp(action.pixels)
+                ActionResult(longTermMemory = "Swiped up ${action.pixels} pixels")
+            }
+            is Action.SwipeDown -> {
+                finger.swipeDown(action.pixels)
+                ActionResult(longTermMemory = "Swiped down ${action.pixels} pixels")
+            }
+            is Action.SwipeLeft -> {
+                finger.swipeLeft(action.pixels)
+                ActionResult(longTermMemory = "Swiped left ${action.pixels} pixels")
+            }
+            is Action.SwipeRight -> {
+                finger.swipeRight(action.pixels)
+                ActionResult(longTermMemory = "Swiped right ${action.pixels} pixels")
+            }
+            is Action.PressKey -> {
+                when (action.key.lowercase()) {
+                    "enter" -> finger.enter()
+                    "back" -> finger.back()
+                    "home" -> finger.home()
                 }
+                ActionResult(longTermMemory = "Pressed key: ${action.key}")
             }
         }
     }
