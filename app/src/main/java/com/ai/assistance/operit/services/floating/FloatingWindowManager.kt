@@ -256,8 +256,18 @@ class FloatingWindowManager(
         view?.let { v ->
             v.visibility = if (windowVisible) View.VISIBLE else View.GONE
             if (windowVisible) {
-                updateViewLayout { params ->
-                    params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                // Maintain non-blocking flags in fullscreen mode
+                if (state.currentMode.value == FloatingMode.FULLSCREEN || state.currentMode.value == FloatingMode.SCREEN_OCR) {
+                    updateViewLayout { params ->
+                        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                    }
+                } else {
+                    updateViewLayout { params ->
+                        params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                    }
                 }
             }
         }
@@ -522,7 +532,11 @@ class FloatingWindowManager(
             FloatingMode.FULLSCREEN, FloatingMode.SCREEN_OCR -> {
                 params.width = WindowManager.LayoutParams.MATCH_PARENT
                 params.height = WindowManager.LayoutParams.MATCH_PARENT
-                params.flags = 0 // Focusable
+                // CRITICAL: Use non-blocking flags so accessibility service can interact with apps behind
+                params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 state.x = 0
                 state.y = 0
             }
@@ -804,7 +818,11 @@ class FloatingWindowManager(
                 TargetParams(width, height, finalX, finalY, flags)
                 }
                 FloatingMode.FULLSCREEN, FloatingMode.SCREEN_OCR -> {
-                val flags = 0 // Remove all flags, making it focusable
+                // CRITICAL: Non-blocking flags so accessibility service can interact with apps behind
+                val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 TargetParams(screenWidth, screenHeight, 0, 0, flags)
             }
             FloatingMode.RESULT_DISPLAY -> {
