@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -73,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.ExperimentalComposeUiApi
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
 import com.ai.assistance.operit.ui.floating.FloatContext
 import com.ai.assistance.operit.ui.floating.FloatingMode
 import kotlin.math.abs
@@ -138,6 +140,9 @@ fun BottomControlBar(
             volumeHistory.add(volumeLevel.coerceIn(0f, 1f))
         }
     }
+
+    // UI Agent Mode state
+    val uiAgentEnabled by UIAgentModeManager.isEnabled.collectAsState()
 
     AnimatedVisibility(
         visible = visible,
@@ -228,6 +233,17 @@ fun BottomControlBar(
                                 floatContext.onModeChange(FloatingMode.SCREEN_OCR)
                             }
                         }
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // UI Agent Mode
+                    GlassyChip(
+                        selected = uiAgentEnabled,
+                        text = stringResource(R.string.floating_ui_agent_mode),
+                        icon = Icons.Default.TouchApp,
+                        showIcon = true,
+                        onClick = { UIAgentModeManager.toggle() }
                     )
                 }
 

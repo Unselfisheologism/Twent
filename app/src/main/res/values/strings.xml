@@ -46,6 +46,7 @@
     <string name="floating_position">位置</string>
     <string name="floating_ocr_selected">已圈选</string>
     <string name="floating_ocr_select">圈选识别</string>
+    <string name="floating_ui_agent_mode">UI代理</string>
     <string name="floating_input_or_hold_voice">输入或者长按语音</string>
     <string name="floating_voice_call">语音通话</string>
     <string name="floating_send">发送</string>

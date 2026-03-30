@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.core.agent.UIAgentModeManager
 import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.SpeechServicesPreferences
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
@@ -175,6 +176,18 @@ fun FloatingFullscreenMode(floatContext: FloatContext) {
 
     // UI 布局
     val effectiveWaveActive = viewModel.isWaveActive || autoEnteringVoice
+    // Hide chat messages after user sends message OR when UI Agent is running - show only input box
+    val uiAgentActive by UIAgentModeManager.isEnabled.collectAsState()
+    val hideChatDuringProcessing = (viewModel.userMessageSent || uiAgentActive) && !effectiveWaveActive
+    
+    // Track when AI message arrives to reset the UI
+    val lastMessageSender = floatContext.messages.lastOrNull()?.sender
+    LaunchedEffect(lastMessageSender) {
+        // Reset when AI sends a message
+        if (lastMessageSender == "ai") {
+            viewModel.userMessageSent = false
+        }
+    }
     val fullscreenBgAlpha by animateFloatAsState(
         targetValue = if (autoEnteringVoice) 0f else 0.22f,
         animationSpec = tween(durationMillis = 260),
@@ -326,6 +339,7 @@ fun FloatingFullscreenMode(floatContext: FloatContext) {
             }
             
             // 消息显示区域 - 根据模式切换位置
+            // When userMessageSent, hide chat messages and show only input box
             AnimatedContent(
                 targetState = effectiveWaveActive,
                 transitionSpec = {
@@ -356,12 +370,15 @@ fun FloatingFullscreenMode(floatContext: FloatContext) {
                             .padding(horizontal = 16.dp)
                     }
 
-                    MessageDisplay(
-                        messages = floatContext.messages,
-                        speechPreviewText = if (viewModel.isRecording) viewModel.userMessage else (pendingSpeechPreview ?: ""),
-                        showSpeechOverlay = viewModel.isRecording || pendingSpeechPreview != null,
-                        modifier = modifier
-                    )
+                    // Hide MessageDisplay when user sent message and AI is processing
+                    if (!hideChatDuringProcessing) {
+                        MessageDisplay(
+                            messages = floatContext.messages,
+                            speechPreviewText = if (viewModel.isRecording) viewModel.userMessage else (pendingSpeechPreview ?: ""),
+                            showSpeechOverlay = viewModel.isRecording || pendingSpeechPreview != null,
+                            modifier = modifier
+                        )
+                    }
                 }
             }
         }

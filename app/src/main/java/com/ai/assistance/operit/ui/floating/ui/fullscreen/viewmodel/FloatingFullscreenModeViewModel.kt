@@ -38,8 +38,16 @@ class FloatingFullscreenModeViewModel(
     var showBottomControls by mutableStateOf(true)
     var isEditMode by mutableStateOf(false)
     var editableText by mutableStateOf("")
-    var inputText by mutableStateOf("")
+    var inputText by mutableStateOf("") {
+        // Reset userMessageSent when user starts typing a new message
+        if (value.isNotEmpty()) {
+            userMessageSent = false
+        }
+    }
     var showDragHints by mutableStateOf(false)
+    
+    // Track if user has sent a message - used to hide chat UI during AI processing
+    var userMessageSent by mutableStateOf(false)
 
     var attachScreenContent by mutableStateOf(false)
     var attachNotifications by mutableStateOf(false)
@@ -171,6 +179,7 @@ class FloatingFullscreenModeViewModel(
 
     private fun handleStaticResponse(content: String, cleaners: List<String>) {
         aiMessage = content
+        userMessageSent = false  // Re-enable chat UI after AI responds
         trySpeak(content, false, cleaners)
     }
 
@@ -418,6 +427,7 @@ class FloatingFullscreenModeViewModel(
         attachNotifications = false
         attachLocation = false
         hasOcrSelection = false
+        userMessageSent = true  // Mark that user sent a message - hide chat UI
         aiMessage = context.getString(R.string.floating_thinking)
 
         coroutineScope.launch {

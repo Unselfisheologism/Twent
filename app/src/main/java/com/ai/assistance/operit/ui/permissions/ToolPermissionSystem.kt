@@ -61,8 +61,8 @@ class ToolPermissionSystem private constructor(private val context: Context) {
         // DataStore keys
         private val MASTER_SWITCH = stringPreferencesKey("master_switch")
         
-        // Default permission setting
-        private val DEFAULT_MASTER_SWITCH = PermissionLevel.ASK.name
+        // Default permission setting - auto-allow all tools by default
+        private val DEFAULT_MASTER_SWITCH = PermissionLevel.ALLOW.name
         
         @Volatile
         private var INSTANCE: ToolPermissionSystem? = null

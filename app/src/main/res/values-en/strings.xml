@@ -39,6 +39,7 @@
     <string name="floating_position">Position</string>
     <string name="floating_ocr_selected">Selected</string>
     <string name="floating_ocr_select">Select to Recognize</string>
+    <string name="floating_ui_agent_mode">UI Agent</string>
     <string name="floating_input_or_hold_voice">Input or hold for voice</string>
     <string name="floating_voice_call">Voice Call</string>
     <string name="floating_send">Send</string>
