@@ -38,12 +38,7 @@ class FloatingFullscreenModeViewModel(
     var showBottomControls by mutableStateOf(true)
     var isEditMode by mutableStateOf(false)
     var editableText by mutableStateOf("")
-    var inputText by mutableStateOf("") {
-        // Reset userMessageSent when user starts typing a new message
-        if (value.isNotEmpty()) {
-            userMessageSent = false
-        }
-    }
+    var inputText by mutableStateOf("")
     var showDragHints by mutableStateOf(false)
     
     // Track if user has sent a message - used to hide chat UI during AI processing
