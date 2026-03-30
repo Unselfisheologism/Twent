@@ -10,6 +10,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.core.tools.StringResultData
 import com.ai.assistance.operit.core.tools.SimplifiedUINode
@@ -29,6 +30,110 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
 
     private val service: OperitAutomationService?
         get() = OperitAutomationService.instance
+
+    /**
+     * Captures current screen context (page info + current activity) before UI actions.
+     * This is called automatically before each UI automation tool execution.
+     * Returns a formatted string with screen context, or empty string if capture fails.
+     * Hides floating window during capture to get actual screen content.
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private suspend fun captureScreenContext(): String {
+        val svc = service ?: return ""
+        
+        // Hide floating window before capturing
+        val floatingService = FloatingChatService.getInstance()
+        val wasFloatingVisible = floatingService != null
+        if (wasFloatingVisible) {
+            try {
+                floatingService?.setFloatingWindowVisible(false)
+                delay(100)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to hide floating window", e)
+            }
+        }
+        
+        return try {
+            // Get current activity by filtering out our own windows
+            val allWindows = svc.windows
+            val ownPackageName = svc.packageName
+            val targetWindow = allWindows
+                .filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
+                .filter { 
+                    val windowPackageName = it.root?.packageName?.toString()
+                    windowPackageName != ownPackageName
+                }
+                .maxByOrNull {
+                    val bounds = Rect()
+                    it.getBoundsInScreen(bounds)
+                    bounds.width() * bounds.height()
+                }
+            
+            val currentActivity = if (targetWindow != null) {
+                targetWindow.root?.packageName?.toString() ?: svc.getCurrentActivityName()
+            } else {
+                svc.getCurrentActivityName()
+            }
+            
+            // Get page info
+            val rawData = svc.getScreenAnalysisData()
+            val rootNode = rawData.rootNode
+            
+            val pageSummary = if (rootNode != null) {
+                val nodes = mutableListOf<SimplifiedUINode>()
+                extractNodes(rootNode, nodes, 0)
+                val simplifiedNodes = nodes.take(30) // Limit for conciseness
+                buildString {
+                    appendLine("Screen Context:")
+                    appendLine("- App: $currentActivity")
+                    appendLine("- Visible elements (${simplifiedNodes.size}):")
+                    simplifiedNodes.forEach { node ->
+                        val text = node.text?.take(40) ?: ""
+                        val desc = node.contentDesc?.take(40) ?: ""
+                        val clickable = if (node.isClickable) "[ clickable ]" else ""
+                        if (text.isNotEmpty() || desc.isNotEmpty()) {
+                            appendLine("  • $text $desc $clickable".trim())
+                        }
+                    }
+                }
+            } else {
+                "Screen Context: App=$currentActivity (no UI elements detected)"
+            }
+            
+            pageSummary
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to capture screen context", e)
+            ""
+        } finally {
+            // Restore floating window visibility
+            if (wasFloatingVisible) {
+                try {
+                    floatingService?.setFloatingWindowVisible(true)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to restore floating window visibility", e)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Wraps a tool result with screen context information.
+     * The screen context is prepended to make it visible to the AI agent.
+     */
+    private fun wrapResultWithScreenContext(toolResult: ToolResult, screenContext: String): ToolResult {
+        if (screenContext.isEmpty()) return toolResult
+        
+        val currentResult = toolResult.result.toString()
+        val combinedResult = if (currentResult.isNotEmpty()) {
+            "$screenContext\n\nAction Result:\n$currentResult"
+        } else {
+            screenContext
+        }
+        
+        return toolResult.copy(
+            result = StringResultData(combinedResult)
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.R)
     override suspend fun getPageInfo(tool: AITool): ToolResult {
@@ -114,14 +219,19 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         try {
             svc.showTapIndicator(x, y)
             svc.clickOnPoint(x.toFloat(), y.toFloat())
             AppLogger.d(TAG, "tap at ($x, $y)")
-            return ToolResult(toolName = tool.name, success = true, result = StringResultData("Tapped at ($x, $y)"))
+            val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Tapped at ($x, $y)"))
+            return wrapResultWithScreenContext(result, screenContext)
         } catch (e: Exception) {
             AppLogger.e(TAG, "tap failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            return wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -136,13 +246,18 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         try {
             svc.longClickOnPoint(x.toFloat(), y.toFloat())
             AppLogger.d(TAG, "longPress at ($x, $y) for ${durationMs}ms")
-            return ToolResult(toolName = tool.name, success = true, result = StringResultData("Long pressed at ($x, $y)"))
+            val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Long pressed at ($x, $y)"))
+            return wrapResultWithScreenContext(result, screenContext)
         } catch (e: Exception) {
             AppLogger.e(TAG, "longPress failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            return wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -156,6 +271,9 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         if (svc == null) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
+
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
 
         return try {
             val rootNode = svc.getScreenAnalysisData().rootNode
@@ -171,13 +289,16 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
                 svc.clickOnPoint(centerX.toFloat(), centerY.toFloat())
 
                 targetNode.recycle()
-                return ToolResult(toolName = tool.name, success = true, result = StringResultData("Clicked element"))
+                val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Clicked element"))
+                wrapResultWithScreenContext(result, screenContext)
             } else {
-                return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Element not found")
+                val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Element not found")
+                wrapResultWithScreenContext(result, screenContext)
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "clickElement failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -235,13 +356,18 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         try {
             svc.typeTextInFocusedField(text)
             AppLogger.d(TAG, "typed text: $text")
-            return ToolResult(toolName = tool.name, success = true, result = StringResultData("Typed: $text"))
+            val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Typed: $text"))
+            return wrapResultWithScreenContext(result, screenContext)
         } catch (e: Exception) {
             AppLogger.e(TAG, "setInputText failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            return wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -254,17 +380,22 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         return try {
-            when (key.lowercase()) {
+            val result = when (key.lowercase()) {
                 "back" -> { svc.performBack(); ToolResult(toolName = tool.name, success = true, result = StringResultData("Pressed back")) }
                 "home" -> { svc.performHome(); ToolResult(toolName = tool.name, success = true, result = StringResultData("Pressed home")) }
                 "enter", "return" -> { svc.performEnter(); ToolResult(toolName = tool.name, success = true, result = StringResultData("Pressed enter")) }
                 "recents", "switch" -> { svc.performRecents(); ToolResult(toolName = tool.name, success = true, result = StringResultData("Opened recents")) }
                 else -> ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Unknown key: $key")
             }
+            wrapResultWithScreenContext(result, screenContext)
         } catch (e: Exception) {
             AppLogger.e(TAG, "pressKey failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -281,13 +412,18 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         try {
             svc.swipe(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), duration)
             AppLogger.d(TAG, "swiped from ($startX, $startY) to ($endX, $endY)")
-            return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped"))
+            val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped"))
+            return wrapResultWithScreenContext(result, screenContext)
         } catch (e: Exception) {
             AppLogger.e(TAG, "swipe failed", e)
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            return wrapResultWithScreenContext(result, screenContext)
         }
     }
 
@@ -300,6 +436,9 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -310,7 +449,8 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         val endY = startY
 
         svc.swipe(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), duration)
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped left $pixels pixels"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped left $pixels pixels"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun swipeRight(tool: AITool): ToolResult {
@@ -322,6 +462,9 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -332,7 +475,8 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         val endY = startY
 
         svc.swipe(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), duration)
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped right $pixels pixels"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped right $pixels pixels"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun swipeUp(tool: AITool): ToolResult {
@@ -344,6 +488,9 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -354,7 +501,8 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         val endY = startY - pixels
 
         svc.swipe(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), duration)
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped up $pixels pixels"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped up $pixels pixels"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun swipeDown(tool: AITool): ToolResult {
@@ -366,6 +514,9 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -376,7 +527,8 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         val endY = startY + pixels
 
         svc.swipe(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), duration)
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped down $pixels pixels"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Swiped down $pixels pixels"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun scrollDown(tool: AITool): ToolResult = swipeDown(tool)
@@ -393,12 +545,16 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         svc.clickOnPoint(x.toFloat(), y.toFloat())
         mainHandler.postDelayed({
             svc.clickOnPoint(x.toFloat(), y.toFloat())
         }, 200)
 
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Double tapped at ($x, $y)"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Double tapped at ($x, $y)"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun hold(tool: AITool): ToolResult = longPress(tool)
@@ -411,30 +567,46 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
 
         val resolvedPackage = APP_PACKAGES[packageName] ?: packageName
 
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+
         return try {
             val intent = context.packageManager.getLaunchIntentForPackage(resolvedPackage)
             if (intent != null) {
                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                return ToolResult(toolName = tool.name, success = true, result = StringResultData("Opened: $resolvedPackage"))
+                val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Opened: $resolvedPackage"))
+                wrapResultWithScreenContext(result, screenContext)
             } else {
-                return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "App not found: $resolvedPackage")
+                val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "App not found: $resolvedPackage")
+                wrapResultWithScreenContext(result, screenContext)
             }
         } catch (e: Exception) {
-            return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            val result = ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+            wrapResultWithScreenContext(result, screenContext)
         }
     }
 
     override suspend fun back(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
+        
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+        
         svc.performBack()
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Back"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Back"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun home(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
+        
+        // Capture screen context before action
+        val screenContext = captureScreenContext()
+        
         svc.performHome()
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Home"))
+        val result = ToolResult(toolName = tool.name, success = true, result = StringResultData("Home"))
+        return wrapResultWithScreenContext(result, screenContext)
     }
 
     override suspend fun getCurrentActivity(tool: AITool): ToolResult {
