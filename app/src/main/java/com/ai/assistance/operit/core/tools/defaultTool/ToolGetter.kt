@@ -45,18 +45,10 @@ object ToolGetter {
      * @return 根据实际Android权限级别的UI工具实现（优先检查系统级无障碍权限）
      */
     fun getUITools(context: Context): StandardUITools {
-        // 直接检查内部偏好设置，不再依赖系统检查（系统检查有时失败）
-        val level = androidPermissionPreferences.getPreferredPermissionLevel()
-        AppLogger.d("ToolGetter", "getUITools: permission level = $level")
-        
-        return when (level) {
-            AndroidPermissionLevel.ROOT -> RootUITools(context).also { AppLogger.d("ToolGetter", "Using RootUITools") }
-            AndroidPermissionLevel.ADMIN -> AdminUITools(context).also { AppLogger.d("ToolGetter", "Using AdminUITools") }
-            AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context).also { AppLogger.d("ToolGetter", "Using DebuggerUITools") }
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools") }
-            AndroidPermissionLevel.STANDARD -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools") }
-            null -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools (default)") }
-        }
+        // Always use AccessibilityUITools - it will try to use the AccessibilityService APIs
+        // and fail gracefully at runtime if the service isn't connected (with "Accessibility service not available")
+        // This bypasses the permission level check entirely
+        return AccessibilityUITools(context)
     }
 
     /**
