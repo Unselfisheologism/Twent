@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/blurrRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/blurr_input_background">
+
+        <EditText
+            android:id="@+id/blurrInputField"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Tap to speak or type..."
+            android:textColorHint="#80FFFFFF"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:inputType="text"
+            android:imeOptions="actionSend"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/blurrMicButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/blurr_mic_button_background"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:contentDescription="Voice input"
+            android:scaleType="centerInside"
+            android:padding="12dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

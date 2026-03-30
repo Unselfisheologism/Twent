@@ -7,17 +7,8 @@ import android.os.Bundle
 import android.service.voice.VoiceInteractionSession
 import android.service.voice.VoiceInteractionSessionService
 import com.ai.assistance.operit.util.AppLogger
-import android.view.View
-import android.widget.FrameLayout
-import com.ai.assistance.operit.services.FloatingChatService
-import com.ai.assistance.operit.ui.floating.FloatingMode
+import com.ai.assistance.operit.services.BlurrAssistantService
 
-/**
- * Operit 语音交互会话服务
- * 
- * 当用户触发助手时（如长按 Home 键），系统会创建这个服务的会话实例。
- * 我们在这里启动悬浮窗来提供 AI 助手功能。
- */
 class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
     
     companion object {
@@ -29,9 +20,6 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
         return OperitVoiceInteractionSession(this)
     }
     
-    /**
-     * Operit 的语音交互会话实现
-     */
     private class OperitVoiceInteractionSession(context: Context) : VoiceInteractionSession(context) {
         
         companion object {
@@ -42,10 +30,8 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onShow(args, showFlags)
             AppLogger.d(TAG, "Session show requested with flags: $showFlags")
             
-            // 启动悬浮窗服务来提供 AI 助手功能
-            startFloatingChatService()
+            startBlurrAssistantService()
             
-            // 立即结束会话，因为我们使用悬浮窗而不是系统覆盖层
             finish()
         }
         
@@ -60,24 +46,21 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onDestroy()
         }
         
-        /**
-         * 启动悬浮窗聊天服务
-         */
-        private fun startFloatingChatService() {
+        private fun startBlurrAssistantService() {
             try {
-                val intent = Intent(context, FloatingChatService::class.java).apply {
-                    putExtra("INITIAL_MODE", FloatingMode.FULLSCREEN.name)
-                    putExtra(FloatingChatService.EXTRA_AUTO_ENTER_VOICE_CHAT, true)
-                    putExtra(FloatingChatService.EXTRA_WAKE_LAUNCHED, true)
+                val intent = Intent(context, BlurrAssistantService::class.java).apply {
+                    action = BlurrAssistantService.ACTION_START
+                    putExtra(BlurrAssistantService.EXTRA_TASK, "Help me automate the current screen")
+                    putExtra(BlurrAssistantService.EXTRA_MAX_STEPS, 100)
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent)
                 } else {
                     context.startService(intent)
                 }
-                AppLogger.d(TAG, "Floating chat service started")
+                AppLogger.d(TAG, "Blurr assistant service started")
             } catch (e: Exception) {
-                AppLogger.e(TAG, "Failed to start floating chat service", e)
+                AppLogger.e(TAG, "Failed to start blurr assistant service", e)
             }
         }
     }
