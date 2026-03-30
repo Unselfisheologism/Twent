@@ -836,15 +836,19 @@ class OperitAutomationService : AccessibilityService() {
         val floatingService = com.ai.assistance.operit.services.FloatingChatService.getInstance()
         val wasFloatingVisible = floatingService != null
         
-        try {
-            // Temporarily hide the floating window
-            if (wasFloatingVisible) {
+        // Temporarily hide the floating window
+        if (wasFloatingVisible) {
+            try {
                 floatingService?.setFloatingWindowVisible(false)
                 // Small delay to ensure the window is hidden before capture
                 delay(100)
+            } catch (e: Exception) {
+                Log.e("ScreenshotUtil", "Failed to hide floating window", e)
             }
-            
-            return suspendCancellableCoroutine { continuation ->
+        }
+        
+        return try {
+            suspendCancellableCoroutine { continuation ->
                 val executor = ContextCompat.getMainExecutor(this)
 
                 takeScreenshot(
