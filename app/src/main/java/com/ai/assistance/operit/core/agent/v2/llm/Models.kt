@@ -1,27 +1,15 @@
 package com.ai.assistance.operit.core.agent.v2.llm
 
-import kotlinx.serialization.Serializable
-
 enum class MessageRole {
     USER,
     MODEL,
     TOOL
 }
 
-@Serializable
-sealed interface ContentPart
+data class TextPart(val text: String)
 
-@Serializable
-data class TextPart(val text: String) : ContentPart
-
-@Serializable
 data class GeminiMessage(
     val role: MessageRole,
-    val parts: List<ContentPart>,
+    val parts: List<Any>,
     val toolCode: String? = null
-) {
-    constructor(text: String) : this(
-        role = MessageRole.USER,
-        parts = listOf(TextPart(text))
-    )
-}
+)

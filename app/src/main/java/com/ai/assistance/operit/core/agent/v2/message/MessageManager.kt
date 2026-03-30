@@ -1,102 +1,73 @@
 package com.ai.assistance.operit.core.agent.v2.message
 
 import android.content.Context
-import com.ai.assistance.operit.core.agent.v2.AgentModels.ActionResult
-import com.ai.assistance.operit.core.agent.v2.AgentModels.AgentOutput
-import com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings
-import com.ai.assistance.operit.core.agent.v2.AgentModels.AgentStepInfo
-import com.ai.assistance.operit.core.agent.v2.AgentModels.ScreenState
-import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
-import android.os.Build
-import androidx.annotation.RequiresApi
+import com.ai.assistance.operit.core.agent.v2.AgentOutput
+import com.ai.assistance.operit.core.agent.v2.AgentSettings
+import com.ai.assistance.operit.core.agent.v2.AgentStepInfo
+import com.ai.assistance.operit.core.agent.v2.ScreenState
+import com.ai.assistance.operit.core.agent.v2.ActionResult
 
-/**
- * Manages the agent's short-term memory, including conversation history and prompt construction.
- * This class is the central hub for managing the state that gets sent to the LLM.
- *
- * @param context The Android application context.
- * @param task The initial user request or task for the agent.
- * @param fileSystem An instance of the agent's file system.
- * @param settings The agent's configuration settings.
- * @param sensitiveData A map of placeholder keys to sensitive string values to be filtered from prompts.
- * @param initialState An optional initial state to resume from a previous session.
- */
 class MemoryManager(
-    context: Context,
+    private val context: Context,
     private var task: String,
-    private val fileSystem: FileSystem,
-    private val settings: AgentSettings,
-    private val sensitiveData: Map<String, String>? = null,
-    initialState: MemoryState = MemoryState()
+    private val fileSystem: com.ai.assistance.operit.core.agent.v2.fs.FileSystem,
+    private val settings: AgentSettings
 ) {
-    val state: MemoryState = initialState
+    private val historyItems = mutableListOf<HistoryItem>()
+    private var systemMessage: String = ""
+    private var stateMessage: String = ""
+    private val contextMessages = mutableListOf<GeminiMessage>()
 
     init {
-        // On initialization, create and set the system message if it doesn't already exist.
-        if (state.history.systemMessage == null) {
-            val systemPromptLoader = SystemPromptLoader(context)
-            val systemMessage = systemPromptLoader.getSystemMessage(settings)
-            state.history.systemMessage = filterSensitiveData(systemMessage)
-        }
+        systemMessage = buildSystemPrompt()
     }
 
-    /**
-     * The primary method to update the memory and generate the next prompt.
-     * This should be called once per agent step.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun createStateMessage(
-        modelOutput: AgentOutput?,
-        result: List<ActionResult>?,
-        stepInfo: AgentStepInfo?,
-        screenState: ScreenState
-    ) {
-        // 1. Update the structured history with the outcome of the last step.
-        updateHistory(modelOutput, result, stepInfo)
+    private fun buildSystemPrompt(): String {
+        return """
+You are an automation agent that controls an Android phone. Your ONLY output format is JSON. NO plain text.
 
-        // 2. Build the arguments for the prompt builder.
-        val builderArgs = UserMessageBuilder.Args(
-            task = this.task,
-            screenState = screenState,
-            fileSystem = this.fileSystem,
-            agentHistoryDescription = getAgentHistoryDescription(),
-            readStateDescription = state.readStateDescription,
-            stepInfo = stepInfo,
-            sensitiveDataDescription = getSensitiveDataDescription(),
-            availableFilePaths = null // Assuming we get this from fileSystem or elsewhere
-        )
+ABSOLUTE RULES:
+1. OUTPUT MUST BE VALID JSON - Nothing else
+2. START with "{" and END with "}"
+3. Every response MUST have an "action" array
 
-        // 3. Construct the new user message using the builder.
-        var stateMessage = UserMessageBuilder.build(builderArgs)
-        stateMessage = filterSensitiveData(stateMessage)
+JSON RESPONSE FORMAT:
+{
+  "thinking": "Brief reasoning",
+  "evaluationPreviousGoal": "What happened from previous action",
+  "memory": "What to remember",
+  "nextGoal": "What you plan to do",
+  "action": [{"tap": {"x": 500, "y": 800}}]
+}
 
-        // 4. Update the history with the new state message, clearing old context.
-        state.history.stateMessage = stateMessage
-        state.history.contextMessages.clear()
+AVAILABLE ACTIONS:
+- {"tap": {"x": 500, "y": 800}}
+- {"long_press": {"x": 500, "y": 800}}
+- {"type_text": {"text": "hello"}}
+- {"swipe_up": {"pixels": 500}}
+- {"swipe_down": {"pixels": 500}}
+- {"open_app": {"package_name": "com.whatsapp"}}
+- {"back": {}}
+- {"home": {}}
+- {"switch_app": {}}
+- {"wait": {}}
+- {"done": {"success": true, "message": "completed"}}
+- {"speak": {"text": "message"}}
+
+Now execute the user's task.
+        """.trimIndent()
     }
 
-    /**
-     * Adds a new task, replacing the old one, and records this change in the history.
-     */
     fun addNewTask(newTask: String) {
         this.task = newTask
-
-        // A system notification item only needs the 'systemMessage' field.
-        // The other fields are nullable and will default to null, which is correct.
-        val taskUpdateItem = HistoryItem(
-            stepNumber = 0,
-            systemMessage = "<user_request> added: $newTask"
-        )
-
-        state.agentHistoryItems.add(taskUpdateItem)
+        historyItems.add(HistoryItem(stepNumber = 0, systemMessage = "Task: $newTask"))
     }
 
-    fun addContextMessage(message: LlmMessage){
-        //TODO implement filtering here too
-        state.history.contextMessages.add(
-            com.ai.assistance.operit.core.agent.v2.message.GeminiMessage(
+    fun addContextMessage(message: LlmMessage) {
+        contextMessages.add(
+            GeminiMessage(
                 role = when (message.role) {
                     MessageRole.SYSTEM -> "system"
                     MessageRole.USER -> "user"
@@ -107,117 +78,68 @@ class MemoryManager(
         )
     }
 
-    /**
-     * Returns the complete list of messages ready to be sent to the LLM.
-     */
     fun getMessages(): List<LlmMessage> {
-        val geminiMessages = state.history.getMessages()
-        return geminiMessages.map { gm ->
-            LlmMessage(
+        val result = mutableListOf<LlmMessage>()
+        result.add(LlmMessage(MessageRole.SYSTEM, systemMessage))
+        
+        if (stateMessage.isNotEmpty()) {
+            result.add(LlmMessage(MessageRole.USER, stateMessage))
+        }
+        
+        contextMessages.forEach { gm ->
+            result.add(LlmMessage(
                 role = when (gm.role) {
                     "system" -> MessageRole.SYSTEM
                     "user" -> MessageRole.USER
                     else -> MessageRole.ASSISTANT
                 },
                 content = gm.text
-            )
+            ))
         }
+        
+        return result
     }
 
-    /**
-     * Processes the results of the last step and adds a new `HistoryItem` to the state.
-     */
-    private fun updateHistory(
+    fun createStateMessage(
         modelOutput: AgentOutput?,
         result: List<ActionResult>?,
-        stepInfo: AgentStepInfo?
+        stepInfo: AgentStepInfo?,
+        screenState: ScreenState
     ) {
-        // Clear the one-time read state from the previous turn.
-        state.readStateDescription = ""
-
-        val actionResultsText = result?.mapIndexedNotNull { index, actionResult ->
-            // Populate the one-time read state if necessary
-            if (actionResult.includeExtractedContentOnlyOnce && !actionResult.extractedContent.isNullOrBlank()) {
-                state.readStateDescription += actionResult.extractedContent + "\n"
+        val historyText = buildHistoryDescription()
+        
+        stateMessage = buildString {
+            append("Current Task: $task\n")
+            append("Step: ${stepInfo?.stepNumber ?: 1}/${stepInfo?.maxSteps ?: 150}\n\n")
+            
+            append("Screen State:\n")
+            append("Activity: ${screenState.activityName}\n")
+            append("Keyboard: ${screenState.isKeyboardOpen}\n\n")
+            append("UI Elements:\n${screenState.uiRepresentation}\n\n")
+            
+            if (historyText.isNotEmpty()) {
+                append("History:\n$historyText\n\n")
             }
-
-            // Format the action result for long-term history
-            when {
-                !actionResult.longTermMemory.isNullOrBlank() -> "Action ${index + 1}: ${actionResult.longTermMemory}"
-                !actionResult.extractedContent.isNullOrBlank() && !actionResult.includeExtractedContentOnlyOnce -> "Action ${index + 1}: ${actionResult.extractedContent}"
-                !actionResult.error.isNullOrBlank() -> "Action ${index + 1}: ERROR - ${actionResult.error.take(200)}"
-                else -> null
-            }
-        }?.joinToString("\n")
-
-        val historyItem = if (modelOutput == null) {
-            if(stepInfo?.stepNumber != 1){
-                HistoryItem(stepNumber = stepInfo?.stepNumber, error = "Agent failed to produce a valid output.")
-            }else{
-                HistoryItem(stepNumber = stepInfo.stepNumber, error = "Agent not asked to create output yet")
-            }
-        } else {
-            HistoryItem(
-                stepNumber = stepInfo?.stepNumber,
-                evaluation = modelOutput.evaluationPreviousGoal,
-                memory = modelOutput.memory,
-                nextGoal = modelOutput.nextGoal,
-                actionResults = actionResultsText?.let { "Action Results:\n$it" }
-            )
-        }
-        state.agentHistoryItems.add(historyItem)
-    }
-
-    /**
-     * Generates the <agent_history> string, truncating it if it exceeds `maxHistoryItems`.
-     */
-    private fun getAgentHistoryDescription(): String {
-        val items = state.agentHistoryItems
-        val maxItems = settings.maxHistoryItems ?: items.size
-
-        if (items.size <= maxItems) {
-            return items.joinToString("\n") { it.toPromptString() }
-        }
-
-        val omittedCount = items.size - maxItems
-        val recentItemsCount = maxItems - 1
-
-        val result = mutableListOf<String>()
-        result.add(items.first().toPromptString()) // Always include the first item
-        result.add("<sys>[... $omittedCount previous steps omitted...]</sys>")
-        result.addAll(items.takeLast(recentItemsCount).map { it.toPromptString() })
-
-        return result.joinToString("\n")
-    }
-
-    /**
-     * Creates a description of available sensitive data placeholders.
-     * This is simplified as the URL-matching logic is not applicable.
-     */
-    private fun getSensitiveDataDescription(): String? {
-        val placeholders = sensitiveData?.keys
-        if (placeholders.isNullOrEmpty()) return null
-
-        return "Here are placeholders for sensitive data:\n${placeholders.joinToString()}\nTo use them, write <secret>the placeholder name</secret>"
-    }
-
-    /**
-     * Scrubs sensitive data from a message before sending it to the LLM.
-     */
-    private fun filterSensitiveData(message: GeminiMessage): GeminiMessage {
-        if (sensitiveData.isNullOrEmpty()) return message
-
-        val newParts = message.parts.map { part ->
-            if (part is TextPart) {
-                var newText = part.text
-                sensitiveData.forEach { (key, value) ->
-                    newText = newText.replace(value, "<secret>$key</secret>")
+            
+            result?.let { results ->
+                append("Last Result:\n")
+                results.forEach { res ->
+                    res.longTermMemory?.let { append("$it\n") }
+                    res.error?.let { append("Error: $it\n") }
                 }
-                TextPart(newText)
-            } else {
-                part
             }
+            
+            append("What should you do next? (Respond in JSON)")
         }
-        return message.copy(parts = newParts)
+    }
+
+    private fun buildHistoryDescription(): String {
+        return historyItems.takeLast(5).joinToString("\n") { item ->
+            val parts = mutableListOf<String>()
+            item.evaluation?.let { parts.add("Eval: $it") }
+            item.memory?.let { parts.add("Memory: $it") }
+            item.nextGoal?.let { parts.add("Goal: $it") }
+            parts.joinToString(" | ")
+        }
     }
 }

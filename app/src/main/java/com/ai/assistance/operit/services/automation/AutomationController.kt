@@ -4,30 +4,13 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.R
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
-import com.ai.assistance.operit.core.agent.Agent
 import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
-import com.ai.assistance.operit.core.agent.actions.Action
-import com.ai.assistance.operit.core.agent.actions.ActionExecutor
-import com.ai.assistance.operit.core.agent.fs.FileSystem
-import com.ai.assistance.operit.core.agent.llm.LlmApi
-import com.ai.assistance.operit.core.agent.llm.LlmMessage
-import com.ai.assistance.operit.core.agent.message.MessageManager
-import com.ai.assistance.operit.core.agent.model.AgentOutput
-import com.ai.assistance.operit.core.agent.model.AgentSettings
-import com.ai.assistance.operit.core.agent.perception.Perception
-import com.ai.assistance.operit.core.agent.perception.SemanticParser
-import com.ai.assistance.operit.core.agent.perception.ScreenAnalysis
-import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.llmprovider.AIService
-import com.ai.assistance.operit.data.model.ChatMessage
-import com.ai.assistance.operit.core.agent.llm.MessageRole
-import com.ai.assistance.operit.data.preferences.UserPreferencesManager
-import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
+import com.ai.assistance.operit.core.agent.v2.message.MessageManager
+import com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
 
 @RequiresApi(Build.VERSION_CODES.R)
 class AutomationController private constructor(private val context: Context) {
@@ -47,9 +30,9 @@ class AutomationController private constructor(private val context: Context) {
 
     private val eyes by lazy { Eyes(context) }
     private val finger by lazy { Finger(context) }
-    private val semanticParser by lazy { SemanticParser() }
-    private val perception by lazy { Perception(eyes, semanticParser) }
-    private val fileSystem by lazy { FileSystem(context) }
+    private val semanticParser by lazy { com.ai.assistance.operit.core.agent.v2.perception.SemanticParser() }
+    private val perception by lazy { com.ai.assistance.operit.core.agent.v2.perception.Perception(eyes, semanticParser) }
+    private val fileSystem by lazy { com.ai.assistance.operit.core.agent.v2.fs.FileSystem(context) }
     
     private var agent: V2Agent? = null
     private var isRunning = false
@@ -307,7 +290,7 @@ Now respond with JSON only. No text.
     /**
      * Get current screen analysis
      */
-    suspend fun getScreenAnalysis(): ScreenAnalysis? {
+    suspend fun getScreenAnalysis(): com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis? {
         return try {
             perception.analyze()
         } catch (e: Exception) {

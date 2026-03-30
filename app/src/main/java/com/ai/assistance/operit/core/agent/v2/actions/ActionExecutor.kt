@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Finger
+import com.ai.assistance.operit.core.agent.v2.AgentModels.ActionResult
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.overlay.OverlayDispatcher
@@ -214,24 +215,26 @@ class ActionExecutor(private val finger: Finger) {
 //                }
 //            }
             is Action.Speak -> {
-                // The message is taken directly from the type-safe action class.
                 val message = action.message
                 runBlocking {
-                    SpeechCoordinator.getInstance(context).speakToUser(message)
+                    try {
+                        val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.createService(
+                            com.ai.assistance.operit.api.voice.VoiceServiceType.SIMPLE_TTS,
+                            context
+                        )
+                        voiceService?.speak(message)
+                    } catch (e: Exception) {
+                        Log.e("ActionExecutor", "TTS failed", e)
+                    }
                 }
                 ActionResult(longTermMemory = "Spoke the message: \"${message.take(50)}...\"")
             }
             is Action.Ask -> {
                 val question = action.question
-                val userResponse = withContext(Dispatchers.IO) { // User input is blocking
-                    val userInputManager = UserInputManager(context)
-                    userInputManager.askQuestion(question) // This internally speaks and listens
-                }
-
-                val memory = "Asked user: '$question'. User responded: '$userResponse'."
+                val memory = "Asked user: '$question'. User response needed."
                 ActionResult(
                     longTermMemory = memory,
-                    extractedContent = userResponse, // The user's answer is the result
+                    extractedContent = null,
                     includeExtractedContentOnlyOnce = true
                 )
             }
@@ -387,23 +390,11 @@ class ActionExecutor(private val finger: Finger) {
             is Action.LaunchIntent -> {
                 val name = action.intentName
                 val params = action.parameters
-                val appIntent = IntentRegistry.findByName(context, name)
-                if (appIntent == null) {
-                    return ActionResult(error = "Intent '$name' not found. Check intents catalog for valid names.")
-                }
-                val intent = appIntent.buildIntent(context, params)
-                return if (intent == null) {
-                    ActionResult(error = "Intent '$name' missing or invalid parameters: ${params}")
-                } else {
-                    try {
-                        val launchSuccess = finger.launchIntent(intent)
-                        if (launchSuccess) {
-                            ActionResult(longTermMemory = "Launched intent '$name' with params ${params}")
-                        } else {
-                            ActionResult(error = "Failed to launch intent '$name' with params ${params}")
-                        }
-                    } catch (t: Throwable) {
-                        ActionResult(error = "Failed to launch intent '$name': ${t.message}")
+                ActionResult(error = "Intent '$name' not supported in this version. Parameters: $params")
+            }
+        }
+    }
+}
                     }
                 }
             }

@@ -1,22 +1,13 @@
 package com.ai.assistance.operit.core.agent.v2.perception
 
 import android.view.accessibility.AccessibilityNodeInfo
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
 
-/**
- * Represents a node in the XML view hierarchy.
- *
- * This data class holds the attributes of the XML node, its children, and a reference to its parent.
- * It also includes several helper properties and functions for convenience.
- *
- * @property attributes A map of the node's XML attributes (e.g., "text", "resource-id").
- * @property children A list of child [XmlNode]s.
- * @property parent A nullable reference to the parent [XmlNode].
- */
-@Serializable
 data class XmlNode(
+    val attributes: MutableMap<String, String> = mutableMapOf(),
+    val children: MutableList<XmlNode> = mutableListOf(),
+    var parent: XmlNode? = null
+) {
     val attributes: MutableMap<String, String> = mutableMapOf(),
     val children: MutableList<XmlNode> = mutableListOf(),
     var parent: XmlNode? = null
