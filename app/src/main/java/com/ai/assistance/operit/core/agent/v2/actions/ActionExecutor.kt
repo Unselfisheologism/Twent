@@ -8,7 +8,8 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Finger
-import com.ai.assistance.operit.core.agent.v2.AgentModels.ActionResult
+import com.ai.assistance.operit.api.automation.Finger
+import com.ai.assistance.operit.core.agent.v2.ActionResult
 import com.ai.assistance.operit.core.agent.v2.actions.Action.DoubleTapAt
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis

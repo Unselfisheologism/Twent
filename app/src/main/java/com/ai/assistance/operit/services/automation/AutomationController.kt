@@ -6,16 +6,17 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
-import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
-import com.ai.assistance.operit.core.agent.v2.AgentModels
+import com.ai.assistance.operit.core.agent.v2.AgentSettings
 import com.ai.assistance.operit.core.agent.v2.AgentOutput
-import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
 import com.ai.assistance.operit.core.agent.v2.message.MessageManager
 import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
+import com.ai.assistance.operit.core.agent.v2.perception.Perception
+import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
+import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import kotlinx.coroutines.*
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -184,7 +185,7 @@ Now respond with JSON only. No text.
             context = context,
             task = task,
             fileSystem = fileSystem,
-            settings = AgentModels.AgentSettings(maxSteps = maxSteps)
+            settings = AgentSettings(maxSteps = maxSteps)
         )
         
         // Create LLM API wrapper that uses Operit's existing AI service
@@ -193,7 +194,7 @@ Now respond with JSON only. No text.
             context = context
         )
         
-        val settings = AgentModels.AgentSettings(maxSteps = maxSteps)
+        val settings = AgentSettings(maxSteps = maxSteps)
         
         agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
@@ -258,7 +259,7 @@ Now respond with JSON only. No text.
             context = context,
             task = task,
             fileSystem = fileSystem,
-            settings = AgentModels.AgentSettings(maxSteps = maxSteps)
+            settings = AgentSettings(maxSteps = maxSteps)
         )
         
         val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
@@ -266,7 +267,7 @@ Now respond with JSON only. No text.
             context = context
         )
         
-        val settings = AgentModels.AgentSettings(maxSteps = maxSteps)
+        val settings = AgentSettings(maxSteps = maxSteps)
         
         agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
@@ -308,10 +309,11 @@ Now respond with JSON only. No text.
     /**
      * Perform a single action directly (without full agent loop)
      */
-    suspend fun performAction(action: Action): Boolean {
+    suspend fun performAction(action: com.ai.assistance.operit.core.agent.v2.actions.Action): Boolean {
         return try {
             val screenState = perception.analyze()
-            val result = ActionExecutor.execute(action, screenState, context, fileSystem)
+            val executor = ActionExecutor(finger)
+            val result = executor.execute(action, screenState, context, fileSystem)
             result.error == null
         } catch (e: Exception) {
             Log.e(TAG, "Failed to perform action", e)

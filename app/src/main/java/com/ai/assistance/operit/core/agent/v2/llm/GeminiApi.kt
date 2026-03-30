@@ -3,13 +3,10 @@ package com.ai.assistance.operit.core.agent.v2.llm
 import android.content.Context
 import android.util.Log
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.llmprovider.AIService
+import com.ai.assistance.operit.api.chat.llmprovider.FunctionType
 import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
-import com.ai.assistance.operit.core.agent.v2.AgentOutput as V2AgentOutput
-import com.ai.assistance.operit.core.agent.v2.AgentSettings
-import com.ai.assistance.operit.core.agent.v2.actions.Action
-import com.ai.assistance.operit.services.FloatingChatService
+import com.ai.assistance.operit.core.agent.llm.MessageRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -24,40 +21,34 @@ class OperitLlmApi(
         private const val TAG = "OperitLlmApi"
     }
 
-    override suspend fun generateAgentOutput(messages: List<LlmMessage>): AgentOutput? {
+    override suspend fun generateAgentOutput(messages: List<LlmMessage>): com.ai.assistance.operit.core.agent.model.AgentOutput? {
         return withContext(Dispatchers.IO) {
             try {
                 val enhanced = EnhancedAIService.getInstance(context)
-                val aiService = enhanced.getAIService()
+                val aiService = enhanced.getAIServiceForFunction(FunctionType.CHAT)
 
-                val systemMessage = messages.find { 
-                    it.role == com.ai.assistance.operit.core.agent.llm.MessageRole.SYSTEM 
-                }?.content ?: ""
+                val systemMsg = messages.find { it.role == MessageRole.SYSTEM }?.content ?: ""
+                val userMsg = messages.findLast { it.role == MessageRole.USER }?.content ?: ""
 
-                val userMessage = messages.findLast { 
-                    it.role == com.ai.assistance.operit.core.agent.llm.MessageRole.USER 
-                }?.content ?: ""
-
-                val fullPrompt = buildString {
-                    append(systemMessage)
-                    if (userMessage.isNotEmpty()) {
-                        append("\n\n")
-                        append("Current request: ")
-                        append(userMessage)
+                val prompt = buildString {
+                    append(systemMsg)
+                    if (userMsg.isNotEmpty()) {
+                        append("\n\nCurrent request: ")
+                        append(userMsg)
                     }
                 }
 
-                Log.d(TAG, "Sending to LLM: ${fullPrompt.take(200)}...")
+                Log.d(TAG, "Sending to LLM: ${prompt.take(200)}...")
 
                 val responseStream = aiService.sendMessage(
                     context = context,
-                    message = userMessage,
-                    chatHistory = listOf("system" to systemMessage),
+                    message = userMsg,
+                    chatHistory = listOf("system" to systemMsg),
                     stream = false
                 )
 
                 val responseBuilder = StringBuilder()
-                responseStream.collect { chunk ->
+                responseStream.collect { chunk: String ->
                     responseBuilder.append(chunk)
                 }
                 val response = responseBuilder.toString()
@@ -72,7 +63,7 @@ class OperitLlmApi(
         }
     }
 
-    private fun parseAgentOutput(response: String): V2AgentOutput? {
+    private fun parseAgentOutput(response: String): com.ai.assistance.operit.core.agent.model.AgentOutput? {
         return try {
             val json = JSONObject(response)
 
@@ -81,7 +72,7 @@ class OperitLlmApi(
             val nextGoal = json.optString("nextGoal", null).takeIf { it.isNotEmpty() }
 
             val actionArray = json.optJSONArray("action")
-            val actions = mutableListOf<Action>()
+            val actions = mutableListOf<com.ai.assistance.operit.core.agent.actions.Action>()
 
             actionArray?.let { arr ->
                 for (i in 0 until arr.length()) {
@@ -96,8 +87,9 @@ class OperitLlmApi(
                 }
             }
 
-            V2AgentOutput(
+            com.ai.assistance.operit.core.agent.model.AgentOutput(
                 thinking = thinking,
+                evaluationPreviousGoal = null,
                 memory = memory,
                 nextGoal = nextGoal,
                 action = actions
@@ -108,75 +100,46 @@ class OperitLlmApi(
         }
     }
 
-    private fun parseAction(name: String, params: JSONObject?): Action? {
+    private fun parseAction(name: String, params: JSONObject?): com.ai.assistance.operit.core.agent.actions.Action? {
         return try {
             when (name) {
                 "tap", "click" -> {
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
-                        Action.TapAt(x, y)
+                        com.ai.assistance.operit.core.agent.actions.Action.Tap(x, y)
                     } else {
                         val index = params?.optInt("index") ?: 0
-                        Action.TapElement(index)
-                    }
-                }
-                "long_press" -> {
-                    val x = params?.optInt("x") ?: 0
-                    val y = params?.optInt("y") ?: 0
-                    val duration = params?.optInt("duration_ms") ?: 1500
-                    if (x > 0 && y > 0) {
-                        Action.LongPressAt(x, y, duration.toLong())
-                    } else {
-                        val index = params?.optInt("index") ?: 0
-                        Action.LongPressElement(index)
+                        com.ai.assistance.operit.core.agent.actions.Action.TapElement(index)
                     }
                 }
                 "type_text", "type" -> {
                     val text = params?.optString("text") ?: ""
-                    Action.InputText(text)
-                }
-                "swipe" -> {
-                    val startX = params?.optInt("start_x") ?: 0
-                    val startY = params?.optInt("start_y") ?: 0
-                    val endX = params?.optInt("end_x") ?: 0
-                    val endY = params?.optInt("end_y") ?: 0
-                    val duration = (params?.optLong("duration_ms") ?: params?.optInt("duration_ms") ?: 500).toLong()
-                    Action.Swipe(startX, startY, endX, endY, duration)
+                    com.ai.assistance.operit.core.agent.actions.Action.Input(text)
                 }
                 "swipe_up" -> {
                     val pixels = params?.optInt("pixels") ?: 500
-                    Action.SwipeUp(pixels)
+                    com.ai.assistance.operit.core.agent.actions.Action.SwipeUp(pixels)
                 }
                 "swipe_down" -> {
                     val pixels = params?.optInt("pixels") ?: 500
-                    Action.SwipeDown(pixels)
-                }
-                "swipe_left" -> {
-                    val pixels = params?.optInt("pixels") ?: 500
-                    Action.SwipeLeft(pixels)
-                }
-                "swipe_right" -> {
-                    val pixels = params?.optInt("pixels") ?: 500
-                    Action.SwipeRight(pixels)
+                    com.ai.assistance.operit.core.agent.actions.Action.SwipeDown(pixels)
                 }
                 "open_app" -> {
-                    val packageName = params?.optString("package_name") 
-                        ?: params?.optString("app_name") ?: ""
-                    Action.OpenApp(packageName)
+                    val packageName = params?.optString("package_name") ?: params?.optString("app_name") ?: ""
+                    com.ai.assistance.operit.core.agent.actions.Action.OpenApp(packageName)
                 }
-                "back" -> Action.Back
-                "home" -> Action.Home
-                "switch_app" -> Action.SwitchApp
-                "wait" -> Action.Wait
+                "back" -> com.ai.assistance.operit.core.agent.actions.Action.Back
+                "home" -> com.ai.assistance.operit.core.agent.actions.Action.Home
+                "wait" -> com.ai.assistance.operit.core.agent.actions.Action.Wait
                 "done" -> {
                     val success = params?.optBoolean("success") ?: true
                     val message = params?.optString("message") ?: "Task completed"
-                    Action.Done(success, message)
+                    com.ai.assistance.operit.core.agent.actions.Action.Done(success, message)
                 }
                 "speak" -> {
                     val text = params?.optString("text") ?: ""
-                    Action.Speak(text)
+                    com.ai.assistance.operit.core.agent.actions.Action.Speak(text)
                 }
                 else -> {
                     Log.w(TAG, "Unknown action: $name")
