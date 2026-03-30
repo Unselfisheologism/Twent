@@ -6,7 +6,8 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
-import com.ai.assistance.operit.core.agent.llm.LlmApi
+import com.ai.assistance.operit.core.agent.llm.LlmMessage
+import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
@@ -92,11 +93,11 @@ class Agent(
                 state.consecutiveFailures++
                 // Add a corrective message for the next attempt.
                 memoryManager.addContextMessage(
-                    com.ai.assistance.operit.core.agent.llm.LlmMessage(
-                        role = com.ai.assistance.operit.core.agent.llm.MessageRole.SYSTEM,
-                        content = "System Note: Your previous output was not valid JSON. Please ensure your response is correctly formatted."
-                    )
+                LlmMessage(
+                    role = MessageRole.SYSTEM,
+                    content = "System Note: Your previous output was not valid JSON. Please ensure your response is correctly formatted."
                 )
+            )
                 if (state.consecutiveFailures >= settings.maxFailures) {
                     Log.d(TAG,"❌ Agent failed too many times consecutively. Stopping.")
                     speechCoordinator.speakToUser("Agent failed after multiple attempts. Stopping execution.")

@@ -1,6 +1,8 @@
 package com.ai.assistance.operit.core.agent.v2.perception
 
 import android.view.accessibility.AccessibilityNodeInfo
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
 
 data class XmlNode(

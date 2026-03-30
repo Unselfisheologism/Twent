@@ -6,7 +6,7 @@ import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
-import com.ai.assistance.operit.core.agent.v2.AgentOutput
+import com.ai.assistance.operit.core.agent.v2.AgentOutput as V2AgentOutput
 import com.ai.assistance.operit.core.agent.v2.AgentSettings
 import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.services.FloatingChatService
@@ -28,9 +28,7 @@ class OperitLlmApi(
         return withContext(Dispatchers.IO) {
             try {
                 val enhanced = EnhancedAIService.getInstance(context)
-                val aiService = enhanced.getAIServiceForFunction(
-                    com.ai.assistance.operit.api.chat.llmprovider.FunctionType.CHAT
-                )
+                val aiService = enhanced.getAIService()
 
                 val systemMessage = messages.find { 
                     it.role == com.ai.assistance.operit.core.agent.llm.MessageRole.SYSTEM 
@@ -74,7 +72,7 @@ class OperitLlmApi(
         }
     }
 
-    private fun parseAgentOutput(response: String): AgentOutput? {
+    private fun parseAgentOutput(response: String): V2AgentOutput? {
         return try {
             val json = JSONObject(response)
 
@@ -98,7 +96,7 @@ class OperitLlmApi(
                 }
             }
 
-            AgentOutput(
+            V2AgentOutput(
                 thinking = thinking,
                 memory = memory,
                 nextGoal = nextGoal,
@@ -143,7 +141,7 @@ class OperitLlmApi(
                     val startY = params?.optInt("start_y") ?: 0
                     val endX = params?.optInt("end_x") ?: 0
                     val endY = params?.optInt("end_y") ?: 0
-                    val duration = params?.optInt("duration_ms") ?: 500
+                    val duration = (params?.optLong("duration_ms") ?: params?.optInt("duration_ms") ?: 500).toLong()
                     Action.Swipe(startX, startY, endX, endY, duration)
                 }
                 "swipe_up" -> {

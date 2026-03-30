@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Finger
 import com.ai.assistance.operit.core.agent.v2.AgentModels.ActionResult
+import com.ai.assistance.operit.core.agent.v2.actions.Action.DoubleTapAt
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.overlay.OverlayDispatcher
@@ -218,10 +219,7 @@ class ActionExecutor(private val finger: Finger) {
                 val message = action.message
                 runBlocking {
                     try {
-                        val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.createService(
-                            com.ai.assistance.operit.api.voice.VoiceServiceType.SIMPLE_TTS,
-                            context
-                        )
+                val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.getInstance(context)
                         voiceService?.speak(message)
                     } catch (e: Exception) {
                         Log.e("ActionExecutor", "TTS failed", e)
@@ -419,6 +417,12 @@ class ActionExecutor(private val finger: Finger) {
             is Action.SwipeRight -> {
                 finger.swipeRight(action.pixels)
                 ActionResult(longTermMemory = "Swiped right ${action.pixels} pixels")
+            }
+            is DoubleTapAt -> {
+                finger.tap(action.x, action.y)
+                kotlinx.coroutines.delay(200)
+                finger.tap(action.x, action.y)
+                ActionResult(longTermMemory = "Double tapped at (${action.x}, ${action.y})")
             }
             is Action.PressKey -> {
                 when (action.key.lowercase()) {

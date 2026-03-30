@@ -6,10 +6,16 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
+import com.ai.assistance.operit.core.agent.llm.LlmApi
+import com.ai.assistance.operit.core.agent.llm.LlmMessage
+import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
-import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
+import com.ai.assistance.operit.core.agent.v2.AgentModels
+import com.ai.assistance.operit.core.agent.v2.AgentOutput
+import com.ai.assistance.operit.core.agent.v2.actions.Action
+import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
 import com.ai.assistance.operit.core.agent.v2.message.MessageManager
-import com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings
+import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
 import kotlinx.coroutines.*
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -174,11 +180,11 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = com.ai.assistance.operit.core.agent.v2.message.MessageManager(
+        val messageManager = MessageManager(
             context = context,
             task = task,
             fileSystem = fileSystem,
-            settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+            settings = AgentModels.AgentSettings(maxSteps = maxSteps)
         )
         
         // Create LLM API wrapper that uses Operit's existing AI service
@@ -187,14 +193,14 @@ Now respond with JSON only. No text.
             context = context
         )
         
-        val settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+        val settings = AgentModels.AgentSettings(maxSteps = maxSteps)
         
         agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
             memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor(finger),
+            actionExecutor = ActionExecutor(finger),
             fileSystem = fileSystem,
             context = context
         )
@@ -248,11 +254,11 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = com.ai.assistance.operit.core.agent.v2.message.MessageManager(
+        val messageManager = MessageManager(
             context = context,
             task = task,
             fileSystem = fileSystem,
-            settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+            settings = AgentModels.AgentSettings(maxSteps = maxSteps)
         )
         
         val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
@@ -260,14 +266,14 @@ Now respond with JSON only. No text.
             context = context
         )
         
-        val settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+        val settings = AgentModels.AgentSettings(maxSteps = maxSteps)
         
         agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
             memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor(finger),
+            actionExecutor = ActionExecutor(finger),
             fileSystem = fileSystem,
             context = context
         )
@@ -416,18 +422,10 @@ class OperitLlmApi(private val context: Context) : LlmApi {
     private fun parseAction(name: String, params: org.json.JSONObject?): Action? {
         return when (name) {
             // Element-based actions
-            "click_element" -> {
-                val index = params?.optInt("index", -1) ?: -1
-                val text = params?.optString("text", "")
-                val contentDesc = params?.optString("content_description", "")
-                when {
-                    index >= 0 -> Action.ClickElement(index)
-                    !text.isNullOrEmpty() -> Action.ClickElementByText(text)
-                    !contentDesc.isNullOrEmpty() -> Action.ClickElementByDesc(contentDesc)
-                    else -> null
-                }
+            "click_element", "tap_element" -> {
+                val index = params?.optInt("index", -1) ?: params?.optInt("element_id", -1) ?: -1
+                if (index >= 0) Action.TapElement(index) else null
             }
-            "tap_element" -> Action.TapElement(params?.optInt("element_id") ?: 0)
             "long_press_element" -> Action.LongPressElement(params?.optInt("element_id") ?: 0)
             "tap_element_input_text_and_enter" -> Action.TapElementInputTextPressEnter(
                 params?.optInt("index") ?: 0,
@@ -446,7 +444,7 @@ class OperitLlmApi(private val context: Context) : LlmApi {
             "long_press" -> Action.LongPressAt(
                 params?.optInt("x") ?: 0,
                 params?.optInt("y") ?: 0,
-                params?.optLong("duration_ms") ?: 1500
+                (params?.optLong("duration_ms") ?: 1500).toLong()
             )
             "double_tap" -> Action.DoubleTapAt(
                 params?.optInt("x") ?: 0,
@@ -457,7 +455,7 @@ class OperitLlmApi(private val context: Context) : LlmApi {
                 params?.optInt("start_y") ?: 0,
                 params?.optInt("end_x") ?: 0,
                 params?.optInt("end_y") ?: 0,
-                params?.optLong("duration_ms") ?: 500
+                (params?.optLong("duration_ms") ?: 500).toLong()
             )
             "swipe_left" -> Action.SwipeLeft(params?.optInt("pixels") ?: 500)
             "swipe_right" -> Action.SwipeRight(params?.optInt("pixels") ?: 500)
@@ -477,14 +475,13 @@ class OperitLlmApi(private val context: Context) : LlmApi {
             "back" -> Action.Back
             "home" -> Action.Home
             "switch_app" -> Action.SwitchApp
-            "press_enter" -> Action.PressEnter
             
             // Meta actions
             "speak" -> Action.Speak(params?.optString("text") ?: params?.optString("message") ?: "")
             "wait" -> Action.Wait
             "done" -> {
                 val success = params?.optBoolean("success", true) ?: true
-                Action.Done(params?.optString("message") ?: "Task completed", success)
+                Action.Done(success, params?.optString("message") ?: "Task completed", null)
             }
             else -> null
         }
