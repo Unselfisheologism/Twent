@@ -412,18 +412,36 @@ class OperitAutomationService : AccessibilityService() {
         val (screenWidth, screenHeight) = getScreenDimensions()
         val maxRetries = 5
         val retryDelay = 200L
+        val ownPackageName = packageName
 
         for (attempt in 1..maxRetries) {
             val allWindows = windows
+            // Filter out our own app's windows (floating overlay) to get the actual screen content
             val targetWindow = allWindows
                 .filter { it.type == TYPE_APPLICATION }
+                .filter { 
+                    // Exclude windows from our own package to avoid capturing the floating overlay
+                    val windowPackageName = it.root?.packageName?.toString()
+                    windowPackageName != ownPackageName
+                }
                 .maxByOrNull {
                     val bounds = Rect()
                     it.getBoundsInScreen(bounds)
                     bounds.width() * bounds.height()
                 }
 
-            val rootNode = targetWindow?.root ?: rootInActiveWindow
+            // Fallback to any application window if no non-own window found
+            val fallbackWindow = if (targetWindow == null) {
+                allWindows
+                    .filter { it.type == TYPE_APPLICATION }
+                    .maxByOrNull {
+                        val bounds = Rect()
+                        it.getBoundsInScreen(bounds)
+                        bounds.width() * bounds.height()
+                    }
+            } else null
+
+            val rootNode = targetWindow?.root ?: fallbackWindow?.root ?: rootInActiveWindow
 
             if (rootNode != null) {
                 Log.d("OperitAutomation", "Analyzing window: ${rootNode.packageName}")
@@ -442,10 +460,30 @@ class OperitAutomationService : AccessibilityService() {
 
     suspend fun dumpWindowHierarchy(pureXML: Boolean = false): String {
         return withContext(Dispatchers.Default) {
-            val rootNode = rootInActiveWindow ?: run {
+            val ownPackageName = packageName
+            
+            // Try to get a window that is not our own floating overlay
+            val allWindows = windows
+            val targetWindow = allWindows
+                .filter { it.type == TYPE_APPLICATION }
+                .filter { 
+                    val windowPackageName = it.root?.packageName?.toString()
+                    windowPackageName != ownPackageName
+                }
+                .maxByOrNull {
+                    val bounds = Rect()
+                    it.getBoundsInScreen(bounds)
+                    bounds.width() * bounds.height()
+                }
+            
+            // Use the target window if found, otherwise fall back to rootInActiveWindow
+            val rootNode = targetWindow?.root ?: rootInActiveWindow ?: run {
                 Log.e("OperitAutomation", "Root node is null, cannot dump hierarchy.")
                 return@withContext "Error: UI hierarchy is not available."
             }
+
+            // Log which package we're analyzing
+            Log.d("OperitAutomation", "Dumping hierarchy for package: ${rootNode.packageName}")
 
             val stringWriter = StringWriter()
             try {
@@ -756,31 +794,57 @@ class OperitAutomationService : AccessibilityService() {
         val (screenWidth, screenHeight) = getScreenDimensions()
         val maxRetries = 5
         val retryDelay = 800L
+        val ownPackageName = packageName
 
         for (attempt in 1..maxRetries) {
-            val rootNode = rootInActiveWindow
+            // Try to get a window that is not our own floating overlay
+            val allWindows = windows
+            val targetWindow = allWindows
+                .filter { it.type == TYPE_APPLICATION }
+                .filter { 
+                    val windowPackageName = it.root?.packageName?.toString()
+                    windowPackageName != ownPackageName
+                }
+                .maxByOrNull {
+                    val bounds = Rect()
+                    it.getBoundsInScreen(bounds)
+                    bounds.width() * bounds.height()
+                }
+            
+            val rootNode = targetWindow?.root ?: rootInActiveWindow
 
             if (rootNode != null) {
-                Log.d("OperitAutomation", "Got rootInActiveWindow on attempt $attempt.")
+                Log.d("OperitAutomation", "Got root node on attempt $attempt. Package: ${rootNode.packageName}")
                 val (pixelsAbove, pixelsBelow) = findScrollableNodeAndGetInfo(rootNode)
                 val activityName = rootNode.packageName?.toString()
                 return RawScreenData(rootNode, activityName, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
             }
 
             if (attempt < maxRetries) {
-                Log.d("OperitAutomation", "rootInActiveWindow is null on attempt $attempt. Retrying in ${retryDelay}ms...")
+                Log.d("OperitAutomation", "root node is null on attempt $attempt. Retrying in ${retryDelay}ms...")
                 delay(retryDelay)
             }
         }
 
-        Log.e("OperitAutomation", "Failed to get rootInActiveWindow after $maxRetries attempts.")
+        Log.e("OperitAutomation", "Failed to get root node after $maxRetries attempts.")
         return RawScreenData(null, null, 0, 0, screenWidth, screenHeight)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
     suspend fun captureScreenshot(): Bitmap? {
-        return try {
-            suspendCancellableCoroutine { continuation ->
+        // Hide floating window before capture to avoid overlay in screenshot
+        val floatingService = com.ai.assistance.operit.services.FloatingChatService.getInstance()
+        val wasFloatingVisible = floatingService != null
+        
+        try {
+            // Temporarily hide the floating window
+            if (wasFloatingVisible) {
+                floatingService?.setFloatingWindowVisible(false)
+                // Small delay to ensure the window is hidden before capture
+                delay(100)
+            }
+            
+            return suspendCancellableCoroutine { continuation ->
                 val executor = ContextCompat.getMainExecutor(this)
 
                 takeScreenshot(
@@ -816,6 +880,15 @@ class OperitAutomationService : AccessibilityService() {
         } catch (e: Exception) {
             Log.e("ScreenshotUtil", "Screenshot capture failed", e)
             null
+        } finally {
+            // Restore floating window visibility
+            if (wasFloatingVisible) {
+                try {
+                    floatingService?.setFloatingWindowVisible(true)
+                } catch (e: Exception) {
+                    Log.e("ScreenshotUtil", "Failed to restore floating window visibility", e)
+                }
+            }
         }
     }
 
