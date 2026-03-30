@@ -39,7 +39,7 @@ import com.ai.assistance.operit.core.chat.AIMessageManager
 import com.ai.assistance.operit.core.application.ActivityLifecycleManager
 import com.ai.assistance.operit.core.application.ForegroundServiceCompat
 import com.ai.assistance.operit.data.preferences.SpeechServicesPreferences
-import com.ai.assistance.operit.services.FloatingChatService
+import com.ai.assistance.operit.services.BlurrAssistantService
 import com.ai.assistance.operit.services.UIDebuggerService
 import com.ai.assistance.operit.data.preferences.DisplayPreferencesManager
 import com.ai.assistance.operit.data.preferences.WakeWordPreferences
@@ -536,9 +536,9 @@ class AIForegroundService : Service() {
             }
 
             try {
-                stopService(Intent(this, FloatingChatService::class.java))
+                stopService(Intent(this, BlurrAssistantService::class.java))
             } catch (e: Exception) {
-                AppLogger.e(TAG, "退出时停止 FloatingChatService 失败: ${e.message}", e)
+                AppLogger.e(TAG, "退出时停止 BlurrAssistantService 失败: ${e.message}", e)
             }
 
             try {
@@ -932,7 +932,7 @@ class AIForegroundService : Service() {
 
         AppLogger.d(TAG, "startWakeListening: phrase='$currentWakePhrase'")
 
-        if (wakeHandoffPending && !wakeStopInProgress && FloatingChatService.getInstance() == null) {
+        if (wakeHandoffPending && !wakeStopInProgress && BlurrAssistantService.getInstance() == null) {
             AppLogger.d(TAG, "Clearing stale wake handoff pending state before starting wake listening")
             wakeHandoffPending = false
             wakeStopInProgress = false
@@ -1019,8 +1019,8 @@ class AIForegroundService : Service() {
                     )
 
                     if (wakeHandoffPending) {
-                        val floatingAlive = FloatingChatService.getInstance() != null
-                        if (!wakeStopInProgress && !floatingAlive) {
+                        val blurrAlive = BlurrAssistantService.getInstance() != null
+                        if (!wakeStopInProgress && !blurrAlive) {
                             AppLogger.d(TAG, "Clearing stale wake handoff pending state (no floating instance)")
                             wakeHandoffPending = false
                             wakeStopInProgress = false
@@ -1151,20 +1151,20 @@ class AIForegroundService : Service() {
                 var waitedMs = 0L
                 while (isActive && waitedMs < 5000L) {
                     if (!wakeListeningEnabled) return@launch
-                    if (FloatingChatService.getInstance() != null) break
+                    if (BlurrAssistantService.getInstance() != null) break
                     delay(250)
                     waitedMs += 250
                 }
 
-                AppLogger.d(TAG, "等待悬浮窗启动: waitedMs=$waitedMs, instance=${FloatingChatService.getInstance() != null}")
+                AppLogger.d(TAG, "等待Blurr服务启动: waitedMs=$waitedMs, instance=${BlurrAssistantService.getInstance() != null}")
 
                 while (isActive) {
                     if (!wakeListeningEnabled) return@launch
-                    if (FloatingChatService.getInstance() == null) break
+                    if (BlurrAssistantService.getInstance() == null) break
                     delay(500)
                 }
 
-                AppLogger.d(TAG, "检测到悬浮窗已关闭，准备恢复唤醒监听")
+                AppLogger.d(TAG, "检测到Blurr服务已关闭，准备恢复唤醒监听")
 
                 if (wakeHandoffPending) {
                     AppLogger.d(TAG, "Wake handoff aborted, clearing pending state")
@@ -1181,21 +1181,22 @@ class AIForegroundService : Service() {
     }
 
     private fun triggerWakeLaunch() {
-        AppLogger.d(TAG, "triggerWakeLaunch: 打开全屏悬浮窗并进入语音")
+        AppLogger.d(TAG, "triggerWakeLaunch: Starting BlurrAssistantService for automation")
         try {
-            val floatingIntent = Intent(this, FloatingChatService::class.java).apply {
-                putExtra("INITIAL_MODE", com.ai.assistance.operit.ui.floating.FloatingMode.FULLSCREEN.name)
-                putExtra(FloatingChatService.EXTRA_AUTO_ENTER_VOICE_CHAT, true)
-                putExtra(FloatingChatService.EXTRA_WAKE_LAUNCHED, true)
+            val serviceIntent = Intent(this, BlurrAssistantService::class.java).apply {
+                action = BlurrAssistantService.ACTION_START
+                putExtra(BlurrAssistantService.EXTRA_TASK, "Help me automate the current screen")
+                putExtra(BlurrAssistantService.EXTRA_MAX_STEPS, 100)
+                putExtra(BlurrAssistantService.EXTRA_AUTO_VOICE, true)
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(floatingIntent)
+                startForegroundService(serviceIntent)
             } else {
-                startService(floatingIntent)
+                startService(serviceIntent)
             }
         } catch (e: Exception) {
-            AppLogger.e(TAG, "唤醒打开悬浮窗失败: ${e.message}", e)
+            AppLogger.e(TAG, "唤醒打开 BlurrAssistantService 失败: ${e.message}", e)
         }
     }
 
@@ -1268,29 +1269,28 @@ class AIForegroundService : Service() {
             builder.setContentIntent(contentPendingIntent)
         }
 
-        val floatingIntent = Intent(this, FloatingChatService::class.java).apply {
-            putExtra("INITIAL_MODE", com.ai.assistance.operit.ui.floating.FloatingMode.FULLSCREEN.name)
-            putExtra(FloatingChatService.EXTRA_AUTO_ENTER_VOICE_CHAT, true)
+        val blurrIntent = Intent(this, BlurrAssistantService::class.java).apply {
+            action = BlurrAssistantService.ACTION_START
         }
-        val floatingPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val blurrPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PendingIntent.getForegroundService(
                 this,
                 9005,
-                floatingIntent,
+                blurrIntent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
         } else {
             PendingIntent.getService(
                 this,
                 9005,
-                floatingIntent,
+                blurrIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
         }
         builder.addAction(
             android.R.drawable.ic_btn_speak_now,
             getString(R.string.service_voice_floating_window),
-            floatingPendingIntent
+            blurrPendingIntent
         )
 
         val toggleWakeIntent = Intent(this, AIForegroundService::class.java).apply {

@@ -29,7 +29,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.services.FloatingChatService
+import com.ai.assistance.operit.services.BlurrAssistantService
 import com.ai.assistance.operit.ui.floating.FloatingMode
 
 /**
@@ -65,11 +65,9 @@ fun VoiceAssistantWidgetContent(context: Context) {
                 )
                 .padding(16.dp)
                 .clickable {
-                    // 直接启动 FloatingChatService，不需要经过 MainActivity
-                    val intent = Intent(context, FloatingChatService::class.java).apply {
-                        // 设置初始模式为全屏语音模式
-                        putExtra("INITIAL_MODE", FloatingMode.FULLSCREEN.name)
-                        putExtra(FloatingChatService.EXTRA_AUTO_ENTER_VOICE_CHAT, true)
+                    // Start BlurrAssistantService for automation
+                    val intent = Intent(context, BlurrAssistantService::class.java).apply {
+                        action = BlurrAssistantService.ACTION_START
                     }
                     
                     // 启动前台服务
