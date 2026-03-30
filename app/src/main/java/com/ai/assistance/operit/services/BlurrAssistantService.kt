@@ -8,14 +8,15 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.api.speech.SpeechService
 import com.ai.assistance.operit.api.speech.SpeechServiceFactory
-import com.ai.assistance.operit.api.voice.VoiceServiceFactory
 import com.ai.assistance.operit.core.agent.v2.Agent
 import com.ai.assistance.operit.core.agent.v2.AgentSettings
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
@@ -298,7 +299,6 @@ class BlurrAssistantService : Service() {
         
         try {
             val mainHandler = Handler(Looper.getMainLooper())
-            val serviceContext = this
             mainHandler.post {
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
@@ -306,9 +306,6 @@ class BlurrAssistantService : Service() {
                         speechService?.shutdown()
                     } catch (_: Exception) {}
                 }
-                try {
-                    VoiceServiceFactory.getInstance(serviceContext)?.stop()
-                } catch (_: Exception) {}
             }
         } catch (_: Exception) {}
         
