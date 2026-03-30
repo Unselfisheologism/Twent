@@ -17,6 +17,7 @@ import com.ai.assistance.operit.core.tools.UIPageResultData
 import com.ai.assistance.operit.core.tools.defaultTool.standard.StandardUITools
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
+import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.services.automation.OperitAutomationService
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.delay
@@ -36,6 +37,18 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
             return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
         }
 
+        // Hide floating window before capturing screen info
+        val floatingService = FloatingChatService.getInstance()
+        val wasFloatingVisible = floatingService != null
+        if (wasFloatingVisible) {
+            try {
+                floatingService?.setFloatingWindowVisible(false)
+                delay(100)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to hide floating window", e)
+            }
+        }
+
         return try {
             val rawData = svc.getScreenAnalysisData()
             val rootNode = rawData.rootNode
@@ -53,6 +66,15 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
         } catch (e: Exception) {
             AppLogger.e(TAG, "getPageInfo failed", e)
             ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = e.message)
+        } finally {
+            // Restore floating window visibility
+            if (wasFloatingVisible) {
+                try {
+                    floatingService?.setFloatingWindowVisible(true)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to restore floating window visibility", e)
+                }
+            }
         }
     }
 
@@ -417,8 +439,52 @@ open class AccessibilityUITools(context: Context) : StandardUITools(context) {
 
     override suspend fun getCurrentActivity(tool: AITool): ToolResult {
         val svc = service ?: return ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Accessibility service not available")
-        val activity = svc.getCurrentActivityName()
-        return ToolResult(toolName = tool.name, success = true, result = StringResultData("Current activity: $activity"))
+        
+        // Hide floating window before getting current activity to avoid returning our own activity
+        val floatingService = FloatingChatService.getInstance()
+        val wasFloatingVisible = floatingService != null
+        if (wasFloatingVisible) {
+            try {
+                floatingService?.setFloatingWindowVisible(false)
+                delay(100)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to hide floating window", e)
+            }
+        }
+        
+        return try {
+            // Get the current foreground app that is not our own
+            val allWindows = svc.windows
+            val ownPackageName = svc.packageName
+            val targetWindow = allWindows
+                .filter { it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION }
+                .filter { 
+                    val windowPackageName = it.root?.packageName?.toString()
+                    windowPackageName != ownPackageName
+                }
+                .maxByOrNull {
+                    val bounds = android.graphics.Rect()
+                    it.getBoundsInScreen(bounds)
+                    bounds.width() * bounds.height()
+                }
+            
+            val activity = if (targetWindow != null) {
+                targetWindow.root?.packageName?.toString() ?: svc.getCurrentActivityName()
+            } else {
+                svc.getCurrentActivityName()
+            }
+            
+            ToolResult(toolName = tool.name, success = true, result = StringResultData("Current activity: $activity"))
+        } finally {
+            // Restore floating window visibility
+            if (wasFloatingVisible) {
+                try {
+                    floatingService?.setFloatingWindowVisible(true)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to restore floating window visibility", e)
+                }
+            }
+        }
     }
 
     private fun missingParam(name: String) = ToolResult(toolName = "missing_param", success = false, result = StringResultData(""), error = "Missing parameter: $name")
