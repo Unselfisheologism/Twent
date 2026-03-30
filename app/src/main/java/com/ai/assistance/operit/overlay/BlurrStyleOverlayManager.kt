@@ -215,7 +215,7 @@ class BlurrStyleOverlayManager private constructor(private val context: Context)
 
             if (statusView == null) {
                 statusView = TextView(context).apply {
-                    text = text
+                    this.text = text
                     val bg = GradientDrawable().apply {
                         setColor(0xCC000000.toInt())
                         cornerRadius = 16f

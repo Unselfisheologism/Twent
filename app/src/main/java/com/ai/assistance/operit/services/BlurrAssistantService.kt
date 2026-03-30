@@ -297,9 +297,19 @@ class BlurrAssistantService : Service() {
         serviceScope.cancel()
         
         try {
-            speechService?.cancelRecognition()
-            speechService?.shutdown()
-            VoiceServiceFactory.getInstance(this)?.stop()
+            val mainHandler = Handler(Looper.getMainLooper())
+            val serviceContext = this
+            mainHandler.post {
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        speechService?.cancelRecognition()
+                        speechService?.shutdown()
+                    } catch (_: Exception) {}
+                }
+                try {
+                    VoiceServiceFactory.getInstance(serviceContext)?.stop()
+                } catch (_: Exception) {}
+            }
         } catch (_: Exception) {}
         
         releaseWakeLock()
