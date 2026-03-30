@@ -45,33 +45,17 @@ object ToolGetter {
      * @return 根据实际Android权限级别的UI工具实现（优先检查系统级无障碍权限）
      */
     fun getUITools(context: Context): StandardUITools {
-        // 优先检查系统级无障碍服务是否已启用并连接
-        // 这比检查内部偏好设置更可靠，因为用户可能在系统设置中直接授予权限
-        val isAccessibilityServiceEnabled = UIHierarchyManager.isAccessibilityServiceEnabled(context)
-        AppLogger.d("ToolGetter", "System accessibility service enabled: $isAccessibilityServiceEnabled")
-        
-        // 如果系统级无障碍服务已启用，直接使用AccessibilityUITools
-        if (isAccessibilityServiceEnabled) {
-            AppLogger.d("ToolGetter", "Using AccessibilityUITools (system permission granted)")
-            return AccessibilityUITools(context)
-        }
-        
-        // 如果系统级无障碍服务未启用，检查内部偏好设置
+        // 直接检查内部偏好设置，不再依赖系统检查（系统检查有时失败）
         val level = androidPermissionPreferences.getPreferredPermissionLevel()
-        AppLogger.d("ToolGetter", "getUITools: internal preference level = $level")
+        AppLogger.d("ToolGetter", "getUITools: permission level = $level")
         
         return when (level) {
             AndroidPermissionLevel.ROOT -> RootUITools(context).also { AppLogger.d("ToolGetter", "Using RootUITools") }
             AndroidPermissionLevel.ADMIN -> AdminUITools(context).also { AppLogger.d("ToolGetter", "Using AdminUITools") }
             AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context).also { AppLogger.d("ToolGetter", "Using DebuggerUITools") }
-            AndroidPermissionLevel.ACCESSIBILITY -> {
-                // If preference is set to ACCESSIBILITY, trust the user's choice and use AccessibilityUITools
-                // even if system check temporarily fails (may have timing issues)
-                AppLogger.d("ToolGetter", "Using AccessibilityUITools (user preference)")
-                AccessibilityUITools(context)
-            }
+            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools") }
             AndroidPermissionLevel.STANDARD -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools") }
-            null -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools (null fallback)") }
+            null -> AccessibilityUITools(context).also { AppLogger.d("ToolGetter", "Using AccessibilityUITools (default)") }
         }
     }
 
