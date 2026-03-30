@@ -6,13 +6,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
-import com.ai.assistance.operit.core.agent.actions.Action
-import com.ai.assistance.operit.core.agent.llm.LlmApi
-import com.ai.assistance.operit.core.agent.llm.LlmMessage
-import com.ai.assistance.operit.core.agent.llm.MessageRole
-import com.ai.assistance.operit.core.agent.model.AgentOutput
-import com.ai.assistance.operit.core.agent.model.AgentSettings
-import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
+import com.ai.assistance.operit.core.agent.v2.Agent
+import com.ai.assistance.operit.core.agent.v2.AgentSettings
+import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
@@ -40,10 +36,10 @@ class AutomationController private constructor(private val context: Context) {
     private val eyes by lazy { Eyes(context) }
     private val finger by lazy { Finger(context) }
     private val semanticParser by lazy { com.ai.assistance.operit.core.agent.v2.perception.SemanticParser() }
-    private val perception by lazy { com.ai.assistance.operit.core.agent.v2.perception.Perception(eyes, semanticParser) }
-    private val fileSystem by lazy { com.ai.assistance.operit.core.agent.v2.fs.FileSystem(context) }
+    private val perception by lazy { Perception(eyes, semanticParser) }
+    private val fileSystem by lazy { FileSystem(context) }
     
-    private var agent: V2Agent? = null
+    private var agent: Agent? = null
     private var isRunning = false
     
     private val agentScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -160,13 +156,6 @@ USER REQUEST (Your task to accomplish)
 Now respond with JSON only. No text.
 """.trimIndent()
 
-    /**
-     * Start an automation task
-     * @param task The task description
-     * @param maxSteps Maximum steps before stopping
-     * @param onStatusChange Callback for status updates
-     * @param onComplete Callback when task completes
-     */
     fun startAutomation(
         task: String,
         maxSteps: Int = 150,
@@ -190,15 +179,14 @@ Now respond with JSON only. No text.
             settings = AgentSettings(maxSteps = maxSteps)
         )
         
-        // Create LLM API wrapper that uses Operit's existing AI service
-        val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
+        val operitLlmApi = OperitLlmApi(
             modelName = "default",
             context = context
         )
         
         val settings = AgentSettings(maxSteps = maxSteps)
         
-        agent = com.ai.assistance.operit.core.agent.v2.Agent(
+        agent = Agent(
             settings = settings,
             memoryManager = messageManager,
             perception = perception,
@@ -223,9 +211,6 @@ Now respond with JSON only. No text.
         }
     }
 
-    /**
-     * Stop the current automation
-     */
     fun stopAutomation() {
         Log.d(TAG, "Stopping automation")
         isRunning = false
@@ -233,14 +218,8 @@ Now respond with JSON only. No text.
         agent = null
     }
 
-    /**
-     * Check if automation is running
-     */
     fun isRunning(): Boolean = isRunning
 
-    /**
-     * Run automation task synchronously - waits for completion
-     */
     fun runAutomationTask(
         task: String,
         maxSteps: Int = 150,
@@ -264,14 +243,14 @@ Now respond with JSON only. No text.
             settings = AgentSettings(maxSteps = maxSteps)
         )
         
-        val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
+        val operitLlmApi = OperitLlmApi(
             modelName = "default",
             context = context
         )
         
         val settings = AgentSettings(maxSteps = maxSteps)
         
-        agent = com.ai.assistance.operit.core.agent.v2.Agent(
+        agent = Agent(
             settings = settings,
             memoryManager = messageManager,
             perception = perception,
@@ -296,10 +275,7 @@ Now respond with JSON only. No text.
         }
     }
 
-    /**
-     * Get current screen analysis
-     */
-    suspend fun getScreenAnalysis(): com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis? {
+    suspend fun getScreenAnalysis(): ScreenAnalysis? {
         return try {
             perception.analyze()
         } catch (e: Exception) {
@@ -308,10 +284,7 @@ Now respond with JSON only. No text.
         }
     }
 
-    /**
-     * Perform a single action directly (without full agent loop)
-     */
-    suspend fun performAction(action: com.ai.assistance.operit.core.agent.v2.actions.Action): Boolean {
+    suspend fun performAction(action: Action): Boolean {
         return try {
             val screenState = perception.analyze()
             val executor = ActionExecutor(finger)
@@ -323,9 +296,6 @@ Now respond with JSON only. No text.
         }
     }
 
-    /**
-     * Quick actions for simple interactions
-     */
     fun tap(x: Int, y: Int) = finger.tap(x, y)
     fun longPress(x: Int, y: Int) = finger.longPress(x, y)
     fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, duration: Int = 1000) = finger.swipe(x1, y1, x2, y2, duration)
@@ -334,160 +304,4 @@ Now respond with JSON only. No text.
     fun goHome() = finger.home()
     fun switchApp() = finger.switchApp()
     fun openApp(packageName: String) = finger.openApp(packageName)
-}
-
-/**
- * LLM API implementation that uses Operit's existing AI service
- */
-@RequiresApi(Build.VERSION_CODES.R)
-class OperitLlmApi(private val context: Context) : LlmApi {
-    private val TAG = "OperitLlmApi"
-    
-    override suspend fun generateAgentOutput(messages: List<LlmMessage>): AgentOutput? {
-        return try {
-            // Get the enhanced AI service from the running chat service
-            val aiService = getAiService() ?: run {
-                Log.e(TAG, "No AI service available")
-                return null
-            }
-            
-            // Convert messages to chat format
-            val systemMessage = messages.find { it.role == MessageRole.SYSTEM }?.content ?: ""
-            val userMessages = messages.filter { it.role == MessageRole.USER }.map { it.content }
-            
-            // Build prompt with system and context
-            val prompt = buildString {
-                append(systemMessage)
-                append("\n\n")
-                userMessages.lastOrNull()?.let { append(it) }
-            }
-            
-            Log.d(TAG, "Sending prompt to LLM")
-            
-            // Call the AI service (non-streaming for agent loop)
-            val response = aiService.completions(
-                prompt = prompt,
-                imageUris = emptyList(),
-                toolInvocations = emptyList()
-            )
-            
-            // Parse JSON response to AgentOutput
-            parseAgentOutput(response)
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to generate output", e)
-            null
-        }
-    }
-    
-    private fun getAiService(): com.ai.assistance.operit.api.chat.EnhancedAIService? {
-        // Try to get from FloatingChatService
-        val chatService = com.ai.assistance.operit.services.FloatingChatService.getInstance()
-        return chatService?.getAiService()
-    }
-    
-    private fun parseAgentOutput(response: String): AgentOutput? {
-        return try {
-            val json = org.json.JSONObject(response)
-            
-            val thinking = json.optString("thinking", null).takeIf { it.isNotEmpty() }
-            val evaluationPreviousGoal = json.optString("evaluationPreviousGoal", null).takeIf { it.isNotEmpty() }
-            val memory = json.optString("memory", null).takeIf { it.isNotEmpty() }
-            val nextGoal = json.optString("nextGoal", null).takeIf { it.isNotEmpty() }
-            
-            val actionArray = json.optJSONArray("action")
-            val actions = mutableListOf<Action>()
-            
-            actionArray?.let { arr ->
-                for (i in 0 until arr.length()) {
-                    val actionObj = arr.getJSONObject(i)
-                    val actionName = actionObj.keys().next()
-                    val actionParams = actionObj.optJSONObject(actionName)
-                    
-                    val action = parseAction(actionName, actionParams)
-                    if (action != null) {
-                        actions.add(action)
-                    }
-                }
-            }
-            
-            AgentOutput(
-                thinking = thinking,
-                memory = memory,
-                nextGoal = nextGoal,
-                action = actions
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse agent output", e)
-            null
-        }
-    }
-    
-    private fun parseAction(name: String, params: org.json.JSONObject?): Action? {
-        return when (name) {
-            // Element-based actions
-            "click_element", "tap_element" -> {
-                val index = params?.optInt("index", -1) ?: params?.optInt("element_id", -1) ?: -1
-                if (index >= 0) Action.TapElement(index) else null
-            }
-            "long_press_element" -> Action.LongPressElement(params?.optInt("element_id") ?: 0)
-            "tap_element_input_text_and_enter" -> Action.TapElementInputTextPressEnter(
-                params?.optInt("index") ?: 0,
-                params?.optString("text") ?: ""
-            )
-            
-            // Coordinate-based actions
-            "tap" -> Action.TapAt(
-                params?.optInt("x") ?: 0,
-                params?.optInt("y") ?: 0
-            )
-            "tap_at" -> Action.TapAt(
-                params?.optInt("x") ?: 0,
-                params?.optInt("y") ?: 0
-            )
-            "long_press" -> Action.LongPressAt(
-                params?.optInt("x") ?: 0,
-                params?.optInt("y") ?: 0,
-                (params?.optLong("duration_ms") ?: 1500).toLong()
-            )
-            "double_tap" -> Action.DoubleTapAt(
-                params?.optInt("x") ?: 0,
-                params?.optInt("y") ?: 0
-            )
-            "swipe" -> Action.Swipe(
-                params?.optInt("start_x") ?: 0,
-                params?.optInt("start_y") ?: 0,
-                params?.optInt("end_x") ?: 0,
-                params?.optInt("end_y") ?: 0,
-                (params?.optLong("duration_ms") ?: 500).toLong()
-            )
-            "swipe_left" -> Action.SwipeLeft(params?.optInt("pixels") ?: 500)
-            "swipe_right" -> Action.SwipeRight(params?.optInt("pixels") ?: 500)
-            "swipe_up" -> Action.SwipeUp(params?.optInt("pixels") ?: 500)
-            "swipe_down" -> Action.SwipeDown(params?.optInt("pixels") ?: 500)
-            
-            // Text input
-            "type" -> Action.InputText(params?.optString("text") ?: "")
-            "input_text" -> Action.InputText(params?.optString("text") ?: "")
-            "type_text" -> Action.InputText(params?.optString("text") ?: "")
-            
-            // Key press
-            "press_key" -> Action.PressKey(params?.optString("key") ?: "enter")
-            
-            // System actions
-            "open_app" -> Action.OpenApp(params?.optString("package_name") ?: params?.optString("app_name") ?: "")
-            "back" -> Action.Back
-            "home" -> Action.Home
-            "switch_app" -> Action.SwitchApp
-            
-            // Meta actions
-            "speak" -> Action.Speak(params?.optString("text") ?: params?.optString("message") ?: "")
-            "wait" -> Action.Wait
-            "done" -> {
-                val success = params?.optBoolean("success", true) ?: true
-                Action.Done(success, params?.optString("message") ?: "Task completed", null)
-            }
-            else -> null
-        }
-    }
 }

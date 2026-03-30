@@ -4,9 +4,10 @@ import android.content.Context
 import android.util.Log
 import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.data.model.FunctionType
-import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
+import com.ai.assistance.operit.core.agent.v2.AgentOutput
+import com.ai.assistance.operit.core.agent.v2.actions.Action
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -15,13 +16,13 @@ class OperitLlmApi(
     private val modelName: String,
     private val context: Context,
     private val maxRetry: Int = 3
-) : LlmApi {
+) : V2LlmApi {
 
     companion object {
         private const val TAG = "OperitLlmApi"
     }
 
-    override suspend fun generateAgentOutput(messages: List<LlmMessage>): com.ai.assistance.operit.core.agent.model.AgentOutput? {
+    override suspend fun generateAgentOutput(messages: List<LlmMessage>): AgentOutput? {
         return withContext(Dispatchers.IO) {
             try {
                 val enhanced = EnhancedAIService.getInstance(context)
@@ -63,16 +64,17 @@ class OperitLlmApi(
         }
     }
 
-    private fun parseAgentOutput(response: String): com.ai.assistance.operit.core.agent.model.AgentOutput? {
+    private fun parseAgentOutput(response: String): AgentOutput? {
         return try {
             val json = JSONObject(response)
 
             val thinking = json.optString("thinking", null).takeIf { it.isNotEmpty() }
             val memory = json.optString("memory", null).takeIf { it.isNotEmpty() }
             val nextGoal = json.optString("nextGoal", null).takeIf { it.isNotEmpty() }
+            val evaluationPreviousGoal = json.optString("evaluationPreviousGoal", null).takeIf { it.isNotEmpty() }
 
             val actionArray = json.optJSONArray("action")
-            val actions = mutableListOf<com.ai.assistance.operit.core.agent.actions.Action>()
+            val actions = mutableListOf<Action>()
 
             actionArray?.let { arr ->
                 for (i in 0 until arr.length()) {
@@ -87,9 +89,9 @@ class OperitLlmApi(
                 }
             }
 
-            com.ai.assistance.operit.core.agent.model.AgentOutput(
+            AgentOutput(
                 thinking = thinking,
-                evaluationPreviousGoal = null,
+                evaluationPreviousGoal = evaluationPreviousGoal,
                 memory = memory,
                 nextGoal = nextGoal,
                 action = actions
@@ -100,47 +102,56 @@ class OperitLlmApi(
         }
     }
 
-    private fun parseAction(name: String, params: JSONObject?): com.ai.assistance.operit.core.agent.actions.Action? {
+    private fun parseAction(name: String, params: JSONObject?): Action? {
         return try {
             when (name) {
                 "tap", "click" -> {
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
-                        com.ai.assistance.operit.core.agent.actions.Action.TapAt(x, y)
+                        Action.TapAt(x, y)
                     } else {
                         val index = params?.optInt("index") ?: 0
-                        com.ai.assistance.operit.core.agent.actions.Action.TapElement(index)
+                        Action.TapElement(index)
                     }
                 }
                 "type_text", "type" -> {
                     val text = params?.optString("text") ?: ""
-                    com.ai.assistance.operit.core.agent.actions.Action.InputText(text)
+                    Action.InputText(text)
                 }
                 "swipe_up" -> {
                     val pixels = params?.optInt("pixels") ?: 500
-                    com.ai.assistance.operit.core.agent.actions.Action.SwipeUp(pixels)
+                    Action.SwipeUp(pixels)
                 }
                 "swipe_down" -> {
                     val pixels = params?.optInt("pixels") ?: 500
-                    com.ai.assistance.operit.core.agent.actions.Action.SwipeDown(pixels)
+                    Action.SwipeDown(pixels)
                 }
                 "open_app" -> {
                     val packageName = params?.optString("package_name") ?: params?.optString("app_name") ?: ""
-                    com.ai.assistance.operit.core.agent.actions.Action.OpenApp(packageName)
+                    Action.OpenApp(packageName)
                 }
-                "back" -> com.ai.assistance.operit.core.agent.actions.Action.Back
-                "home" -> com.ai.assistance.operit.core.agent.actions.Action.Home
-                "wait" -> com.ai.assistance.operit.core.agent.actions.Action.Wait
+                "back" -> Action.Back
+                "home" -> Action.Home
+                "wait" -> Action.Wait
                 "done" -> {
                     val success = params?.optBoolean("success") ?: true
                     val message = params?.optString("message") ?: "Task completed"
-                    com.ai.assistance.operit.core.agent.actions.Action.Done(message, success)
+                    Action.Done(success, message, null)
                 }
                 "speak" -> {
                     val text = params?.optString("text") ?: ""
-                    com.ai.assistance.operit.core.agent.actions.Action.Speak(text)
+                    Action.Speak(text)
                 }
+                "swipe_left" -> Action.SwipeLeft(params?.optInt("pixels") ?: 500)
+                "swipe_right" -> Action.SwipeRight(params?.optInt("pixels") ?: 500)
+                "double_tap" -> Action.DoubleTapAt(params?.optInt("x") ?: 0, params?.optInt("y") ?: 0)
+                "long_press" -> Action.LongPressAt(
+                    params?.optInt("x") ?: 0,
+                    params?.optInt("y") ?: 0,
+                    params?.optLong("duration_ms")?.toLong() ?: 1500
+                )
+                "press_key" -> Action.PressKey(params?.optString("key") ?: "enter")
                 else -> {
                     Log.w(TAG, "Unknown action: $name")
                     null

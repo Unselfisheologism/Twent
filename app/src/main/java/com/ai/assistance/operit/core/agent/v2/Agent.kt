@@ -4,16 +4,12 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.core.agent.actions.Action
-import com.ai.assistance.operit.core.agent.actions.ActionExecutor
-import com.ai.assistance.operit.core.agent.actions.ActionResult
-import com.ai.assistance.operit.core.agent.llm.LlmApi
+import com.ai.assistance.operit.core.agent.v2.actions.Action
+import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
+import com.ai.assistance.operit.core.agent.v2.actions.ActionResult
+import com.ai.assistance.operit.core.agent.v2.llm.V2LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
-import com.ai.assistance.operit.core.agent.model.AgentOutput
-import com.ai.assistance.operit.core.agent.model.AgentSettings
-import com.ai.assistance.operit.core.agent.model.AgentState
-import com.ai.assistance.operit.core.agent.model.AgentStepInfo
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
@@ -28,7 +24,7 @@ class Agent(
     private val settings: AgentSettings,
     private val memoryManager: MemoryManager,
     private val perception: Perception,
-    private val llmApi: LlmApi,
+    private val llmApi: V2LlmApi,
     private val actionExecutor: ActionExecutor,
     private val fileSystem: FileSystem,
     private val context: Context
