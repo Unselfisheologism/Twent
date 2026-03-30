@@ -9,7 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Finger as OperitFinger
 import com.ai.assistance.operit.core.agent.v2.actions.Action
-import com.ai.assistance.operit.core.agent.v2.actions.ActionResult
+import com.ai.assistance.operit.core.agent.v2.ActionResult
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.overlay.OverlayDispatcher

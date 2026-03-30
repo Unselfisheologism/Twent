@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
-import com.ai.assistance.operit.core.agent.v2.actions.ActionResult
+import com.ai.assistance.operit.core.agent.v2.ActionResult
 import com.ai.assistance.operit.core.agent.v2.llm.V2LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
