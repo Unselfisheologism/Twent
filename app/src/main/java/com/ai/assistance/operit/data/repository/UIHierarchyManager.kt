@@ -20,9 +20,26 @@ object UIHierarchyManager {
      */
     fun isAccessibilityServiceEnabled(context: Context): Boolean {
         val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        return am.isEnabled && am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK).any {
-            it.resolveInfo.serviceInfo.packageName == context.packageName
+        val packageName = context.packageName
+        
+        // Log all enabled accessibility services for debugging
+        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+        AppLogger.d(TAG, "isAccessibilityServiceEnabled check:")
+        AppLogger.d(TAG, "  - am.isEnabled: ${am.isEnabled}")
+        AppLogger.d(TAG, "  - checking package: $packageName")
+        AppLogger.d(TAG, "  - enabled services count: ${enabledServices.size}")
+        enabledServices.forEach { svc ->
+            val svcPackage = svc.resolveInfo.serviceInfo.packageName
+            val svcName = svc.resolveInfo.serviceInfo.name
+            AppLogger.d(TAG, "    - service: $svcName (package: $svcPackage)")
         }
+        
+        val isEnabled = am.isEnabled && enabledServices.any {
+            it.resolveInfo.serviceInfo.packageName == packageName
+        }
+        AppLogger.d(TAG, "  - result: $isEnabled")
+        
+        return isEnabled
     }
 
     /**

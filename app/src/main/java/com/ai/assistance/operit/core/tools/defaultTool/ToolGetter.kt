@@ -65,9 +65,10 @@ object ToolGetter {
             AndroidPermissionLevel.ADMIN -> AdminUITools(context).also { AppLogger.d("ToolGetter", "Using AdminUITools") }
             AndroidPermissionLevel.DEBUGGER -> DebuggerUITools(context).also { AppLogger.d("ToolGetter", "Using DebuggerUITools") }
             AndroidPermissionLevel.ACCESSIBILITY -> {
-                // 如果偏好设置为ACCESSIBILITY但系统服务未启用，给出提示
-                AppLogger.w("ToolGetter", "ACCESSIBILITY level set but service not enabled - falling back to Standard")
-                StandardUITools(context)
+                // If preference is set to ACCESSIBILITY, trust the user's choice and use AccessibilityUITools
+                // even if system check temporarily fails (may have timing issues)
+                AppLogger.d("ToolGetter", "Using AccessibilityUITools (user preference)")
+                AccessibilityUITools(context)
             }
             AndroidPermissionLevel.STANDARD -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools") }
             null -> StandardUITools(context).also { AppLogger.d("ToolGetter", "Using StandardUITools (null fallback)") }
