@@ -1181,11 +1181,10 @@ class AIForegroundService : Service() {
     }
 
     private fun triggerWakeLaunch() {
-        AppLogger.d(TAG, "triggerWakeLaunch: Starting BlurrAssistantService for automation")
+        AppLogger.d(TAG, "triggerWakeLaunch: Starting BlurrAssistantService for input")
         try {
             val serviceIntent = Intent(this, BlurrAssistantService::class.java).apply {
                 action = BlurrAssistantService.ACTION_START
-                putExtra(BlurrAssistantService.EXTRA_TASK, "Help me automate the current screen")
                 putExtra(BlurrAssistantService.EXTRA_MAX_STEPS, 100)
                 putExtra(BlurrAssistantService.EXTRA_AUTO_VOICE, true)
             }
