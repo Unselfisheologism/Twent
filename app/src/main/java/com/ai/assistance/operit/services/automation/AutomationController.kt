@@ -8,6 +8,7 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
 import com.ai.assistance.operit.core.agent.Agent
+import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
 import com.ai.assistance.operit.core.agent.actions.Action
 import com.ai.assistance.operit.core.agent.actions.ActionExecutor
 import com.ai.assistance.operit.core.agent.fs.FileSystem
@@ -50,7 +51,7 @@ class AutomationController private constructor(private val context: Context) {
     private val perception by lazy { Perception(eyes, semanticParser) }
     private val fileSystem by lazy { FileSystem(context) }
     
-    private var agent: Agent? = null
+    private var agent: V2Agent? = null
     private var isRunning = false
     
     private val agentScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -190,19 +191,27 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = MessageManager(modifiedPrompt)
+        val messageManager = com.ai.assistance.operit.core.agent.v2.message.MessageManager(
+            context = context,
+            task = task,
+            fileSystem = fileSystem,
+            settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+        )
         
         // Create LLM API wrapper that uses Operit's existing AI service
-        val operitLlmApi = OperitLlmApi(context)
+        val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
+            modelName = "default",
+            context = context
+        )
         
-        val settings = AgentSettings(maxSteps = maxSteps)
+        val settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
         
-        agent = Agent(
+        agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
-            messageManager = messageManager,
+            memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = ActionExecutor,
+            actionExecutor = com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor(finger),
             fileSystem = fileSystem,
             context = context
         )
@@ -256,18 +265,26 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = MessageManager(modifiedPrompt)
+        val messageManager = com.ai.assistance.operit.core.agent.v2.message.MessageManager(
+            context = context,
+            task = task,
+            fileSystem = fileSystem,
+            settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
+        )
         
-        val operitLlmApi = OperitLlmApi(context)
+        val operitLlmApi = com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi(
+            modelName = "default",
+            context = context
+        )
         
-        val settings = AgentSettings(maxSteps = maxSteps)
+        val settings = com.ai.assistance.operit.core.agent.v2.AgentModels.AgentSettings(maxSteps = maxSteps)
         
-        agent = Agent(
+        agent = com.ai.assistance.operit.core.agent.v2.Agent(
             settings = settings,
-            messageManager = messageManager,
+            memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = ActionExecutor,
+            actionExecutor = com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor(finger),
             fileSystem = fileSystem,
             context = context
         )
