@@ -6,13 +6,15 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.api.automation.Eyes
 import com.ai.assistance.operit.api.automation.Finger
+import com.ai.assistance.operit.core.agent.actions.Action
+import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
+import com.ai.assistance.operit.core.agent.model.AgentOutput
+import com.ai.assistance.operit.core.agent.model.AgentSettings
 import com.ai.assistance.operit.core.agent.v2.Agent as V2Agent
-import com.ai.assistance.operit.core.agent.v2.AgentSettings
-import com.ai.assistance.operit.core.agent.v2.AgentOutput
 import com.ai.assistance.operit.core.agent.v2.actions.ActionExecutor
-import com.ai.assistance.operit.core.agent.v2.message.MessageManager
+import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.llm.OperitLlmApi
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
@@ -181,7 +183,7 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = MessageManager(
+        val messageManager = MemoryManager(
             context = context,
             task = task,
             fileSystem = fileSystem,
@@ -255,7 +257,7 @@ Now respond with JSON only. No text.
         onStatusChange?.invoke("Starting automation: $task")
         
         val modifiedPrompt = systemPrompt.replace("{user_request}", task)
-        val messageManager = MessageManager(
+        val messageManager = MemoryManager(
             context = context,
             task = task,
             fileSystem = fileSystem,

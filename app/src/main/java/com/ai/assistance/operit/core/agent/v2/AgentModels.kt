@@ -22,6 +22,7 @@ enum class VisionDetailLevel {
 }
 
 data class AgentSettings(
+    val maxSteps: Int = 150,
     val saveConversationPath: String? = null,
     val saveConversationPathEncoding: String = "utf-8",
     val maxFailures: Int = 3,

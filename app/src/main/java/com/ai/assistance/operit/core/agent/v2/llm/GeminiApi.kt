@@ -3,7 +3,7 @@ package com.ai.assistance.operit.core.agent.v2.llm
 import android.content.Context
 import android.util.Log
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.llmprovider.FunctionType
+import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.core.agent.llm.LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
@@ -107,7 +107,7 @@ class OperitLlmApi(
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
-                        com.ai.assistance.operit.core.agent.actions.Action.Tap(x, y)
+                        com.ai.assistance.operit.core.agent.actions.Action.TapAt(x, y)
                     } else {
                         val index = params?.optInt("index") ?: 0
                         com.ai.assistance.operit.core.agent.actions.Action.TapElement(index)
@@ -115,7 +115,7 @@ class OperitLlmApi(
                 }
                 "type_text", "type" -> {
                     val text = params?.optString("text") ?: ""
-                    com.ai.assistance.operit.core.agent.actions.Action.Input(text)
+                    com.ai.assistance.operit.core.agent.actions.Action.InputText(text)
                 }
                 "swipe_up" -> {
                     val pixels = params?.optInt("pixels") ?: 500
@@ -135,7 +135,7 @@ class OperitLlmApi(
                 "done" -> {
                     val success = params?.optBoolean("success") ?: true
                     val message = params?.optString("message") ?: "Task completed"
-                    com.ai.assistance.operit.core.agent.actions.Action.Done(success, message)
+                    com.ai.assistance.operit.core.agent.actions.Action.Done(message, success)
                 }
                 "speak" -> {
                     val text = params?.optString("text") ?: ""

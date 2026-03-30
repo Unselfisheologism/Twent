@@ -7,10 +7,9 @@ import android.os.Build
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.api.automation.Finger
-import com.ai.assistance.operit.api.automation.Finger
+import com.ai.assistance.operit.api.automation.Finger as OperitFinger
 import com.ai.assistance.operit.core.agent.v2.ActionResult
-import com.ai.assistance.operit.core.agent.v2.actions.Action.DoubleTapAt
+import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.overlay.OverlayDispatcher
@@ -27,7 +26,7 @@ import kotlin.text.removePrefix
  * Executes a pre-validated, type-safe Action command.
  * The 'when' block is exhaustive, ensuring every action is handled.
  */
-class ActionExecutor(private val finger: Finger) {
+class ActionExecutor(private val finger: OperitFinger) {
 
     // Add this function inside ActionExecutor.kt, outside the class, or as a private fun.
     private fun getExtraInfo(node: AccessibilityNodeInfo): String {
