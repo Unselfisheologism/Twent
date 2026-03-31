@@ -96,29 +96,48 @@ class ActionExecutor(private val finger: OperitFinger, private val context: Cont
     ): ActionResult {
         return when (action) {
             is Action.TapElement -> {
-                val elementNode = screenAnalysis.elementMap[action.elementId]
+                val elementId = action.elementId
+                Log.d("ActionExecutor", "TapElement action - looking for element ID $elementId")
+                
+                // First try exact match
+                var elementNode = screenAnalysis.elementMap[elementId]
+                
+                // If not found, try +/- 1 (LLM might use 1-based indexing)
+                if (elementNode == null) {
+                    Log.d("ActionExecutor", "Exact match not found, trying offset...")
+                    elementNode = screenAnalysis.elementMap[elementId] 
+                        ?: screenAnalysis.elementMap[elementId + 1]
+                        ?: screenAnalysis.elementMap[elementId - 1]
+                        ?: screenAnalysis.elementMap[elementId + 10]
+                        ?: screenAnalysis.elementMap[elementId - 10]
+                }
+                
+                Log.d("ActionExecutor", "Available element IDs in map: ${screenAnalysis.elementMap.keys.sorted().take(20)}")
+                
                 if (elementNode != null) {
                     val text = getVisibleText(elementNode)
-                    val service = OperitAutomationService.instance
-                    val center = getCenterFromNode(elementNode)
-
+                    val resourceId = elementNode.viewIdResourceName ?: ""
+                    val bounds = Rect()
+                    elementNode.getBoundsInScreen(bounds)
+                    Log.d("ActionExecutor", "Found element: text='$text', id='$resourceId', bounds=$bounds")
+                    
                     // PRIMARY: Use direct coordinate tap for speed and accuracy
-                    if (center != null) {
+                    if (!bounds.isEmpty) {
+                        val center = Pair(bounds.centerX(), bounds.centerY())
                         Log.d("ActionExecutor", "Using direct tap at coordinates (${center.first}, ${center.second})")
                         finger.tap(center.first, center.second)
-                        // Minimal delay - screen updates very fast on modern devices
                         delay(50)
                         
-                        // Verify tap was delivered
                         ActionResult(longTermMemory = "Tapped element '$text' at ${center.first},${center.second}")
                     } else {
-                        // Fallback: try accessibility click if no coordinates
+                        Log.d("ActionExecutor", "Element has no bounds, trying accessibility click")
                         elementNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                         delay(100)
                         ActionResult(longTermMemory = "Tapped element '$text' via accessibility API")
                     }
                 } else {
-                    ActionResult(error = "Element with ID ${action.elementId} not found.")
+                    Log.w("ActionExecutor", "Element with ID $elementId not found in elementMap!")
+                    ActionResult(error = "Element with ID $elementId not found.")
                 }
             }
             is Action.Speak -> {

@@ -45,7 +45,8 @@ class OperitLlmApi(
                     context = context,
                     message = userMsg,
                     chatHistory = listOf("system" to systemMsg),
-                    stream = false
+                    stream = false,
+                    availableTools = null // Disable Operit tool calls - use system prompt actions only
                 )
 
                 val responseBuilder = StringBuilder()
@@ -81,10 +82,14 @@ class OperitLlmApi(
                     val actionObj = arr.getJSONObject(i)
                     val actionName = actionObj.keys().next()
                     val actionParams = actionObj.optJSONObject(actionName)
+                    
+                    Log.d(TAG, "Parsing action: $actionName with params: $actionParams")
 
                     val action = parseAction(actionName, actionParams)
                     if (action != null) {
                         actions.add(action)
+                    } else {
+                        Log.w(TAG, "Failed to parse action: $actionName with params: $actionParams")
                     }
                 }
             }
@@ -105,23 +110,51 @@ class OperitLlmApi(
     private fun parseAction(name: String, params: JSONObject?): Action? {
         return try {
             when (name) {
-                "tap", "click", "click_element" -> {
+                "tap_element", "tap", "click", "click_element" -> {
+                    // Try x,y coordinates first
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
                         Action.TapAt(x, y)
                     } else {
-                        val index = params?.optInt("index") ?: 0
-                        if (index > 0) {
-                            Action.TapElement(index)
+                        // Try element_id (used by tap_element)
+                        val elementId = params?.optInt("element_id") ?: 0
+                        if (elementId > 0) {
+                            Action.TapElement(elementId)
                         } else {
-                            val text = params?.optString("text")
-                            if (!text.isNullOrBlank()) {
-                                Action.TapElement(text.hashCode().and(0x7FFFFFFF) % 10000)
+                            // Try index (used by click_element)
+                            val index = params?.optInt("index") ?: 0
+                            if (index > 0) {
+                                Action.TapElement(index)
                             } else {
-                                Action.TapElement(0)
+                                // Try text-based selection
+                                val text = params?.optString("text")
+                                if (!text.isNullOrBlank()) {
+                                    // Use hash of text as element ID (not ideal but fallback)
+                                    Action.TapElement(text.hashCode().and(0x7FFFFFFF) % 10000)
+                                } else {
+                                    // Last resort - try content_description
+                                    val contentDesc = params?.optString("content_description")
+                                    if (!contentDesc.isNullOrBlank()) {
+                                        Action.TapElement(contentDesc.hashCode().and(0x7FFFFFFF) % 10000)
+                                    } else {
+                                        Log.w(TAG, "No valid element identifier found for tap action")
+                                        null
+                                    }
+                                }
                             }
                         }
+                    }
+                }
+                "long_press_element" -> {
+                    val elementId = params?.optInt("element_id") ?: 0
+                    if (elementId > 0) {
+                        Action.LongPressElement(elementId)
+                    } else {
+                        val index = params?.optInt("index") ?: 0
+                        if (index > 0) {
+                            Action.LongPressElement(index)
+                        } else null
                     }
                 }
                 "type_text", "type" -> {

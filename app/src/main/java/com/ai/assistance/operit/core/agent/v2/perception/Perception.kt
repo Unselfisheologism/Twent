@@ -32,6 +32,7 @@ class Perception(
      * @return A ScreenAnalysis object containing the complete state of the screen.
      */
     suspend fun analyze(previousState: Set<String>? = null, all: Boolean? =  false): ScreenAnalysis {
+        Log.d("Perception", "Starting screen analysis...")
         return coroutineScope {
             val rawDataDeferred = if (all == true) {
                 async { eyes.getAllRawScreenData() }
@@ -49,12 +50,15 @@ class Perception(
             screenWidth = 0,
             screenHeight = 0
         )
+        Log.d("Perception", "Raw screen data - rootNode: ${rawTree.rootNode != null}, activity: ${rawTree.activityName}")
         val isKeyboardOpen = keyboardStatusDeferred.await()
         val activityName = currentActivity.await()
+        Log.d("Perception", "Activity: $activityName, keyboard: $isKeyboardOpen")
         val rootNode = rawTree.rootNode
 
         // Parse the XML from the raw data
             if(rootNode != null) {
+                Log.d("Perception", "Parsing node tree...")
                 var (uiRepresentation, elementMap) =
                     semanticParser.parseNodeTree(
                         rootNode,
@@ -62,6 +66,9 @@ class Perception(
                         rawTree.screenWidth,
                         rawTree.screenHeight
                     )
+                
+                Log.d("Perception", "Parsed ${elementMap.size} interactive elements")
+                Log.d("Perception", "First 10 element IDs: ${elementMap.keys.take(10).toList()}")
 
                 val hasContentAbove = rawTree.pixelsAbove > 0
                 val hasContentBelow = rawTree.pixelsBelow > 0
