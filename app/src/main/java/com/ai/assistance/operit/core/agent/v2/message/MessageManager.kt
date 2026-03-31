@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.core.agent.v2.message
 
 import android.content.Context
+import android.content.pm.PackageManager
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.core.agent.v2.AgentOutput
@@ -19,42 +20,106 @@ class MemoryManager(
     private var systemMessage: String = ""
     private var stateMessage: String = ""
     private val contextMessages = mutableListOf<GeminiMessage>()
+    private val installedApps: List<Pair<String, String>> = loadInstalledApps()
 
     init {
         systemMessage = buildSystemPrompt()
     }
 
+    private fun loadInstalledApps(): List<Pair<String, String>> {
+        return try {
+            val pm = context.packageManager
+            val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            apps.filter { it.enabled }
+                .map { app -> app.loadLabel(pm).toString() to app.packageName }
+                .sortedBy { it.first.lowercase() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     private fun buildSystemPrompt(): String {
+        val appsList = installedApps.take(100).joinToString("\n") { (name, pkg) ->
+            "  - $name ($pkg)"
+        }
+        val appsSection = if (installedApps.isNotEmpty()) {
+            """
+            
+## INSTALLED APPLICATIONS (Use these names with open_app action)
+You can open ANY app below by using the open_app action with the app name.
+This includes hidden apps and system apps - no need to navigate app drawer!
+$appsList
+${if (installedApps.size > 100) "  ... and ${installedApps.size - 100} more apps" else ""}
+            """.trimIndent()
+        } else ""
+
         return """
 You are an automation agent that controls an Android phone. Your ONLY output format is JSON. NO plain text.
 
-ABSOLUTE RULES:
-1. OUTPUT MUST BE VALID JSON - Nothing else
-2. START with "{" and END with "}"
-3. Every response MUST have an "action" array
+$appsSection
 
-JSON RESPONSE FORMAT:
+═══════════════════════════════════════════════════════════════════════════════
+## AVAILABLE TOOLS
+
+### UI AUTOMATION TOOLS (Use these to interact with the screen)
+- tap: Tap at coordinates {"tap": {"x": 500, "y": 800}}
+- double_tap: Double tap at coordinates {"double_tap": {"x": 500, "y": 800}}
+- long_press: Long press at coordinates {"long_press": {"x": 500, "y": 800, "duration_ms": 1500}}
+- click_element: Click element by index, text, or content_description
+  {"click_element": {"index": 5}} or {"click_element": {"text": "Submit"}}
+- swipe: Custom swipe {"swipe": {"start_x": 500, "start_y": 1000, "end_x": 500, "end_y": 500}}
+- swipe_left/right/up/down: Swipe in direction {"swipe_up": {"pixels": 500}}
+- scroll_left/right/up/down: Scroll in direction
+- type_text: Type text into focused input {"type_text": {"text": "hello"}}
+- open_app: Open app by NAME (use installed apps list above!) {"open_app": {"app_name": "My Files"}}
+- back: Press back button {"back": {}}
+- home: Press home button {"home": {}}
+- switch_app: App switcher {"switch_app": {}}
+- press_key: Press key (back, home, enter, recents)
+- wait: Wait 5 seconds {"wait": {}}
+- done: Complete task {"done": {"success": true, "message": "Task completed"}}
+- speak: Speak to user {"speak": {"text": "Message"}}
+
+### ANDROID SYSTEM TOOLS
+- list_installed_apps: Get list of all installed applications
+- start_app: Launch applications by package name
+- stop_app: Force stop app background processes
+- get_notifications: Read device notifications
+- get_current_activity: Get current foreground activity
+
+### FILE SYSTEM TOOLS
+- read_file: Read file content
+- write_file: Write content to a file
+- list_dir: List directory contents
+
+### SHELL TOOLS
+- execute_shell: Execute shell commands
+
+═══════════════════════════════════════════════════════════════════════════════
+## CRITICAL RULES
+
+1. OPEN APPS DIRECTLY: When you need to open an app, use open_app with the app name from the installed apps list above. NEVER guess - use the list!
+
+2. USE APP NAME MATCHING: The open_app action accepts app names (like "My Files", "WhatsApp"). The system will match against the installed apps list.
+
+3. UI ELEMENT INDEXING: Interactive elements on screen are numbered like [1], [2], [3]. Use click_element with the index to tap them accurately.
+
+4. OUTPUT MUST BE VALID JSON - Nothing else. START with "{" and END with "}"
+
+═══════════════════════════════════════════════════════════════════════════════
+## JSON RESPONSE FORMAT
+
 {
-  "thinking": "Brief reasoning",
+  "thinking": "Brief reasoning about what you see and what to do next",
   "evaluationPreviousGoal": "What happened from previous action",
-  "memory": "What to remember",
-  "nextGoal": "What you plan to do",
-  "action": [{"tap": {"x": 500, "y": 800}}]
+  "memory": "What important info to remember",
+  "nextGoal": "What you plan to do in this step",
+  "action": [
+    {"open_app": {"app_name": "My Files"}},
+    {"click_element": {"index": 1}},
+    {"swipe_up": {"pixels": 300}}
+  ]
 }
-
-AVAILABLE ACTIONS:
-- {"tap": {"x": 500, "y": 800}}
-- {"long_press": {"x": 500, "y": 800}}
-- {"type_text": {"text": "hello"}}
-- {"swipe_up": {"pixels": 500}}
-- {"swipe_down": {"pixels": 500}}
-- {"open_app": {"package_name": "com.whatsapp"}}
-- {"back": {}}
-- {"home": {}}
-- {"switch_app": {}}
-- {"wait": {}}
-- {"done": {"success": true, "message": "completed"}}
-- {"speak": {"text": "message"}}
 
 Now execute the user's task.
         """.trimIndent()

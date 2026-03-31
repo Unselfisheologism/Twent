@@ -105,14 +105,23 @@ class OperitLlmApi(
     private fun parseAction(name: String, params: JSONObject?): Action? {
         return try {
             when (name) {
-                "tap", "click" -> {
+                "tap", "click", "click_element" -> {
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
                         Action.TapAt(x, y)
                     } else {
                         val index = params?.optInt("index") ?: 0
-                        Action.TapElement(index)
+                        if (index > 0) {
+                            Action.TapElement(index)
+                        } else {
+                            val text = params?.optString("text")
+                            if (!text.isNullOrBlank()) {
+                                Action.TapElement(text.hashCode().and(0x7FFFFFFF) % 10000)
+                            } else {
+                                Action.TapElement(0)
+                            }
+                        }
                     }
                 }
                 "type_text", "type" -> {
@@ -128,8 +137,8 @@ class OperitLlmApi(
                     Action.SwipeDown(pixels)
                 }
                 "open_app" -> {
-                    val packageName = params?.optString("package_name") ?: params?.optString("app_name") ?: ""
-                    Action.OpenApp(packageName)
+                    val appName = params?.optString("app_name") ?: params?.optString("package_name") ?: ""
+                    Action.OpenApp(appName)
                 }
                 "back" -> Action.Back
                 "home" -> Action.Home
@@ -152,6 +161,9 @@ class OperitLlmApi(
                     params?.optLong("duration_ms")?.toLong() ?: 1500
                 )
                 "press_key" -> Action.PressKey(params?.optString("key") ?: "enter")
+                "scroll_up" -> Action.ScrollUp(params?.optInt("pixels") ?: 500)
+                "scroll_down" -> Action.ScrollDown(params?.optInt("pixels") ?: 500)
+                "switch_app" -> Action.SwitchApp
                 else -> {
                     Log.w(TAG, "Unknown action: $name")
                     null
