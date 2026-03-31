@@ -33,11 +33,12 @@ class Perception(
      */
     suspend fun analyze(previousState: Set<String>? = null, all: Boolean? =  false): ScreenAnalysis {
         return coroutineScope {
-        val rawDataDeferred = if (all == true) {
-            async { eyes.getAllRawScreenData() }
-        } else {
-            async { eyes.getRawScreenData() }
-        }
+            val rawDataDeferred = if (all == true) {
+                async { eyes.getAllRawScreenData() }
+            } else {
+                // Use getAllRawScreenData() for more reliable window detection
+                async { eyes.getAllRawScreenData() }
+            }
         val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
         val currentActivity = async { eyes.getCurrentActivityName() }
         val rawTree = rawDataDeferred.await() ?: RawScreenData(

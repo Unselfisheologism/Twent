@@ -412,41 +412,31 @@ class OperitAutomationService : AccessibilityService() {
         val (screenWidth, screenHeight) = getScreenDimensions()
         val maxRetries = 5
         val retryDelay = 200L
-        val ownPackageName = packageName
 
         for (attempt in 1..maxRetries) {
+            // 1. Get all interactive windows, not just the focused one
             val allWindows = windows
-            // Filter out our own app's windows (floating overlay) to get the actual screen content
+
+            // 2. Find the main application window.
+            // Logic: Look for TYPE_APPLICATION. If multiple, pick the largest one.
+            // This ignores your overlay (which is likely TYPE_APPLICATION_OVERLAY) or smaller dialogs.
             val targetWindow = allWindows
                 .filter { it.type == TYPE_APPLICATION }
-                .filter { 
-                    // Exclude windows from our own package to avoid capturing the floating overlay
-                    val windowPackageName = it.root?.packageName?.toString()
-                    windowPackageName != ownPackageName
-                }
                 .maxByOrNull {
                     val bounds = Rect()
                     it.getBoundsInScreen(bounds)
                     bounds.width() * bounds.height()
                 }
 
-            // Fallback to any application window if no non-own window found
-            val fallbackWindow = if (targetWindow == null) {
-                allWindows
-                    .filter { it.type == TYPE_APPLICATION }
-                    .maxByOrNull {
-                        val bounds = Rect()
-                        it.getBoundsInScreen(bounds)
-                        bounds.width() * bounds.height()
-                    }
-            } else null
-
-            val rootNode = targetWindow?.root ?: fallbackWindow?.root ?: rootInActiveWindow
+            val rootNode = targetWindow?.root ?: rootInActiveWindow
 
             if (rootNode != null) {
+                // Log what we found to debug
                 Log.d("OperitAutomation", "Analyzing window: ${rootNode.packageName}")
+
                 val (pixelsAbove, pixelsBelow) = findScrollableNodeAndGetInfo(rootNode)
-                return RawScreenData(rootNode, rootNode.packageName?.toString(), pixelsAbove, pixelsBelow, screenWidth, screenHeight)
+                val activityName = rootNode.packageName?.toString()
+                return RawScreenData(rootNode, activityName, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
             }
 
             if (attempt < maxRetries) {
@@ -460,16 +450,10 @@ class OperitAutomationService : AccessibilityService() {
 
     suspend fun dumpWindowHierarchy(pureXML: Boolean = false): String {
         return withContext(Dispatchers.Default) {
-            val ownPackageName = packageName
-            
-            // Try to get a window that is not our own floating overlay
+            // Get all windows and find the main application window (largest TYPE_APPLICATION)
             val allWindows = windows
             val targetWindow = allWindows
                 .filter { it.type == TYPE_APPLICATION }
-                .filter { 
-                    val windowPackageName = it.root?.packageName?.toString()
-                    windowPackageName != ownPackageName
-                }
                 .maxByOrNull {
                     val bounds = Rect()
                     it.getBoundsInScreen(bounds)
@@ -794,39 +778,26 @@ class OperitAutomationService : AccessibilityService() {
         val (screenWidth, screenHeight) = getScreenDimensions()
         val maxRetries = 5
         val retryDelay = 800L
-        val ownPackageName = packageName
 
         for (attempt in 1..maxRetries) {
-            // Try to get a window that is not our own floating overlay
-            val allWindows = windows
-            val targetWindow = allWindows
-                .filter { it.type == TYPE_APPLICATION }
-                .filter { 
-                    val windowPackageName = it.root?.packageName?.toString()
-                    windowPackageName != ownPackageName
-                }
-                .maxByOrNull {
-                    val bounds = Rect()
-                    it.getBoundsInScreen(bounds)
-                    bounds.width() * bounds.height()
-                }
-            
-            val rootNode = targetWindow?.root ?: rootInActiveWindow
+            // Attempt to get the root node in each iteration.
+            val rootNode = rootInActiveWindow
 
             if (rootNode != null) {
-                Log.d("OperitAutomation", "Got root node on attempt $attempt. Package: ${rootNode.packageName}")
+                Log.d("OperitAutomation", "Got rootInActiveWindow on attempt $attempt.")
+
                 val (pixelsAbove, pixelsBelow) = findScrollableNodeAndGetInfo(rootNode)
                 val activityName = rootNode.packageName?.toString()
                 return RawScreenData(rootNode, activityName, pixelsAbove, pixelsBelow, screenWidth, screenHeight)
             }
 
             if (attempt < maxRetries) {
-                Log.d("OperitAutomation", "root node is null on attempt $attempt. Retrying in ${retryDelay}ms...")
+                Log.d("OperitAutomation", "rootInActiveWindow is null on attempt $attempt. Retrying in ${retryDelay}ms...")
                 delay(retryDelay)
             }
         }
 
-        Log.e("OperitAutomation", "Failed to get root node after $maxRetries attempts.")
+        Log.e("OperitAutomation", "Failed to get rootInActiveWindow after $maxRetries attempts.")
         return RawScreenData(null, null, 0, 0, screenWidth, screenHeight)
     }
 
