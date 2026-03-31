@@ -11,6 +11,7 @@ import com.ai.assistance.operit.core.agent.v2.llm.V2LlmApi
 import com.ai.assistance.operit.core.agent.llm.LlmMessage
 import com.ai.assistance.operit.core.agent.llm.MessageRole
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
+import com.ai.assistance.operit.core.agent.v2.message.HistoryItem
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
@@ -31,10 +32,17 @@ class Agent(
 ) {
     val state: AgentState = AgentState()
     private val TAG = "AgentV2"
+    private val historyItems = mutableListOf<HistoryItem>()
     
     private val speechCoordinator = object {
         fun speakToUser(message: String) {
             Log.d("AgentV2", "Speak to user: $message")
+            try {
+                val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.getInstance(context)
+                voiceService?.speak(message)
+            } catch (e: Exception) {
+                Log.e("AgentV2", "TTS failed", e)
+            }
         }
     }
 
@@ -108,10 +116,29 @@ class Agent(
             }
             state.lastResult = actionResults
 
+            // Record history for better tracking
+            historyItems.add(
+                HistoryItem(
+                    stepNumber = state.nSteps,
+                    evaluation = agentOutput.evaluationPreviousGoal,
+                    memory = agentOutput.memory,
+                    nextGoal = agentOutput.nextGoal,
+                    actionResults = actionResults.joinToString("\n") { 
+                        it.longTermMemory ?: it.error ?: "OK" 
+                    }
+                )
+            )
+
+            // Prevent premature completion - only allow "done" after step 3
             if (actionResults.any { it.isDone == true }) {
-                Log.d(TAG,"✅ Agent finished the task.")
-                speechCoordinator.speakToUser("Task completed successfully.")
-                state.stopped = true
+                if (state.nSteps < 3) {
+                    Log.d(TAG,"⚠️ Agent tried to complete in step ${state.nSteps} - ignoring 'done' action, continuing...")
+                    speechCoordinator.speakToUser("Continuing task - need more steps.")
+                } else {
+                    Log.d(TAG,"✅ Agent finished the task.")
+                    speechCoordinator.speakToUser("Task completed successfully.")
+                    state.stopped = true
+                }
             }
 
             state.nSteps++

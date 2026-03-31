@@ -9,6 +9,8 @@ import com.ai.assistance.operit.core.agent.v2.AgentSettings
 import com.ai.assistance.operit.core.agent.v2.AgentStepInfo
 import com.ai.assistance.operit.core.agent.v2.ScreenState
 import com.ai.assistance.operit.core.agent.v2.ActionResult
+import com.ai.assistance.operit.core.agent.v2.actions.Action
+import java.io.IOException
 
 class MemoryManager(
     private val context: Context,
@@ -23,7 +25,7 @@ class MemoryManager(
     private val installedApps: List<Pair<String, String>> = loadInstalledApps()
 
     init {
-        systemMessage = buildSystemPrompt()
+        systemMessage = loadSystemPromptFromAssets()
     }
 
     private fun loadInstalledApps(): List<Pair<String, String>> {
@@ -38,7 +40,30 @@ class MemoryManager(
         }
     }
 
-    private fun buildSystemPrompt(): String {
+    private fun generateActionsDescription(): String {
+        val allActionSpecs = Action.getAllSpecs()
+        return buildString {
+            allActionSpecs.forEach { spec ->
+                append("<action>\n")
+                append("  <name>${spec.name}</name>\n")
+                append("  <description>${spec.description}</description>\n")
+                if (spec.params.isNotEmpty()) {
+                    append("  <parameters>\n")
+                    spec.params.forEach { param ->
+                        append("    <param>\n")
+                        append("      <name>${param.name}</name>\n")
+                        append("      <type>${param.type.simpleName}</type>\n")
+                        append("      <description>${param.description}</description>\n")
+                        append("    </param>\n")
+                    }
+                    append("  </parameters>\n")
+                }
+                append("</action>\n\n")
+            }
+        }.trim()
+    }
+
+    private fun loadSystemPromptFromAssets(): String {
         val appsList = installedApps.take(100).joinToString("\n") { (name, pkg) ->
             "  - $name ($pkg)"
         }
@@ -53,76 +78,41 @@ ${if (installedApps.size > 100) "  ... and ${installedApps.size - 100} more apps
             """.trimIndent()
         } else ""
 
-        return """
-You are an automation agent that controls an Android phone. Your ONLY output format is JSON. NO plain text.
+        val actionsDescription = generateActionsDescription()
+
+        return try {
+            val template = context.assets.open("prompts/system_prompt.md").bufferedReader().use { it.readText() }
+            template
+                .replace("{max_actions}", settings.maxActionsPerStep.toString())
+                .replace("{available_actions}", actionsDescription)
+                .replace("{user_info}", "User: Android Owner")
+                .replace("{intents_catalog}", "")
+        } catch (e: IOException) {
+            // Fallback to basic prompt if asset not found
+            """
+You are an automation agent that controls an Android phone.
 
 $appsSection
 
-═══════════════════════════════════════════════════════════════════════════════
-## AVAILABLE TOOLS
+## AVAILABLE ACTIONS
+$actionsDescription
 
-### UI AUTOMATION TOOLS (Use these to interact with the screen)
-- tap: Tap at coordinates {"tap": {"x": 500, "y": 800}}
-- double_tap: Double tap at coordinates {"double_tap": {"x": 500, "y": 800}}
-- long_press: Long press at coordinates {"long_press": {"x": 500, "y": 800, "duration_ms": 1500}}
-- click_element: Click element by index, text, or content_description
-  {"click_element": {"index": 5}} or {"click_element": {"text": "Submit"}}
-- swipe: Custom swipe {"swipe": {"start_x": 500, "start_y": 1000, "end_x": 500, "end_y": 500}}
-- swipe_left/right/up/down: Swipe in direction {"swipe_up": {"pixels": 500}}
-- scroll_left/right/up/down: Scroll in direction
-- type_text: Type text into focused input {"type_text": {"text": "hello"}}
-- open_app: Open app by NAME (use installed apps list above!) {"open_app": {"app_name": "My Files"}}
-- back: Press back button {"back": {}}
-- home: Press home button {"home": {}}
-- switch_app: App switcher {"switch_app": {}}
-- press_key: Press key (back, home, enter, recents)
-- wait: Wait 5 seconds {"wait": {}}
-- done: Complete task {"done": {"success": true, "message": "Task completed"}}
-- speak: Speak to user {"speak": {"text": "Message"}}
-
-### ANDROID SYSTEM TOOLS
-- list_installed_apps: Get list of all installed applications
-- start_app: Launch applications by package name
-- stop_app: Force stop app background processes
-- get_notifications: Read device notifications
-- get_current_activity: Get current foreground activity
-
-### FILE SYSTEM TOOLS
-- read_file: Read file content
-- write_file: Write content to a file
-- list_dir: List directory contents
-
-### SHELL TOOLS
-- execute_shell: Execute shell commands
-
-═══════════════════════════════════════════════════════════════════════════════
 ## CRITICAL RULES
+1. OUTPUT MUST BE VALID JSON
+2. NEVER use "done" in first 3 steps - explore screen first
+3. Confirm action worked before declaring done
+4. If no visible effect, try DIFFERENT action
 
-1. OPEN APPS DIRECTLY: When you need to open an app, use open_app with the app name from the installed apps list above. NEVER guess - use the list!
-
-2. USE APP NAME MATCHING: The open_app action accepts app names (like "My Files", "WhatsApp"). The system will match against the installed apps list.
-
-3. UI ELEMENT INDEXING: Interactive elements on screen are numbered like [1], [2], [3]. Use click_element with the index to tap them accurately.
-
-4. OUTPUT MUST BE VALID JSON - Nothing else. START with "{" and END with "}"
-
-═══════════════════════════════════════════════════════════════════════════════
-## JSON RESPONSE FORMAT
-
+## RESPONSE FORMAT
 {
-  "thinking": "Brief reasoning about what you see and what to do next",
-  "evaluationPreviousGoal": "What happened from previous action",
-  "memory": "What important info to remember",
-  "nextGoal": "What you plan to do in this step",
-  "action": [
-    {"open_app": {"app_name": "My Files"}},
-    {"click_element": {"index": 1}},
-    {"swipe_up": {"pixels": 300}}
-  ]
+  "thinking": "reasoning...",
+  "evaluationPreviousGoal": "what happened...",
+  "memory": "info to remember...",
+  "nextGoal": "what to do next...",
+  "action": [{"action_name": {"param": "value"}}]
 }
-
-Now execute the user's task.
-        """.trimIndent()
+            """.trimIndent()
+        }
     }
 
     fun addNewTask(newTask: String) {
@@ -199,12 +189,17 @@ Now execute the user's task.
     }
 
     private fun buildHistoryDescription(): String {
-        return historyItems.takeLast(5).joinToString("\n") { item ->
-            val parts = mutableListOf<String>()
-            item.evaluation?.let { parts.add("Eval: $it") }
-            item.memory?.let { parts.add("Memory: $it") }
-            item.nextGoal?.let { parts.add("Goal: $it") }
-            parts.joinToString(" | ")
-        }
+        if (historyItems.isEmpty()) return "No history yet."
+
+        return buildString {
+            historyItems.takeLast(10).forEachIndexed { index, item ->
+                append("Step ${item.stepNumber}:\n")
+                item.evaluation?.let { append("  Evaluation: $it\n") }
+                item.memory?.let { append("  Memory: $it\n") }
+                item.nextGoal?.let { append("  Next Goal: $it\n") }
+                item.actionResults?.let { append("  Action Results: $it\n") }
+                append("\n")
+            }
+        }.trim()
     }
 }
