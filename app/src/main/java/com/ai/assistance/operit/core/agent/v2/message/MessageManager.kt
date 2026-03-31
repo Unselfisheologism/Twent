@@ -198,6 +198,12 @@ $actionsDescription
                 append("Todo List (checklist from your plan):\n$todoText\n\n")
             }
             
+            // Add empty state indicator for adaptive behavior
+            if (screenState.isLikelyEmpty) {
+                append("⚠️ The screen appears to be empty or has no interactive elements.\n")
+                append("➡️ If looking for items that should be here, try: navigating back, refreshing, or switching to a different screen.\n\n")
+            }
+            
             append("Screen State:\n")
             append("Activity: ${screenState.activityName}\n")
             append("Keyboard: ${screenState.isKeyboardOpen}\n\n")

@@ -87,47 +87,6 @@ class Agent(
             Log.e(TAG, "Failed to release wake lock", e)
         }
     }
-    
-    private fun shouldAllowDone(state: AgentState, actionResults: List<ActionResult>): Boolean {
-        if (state.nSteps < 1) {
-            return false
-        }
-        
-        val lastResult = actionResults.firstOrNull { it.isDone == true }
-        if (lastResult?.longTermMemory?.contains("success") == true || lastResult?.success == true) {
-            return true
-        }
-        
-        if (historyItems.isEmpty()) {
-            return state.nSteps >= 3
-        }
-        
-        val recentItems = historyItems.takeLast(5)
-        val hasProgress = recentItems.any { item ->
-            item.actionResults?.let { res ->
-                res.contains("Screen updated") ||
-                res.contains("Opened app") ||
-                res.contains("Scrolled") ||
-                res.contains("Input") ||
-                res.contains("Deleted") ||
-                res.contains("Selected") ||
-                res.contains("Navigated") ||
-                res.contains("Pressed") ||
-                res.contains("success") ||
-                res.contains("Done")
-            } ?: false
-        }
-        
-        if (hasProgress) {
-            return true
-        }
-        
-        if (state.nSteps >= 5) {
-            return true
-        }
-        
-        return false
-    }
 
     suspend fun run(initialTask: String, maxSteps: Int = 150) {
         acquireWakeLock()
@@ -195,12 +154,13 @@ class Agent(
                 }
 
                 val thoughtText = buildString {
-                    agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${it}\n") }
-                    agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${it}\n") }
-                    agentOutput.nextGoal?.let { if (it.isNotEmpty()) append("Next Goal: $it") }
+                    val todoContent = try { fileSystem.getTodoContents() } catch (e: Exception) { "" }
+                    if (todoContent.isNotBlank()) {
+                        append("📋 Todo List:\n$todoContent")
+                    }
                 }.trim()
 
-                if (thoughtText.isNotEmpty()) {
+                if (thoughtText.isNotBlank()) {
                     OverlayDispatcher.show(
                         text = thoughtText,
                         priority = OverlayPriority.TASKS,
@@ -210,16 +170,15 @@ class Agent(
                 }
 
                 val actionResults = mutableListOf<ActionResult>()
-                var actionFailed = false
                 for (action in agentOutput.action) {
                     val result = actionExecutor.execute(action, screenState, context, fileSystem)
                     actionResults.add(result)
                     Log.d(TAG, "  - Action executed: ${result.longTermMemory ?: result.error ?: "OK"}")
                     
-                    // If action failed, mark for retry but continue (don't stop the loop)
+                    // If action failed, stop executing further actions in this step
                     if (result.error != null) {
-                        actionFailed = true
-                        Log.d(TAG, "  - ⚠️ Action failed: ${result.error}, will retry in next step")
+                        Log.d(TAG, "  - 🛑 Action failed. Stopping current step's execution.")
+                        break
                     }
                 }
                 state.lastResult = actionResults
@@ -237,22 +196,11 @@ class Agent(
                     )
                 )
 
-                // Check for done action with proper validation
+                // Check for done action - trust the LLM's decision like Blurr does
                 if (actionResults.any { it.isDone == true }) {
-                    if (!shouldAllowDone(state, actionResults)) {
-                        Log.d(TAG,"⚠️ Premature done at step ${state.nSteps} - ignoring, continuing...")
-                        // Add warning message for LLM
-                        memoryManager.addContextMessage(
-                            LlmMessage(
-                                role = MessageRole.SYSTEM,
-                                content = "System Note: Do NOT use 'done' action yet. The task is not complete. Continue working on the task."
-                            )
-                        )
-                    } else {
-                        Log.d(TAG,"✅ Agent finished the task.")
-                        speechCoordinator.speakToUser("Task completed successfully.")
-                        state.stopped = true
-                    }
+                    Log.d(TAG,"✅ Agent finished the task.")
+                    speechCoordinator.speakToUser("Task completed successfully.")
+                    state.stopped = true
                 }
 
                 state.nSteps++

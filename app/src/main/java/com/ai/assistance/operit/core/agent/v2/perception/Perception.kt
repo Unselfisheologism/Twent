@@ -106,7 +106,8 @@ class Perception(
                     activityName = activityName,
                     elementMap = elementMap,
                     scrollUp = rawTree.pixelsAbove,
-                    scrollDown = rawTree.pixelsBelow
+                    scrollDown = rawTree.pixelsBelow,
+                    isLikelyEmpty = elementMap.isEmpty() || isLikelyEmpty
                 )
             } else{
                 ScreenAnalysis(
@@ -115,7 +116,8 @@ class Perception(
                     activityName = activityName,
                     elementMap = mutableMapOf(),
                     scrollUp = rawTree.pixelsAbove,
-                    scrollDown = rawTree.pixelsBelow
+                    scrollDown = rawTree.pixelsBelow,
+                    isLikelyEmpty = true
                 )
             }
     }
