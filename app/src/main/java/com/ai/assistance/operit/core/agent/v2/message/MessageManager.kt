@@ -221,6 +221,17 @@ $actionsDescription
                 }
             }
             
+            // Detect task completion - if files were deleted, check if there are more steps
+            val justDeleted = result?.any { 
+                it.longTermMemory?.contains("Deleted") == true || 
+                it.longTermMemory?.contains("deleted") == true 
+            } == true
+            
+            if (justDeleted) {
+                append("\n✅ Files were deleted. Check your todo list - if deletion is complete, proceed to the NEXT step (e.g., go to Recycle Bin).\n")
+                append("➡️ Don't keep going back to check - if done, MOVE FORWARD.\n")
+            }
+            
             if (result?.any { it.error != null } == true) {
                 append("\n⚠️ Previous action had an error. ADAPT your strategy - don't repeat failed action.\n")
             }
@@ -243,7 +254,23 @@ $actionsDescription
         val lastGoal = recentItems.lastOrNull()?.nextGoal
         val lastEvaluation = recentItems.lastOrNull()?.evaluation
         
+        // Detect if agent is in a loop - repeating same actions
+        val last3Items = recentItems.takeLast(3)
+        val isLooping = last3Items.size >= 3 && last3Items.distinctBy { it.actionResults?.take(50) }.size == 1
+        
+        // Detect if navigating back repeatedly
+        val backCount = recentItems.count { it.actionResults?.contains("Navigated back") == true || it.actionResults?.contains("back") == true }
+        val isBackLoop = backCount >= 4
+        
         return buildString {
+            if (isLooping || isBackLoop) {
+                append("⚠️ WARNING: You appear to be in a REPETITIVE LOOP!\n")
+                append("➡️ STOP repeating the same actions.\n")
+                append("➡️ REVIEW your original task and think about what needs to be done next.\n")
+                append("➡️ If you deleted files and need to go to Recycle Bin, navigate to that screen now.\n")
+                append("➡️ If the Downloads folder is empty and items were deleted, move to the NEXT STEP in the task.\n\n")
+            }
+            
             if (hasRecentErrors) {
                 append("⚠️ Previous actions had errors or issues. ADAPT your strategy - don't repeat failed actions.\n\n")
             }

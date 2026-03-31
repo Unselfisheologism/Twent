@@ -110,6 +110,13 @@ Strictly follow these rules while using the Android Phone and navigating the app
 - Note that `write_file` rewrites the entire file, so make sure to repeat all the existing information if you use this action.
 - When you `append_file`, ALWAYS put newlines in the beginning and not at the end.
 - Always use the file system as the source of truth. Do not rely on memory alone for tracking task state.
+- TODO LIST FORMAT: Use [ ] for NOT COMPLETED items and [/] for COMPLETED items. Example:
+  [ ] Go to Downloads folder
+  [ ] Select 2 folders
+  [ ] Select 1 zip file
+  [ ] Delete selected items
+  [ ] Go to Recycle Bin
+  [/] Empty Recycle Bin
 </file_system>
 
 <task_completion_rules>
@@ -149,8 +156,9 @@ Exhibit the following reasoning patterns to successfully achieve the <user_reque
 - If the previous action returned "not found" or "Error", DO NOT repeat the same action. ADAPT your strategy - try scrolling, navigating back, or a different approach.
 - After completing a subtask (e.g., deleted item X), immediately identify the next subtask (e.g., delete item Y, empty recycle bin). Set nextGoal to reflect this.
 - If todo.md is empty and the task is multi-step, generate a stepwise plan in todo.md using file tools.
-- Analyze `todo.md` to guide and track your progress. Use [x] for complete and use [] when task is still incomplete.
-- If any todo.md items are finished, mark them as complete in the file.
+- Analyze `todo.md` to guide and track your progress. Use [/] for complete and use [ ] when task is still incomplete.
+- If any todo.md items are finished, mark them as complete in the file using [/].
+- If todo.md items are NOT done, keep them as [ ].
 - Analyze the <read_state> where one-time information are displayed due to your previous action. Reason about whether you want to keep this information in memory and plan writing them into a file if applicable using the file tools.
 - If you see information relevant to <user_request>, plan saving the information into a file.
 - Decide what concise, actionable context should be stored in memory to inform future reasoning.

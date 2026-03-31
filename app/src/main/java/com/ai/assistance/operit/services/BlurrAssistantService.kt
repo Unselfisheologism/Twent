@@ -171,8 +171,7 @@ class BlurrAssistantService : Service() {
         isAgentRunning = true
         overlayManager.hideInputBox()
         
-        overlayManager.showStatus("Starting: ${task.take(30)}...")
-        overlayManager.showThinking("Analyzing screen...")
+        // Directly show todo - no initial status message needed
 
         serviceScope.launch {
             try {
@@ -204,10 +203,31 @@ class BlurrAssistantService : Service() {
                     context = this@BlurrAssistantService
                 )
 
-                overlayManager.updateThinking("Running automation...")
+                // Update bottom overlay with real-time todo.md content periodically
+                // First, create the thinking view so we can update it
+                overlayManager.showThinking("📋 Todo: (initializing...)")
+                
+                val todoUpdateJob = launch {
+                    while (isActive && isAgentRunning) {
+                        try {
+                            val todoContent = fileSystem.getTodoContents()
+                            val displayText = if (todoContent.isNotBlank()) {
+                                "📋 Todo:\n$todoContent"
+                            } else {
+                                "📋 Todo: (empty)"
+                            }
+                            // Truncate if too long
+                            overlayManager.updateThinking(displayText.take(500))
+                        } catch (e: Exception) {
+                            // Ignore errors
+                        }
+                        delay(2000) // Update every 2 seconds
+                    }
+                }
                 
                 agent?.run(task, maxSteps)
                 
+                todoUpdateJob.cancel()
                 overlayManager.hideThinking()
                 overlayManager.showStatus("Task completed!")
                 delay(3000)

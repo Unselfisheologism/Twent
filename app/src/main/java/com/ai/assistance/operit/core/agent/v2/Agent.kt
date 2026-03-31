@@ -195,6 +195,30 @@ class Agent(
                         }
                     )
                 )
+                
+                // Detect if agent is stuck in a loop - repeatedly navigating back
+                // If so, inject a system message to force forward progress
+                if (state.nSteps >= 5) {
+                    val recentItems = historyItems.takeLast(5)
+                    val backCount = recentItems.count { 
+                        it.actionResults?.contains("back") == true || 
+                        it.actionResults?.contains("Navigated") == true 
+                    }
+                    val justDeleted = actionResults.any { 
+                        it.longTermMemory?.contains("Deleted") == true || 
+                        it.longTermMemory?.contains("deleted") == true 
+                    }
+                    
+                    // If doing lots of back navigation after deletion, warn the agent
+                    if (backCount >= 3 && justDeleted) {
+                        memoryManager.addContextMessage(
+                            LlmMessage(
+                                role = MessageRole.SYSTEM,
+                                content = "CRITICAL: You deleted files successfully. STOP navigating back and forward. Check your todo list and complete the NEXT step of the task (e.g., go to Recycle Bin, empty it)."
+                            )
+                        )
+                    }
+                }
 
                 // Check for done action - trust the LLM's decision like Blurr does
                 if (actionResults.any { it.isDone == true }) {
