@@ -18,7 +18,11 @@ import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.overlay.OverlayPriority
 import com.ai.assistance.operit.overlay.OverlayPosition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.R)
 class Agent(
@@ -39,7 +43,13 @@ class Agent(
             Log.d("AgentV2", "Speak to user: $message")
             try {
                 val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.getInstance(context)
-                voiceService?.speak(message)
+                GlobalScope.launch(Dispatchers.Main) {
+                    try {
+                        voiceService.speak(message)
+                    } catch (e: Exception) {
+                        Log.e("AgentV2", "TTS failed", e)
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("AgentV2", "TTS failed", e)
             }

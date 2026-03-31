@@ -131,10 +131,10 @@ class ActionExecutor(private val finger: OperitFinger) {
             }
             is Action.Speak -> {
                 val message = action.message
-                runBlocking {
+                CoroutineScope(Dispatchers.Main).launch {
                     try {
                         val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.getInstance(context)
-                        voiceService?.speak(message)
+                        voiceService.speak(message)
                     } catch (e: Exception) {
                         Log.e("ActionExecutor", "TTS failed", e)
                     }
