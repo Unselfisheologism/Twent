@@ -89,21 +89,44 @@ class Agent(
     }
     
     private fun shouldAllowDone(state: AgentState, actionResults: List<ActionResult>): Boolean {
-        // Don't allow done in first 2 steps - need at least step 3
-        if (state.nSteps < 2) {
+        if (state.nSteps < 1) {
             return false
         }
         
-        // Check if task actually has meaningful progress
-        val hasProgress = historyItems.any { 
-            it.actionResults?.contains("Screen updated") == true ||
-            it.actionResults?.contains("Opened app") == true ||
-            it.actionResults?.contains("Scrolled") == true ||
-            it.actionResults?.contains("Input") == true
+        val lastResult = actionResults.firstOrNull { it.isDone == true }
+        if (lastResult?.longTermMemory?.contains("success") == true || lastResult?.success == true) {
+            return true
         }
         
-        // Only allow done if we have actual progress
-        return hasProgress
+        if (historyItems.isEmpty()) {
+            return state.nSteps >= 3
+        }
+        
+        val recentItems = historyItems.takeLast(5)
+        val hasProgress = recentItems.any { item ->
+            item.actionResults?.let { res ->
+                res.contains("Screen updated") ||
+                res.contains("Opened app") ||
+                res.contains("Scrolled") ||
+                res.contains("Input") ||
+                res.contains("Deleted") ||
+                res.contains("Selected") ||
+                res.contains("Navigated") ||
+                res.contains("Pressed") ||
+                res.contains("success") ||
+                res.contains("Done")
+            }
+        }
+        
+        if (hasProgress) {
+            return true
+        }
+        
+        if (state.nSteps >= 5) {
+            return true
+        }
+        
+        return false
     }
 
     suspend fun run(initialTask: String, maxSteps: Int = 150) {

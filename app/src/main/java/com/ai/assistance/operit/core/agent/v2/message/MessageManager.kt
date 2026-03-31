@@ -188,10 +188,15 @@ $actionsDescription
         screenState: ScreenState
     ) {
         val historyText = buildHistoryDescription()
+        val todoText = try { fileSystem.getTodoContents() } catch (e: Exception) { "" }
         
         stateMessage = buildString {
             append("Current Task: $task\n")
             append("Step: ${stepInfo?.stepNumber ?: 1}/${stepInfo?.maxSteps ?: 150}\n\n")
+            
+            if (todoText.isNotBlank()) {
+                append("Todo List (checklist from your plan):\n$todoText\n\n")
+            }
             
             append("Screen State:\n")
             append("Activity: ${screenState.activityName}\n")
@@ -210,6 +215,10 @@ $actionsDescription
                 }
             }
             
+            if (result?.any { it.error != null } == true) {
+                append("\n⚠️ Previous action had an error. ADAPT your strategy - don't repeat failed action.\n")
+            }
+            
             append("What should you do next? (Respond in JSON)")
         }
     }
@@ -217,8 +226,31 @@ $actionsDescription
     private fun buildHistoryDescription(): String {
         if (historyItems.isEmpty()) return "No history yet."
 
+        val recentItems = historyItems.takeLast(10)
+        
+        val hasRecentErrors = recentItems.any { item ->
+            item.actionResults?.contains("not found") == true ||
+            item.actionResults?.contains("Error") == true ||
+            item.actionResults?.contains("failed") == true
+        }
+        
+        val lastGoal = recentItems.lastOrNull()?.nextGoal
+        val lastEvaluation = recentItems.lastOrNull()?.evaluation
+        
         return buildString {
-            historyItems.takeLast(10).forEachIndexed { index, item ->
+            if (hasRecentErrors) {
+                append("⚠️ Previous actions had errors or issues. ADAPT your strategy - don't repeat failed actions.\n\n")
+            }
+            
+            if (lastGoal != null) {
+                append("🎯 Last Goal: $lastGoal\n")
+                if (lastEvaluation != null) {
+                    append("📊 Evaluation: $lastEvaluation\n")
+                }
+                append("\n")
+            }
+            
+            recentItems.forEachIndexed { index, item ->
                 append("Step ${item.stepNumber}:\n")
                 item.evaluation?.let { append("  Evaluation: $it\n") }
                 item.memory?.let { append("  Memory: $it\n") }

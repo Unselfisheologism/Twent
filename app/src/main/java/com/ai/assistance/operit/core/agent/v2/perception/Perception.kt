@@ -85,25 +85,37 @@ class Perception(
                         uiRepresentation = "$uiRepresentation\n[End of page]"
                     }
                 } else {
-                    uiRepresentation = "The screen is empty or contains no interactive elements."
+                    uiRepresentation = "⚠️ The screen is empty or contains no interactive elements."
+                }
+
+                val normalizedRep = uiRepresentation.lowercase()
+                val isLikelyEmpty = normalizedRep.contains("empty") || 
+                               normalizedRep.contains("no items") ||
+                               normalizedRep.contains("no files") ||
+                               normalizedRep.contains("no folders") ||
+                               normalizedRep.contains("no results") ||
+                               normalizedRep.contains("nothing here")
+
+                if (elementMap.isEmpty() || isLikelyEmpty) {
+                    uiRepresentation = "📭 $uiRepresentation\n➡️ If target items aren't visible, try navigating back or to a different screen."
                 }
 
                 ScreenAnalysis(
-                    uiRepresentation = uiRepresentation, // The newly formatted string
+                    uiRepresentation = uiRepresentation,
                     isKeyboardOpen = isKeyboardOpen,
                     activityName = activityName,
                     elementMap = elementMap,
-                    scrollUp = rawTree.pixelsAbove, // Store the raw numbers
-                    scrollDown = rawTree.pixelsBelow  // Store the raw numbers
+                    scrollUp = rawTree.pixelsAbove,
+                    scrollDown = rawTree.pixelsBelow
                 )
             } else{
                 ScreenAnalysis(
-                    uiRepresentation = "uiRepresentation", // The newly formatted string
+                    uiRepresentation = "⚠️ Screen analysis returned no data. The app may have crashed or be loading.",
                     isKeyboardOpen = isKeyboardOpen,
                     activityName = activityName,
                     elementMap = mutableMapOf(),
-                    scrollUp = rawTree.pixelsAbove, // Store the raw numbers
-                    scrollDown = rawTree.pixelsBelow  // Store the raw numbers
+                    scrollUp = rawTree.pixelsAbove,
+                    scrollDown = rawTree.pixelsBelow
                 )
             }
     }

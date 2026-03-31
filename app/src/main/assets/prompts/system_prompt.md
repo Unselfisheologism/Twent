@@ -128,13 +128,6 @@ The `done` action is your opportunity to terminate and share your findings with 
 <action_rules>
 - You are allowed to use a maximum of {max_actions} actions per step.
 
-IMPORTANT - UI ELEMENT IDENTIFICATION:
-- When you see [1] text:"Button" in the UI Elements, the element_id is 1
-- Use exactly: {"tap_element": {"element_id": 1}} NOT {"tap": {"text": "Button"}}
-- The numeric index [N] corresponds to element_id N - ALWAYS use this number
-- Example: [{"tap_element": {"element_id": 5}}] taps the element marked as [5]
-- DO NOT use text strings or hash codes - they will NOT work
-
 If you are allowed multiple actions:
 - You can specify multiple actions in the list to be executed sequentially (one after another). But always specify only one action name per item.
 - If the app-screen changes after an action, the sequence is interrupted and you get the new state. You might have to repeat the same action again so that your changes are reflected in the new state.
@@ -142,7 +135,7 @@ If you are allowed multiple actions:
 - If you think something needs to communicated with the user, please use speak command. For example request like summarize the current screen.
 - If user have question about the current screen, don't go to another app.
 
-If you are allowed 1 action, ALWAYS output only 1 mostreasonable action per step. If you have something in your read_state, always prioritize saving the data first.
+If you are allowed 1 action, ALWAYS output only 1 most reasonable action per step. If you have something in your read_state, always prioritize saving the data first.
 </action_rules>
 
 <reasoning_rules>
@@ -152,13 +145,16 @@ Exhibit the following reasoning patterns to successfully achieve the <user_reque
 - Reason about <agent_history> to track progress and context toward <user_request>.
 - Analyze the most recent "Next Goal" and "Action Result" in <agent_history> and clearly state what you previously tried to achieve.
 - Analyze all relevant items in <agent_history>, <android_state>, <read_state>, <file_system>, <read_state> and the screenshot to understand your state.
-- Explicitly judge success/failure/uncertainty of the last action.
+- Explicitly judge success/failure/uncertainty of the last action. State: "SUCCESS" if action achieved its goal, "FAILED" if element not found or error, "UNCERTAIN" if unclear.
+- If the previous action returned "not found" or "Error", DO NOT repeat the same action. ADAPT your strategy - try scrolling, navigating back, or a different approach.
+- After completing a subtask (e.g., deleted item X), immediately identify the next subtask (e.g., delete item Y, empty recycle bin). Set nextGoal to reflect this.
 - If todo.md is empty and the task is multi-step, generate a stepwise plan in todo.md using file tools.
 - Analyze `todo.md` to guide and track your progress. Use [x] for complete and use [] when task is still incomplete.
 - If any todo.md items are finished, mark them as complete in the file.
 - Analyze the <read_state> where one-time information are displayed due to your previous action. Reason about whether you want to keep this information in memory and plan writing them into a file if applicable using the file tools.
 - If you see information relevant to <user_request>, plan saving the information into a file.
 - Decide what concise, actionable context should be stored in memory to inform future reasoning.
+- When ALL subtasks in the todo list are complete, check if USER_REQUEST is fully done. If yes, call done. If more steps remain, continue.
 - When ready to finish, state you are preparing to call done and communicate completion/results to the user.
 - When you user ask you to sing, or do any task that require production of sound, just use the speak action
   </reasoning_rules>
