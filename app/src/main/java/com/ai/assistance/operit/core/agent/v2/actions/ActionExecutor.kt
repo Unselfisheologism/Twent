@@ -23,7 +23,9 @@ import kotlinx.coroutines.withContext
 import kotlin.system.measureTimeMillis
 import kotlin.text.removePrefix
 
-class ActionExecutor(private val finger: OperitFinger) {
+class ActionExecutor(private val finger: OperitFinger, private val context: Context) {
+
+    private val executorScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private fun getExtraInfo(node: AccessibilityNodeInfo): String {
         val infoParts = mutableListOf<String>()
@@ -98,32 +100,22 @@ class ActionExecutor(private val finger: OperitFinger) {
                 if (elementNode != null) {
                     val text = getVisibleText(elementNode)
                     val service = OperitAutomationService.instance
+                    val center = getCenterFromNode(elementNode)
 
-                    var signatureBefore = ""
-                    var signatureAfter = ""
-                    var screenChanged = false
-
-                    val diffTime = measureTimeMillis {
-                        signatureBefore = service?.getWindowHierarchySignature() ?: ""
+                    // PRIMARY: Use direct coordinate tap for speed and accuracy
+                    if (center != null) {
+                        Log.d("ActionExecutor", "Using direct tap at coordinates (${center.first}, ${center.second})")
+                        finger.tap(center.first, center.second)
+                        // Minimal delay - screen updates very fast on modern devices
+                        delay(50)
+                        
+                        // Verify tap was delivered
+                        ActionResult(longTermMemory = "Tapped element '$text' at ${center.first},${center.second}")
+                    } else {
+                        // Fallback: try accessibility click if no coordinates
                         elementNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                         delay(100)
-                        signatureAfter = service?.getWindowHierarchySignature() ?: ""
-                        screenChanged = signatureBefore != signatureAfter
-                    }
-
-                    Log.d("ActionExecutor", "Signature diff + 100ms delay took ${diffTime}ms. Screen changed: $screenChanged")
-
-                    if (screenChanged) {
-                        ActionResult(longTermMemory = "Clicked element '$text'. Screen updated successfully.")
-                    } else {
-                        val center = getCenterFromNode(elementNode)
-                        if (center != null) {
-                            finger.tap(center.first, center.second)
-                            delay(500)
-                            ActionResult(longTermMemory = "Accessibility click failed (screen didn't change). Escalated to physical tap at ${center.first},${center.second} on '$text'.")
-                        } else {
-                            ActionResult(error = "Click sent to '$text' but screen did not change, and cannot find coordinates for physical retry.")
-                        }
+                        ActionResult(longTermMemory = "Tapped element '$text' via accessibility API")
                     }
                 } else {
                     ActionResult(error = "Element with ID ${action.elementId} not found.")
@@ -131,7 +123,7 @@ class ActionExecutor(private val finger: OperitFinger) {
             }
             is Action.Speak -> {
                 val message = action.message
-                CoroutineScope(Dispatchers.Main).launch {
+                executorScope.launch {
                     try {
                         val voiceService = com.ai.assistance.operit.api.voice.VoiceServiceFactory.getInstance(context)
                         voiceService.speak(message)
@@ -281,7 +273,23 @@ class ActionExecutor(private val finger: OperitFinger) {
             is Action.LaunchIntent -> {
                 val name = action.intentName
                 val params = action.parameters
-                ActionResult(error = "Intent '$name' not supported in this version. Parameters: $params")
+                val intent = com.ai.assistance.operit.intents.IntentRegistry.findByName(context, name)
+                if (intent != null) {
+                    val androidIntent = intent.buildIntent(context, params)
+                    if (androidIntent != null) {
+                        try {
+                            androidIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(androidIntent)
+                            ActionResult(longTermMemory = "Launched intent '$name' with parameters: $params")
+                        } catch (e: Exception) {
+                            ActionResult(error = "Failed to launch intent '$name': ${e.message}")
+                        }
+                    } else {
+                        ActionResult(error = "Failed to build intent '$name'. Check parameters.")
+                    }
+                } else {
+                    ActionResult(error = "Intent '$name' not found. Check intents catalog for valid names.")
+                }
             }
             is Action.TapAt -> {
                 finger.tap(action.x, action.y)

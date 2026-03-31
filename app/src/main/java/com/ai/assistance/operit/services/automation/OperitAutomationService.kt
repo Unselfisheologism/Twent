@@ -410,8 +410,8 @@ class OperitAutomationService : AccessibilityService() {
 
     suspend fun getAllScreenAnalysisData(): RawScreenData {
         val (screenWidth, screenHeight) = getScreenDimensions()
-        val maxRetries = 5
-        val retryDelay = 200L
+        val maxRetries = 3  // Reduced for speed
+        val retryDelay = 100L  // Reduced for speed
 
         for (attempt in 1..maxRetries) {
             // 1. Get all interactive windows, not just the focused one
@@ -776,8 +776,8 @@ class OperitAutomationService : AccessibilityService() {
 
     suspend fun getScreenAnalysisData(): RawScreenData {
         val (screenWidth, screenHeight) = getScreenDimensions()
-        val maxRetries = 5
-        val retryDelay = 800L
+        val maxRetries = 3  // Reduced for speed
+        val retryDelay = 150L  // Reduced for speed
 
         for (attempt in 1..maxRetries) {
             // Attempt to get the root node in each iteration.

@@ -199,7 +199,7 @@ Now respond with JSON only. No text.
             memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = ActionExecutor(finger),
+            actionExecutor = ActionExecutor(finger, context),
             fileSystem = fileSystem,
             context = context
         )
@@ -263,7 +263,7 @@ Now respond with JSON only. No text.
             memoryManager = messageManager,
             perception = perception,
             llmApi = operitLlmApi,
-            actionExecutor = ActionExecutor(finger),
+            actionExecutor = ActionExecutor(finger, context),
             fileSystem = fileSystem,
             context = context
         )
@@ -295,7 +295,7 @@ Now respond with JSON only. No text.
     suspend fun performAction(action: Action): Boolean {
         return try {
             val screenState = perception.analyze()
-            val executor = ActionExecutor(finger)
+            val executor = ActionExecutor(finger, context)
             val result = executor.execute(action, screenState, context, fileSystem)
             result.error == null
         } catch (e: Exception) {

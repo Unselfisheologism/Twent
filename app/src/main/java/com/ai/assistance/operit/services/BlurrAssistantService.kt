@@ -192,7 +192,7 @@ class BlurrAssistantService : Service() {
                     modelName = "default",
                     context = this@BlurrAssistantService
                 )
-                val actionExecutor = ActionExecutor(finger)
+                val actionExecutor = ActionExecutor(finger, this@BlurrAssistantService)
 
                 agent = Agent(
                     settings = settings,

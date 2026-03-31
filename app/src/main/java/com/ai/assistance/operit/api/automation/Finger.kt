@@ -61,7 +61,7 @@ class Finger(private val context: Context) {
         service?.performRecents()
     }
 
-    fun scrollUp(pixels: Int, duration: Int = 500) {
+    fun scrollUp(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -74,7 +74,7 @@ class Finger(private val context: Context) {
         swipe(x, y1, x, y2, duration)
     }
 
-    fun scrollDown(pixels: Int, duration: Int = 500) {
+    fun scrollDown(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -108,7 +108,7 @@ class Finger(private val context: Context) {
         }
     }
 
-    fun swipeLeft(pixels: Int, duration: Int = 500) {
+    fun swipeLeft(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -122,7 +122,7 @@ class Finger(private val context: Context) {
         swipe(startX, startY, endX, endY, duration)
     }
 
-    fun swipeRight(pixels: Int, duration: Int = 500) {
+    fun swipeRight(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -136,7 +136,7 @@ class Finger(private val context: Context) {
         swipe(startX, startY, endX, endY, duration)
     }
 
-    fun swipeUp(pixels: Int, duration: Int = 500) {
+    fun swipeUp(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -150,7 +150,7 @@ class Finger(private val context: Context) {
         swipe(startX, startY, endX, endY, duration)
     }
 
-    fun swipeDown(pixels: Int, duration: Int = 500) {
+    fun swipeDown(pixels: Int, duration: Int = 300) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels

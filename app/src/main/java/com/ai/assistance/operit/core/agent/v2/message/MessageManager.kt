@@ -63,6 +63,30 @@ class MemoryManager(
         }.trim()
     }
 
+    private fun generateIntentsCatalog(): String {
+        val intents = com.ai.assistance.operit.intents.IntentRegistry.listIntents(context)
+        if (intents.isEmpty()) return ""
+        
+        return buildString {
+            append("\n<intents_catalog>\n")
+            intents.forEach { intent ->
+                append("  <intent>\n")
+                append("    <name>${intent.name}</name>\n")
+                append("    <description>${intent.description()}</description>\n")
+                if (intent.parametersSpec().isNotEmpty()) {
+                    append("    <parameters>\n")
+                    intent.parametersSpec().forEach { param ->
+                        append("      <param name=\"${param.name}\" type=\"${param.type}\" required=\"${param.required}\">${param.description}</param>\n")
+                    }
+                    append("    </parameters>\n")
+                }
+                append("  </intent>\n")
+            }
+            append("</intents_catalog>\n\n")
+            append("Usage: To launch any of the above intents, add an action like {\"launch_intent\": {\"intent_name\": \"Dial\", \"parameters\": {\"phone_number\": \"+123456789\"}}}.\n")
+        }
+    }
+
     private fun loadSystemPromptFromAssets(): String {
         val appsList = installedApps.take(100).joinToString("\n") { (name, pkg) ->
             "  - $name ($pkg)"
@@ -79,6 +103,8 @@ ${if (installedApps.size > 100) "  ... and ${installedApps.size - 100} more apps
         } else ""
 
         val actionsDescription = generateActionsDescription()
+        
+        val intentsCatalog = generateIntentsCatalog()
 
         return try {
             val template = context.assets.open("prompts/system_prompt.md").bufferedReader().use { it.readText() }
@@ -86,7 +112,7 @@ ${if (installedApps.size > 100) "  ... and ${installedApps.size - 100} more apps
                 .replace("{max_actions}", settings.maxActionsPerStep.toString())
                 .replace("{available_actions}", actionsDescription)
                 .replace("{user_info}", "User: Android Owner")
-                .replace("{intents_catalog}", "")
+                .replace("{intents_catalog}", intentsCatalog)
         } catch (e: IOException) {
             // Fallback to basic prompt if asset not found
             """
