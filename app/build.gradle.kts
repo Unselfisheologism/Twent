@@ -455,4 +455,7 @@ dependencies {
     // Glance for Widgets (Compose for Widgets)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+
+    // UI Automator for accessibility-based automation
+    implementation("androidx.test.uiautomator:uiautomator:2.3.0")
 }
