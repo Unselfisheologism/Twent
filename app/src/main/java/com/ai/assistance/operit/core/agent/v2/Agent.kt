@@ -115,7 +115,7 @@ class Agent(
                 res.contains("Pressed") ||
                 res.contains("success") ||
                 res.contains("Done")
-            }
+            } ?: false
         }
         
         if (hasProgress) {
