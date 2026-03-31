@@ -128,6 +128,13 @@ The `done` action is your opportunity to terminate and share your findings with 
 <action_rules>
 - You are allowed to use a maximum of {max_actions} actions per step.
 
+IMPORTANT - UI ELEMENT IDENTIFICATION:
+- When you see [1] text:"Button" in the UI Elements, the element_id is 1
+- Use exactly: {"tap_element": {"element_id": 1}} NOT {"tap": {"text": "Button"}}
+- The numeric index [N] corresponds to element_id N - ALWAYS use this number
+- Example: [{"tap_element": {"element_id": 5}}] taps the element marked as [5]
+- DO NOT use text strings or hash codes - they will NOT work
+
 If you are allowed multiple actions:
 - You can specify multiple actions in the list to be executed sequentially (one after another). But always specify only one action name per item.
 - If the app-screen changes after an action, the sequence is interrupted and you get the new state. You might have to repeat the same action again so that your changes are reflected in the new state.
@@ -135,7 +142,7 @@ If you are allowed multiple actions:
 - If you think something needs to communicated with the user, please use speak command. For example request like summarize the current screen.
 - If user have question about the current screen, don't go to another app.
 
-If you are allowed 1 action, ALWAYS output only 1 most reasonable action per step. If you have something in your read_state, always prioritize saving the data first.
+If you are allowed 1 action, ALWAYS output only 1 mostreasonable action per step. If you have something in your read_state, always prioritize saving the data first.
 </action_rules>
 
 <reasoning_rules>

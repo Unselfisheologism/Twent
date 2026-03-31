@@ -111,50 +111,45 @@ class OperitLlmApi(
         return try {
             when (name) {
                 "tap_element", "tap", "click", "click_element" -> {
-                    // Try x,y coordinates first
+                    // Try x,y coordinates first (preferred for accuracy)
                     val x = params?.optInt("x") ?: 0
                     val y = params?.optInt("y") ?: 0
                     if (x > 0 && y > 0) {
                         Action.TapAt(x, y)
                     } else {
-                        // Try element_id (used by tap_element)
+                        // Try element_id (the actual numeric index from screen)
                         val elementId = params?.optInt("element_id") ?: 0
                         if (elementId > 0) {
                             Action.TapElement(elementId)
                         } else {
-                            // Try index (used by click_element)
+                            // Try index (numeric index)
                             val index = params?.optInt("index") ?: 0
                             if (index > 0) {
                                 Action.TapElement(index)
                             } else {
-                                // Try text-based selection
-                                val text = params?.optString("text")
-                                if (!text.isNullOrBlank()) {
-                                    // Use hash of text as element ID (not ideal but fallback)
-                                    Action.TapElement(text.hashCode().and(0x7FFFFFFF) % 10000)
-                                } else {
-                                    // Last resort - try content_description
-                                    val contentDesc = params?.optString("content_description")
-                                    if (!contentDesc.isNullOrBlank()) {
-                                        Action.TapElement(contentDesc.hashCode().and(0x7FFFFFFF) % 10000)
-                                    } else {
-                                        Log.w(TAG, "No valid element identifier found for tap action")
-                                        null
-                                    }
-                                }
+                                // DO NOT use hashCode - it won't match the real IDs
+                                // Return null so agent can retry with proper element_id
+                                Log.w(TAG, "Tap action requires numeric element_id or x,y coords, got: $params")
+                                null
                             }
                         }
                     }
                 }
-                "long_press_element" -> {
-                    val elementId = params?.optInt("element_id") ?: 0
-                    if (elementId > 0) {
-                        Action.LongPressElement(elementId)
+                "long_press_element", "long_press" -> {
+                    val x = params?.optInt("x") ?: 0
+                    val y = params?.optInt("y") ?: 0
+                    if (x > 0 && y > 0) {
+                        Action.LongPressAt(x, y)
                     } else {
-                        val index = params?.optInt("index") ?: 0
-                        if (index > 0) {
-                            Action.LongPressElement(index)
-                        } else null
+                        val elementId = params?.optInt("element_id") ?: 0
+                        if (elementId > 0) {
+                            Action.LongPressElement(elementId)
+                        } else {
+                            val index = params?.optInt("index") ?: 0
+                            if (index > 0) {
+                                Action.LongPressElement(index)
+                            } else null
+                        }
                     }
                 }
                 "type_text", "type" -> {

@@ -132,10 +132,16 @@ class Agent(
                 if (agentOutput == null) {
                     Log.d(TAG,"❌ LLM failed to return a valid action. Retrying...")
                     state.consecutiveFailures++
+                    // More descriptive error message
+                    val retryMsg = if (state.consecutiveFailures < 3) {
+                        "System Note: Your previous output was not valid JSON. Check that your response starts with { and ends with }. Do NOT include any text before or after the JSON."
+                    } else {
+                        "CRITICAL: Your response must be ONLY valid JSON. No text before { or after }. Example: {\"thinking\": \"...\", \"action\": [{\"tap_element\": {\"element_id\": 1}}]}"
+                    }
                     memoryManager.addContextMessage(
                         LlmMessage(
                             role = MessageRole.SYSTEM,
-                            content = "System Note: Your previous output was not valid JSON. Please ensure your response is correctly formatted."
+                            content = retryMsg
                         )
                     )
                     if (state.consecutiveFailures >= settings.maxFailures) {
@@ -149,7 +155,21 @@ class Agent(
 
                 state.consecutiveFailures = 0
                 state.lastModelOutput = agentOutput
-                Log.d(TAG, "🤖 LLM decided: ${agentOutput.nextGoal}")
+                Log.d(TAG, "🤖 LLM decided: ${agentOutput.nextGoal}, actions: ${agentOutput.action.size}")
+                
+                // Handle empty actions list - this is also a failure
+                if (agentOutput.action.isEmpty()) {
+                    Log.w(TAG, "⚠️ LLM returned empty actions list!")
+                    memoryManager.addContextMessage(
+                        LlmMessage(
+                            role = MessageRole.SYSTEM,
+                            content = "System Note: Your 'action' list cannot be empty. You must always include at least one action."
+                        )
+                    )
+                    state.consecutiveFailures++
+                    delay(500)
+                    continue
+                }
 
                 val thoughtText = buildString {
                     agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${it}\n") }
@@ -167,15 +187,16 @@ class Agent(
                 }
 
                 val actionResults = mutableListOf<ActionResult>()
+                var actionFailed = false
                 for (action in agentOutput.action) {
                     val result = actionExecutor.execute(action, screenState, context, fileSystem)
                     actionResults.add(result)
                     Log.d(TAG, "  - Action executed: ${result.longTermMemory ?: result.error ?: "OK"}")
-
-                    // If action failed, retry once with different approach
-                    if (result.error != null && state.nSteps < maxSteps / 2) {
-                        Log.d(TAG, "  - ⚠️ Action failed, will retry in next step")
-                        // Continue to next step for retry, don't break
+                    
+                    // If action failed, mark for retry but continue (don't stop the loop)
+                    if (result.error != null) {
+                        actionFailed = true
+                        Log.d(TAG, "  - ⚠️ Action failed: ${result.error}, will retry in next step")
                     }
                 }
                 state.lastResult = actionResults

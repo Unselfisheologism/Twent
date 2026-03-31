@@ -25,8 +25,8 @@ data class AgentSettings(
     val maxSteps: Int = 150,
     val saveConversationPath: String? = null,
     val saveConversationPathEncoding: String = "utf-8",
-    val maxFailures: Int = 3,
-    val retryDelay: Int = 10,
+    val maxFailures: Int = 10,  // More lenient - allow more retries
+    val retryDelay: Int = 5,   // Faster retry
     val validateOutput: Boolean = false,
     val calculateCost: Boolean = false,
     val llmTimeout: Int = 60,
