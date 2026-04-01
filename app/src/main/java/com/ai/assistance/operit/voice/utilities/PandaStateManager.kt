@@ -1,10 +1,10 @@
-package com.ai.assistance.operit.utilities
+package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.ai.assistance.operit.ConversationalAgentService
+import com.ai.assistance.operit.voice.ConversationalAgentService
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**

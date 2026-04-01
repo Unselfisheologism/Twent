@@ -1,11 +1,12 @@
-package com.ai.assistance.operit.utilities
+package com.ai.assistance.operit.voice.utilities
 
+import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.queryPurchasesAsync
-import com.ai.assistance.operit.MyApplication
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
@@ -16,15 +17,33 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Calendar
 
-class FreemiumManager {
+class FreemiumManager(private val context: Context) {
 
     private val db = Firebase.firestore
     private val auth = Firebase.auth
-    private val billingClient: BillingClient = MyApplication.billingClient
+    private val billingClient: BillingClient = BillingClient.newBuilder(context)
+        .setListener { _, _ -> }
+        .build()
+    
+    init {
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingClientStateListener) {}
+            override fun onBillingServiceDisconnected() {}
+        })
+    }
 
     companion object {
-        const val DAILY_TASK_LIMIT = 15 // Set your daily task limit here
-        private const val PRO_SKU = "pro" // The SKU for the pro subscription
+        @Volatile
+        private var INSTANCE: FreemiumManager? = null
+        
+        fun getInstance(context: Context): FreemiumManager {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: FreemiumManager(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+        
+        const val DAILY_TASK_LIMIT = 15
+        private const val PRO_SKU = "pro"
     }
 
     suspend fun getDeveloperMessage(): String {

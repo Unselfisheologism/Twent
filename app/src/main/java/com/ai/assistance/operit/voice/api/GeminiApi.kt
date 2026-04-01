@@ -3,7 +3,7 @@ package com.ai.assistance.operit.voice.api
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import com.ai.assistance.operit.voice.BuildConfig
+import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.voice.MyApplication
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.google.ai.client.generativeai.type.ImagePart

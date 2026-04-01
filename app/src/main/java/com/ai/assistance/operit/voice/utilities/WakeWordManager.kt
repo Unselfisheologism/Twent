@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.services.EnhancedWakeWordService
 import kotlinx.coroutines.launch
 

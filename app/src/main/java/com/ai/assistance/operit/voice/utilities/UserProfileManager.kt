@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.utilities
+package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
 import android.util.Patterns

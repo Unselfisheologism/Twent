@@ -12,7 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.ai.assistance.operit.voice.MainActivity
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 
 class TriggerMonitoringService : Service() {
 

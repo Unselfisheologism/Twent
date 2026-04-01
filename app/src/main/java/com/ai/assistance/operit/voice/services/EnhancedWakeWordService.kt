@@ -16,7 +16,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.ConversationalAgentService
 import com.ai.assistance.operit.voice.MainActivity
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.api.PorcupineWakeWordDetector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

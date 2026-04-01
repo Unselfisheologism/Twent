@@ -15,7 +15,7 @@ import android.view.WindowManager
 import android.widget.Button
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.ConversationalAgentService
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 
 class FloatingPandaButtonService : Service() {
 

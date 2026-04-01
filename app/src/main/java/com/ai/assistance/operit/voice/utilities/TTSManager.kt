@@ -15,7 +15,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
-import com.ai.assistance.operit.voice.BuildConfig
+import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.voice.api.GoogleTts
 import com.ai.assistance.operit.voice.api.TTSVoice
 import com.ai.assistance.operit.voice.overlay.OverlayDispatcher

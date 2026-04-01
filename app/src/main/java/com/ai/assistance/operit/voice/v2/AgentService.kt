@@ -12,7 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.api.Eyes
 import com.ai.assistance.operit.voice.api.Finger

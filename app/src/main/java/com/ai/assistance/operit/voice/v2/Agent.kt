@@ -14,8 +14,12 @@ import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
 import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.overlay.OverlayPriority
 import com.ai.assistance.operit.voice.overlay.OverlayPosition
-import com.ai.assistance.operit.voice.SettingsActivity
 import kotlinx.coroutines.delay
+
+object OperitSettings {
+    const val PREFS_NAME = "OperitSettings"
+    const val KEY_SHOW_THOUGHTS = "show_thoughts"
+}
 
 /**
  * The main conductor of the agent.
@@ -104,8 +108,8 @@ class Agent(
             Log.d(TAG,"🤖 LLM decided: ${agentOutput.nextGoal}")
 
             // Show thoughts if enabled
-            val sharedPrefs = context.getSharedPreferences("BlurrSettings", Context.MODE_PRIVATE)
-            if (sharedPrefs.getBoolean(SettingsActivity.KEY_SHOW_THOUGHTS, false)) {
+            val sharedPrefs = context.getSharedPreferences(OperitSettings.PREFS_NAME, Context.MODE_PRIVATE)
+            if (sharedPrefs.getBoolean(OperitSettings.KEY_SHOW_THOUGHTS, false)) {
                 val thoughtText = buildString {
                     agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
                     agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }

@@ -1,7 +1,7 @@
 package com.ai.assistance.operit.voice.v2.llm
 
 import android.util.Log
-import com.ai.assistance.operit.voice.BuildConfig
+import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.v2.AgentOutput
 import com.google.ai.client.generativeai.GenerativeModel

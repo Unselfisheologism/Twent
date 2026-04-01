@@ -1,9 +1,9 @@
-package com.ai.assistance.operit.utilities
+package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
 import android.util.Log
-import com.ai.assistance.operit.api.GoogleTts
-import com.ai.assistance.operit.api.TTSVoice
+import com.ai.assistance.operit.voice.api.GoogleTts
+import com.ai.assistance.operit.voice.api.TTSVoice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
