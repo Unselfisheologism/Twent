@@ -149,8 +149,6 @@ class BlurrAssistantService : Service() {
                 }
             }
         )
-        
-        overlayManager.showStatus("What would you like me to do?")
 
         if (autoVoice) {
             startVoiceInput { text ->
