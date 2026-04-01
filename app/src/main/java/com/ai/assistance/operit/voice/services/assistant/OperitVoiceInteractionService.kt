@@ -45,12 +45,12 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.d(TAG, "onStartCommand received")
         
-        startBlurrAssistantService()
+        startOperitAssistantService()
         
         return START_NOT_STICKY
     }
 
-    private fun startBlurrAssistantService() {
+    private fun startOperitAssistantService() {
         try {
             val serviceIntent = Intent(this, AgentService::class.java).apply {
                 action = "com.ai.assistance.operit.ACTION_START_AGENT"

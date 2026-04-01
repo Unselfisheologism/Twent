@@ -4,7 +4,7 @@ import android.util.Log
 import com.ai.assistance.operit.BuildConfig
 
 object Logger {
-    private const val DEFAULT_TAG = "BlurrVoice"
+    private const val DEFAULT_TAG = "OperitVoice"
     
     // Enable logging based on build configuration
     private val isLoggingEnabled = BuildConfig.ENABLE_LOGGING

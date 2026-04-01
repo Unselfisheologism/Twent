@@ -90,7 +90,7 @@ class TriggersActivity : BaseNavigationActivity() {
     private fun showBatteryOptimizationWarning(onAcknowledge: () -> Unit) {
         val dialog = AlertDialog.Builder(this)
             .setTitle("Vendor Battery Optimization")
-            .setMessage("Your vendor might not support Panda background trigger monitoring. To ensure Panda works properly, please disable any kind of battery optimization for the app.")
+            .setMessage("Your vendor might not support Operit background trigger monitoring. To ensure Operit works properly, please disable any kind of battery optimization for the app.")
             .setPositiveButton("OK") { dialog, _ ->
                 onAcknowledge()
                 dialog.dismiss()
@@ -136,7 +136,7 @@ class TriggersActivity : BaseNavigationActivity() {
     private fun showPermissionDialog() {
         val dialog = AlertDialog.Builder(this)
             .setTitle("Permission Required")
-            .setMessage("To use notification-based triggers, you need to grant Panda the Notification Listener permission in your system settings.")
+            .setMessage("To use notification-based triggers, you need to grant Operit the Notification Listener permission in your system settings.")
             .setPositiveButton("Grant Permission") { _, _ ->
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }

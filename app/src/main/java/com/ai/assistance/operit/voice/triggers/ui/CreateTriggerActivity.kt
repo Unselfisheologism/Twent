@@ -393,7 +393,7 @@ class CreateTriggerActivity : AppCompatActivity() {
     private fun showExactAlarmPermissionDialog() {
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Permission Required")
-            .setMessage("To schedule tasks at a precise time, Panda needs the 'Alarms & Reminders' permission. Please grant this in the next screen.")
+            .setMessage("To schedule tasks at a precise time, Operit needs the 'Alarms & Reminders' permission. Please grant this in the next screen.")
             .setPositiveButton("Grant Permission") { _, _ ->
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     startActivity(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))

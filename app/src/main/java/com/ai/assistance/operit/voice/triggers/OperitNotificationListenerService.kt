@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers
+package com.ai.assistance.operit.voice.triggers
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -7,9 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class PandaNotificationListenerService : NotificationListenerService() {
+class OperitNotificationListenerService : NotificationListenerService() {
 
-    private val TAG = "PandaNotification"
+    private val TAG = "OperitNotification"
     private lateinit var triggerManager: TriggerManager
 
     override fun onCreate() {
@@ -50,7 +50,7 @@ class PandaNotificationListenerService : NotificationListenerService() {
 
                 Log.d(TAG, "Found matching trigger for package: $packageName. Executing instruction: $finalInstruction")
                 // Use the TriggerReceiver to start the agent service
-                val intent = android.content.Intent(this@PandaNotificationListenerService, TriggerReceiver::class.java).apply {
+                val intent = android.content.Intent(this@OperitNotificationListenerService, TriggerReceiver::class.java).apply {
                     action = TriggerReceiver.ACTION_EXECUTE_TASK
                     putExtra(TriggerReceiver.EXTRA_TASK_INSTRUCTION, finalInstruction)
                 }

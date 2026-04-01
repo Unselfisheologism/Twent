@@ -414,13 +414,13 @@
         
         <!-- Floating Button Service -->
         <service
-            android:name=".voice.services.FloatingPandaButtonService"
+            android:name=".voice.services.FloatingOperitButtonService"
             android:enabled="true"
             android:exported="false" />
         
-        <!-- Panda Notification Listener -->
+        <!-- Operit Notification Listener -->
         <service
-            android:name=".voice.triggers.PandaNotificationListenerService"
+            android:name=".voice.triggers.OperitNotificationListenerService"
             android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>

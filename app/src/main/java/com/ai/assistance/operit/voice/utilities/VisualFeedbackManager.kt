@@ -26,8 +26,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.ai.assistance.operit.voice.AudioWaveView
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.ui.SmallDeltaGlowView
-import com.ai.assistance.operit.voice.utilities.PandaState
-import com.ai.assistance.operit.voice.utilities.PandaStateManager
+import com.ai.assistance.operit.voice.utilities.OperitState
+import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.utilities.TTSManager
 import com.ai.assistance.operit.voice.utilities.TtsVisualizer
 
@@ -43,8 +43,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var inputBoxView: View? = null
     private var thinkingIndicatorView: View? = null
     private var smallDeltaGlowView: SmallDeltaGlowView? = null
-    private val pandaStateManager by lazy { PandaStateManager.getInstance(context) }
-    private val stateChangeListener: (PandaState) -> Unit
+    private val pandaStateManager by lazy { OperitStateManager.getInstance(context) }
+    private val stateChangeListener: (OperitState) -> Unit
     private var speakingOverlay: View? = null
 
     init {
@@ -533,7 +533,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     /**
      * A new private method to update the small delta's appearance based on the app state.
      */
-    private fun updateSmallDeltaVisuals(state: PandaState) {
+    private fun updateSmallDeltaVisuals(state: OperitState) {
         // Run on the main thread and only if the view exists
         mainHandler.post {
             smallDeltaGlowView?.let { view ->

@@ -30,7 +30,7 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onShow(args, showFlags)
             AppLogger.d(TAG, "Session show requested with flags: $showFlags")
             
-            startBlurrAssistantService()
+            startOperitAssistantService()
             
             finish()
         }
@@ -46,7 +46,7 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onDestroy()
         }
         
-        private fun startBlurrAssistantService() {
+        private fun startOperitAssistantService() {
             try {
                 val intent = Intent(context, AgentService::class.java).apply {
                     action = "com.ai.assistance.operit.ACTION_START_AGENT"

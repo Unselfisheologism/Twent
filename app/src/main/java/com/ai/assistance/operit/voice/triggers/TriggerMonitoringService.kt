@@ -36,7 +36,7 @@ class TriggerMonitoringService : Service() {
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Blurr Trigger Service")
+            .setContentTitle("Operit Trigger Service")
             .setContentText("Monitoring for app triggers in the background.")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)

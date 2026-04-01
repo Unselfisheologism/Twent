@@ -38,7 +38,7 @@ import com.ai.assistance.operit.voice.utilities.getReasoningModelApiResponse
 import com.ai.assistance.operit.voice.utilities.FreemiumManager
 import com.ai.assistance.operit.voice.overlay.OverlayManager
 import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
-import com.ai.assistance.operit.voice.utilities.PandaState
+import com.ai.assistance.operit.voice.utilities.OperitState
 import com.ai.assistance.operit.voice.utilities.UserProfileManager
 import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
 import com.ai.assistance.operit.voice.v2.AgentService
@@ -51,7 +51,7 @@ import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.ai.assistance.operit.voice.utilities.ServicePermissionManager
-import com.ai.assistance.operit.voice.utilities.PandaStateManager
+import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.google.firebase.firestore.firestore
@@ -90,7 +90,7 @@ class ConversationalAgentService : Service() {
     private val clarificationQuestionViews = mutableListOf<View>()
     private var transcriptionView: TextView? = null
     private val visualFeedbackManager by lazy { VisualFeedbackManager.getInstance(this) }
-    private val pandaStateManager by lazy { PandaStateManager.getInstance(this) }
+    private val pandaStateManager by lazy { OperitStateManager.getInstance(this) }
     private var isTextModeActive = false
     private val freemiumManager by lazy { FreemiumManager() }
     private val servicePermissionManager by lazy { ServicePermissionManager(this) }
@@ -155,7 +155,7 @@ class ConversationalAgentService : Service() {
 
         // Start state monitoring and set initial state
         pandaStateManager.startMonitoring()
-        pandaStateManager.setState(PandaState.IDLE)
+        pandaStateManager.setState(OperitState.IDLE)
 
 
     }
@@ -191,7 +191,7 @@ class ConversationalAgentService : Service() {
         firebaseAnalytics.logEvent("text_mode_activated", null)
         
         isTextModeActive = true
-        pandaStateManager.setState(PandaState.IDLE)
+        pandaStateManager.setState(OperitState.IDLE)
         speechCoordinator.stopListening()
         speechCoordinator.stopSpeaking()
         // Optionally hide the transcription view since user is typing
@@ -247,7 +247,7 @@ class ConversationalAgentService : Service() {
         // Skip greeting and start listening immediately
         serviceScope.launch {
             Log.d("ConvAgent", "Starting immediate listening (no greeting)")
-            pandaStateManager.setState(PandaState.LISTENING)
+            pandaStateManager.setState(OperitState.LISTENING)
             startImmediateListening()
         }
         return START_STICKY
@@ -291,7 +291,7 @@ class ConversationalAgentService : Service() {
             onResult = { recognizedText ->
                 if (isTextModeActive) return@startListening // Ignore results in text mode
                 Log.d("ConvAgent", "Final user transcription: $recognizedText")
-                pandaStateManager.setState(PandaState.PROCESSING)
+                pandaStateManager.setState(OperitState.PROCESSING)
                 visualFeedbackManager.updateTranscription(recognizedText)
                 mainHandler.postDelayed({
                     visualFeedbackManager.hideTranscription()
@@ -307,7 +307,7 @@ class ConversationalAgentService : Service() {
                 if (error == "No speech match") {
                     Log.d("ConvAgent", "No speech match detected. Silently resetting to IDLE.")
                     visualFeedbackManager.hideTranscription()
-                    pandaStateManager.setState(PandaState.IDLE)
+                    pandaStateManager.setState(OperitState.IDLE)
                     // We return early so we don't trigger the "I didn't catch that" logic
                     return@startListening
                 }
@@ -344,11 +344,11 @@ class ConversationalAgentService : Service() {
                 Log.d("ConvAgent", "Listening state: $listening")
                 if (listening) {
                     if (isTextModeActive) return@startListening // Ignore state changes in text mode
-                    pandaStateManager.setState(PandaState.LISTENING)
+                    pandaStateManager.setState(OperitState.LISTENING)
                     visualFeedbackManager.showTranscription()
                 } else {
                     if (!isTextModeActive) {
-                        pandaStateManager.setState(PandaState.IDLE)
+                        pandaStateManager.setState(OperitState.IDLE)
                     }
                 }
             }
@@ -363,9 +363,9 @@ class ConversationalAgentService : Service() {
 //            updateSystemPromptWithMemories()
 //        }
         updateSystemPromptWithTime()
-        pandaStateManager.setState(PandaState.SPEAKING)
+        pandaStateManager.setState(OperitState.SPEAKING)
         speechCoordinator.speakText(text)
-        Log.d("ConvAgent", "Panda said: $text")
+        Log.d("ConvAgent", "Operit said: $text")
         // --- CHANGE 4: Check if we are in text mode before starting to listen ---
         if (isTextModeActive) {
             Log.d("ConvAgent", "In text mode, ensuring input box is visible and skipping voice listening.")
@@ -379,7 +379,7 @@ class ConversationalAgentService : Service() {
             onResult = { recognizedText ->
                 if (isTextModeActive) return@startListening // Ignore errors in text mode
                 Log.d("ConvAgent", "Final user transcription: $recognizedText")
-                pandaStateManager.setState(PandaState.PROCESSING)
+                pandaStateManager.setState(OperitState.PROCESSING)
                 visualFeedbackManager.updateTranscription(recognizedText)
                 mainHandler.postDelayed({
                     visualFeedbackManager.hideTranscription()
@@ -438,11 +438,11 @@ class ConversationalAgentService : Service() {
                 Log.d("ConvAgent", "Listening state: $listening")
                 if (listening) {
                     if (isTextModeActive) return@startListening // Ignore errors in text mode
-                    pandaStateManager.setState(PandaState.LISTENING)
+                    pandaStateManager.setState(OperitState.LISTENING)
                     visualFeedbackManager.showTranscription()
                 } else {
                     if (!isTextModeActive) {
-                        pandaStateManager.setState(PandaState.IDLE)
+                        pandaStateManager.setState(OperitState.IDLE)
                     }
                 }
             }
@@ -550,7 +550,7 @@ class ConversationalAgentService : Service() {
                     gracefulShutdown("Goodbye!", "command")
                     return@launch
                 }
-                pandaStateManager.setState(PandaState.PROCESSING)
+                pandaStateManager.setState(OperitState.PROCESSING)
                 visualFeedbackManager.showThinkingIndicator()
                 val defaultJsonResponse = """{"Type": "Reply", "Reply": "I'm sorry, I had an issue.", "Instruction": "", "Should End": "Continue"}"""
                 val rawModelResponse = getReasoningModelApiResponse(conversationHistory) ?: defaultJsonResponse
@@ -752,7 +752,7 @@ class ConversationalAgentService : Service() {
         } else {
             """
             ### Memory Status ###
-            Memory system is temporarily disabled. Panda cannot remember or learn from previous conversations at this time.
+            Memory system is temporarily disabled. Operit cannot remember or learn from previous conversations at this time.
             some memories added by developers
             {memory_context}
             ### End Memory Status ###
@@ -760,7 +760,7 @@ class ConversationalAgentService : Service() {
         }
 
         val systemPrompt = """
-            You are a helpful voice assistant called Panda that can either have a conversation or ask an executor to execute tasks on the user's phone.
+            You are a helpful voice assistant called Operit that can either have a conversation or ask an executor to execute tasks on the user's phone.
             The executor can speak, listen, see the screen, tap the screen, and basically use the phone as a normal human would.
 
             {agent_status_context}
@@ -1312,7 +1312,7 @@ class ConversationalAgentService : Service() {
         isRunning = false
         
         // Stop state monitoring and set final state
-        pandaStateManager.setState(PandaState.IDLE)
+        pandaStateManager.setState(OperitState.IDLE)
         pandaStateManager.stopMonitoring()
         visualFeedbackManager.hideSmallDeltaGlow()
         visualFeedbackManager.hideSpeakingOverlay() // <-- ADD THIS LINE

@@ -1,9 +1,9 @@
 package com.ai.assistance.operit.voice.utilities
 
 /**
- * Represents the different states of the Panda app for visual feedback
+ * Represents the different states of the Operit app for visual feedback
  */
-enum class PandaState {
+enum class OperitState {
     /**
      * App is ready and idle, no active conversation or processing
      */

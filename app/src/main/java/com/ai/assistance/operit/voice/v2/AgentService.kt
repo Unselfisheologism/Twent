@@ -269,11 +269,11 @@ class AgentService : Service() {
         )
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Panda Doing Task (Expand to stop Panda)")
+            .setContentTitle("Operit Doing Task (Expand to stop Operit)")
             .setContentText(contentText)
             .addAction(
                 android.R.drawable.ic_media_pause, // Using built-in pause icon as stop button
-                "Stop Panda",
+                "Stop Operit",
                 stopPendingIntent
             )
             .setOngoing(true) // Makes notification persistent and harder to dismiss

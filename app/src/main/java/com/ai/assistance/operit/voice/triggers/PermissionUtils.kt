@@ -10,7 +10,7 @@ object PermissionUtils {
 
     fun isNotificationListenerEnabled(context: Context): Boolean {
         val enabledListeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
-        val componentName = PandaNotificationListenerService::class.java.canonicalName
+        val componentName = OperitNotificationListenerService::class.java.canonicalName
         return enabledListeners?.contains(componentName) == true
     }
 

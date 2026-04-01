@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/blurrRootLayout"
+    android:id="@+id/operitRootLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/transparent">
@@ -11,10 +11,10 @@
         android:orientation="horizontal"
         android:padding="8dp"
         android:gravity="center_vertical"
-        android:background="@drawable/blurr_input_background">
+        android:background="@drawable/operit_input_background">
 
         <EditText
-            android:id="@+id/blurrInputField"
+            android:id="@+id/operitInputField"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
@@ -30,10 +30,10 @@
             android:singleLine="true" />
 
         <ImageButton
-            android:id="@+id/blurrMicButton"
+            android:id="@+id/operitMicButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:background="@drawable/blurr_mic_button_background"
+            android:background="@drawable/operit_mic_button_background"
             android:src="@android:drawable/ic_btn_speak_now"
             android:contentDescription="Voice input"
             android:scaleType="centerInside"
