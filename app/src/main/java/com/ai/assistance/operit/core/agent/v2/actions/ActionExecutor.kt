@@ -12,8 +12,7 @@ import com.ai.assistance.operit.core.agent.v2.actions.Action
 import com.ai.assistance.operit.core.agent.v2.ActionResult
 import com.ai.assistance.operit.core.agent.v2.fs.FileSystem
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayPriority
+
 import com.ai.assistance.operit.services.automation.OperitAutomationService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
@@ -256,11 +255,6 @@ class ActionExecutor(private val finger: OperitFinger, private val context: Cont
             is Action.WriteFile -> {
                 val success = fileSystem.writeFile(action.fileName, action.content)
                 if (success) {
-                    Log.d("ActionExecutor", "Wrote content to '${action.fileName} ${action.content}'.")
-                    OverlayDispatcher.show(
-                        action.content,
-                        OverlayPriority.CAPTION
-                    )
                     ActionResult(longTermMemory = "Wrote content to '${action.fileName}'.")
                 } else {
                     ActionResult(error = "Failed to write to file '${action.fileName}'.")

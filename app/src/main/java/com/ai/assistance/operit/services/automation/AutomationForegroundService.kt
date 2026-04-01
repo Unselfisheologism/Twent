@@ -15,8 +15,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayManager
+
 import com.ai.assistance.operit.services.FloatingChatService
 import kotlinx.coroutines.*
 import java.util.Queue
@@ -77,11 +76,7 @@ class AutomationForegroundService : Service() {
         Log.d(TAG, "onCreate: Service is being created.")
         createNotificationChannel()
         
-        // Initialize Blurr-style overlay system
-        val overlayManager = OverlayManager.getInstance(this)
-        OverlayDispatcher.clearAll()
-        overlayManager.startObserving()
-        Log.d(TAG, "Overlay system initialized")
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -179,12 +174,7 @@ class AutomationForegroundService : Service() {
         taskQueue.clear()
         serviceScope.cancel()
         
-        // Clean up Blurr-style overlay system
-        OverlayDispatcher.clearAll()
-        val overlayManager = OverlayManager.getInstance(this)
-        overlayManager.stopObserving()
-        Log.i(TAG, "Overlay system cleaned up")
-        
+
         Log.i(TAG, "Service destroyed.")
     }
 

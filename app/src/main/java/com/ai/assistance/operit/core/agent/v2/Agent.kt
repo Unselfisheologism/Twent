@@ -16,9 +16,7 @@ import com.ai.assistance.operit.core.agent.v2.message.HistoryItem
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayPriority
-import com.ai.assistance.operit.overlay.OverlayPosition
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -160,14 +158,7 @@ class Agent(
                     }
                 }.trim()
 
-                if (thoughtText.isNotBlank()) {
-                    OverlayDispatcher.show(
-                        text = thoughtText,
-                        priority = OverlayPriority.TASKS,
-                        duration = 5000L,
-                        position = OverlayPosition.TOP
-                    )
-                }
+
 
                 val actionResults = mutableListOf<ActionResult>()
                 for (action in agentOutput.action) {

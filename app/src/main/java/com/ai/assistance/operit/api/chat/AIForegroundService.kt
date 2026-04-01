@@ -29,8 +29,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayManager
+
 import com.ai.assistance.operit.api.speech.PersonalWakeListener
 import com.ai.assistance.operit.api.speech.SpeechPrerollStore
 import com.ai.assistance.operit.api.speech.SpeechService
@@ -39,7 +38,6 @@ import com.ai.assistance.operit.core.chat.AIMessageManager
 import com.ai.assistance.operit.core.application.ActivityLifecycleManager
 import com.ai.assistance.operit.core.application.ForegroundServiceCompat
 import com.ai.assistance.operit.data.preferences.SpeechServicesPreferences
-import com.ai.assistance.operit.services.BlurrAssistantService
 import com.ai.assistance.operit.services.UIDebuggerService
 import com.ai.assistance.operit.data.preferences.DisplayPreferencesManager
 import com.ai.assistance.operit.data.preferences.WakeWordPreferences
@@ -475,12 +473,7 @@ class AIForegroundService : Service() {
         )
         startWakeMonitoring()
         
-        // Initialize Blurr-style overlay system for UI automation
-        val overlayManager = OverlayManager.getInstance(this)
-        OverlayDispatcher.clearAll()
-        overlayManager.startObserving()
-        AppLogger.d(TAG, "Overlay system initialized for UI automation")
-        
+
         AppLogger.d(TAG, "AI 前台服务已启动。")
     }
 
@@ -535,13 +528,7 @@ class AIForegroundService : Service() {
                 AppLogger.e(TAG, "退出时取消当前AI任务失败: ${e.message}", e)
             }
 
-            try {
-                stopService(Intent(this, BlurrAssistantService::class.java))
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "退出时停止 BlurrAssistantService 失败: ${e.message}", e)
-            }
 
-            try {
                 stopService(Intent(this, UIDebuggerService::class.java))
             } catch (e: Exception) {
                 AppLogger.e(TAG, "退出时停止 UIDebuggerService 失败: ${e.message}", e)
@@ -695,11 +682,7 @@ class AIForegroundService : Service() {
         hideKeepAliveOverlay()
         stopWakeMonitoring()
         
-        // Clean up Blurr-style overlay system
-        OverlayDispatcher.clearAll()
-        val overlayManager = OverlayManager.getInstance(this)
-        overlayManager.stopObserving()
-        
+
         AppLogger.d(TAG, "AI 前台服务已销毁。")
     }
 
@@ -932,7 +915,7 @@ class AIForegroundService : Service() {
 
         AppLogger.d(TAG, "startWakeListening: phrase='$currentWakePhrase'")
 
-        if (wakeHandoffPending && !wakeStopInProgress && BlurrAssistantService.getInstance() == null) {
+        if (wakeHandoffPending && !wakeStopInProgress) {
             AppLogger.d(TAG, "Clearing stale wake handoff pending state before starting wake listening")
             wakeHandoffPending = false
             wakeStopInProgress = false
@@ -1019,7 +1002,7 @@ class AIForegroundService : Service() {
                     )
 
                     if (wakeHandoffPending) {
-                        val blurrAlive = BlurrAssistantService.getInstance() != null
+                        val blurrAlive = false
                         if (!wakeStopInProgress && !blurrAlive) {
                             AppLogger.d(TAG, "Clearing stale wake handoff pending state (no floating instance)")
                             wakeHandoffPending = false
@@ -1151,20 +1134,18 @@ class AIForegroundService : Service() {
                 var waitedMs = 0L
                 while (isActive && waitedMs < 5000L) {
                     if (!wakeListeningEnabled) return@launch
-                    if (BlurrAssistantService.getInstance() != null) break
                     delay(250)
                     waitedMs += 250
                 }
 
-                AppLogger.d(TAG, "等待Blurr服务启动: waitedMs=$waitedMs, instance=${BlurrAssistantService.getInstance() != null}")
+                AppLogger.d(TAG, "等待服务启动: waitedMs=$waitedMs")
 
                 while (isActive) {
                     if (!wakeListeningEnabled) return@launch
-                    if (BlurrAssistantService.getInstance() == null) break
                     delay(500)
                 }
 
-                AppLogger.d(TAG, "检测到Blurr服务已关闭，准备恢复唤醒监听")
+                AppLogger.d(TAG, "检测到服务已关闭，准备恢复唤醒监听")
 
                 if (wakeHandoffPending) {
                     AppLogger.d(TAG, "Wake handoff aborted, clearing pending state")
@@ -1181,22 +1162,7 @@ class AIForegroundService : Service() {
     }
 
     private fun triggerWakeLaunch() {
-        AppLogger.d(TAG, "triggerWakeLaunch: Starting BlurrAssistantService for input")
-        try {
-            val serviceIntent = Intent(this, BlurrAssistantService::class.java).apply {
-                action = BlurrAssistantService.ACTION_START
-                putExtra(BlurrAssistantService.EXTRA_MAX_STEPS, 100)
-                putExtra(BlurrAssistantService.EXTRA_AUTO_VOICE, true)
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent)
-            } else {
-                startService(serviceIntent)
-            }
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "唤醒打开 BlurrAssistantService 失败: ${e.message}", e)
-        }
+        AppLogger.d(TAG, "triggerWakeLaunch: Wake triggered")
     }
 
     private fun matchWakePhrase(recognized: String, phrase: String, regexEnabled: Boolean): Boolean {
@@ -1267,30 +1233,6 @@ class AIForegroundService : Service() {
             )
             builder.setContentIntent(contentPendingIntent)
         }
-
-        val blurrIntent = Intent(this, BlurrAssistantService::class.java).apply {
-            action = BlurrAssistantService.ACTION_START
-        }
-        val blurrPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PendingIntent.getForegroundService(
-                this,
-                9005,
-                blurrIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        } else {
-            PendingIntent.getService(
-                this,
-                9005,
-                blurrIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
-        builder.addAction(
-            android.R.drawable.ic_btn_speak_now,
-            getString(R.string.service_voice_floating_window),
-            blurrPendingIntent
-        )
 
         val toggleWakeIntent = Intent(this, AIForegroundService::class.java).apply {
             action = ACTION_TOGGLE_WAKE_LISTENING

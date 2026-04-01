@@ -304,18 +304,7 @@
             android:exported="false"
             android:foregroundServiceType="specialUse" />
         
-        <!-- Voice Assistant Widget Receiver -->
-        <receiver
-            android:name=".widget.VoiceAssistantWidgetReceiver"
-            android:exported="true"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/voice_assistant_widget_info" />
-        </receiver>
+
 
         <!-- Receive Shower Binder handoff broadcast from the Shower server (Shizuku-style) -->
         <receiver
@@ -358,26 +347,6 @@
             </intent-filter>
         </receiver>
         
-        <!-- Voice Interaction Service for system default assistant -->
-        <service
-            android:name=".services.assistant.OperitVoiceInteractionService"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_VOICE_INTERACTION"
-            android:exported="true">
-            <meta-data
-                android:name="android.voice_interaction"
-                android:resource="@xml/interaction_service" />
-            <intent-filter>
-                <action android:name="android.service.voice.VoiceInteractionService" />
-            </intent-filter>
-        </service>
-        
-        <!-- Voice Interaction Session Service -->
-        <service
-            android:name=".services.assistant.OperitVoiceInteractionSessionService"
-            android:permission="android.permission.BIND_VOICE_INTERACTION"
-            android:exported="true" />
-        
         <!-- Automation Accessibility Service -->
         <service
             android:name=".services.automation.OperitAutomationService"
@@ -401,13 +370,106 @@
         <service
             android:name=".services.automation.AutomationForegroundService"
             android:foregroundServiceType="specialUse"
+            android:exported="false"         />
+        
+        <!-- Voice Interaction Service -->
+        <service
+            android:name=".voice.services.OperitVoiceInteractionService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
+        </service>
+        
+        <service
+            android:name=".voice.services.OperitVoiceInteractionSessionService"
             android:exported="false" />
         
-        <!-- Blurr-style Assistant Overlay Service (non-blocking, automation-friendly) -->
+        <!-- Agent v2 Service -->
         <service
-            android:name=".services.BlurrAssistantService"
-            android:foregroundServiceType="specialUse"
+            android:name=".voice.v2.AgentService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+        
+        <!-- Trigger Monitoring Service -->
+        <service
+            android:name=".voice.triggers.TriggerMonitoringService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+        
+        <!-- Enhanced Wake Word Service -->
+        <service
+            android:name=".voice.services.EnhancedWakeWordService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+        
+        <!-- Conversational Agent Service -->
+        <service
+            android:name=".voice.ConversationalAgentService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+        
+        <!-- Floating Button Service -->
+        <service
+            android:name=".voice.services.FloatingPandaButtonService"
+            android:enabled="true"
             android:exported="false" />
+        
+        <!-- Panda Notification Listener -->
+        <service
+            android:name=".voice.triggers.PandaNotificationListenerService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        
+        <!-- Voice Trigger Receiver -->
+        <receiver
+            android:name=".voice.triggers.TriggerReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ai.assistance.operit.action.EXECUTE_TASK" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- Boot Receiver for triggers -->
+        <receiver
+            android:name=".voice.triggers.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- Voice Trigger Activities -->
+        <activity
+            android:name=".voice.triggers.ui.TriggersActivity"
+            android:exported="false"
+            android:label="Triggers"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Operit" />
+        
+        <activity
+            android:name=".voice.triggers.ui.CreateTriggerActivity"
+            android:exported="false"
+            android:label="Create Trigger"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Operit"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <activity
+            android:name=".voice.triggers.ui.ChooseTriggerTypeActivity"
+            android:exported="false"
+            android:label="Choose Trigger Type"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Operit" />
         
     </application>
 

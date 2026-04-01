@@ -14,9 +14,7 @@ import com.ai.assistance.operit.core.agent.model.AgentStepInfo
 import com.ai.assistance.operit.core.agent.model.AgentOutput
 import com.ai.assistance.operit.core.agent.perception.Perception
 import com.ai.assistance.operit.core.agent.message.MessageManager
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayPriority
-import com.ai.assistance.operit.overlay.OverlayPosition
+
 import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -83,14 +81,7 @@ class Agent(
                 agentOutput.nextGoal?.let { if (it.isNotEmpty()) append("Next Goal: ${it}") }
             }.trim()
 
-            if (thoughtText.isNotEmpty()) {
-                OverlayDispatcher.show(
-                    text = thoughtText,
-                    priority = OverlayPriority.TASKS,
-                    duration = 8000L,
-                    position = OverlayPosition.TOP
-                )
-            }
+
 
             // 4. ACT: Execute the LLM's planned actions
             Log.d(TAG, "💪 Executing actions...")
