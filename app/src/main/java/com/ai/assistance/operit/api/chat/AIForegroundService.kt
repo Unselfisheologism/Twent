@@ -529,6 +529,7 @@ class AIForegroundService : Service() {
             }
 
 
+            try {
                 stopService(Intent(this, UIDebuggerService::class.java))
             } catch (e: Exception) {
                 AppLogger.e(TAG, "退出时停止 UIDebuggerService 失败: ${e.message}", e)
