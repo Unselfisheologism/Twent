@@ -6697,6 +6697,7 @@
     <string name="wake_word_enabled">唤醒词已启用: %1$s</string>
     <string name="wake_word_disabled">唤醒词已禁用</string>
     <string name="enable_wake_word">启用唤醒词</string>
+    <string name="input_box_hint">输入消息...</string>
     <string name="microphone_permission_not_granted">麦克风权限未授予，无法使用语音功能</string>
     <string name="accessibility_permission_needed_for_task">需要无障碍权限才能执行此任务</string>
 

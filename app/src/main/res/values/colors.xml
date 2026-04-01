@@ -14,4 +14,11 @@
     <color name="delta_processing">#FF9800</color>
     <color name="delta_speaking">#2196F3</color>
     <color name="delta_error">#F44336</color>
+    
+    <!-- Panel background -->
+    <color name="panel_background">#F5F5F5</color>
+    
+    <!-- Additional colors -->
+    <color name="accent">#5880F7</color>
+    <color name="button_blue">#5880F7</color>
 </resources>
