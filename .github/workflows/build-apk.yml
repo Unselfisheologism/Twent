@@ -46,8 +46,13 @@ jobs:
 
       # Clean and compile the apk
       - name: Clean and Generate Debug APK
+        env:
+          ORG_GRADLE_PROJECT_org_gradle_jvmargs: -Xmx4096m
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
         run: |
-          ./gradlew clean assembleDebug --warning-mode=all --stacktrace
+          ./gradlew --stop-gradle-daemon || true
+          ./gradlew clean
+          ./gradlew assembleDebug -x test --warning-mode=all --stacktrace
 
       # Upload the action artifact
       - name: Upload Debug APK (artifact)
