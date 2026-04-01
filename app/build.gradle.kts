@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.parcelize)
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     id("io.objectbox")
 }
 
@@ -134,7 +134,7 @@ android {
     }
     
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         
@@ -297,11 +297,10 @@ dependencies {
     // Room 数据库
     implementation(libs.room.runtime)
     implementation(libs.room.ktx) // Kotlin扩展和协程支持
-    kapt(libs.room.compiler) // 使用kapt代替ksp
+    ksp(libs.room.compiler) // 使用ksp代替kapt
 
-    // ObjectBox
+    // ObjectBox - processor is handled by the objectbox plugin
     implementation(libs.objectbox.kotlin)
-    kapt(libs.objectbox.processor)
     implementation(libs.commons.compress.v2)
     implementation(libs.junrar)
 
