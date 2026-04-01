@@ -14,7 +14,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         app:title="Your Triggers"
-        android:fontFamily="@font/playfair_display"
+        android:fontFamily="sans-serif-medium"
         app:titleTextColor="@color/white" />
 
     <LinearLayout
@@ -61,7 +61,7 @@
         android:layout_margin="16dp"
         android:text="Add Trigger"
         app:icon="@drawable/ic_add"
-        android:fontFamily="@font/oxanium"
+        android:fontFamily="sans-serif-medium"
         app:iconTint="@color/white"
         android:textColor="@color/white"
         app:backgroundTint="@color/button_blue"

@@ -518,6 +518,9 @@
     <string name="voice_keyword_attachments_add_item_title">添加附件项</string>
     <string name="voice_keyword_attachments_type_label">类型</string>
 
+    <!-- Trigger screen -->
+    <string name="triggers_not_working_for_you">Triggers not working for you?</string>
+
     <!-- 用于NavItem类的标识符 -->
     <string name="shizuku_commands">权限授予</string>
     <string name="tool_permissions">工具权限设置</string>

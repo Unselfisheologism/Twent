@@ -21,4 +21,9 @@
     <!-- Additional colors -->
     <color name="accent">#5880F7</color>
     <color name="button_blue">#5880F7</color>
+
+    <!-- Missing colors -->
+    <color name="background">#F5F5F5</color>
+    <color name="input_box_background">#333333</color>
+    <color name="orange">#FF9800</color>
 </resources>
