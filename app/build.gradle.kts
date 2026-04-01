@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.parcelize)
     id("io.objectbox")
-    id("kotlin-kapt")
 }
 
 val localProperties = Properties()
@@ -401,10 +400,6 @@ dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 
-    // ObjectBox
-    implementation(libs.objectbox.kotlin)
-    kapt(libs.objectbox.processor)
-    
     // MCP Kotlin SDK with version compatibility fix
     implementation("io.modelcontextprotocol.sdk:mcp:0.7.0") {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-serialization-json")
