@@ -6694,6 +6694,11 @@
     <string name="wake_word_notification">通知</string>
     <string name="wake_word_which_location">哪个地方</string>
     <string name="wake_word_time_query">时间|几点</string>
+    <string name="wake_word_enabled">唤醒词已启用: %1$s</string>
+    <string name="wake_word_disabled">唤醒词已禁用</string>
+    <string name="enable_wake_word">启用唤醒词</string>
+    <string name="microphone_permission_not_granted">麦克风权限未授予，无法使用语音功能</string>
+    <string name="accessibility_permission_needed_for_task">需要无障碍权限才能执行此任务</string>
 
     <!-- HttpVoiceProvider -->
     <string name="http_tts_url_template_not_set">HTTP TTS 服务配置错误: URL 模板不能为空。</string>
