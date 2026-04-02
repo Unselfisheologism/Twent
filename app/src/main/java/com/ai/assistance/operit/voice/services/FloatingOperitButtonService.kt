@@ -147,6 +147,8 @@ class FloatingOperitButtonService : Service() {
                     windowManager?.removeView(button)
                 }
             } catch (e: Exception) {
+                Unit
+            }
                 Log.e(TAG, "Error removing floating button", e)
             }
         }

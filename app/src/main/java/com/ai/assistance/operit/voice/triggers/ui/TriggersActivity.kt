@@ -10,10 +10,10 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.voice.triggers.Trigger
 import com.ai.assistance.operit.voice.triggers.TriggerManager
 import com.ai.assistance.operit.voice.triggers.TriggerMonitoringService
 import com.ai.assistance.operit.voice.triggers.TriggerType
@@ -193,6 +193,4 @@ class TriggersActivity : AppCompatActivity() {
     }
     
     override fun getContentLayoutId(): Int = R.layout.activity_triggers
-    
-    override fun getCurrentNavItem(): BaseNavigationActivity.NavItem = BaseNavigationActivity.NavItem.TRIGGERS
 }

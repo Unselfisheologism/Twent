@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.PixelFormat
+import com.ai.assistance.operit.R
 import android.graphics.drawable.GradientDrawable
 import android.animation.ValueAnimator
 import android.app.PendingIntent
@@ -183,8 +184,8 @@ class ConversationalAgentService : Service() {
         if (isTextModeActive) {
             visualFeedbackManager.showInputBox(
                 onActivated = { enterTextMode() },
-                onSubmit = { submittedText -> processUserInput(submittedText) },
-                onOutsideTap = { serviceScope.launch { instantShutdown() } }
+                onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
+                onOutsideTap = { serviceScope.launch { stopSelf() } }
             )
         }
     }
@@ -258,7 +259,7 @@ class ConversationalAgentService : Service() {
                 visualFeedbackManager.showInputBox(
                     onActivated = { enterTextMode() },
                     onSubmit = { submittedText -> processUserInput(submittedText) },
-                    onOutsideTap = { serviceScope.launch { instantShutdown() } }
+                    onOutsideTap = { serviceScope.launch { stopSelf() } }
                 )
             }
             return
@@ -305,7 +306,7 @@ class ConversationalAgentService : Service() {
                 visualFeedbackManager.showInputBox(
                     onActivated = { enterTextMode() },
                     onSubmit = { submittedText -> processUserInput(submittedText) },
-                    onOutsideTap = { serviceScope.launch { instantShutdown() } }
+                    onOutsideTap = { serviceScope.launch { stopSelf() } }
                 )
             }
             return
@@ -332,7 +333,11 @@ class ConversationalAgentService : Service() {
                     enterTextMode()
                     val message = "Switched to text mode. You can type your messages now."
                     speechCoordinator.speakText(message)
-                    visualFeedbackManager.showInputBox()
+                    visualFeedbackManager.showInputBox(
+                        onActivated = { enterTextMode() },
+onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
+                onOutsideTap = { serviceScope.launch { stopSelf() } }
+                    )
                 }
                 else -> {
                     val reply = "I heard: $text. How can I help you?"
