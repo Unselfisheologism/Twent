@@ -69,5 +69,4 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
         super.onDestroy()
     }
 }
-}
 
