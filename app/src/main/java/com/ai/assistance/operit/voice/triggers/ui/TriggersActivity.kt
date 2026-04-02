@@ -10,7 +10,7 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.ai.assistance.operit.BaseNavigationActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ai.assistance.operit.R
@@ -19,7 +19,7 @@ import com.ai.assistance.operit.voice.triggers.TriggerMonitoringService
 import com.ai.assistance.operit.voice.triggers.TriggerType
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 
-class TriggersActivity : BaseNavigationActivity() {
+class TriggersActivity : AppCompatActivity() {
 
     private lateinit var triggerManager: TriggerManager
     private lateinit var triggerAdapter: TriggerAdapter
