@@ -69,6 +69,8 @@ swipe = "1.2.0"
 objectbox = "3.8.0"
 mediapipe = "0.10.11"
 work = "2.9.0"
+picovoice = "3.0.2"
+billing = "7.0.0"
 uiTextAndroid = "1.6.2"
 animationAndroid = "1.6.2"
 uiAndroid = "1.6.2"
@@ -238,6 +240,12 @@ objectbox-processor = { group = "io.objectbox", name = "objectbox-processor", ve
 
 # WorkManager
 work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+
+# Picovoice
+picovoice-porcupine = { group = "ai.picovoice", name = "porcupine-android", version.ref = "picovoice" }
+
+# Billing
+billing-client = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 
 
  androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "uiTextAndroid" }

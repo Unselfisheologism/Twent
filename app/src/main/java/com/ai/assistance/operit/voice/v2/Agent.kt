@@ -11,9 +11,9 @@ import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
-import com.ai.assistance.operit.voice.overlay.OverlayPriority
-import com.ai.assistance.operit.voice.overlay.OverlayPosition
+import com.ai.assistance.operit.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayPriority
+import com.ai.assistance.operit.overlay.OverlayPosition
 import kotlinx.coroutines.delay
 
 object OperitSettings {

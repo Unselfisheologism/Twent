@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import android.util.Log
-import com.ai.assistance.operit.core.application.OperitApplication
+import com.ai.assistance.operit.voice.MyApplication
 
 /**
  * Shows a user-facing offline notification (toast) and speaks a short TTS message.
@@ -24,7 +24,7 @@ object NetworkNotifier {
         }
         lastNotifiedAt = now
 
-        val context = OperitApplication.appContext
+        val context = MyApplication.appContext
 
         // Show a toast popup on the main thread
         Handler(Looper.getMainLooper()).post {

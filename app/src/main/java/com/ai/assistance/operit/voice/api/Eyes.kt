@@ -7,7 +7,7 @@ import android.os.Environment
 import java.io.File
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.RawScreenData
+import com.ai.assistance.operit.services.automation.RawScreenData
 import com.ai.assistance.operit.services.automation.OperitAutomationService
 
 class Eyes(context: Context) {

@@ -35,8 +35,8 @@ import com.ai.assistance.operit.voice.utilities.TTSManager
 import com.ai.assistance.operit.voice.utilities.addResponse
 import com.ai.assistance.operit.voice.utilities.getReasoningModelApiResponse
 import com.ai.assistance.operit.voice.utilities.FreemiumManager
-import com.ai.assistance.operit.voice.overlay.OverlayManager
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayManager
+import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.utilities.OperitState
 import com.ai.assistance.operit.voice.utilities.UserProfileManager
 import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager

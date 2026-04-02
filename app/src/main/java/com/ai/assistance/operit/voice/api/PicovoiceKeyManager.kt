@@ -10,10 +10,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
-import com.ai.assistance.operit.voice.utilities.NetworkConnectivityManager
-import com.ai.assistance.operit.voice.utilities.UserIdManager
-import com.ai.assistance.operit.voice.utilities.UserProfileManager
-import okhttp3.internal.platform.PlatformRegistry.applicationContext
 import java.util.UUID
 
 /**

@@ -16,9 +16,9 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.api.Eyes
 import com.ai.assistance.operit.voice.api.Finger
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
-import com.ai.assistance.operit.voice.overlay.OverlayManager
+import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
 import com.ai.assistance.operit.voice.v2.llm.V2LlmApi

@@ -11,13 +11,9 @@ import com.ai.assistance.operit.services.automation.OperitAutomationService
 import com.ai.assistance.operit.voice.api.Finger
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
 import com.ai.assistance.operit.voice.utilities.UserInputManager
-import com.ai.assistance.operit.voice.overlay.OverlayManager
-import com.ai.assistance.operit.voice.v2.ActionResult
-import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.perception.ScreenAnalysis
-import com.ai.assistance.operit.voice.intents.IntentRegistry
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
-import com.ai.assistance.operit.voice.overlay.OverlayPriority
+import com.ai.assistance.operit.overlay.OverlayManager
+import com.ai.assistance.operit.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayPriority
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
