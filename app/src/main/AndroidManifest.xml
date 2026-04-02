@@ -366,15 +366,34 @@
         <!-- Voice Interaction Service -->
         <service
             android:name=".voice.services.OperitVoiceInteractionService"
-            android:exported="false">
+            android:exported="true"
+            android:label="Operit"
+            android:permission="android.permission.BIND_VOICE_INTERACTION">
             <intent-filter>
                 <action android:name="android.service.voice.VoiceInteractionService" />
             </intent-filter>
+            <meta-data
+                android:name="android.voice_interaction"
+                android:resource="@xml/interaction_service" />
         </service>
         
         <service
             android:name=".voice.services.OperitVoiceInteractionSessionService"
             android:exported="false" />
+        
+        <!-- Assist Entry Activity - makes app appear as digital assistant option -->
+        <activity
+            android:name=".voice.AssistEntryActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         
         <!-- Agent v2 Service -->
         <service
