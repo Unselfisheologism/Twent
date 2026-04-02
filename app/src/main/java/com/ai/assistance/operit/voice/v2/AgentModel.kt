@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.voice.v2
 
 import com.ai.assistance.operit.voice.v2.actions.Action
+import com.ai.assistance.operit.voice.v2.actions.ActionResult
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryState
 import com.ai.assistance.operit.voice.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.voice.v2.perception.XmlNode
