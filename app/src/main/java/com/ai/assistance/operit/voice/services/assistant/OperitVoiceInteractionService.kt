@@ -5,7 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.service.voice.VoiceInteractionService
 import com.ai.assistance.operit.util.AppLogger
-import com.ai.assistance.operit.voice.v2.AgentService
+import com.ai.assistance.operit.voice.ConversationalAgentService
 
 /**
  * Operit 语音交互服务
@@ -24,19 +24,11 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
         AppLogger.d(TAG, "VoiceInteractionService created")
     }
     
-    /**
-     * 当服务准备就绪时调用
-     * 这里可以进行一些初始化操作
-     */
     override fun onReady() {
         super.onReady()
         AppLogger.d(TAG, "VoiceInteractionService ready")
     }
     
-    /**
-     * 系统请求启动识别会话时调用
-     * 这里应该返回 true 表示我们可以处理这个请求
-     */
     override fun onGetSupportedVoiceActions(voiceActions: MutableSet<String>): MutableSet<String> {
         AppLogger.d(TAG, "onGetSupportedVoiceActions: $voiceActions")
         return super.onGetSupportedVoiceActions(voiceActions)
@@ -45,25 +37,76 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.d(TAG, "onStartCommand received")
         
-        startOperitAssistantService()
+        startConversationalAgent()
         
         return START_NOT_STICKY
     }
 
-    private fun startOperitAssistantService() {
+    private fun startConversationalAgent() {
         try {
-            val serviceIntent = Intent(this, AgentService::class.java).apply {
-                action = "com.ai.assistance.operit.ACTION_START_AGENT"
-                putExtra("task", "")
+            val serviceIntent = Intent(this, ConversationalAgentService::class.java).apply {
+                action = "com.ai.assistance.operit.voice.ACTION_START_FROM_VOICE_INTERACTION"
+                putExtra("source", "voice_interaction_service")
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(serviceIntent)
             } else {
                 startService(serviceIntent)
             }
-            AppLogger.d(TAG, "AgentService started from VoiceInteractionService")
+            AppLogger.d(TAG, "ConversationalAgentService started from VoiceInteractionService")
         } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to start AgentService", e)
+            AppLogger.e(TAG, "Failed to start ConversationalAgentService", e)
+        }
+    }
+    
+    override fun onShutdown() {
+        AppLogger.d(TAG, "VoiceInteractionService shutting down")
+        super.onShutdown()
+    }
+    
+    override fun onDestroy() {
+        AppLogger.d(TAG, "VoiceInteractionService destroyed")
+        super.onDestroy()
+    }
+}
+    
+    override fun onCreate() {
+        super.onCreate()
+        AppLogger.d(TAG, "VoiceInteractionService created")
+    }
+    
+    override fun onReady() {
+        super.onReady()
+        AppLogger.d(TAG, "VoiceInteractionService ready")
+    }
+    
+    override fun onGetSupportedVoiceActions(voiceActions: MutableSet<String>): MutableSet<String> {
+        AppLogger.d(TAG, "onGetSupportedVoiceActions: $voiceActions")
+        return super.onGetSupportedVoiceActions(voiceActions)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        AppLogger.d(TAG, "onStartCommand received")
+        
+        startConversationalAgent()
+        
+        return START_NOT_STICKY
+    }
+
+    private fun startConversationalAgent() {
+        try {
+            val serviceIntent = Intent(this, ConversationalAgentService::class.java).apply {
+                action = "com.ai.assistance.operit.voice.ACTION_START_FROM_VOICE_INTERACTION"
+                putExtra("source", "voice_interaction_service")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+            AppLogger.d(TAG, "ConversationalAgentService started from VoiceInteractionService")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to start ConversationalAgentService", e)
         }
     }
     

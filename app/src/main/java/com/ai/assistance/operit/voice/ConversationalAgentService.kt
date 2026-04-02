@@ -181,13 +181,11 @@ class ConversationalAgentService : Service() {
     }
 
     private fun showInputBoxIfNeeded() {
-        if (isTextModeActive) {
-            visualFeedbackManager.showInputBox(
-                onActivated = { enterTextMode() },
-                onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
-                onOutsideTap = { serviceScope.launch { stopSelf() } }
-            )
-        }
+        visualFeedbackManager.showInputBox(
+            onActivated = { enterTextMode() },
+            onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
+            onOutsideTap = { serviceScope.launch { stopSelf() } }
+        )
     }
 
     private fun enterTextMode() {

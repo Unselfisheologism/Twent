@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.service.voice.VoiceInteractionSession
 import android.service.voice.VoiceInteractionSessionService
 import com.ai.assistance.operit.util.AppLogger
-import com.ai.assistance.operit.voice.v2.AgentService
+import com.ai.assistance.operit.voice.ConversationalAgentService
 
 class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
     
@@ -30,7 +30,7 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onShow(args, showFlags)
             AppLogger.d(TAG, "Session show requested with flags: $showFlags")
             
-            startOperitAssistantService()
+            startConversationalAgent()
             
             finish()
         }
@@ -46,20 +46,20 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
             super.onDestroy()
         }
         
-        private fun startOperitAssistantService() {
+        private fun startConversationalAgent() {
             try {
-                val intent = Intent(context, AgentService::class.java).apply {
-                    action = "com.ai.assistance.operit.ACTION_START_AGENT"
-                    putExtra("task", "")
+                val intent = Intent(context, ConversationalAgentService::class.java).apply {
+                    action = "com.ai.assistance.operit.voice.ACTION_START_FROM_VOICE_INTERACTION"
+                    putExtra("source", "voice_interaction_session")
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent)
                 } else {
                     context.startService(intent)
                 }
-                AppLogger.d(TAG, "Operit agent service started")
+                AppLogger.d(TAG, "ConversationalAgentService started from voice interaction session")
             } catch (e: Exception) {
-                AppLogger.e(TAG, "Failed to start operit assistant service", e)
+                AppLogger.e(TAG, "Failed to start conversational agent service", e)
             }
         }
     }
