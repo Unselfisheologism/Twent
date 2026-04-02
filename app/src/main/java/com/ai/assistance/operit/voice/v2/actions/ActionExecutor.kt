@@ -5,15 +5,9 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.api.Finger
+import com.ai.assistance.operit.voice.v2.AgentModel.ActionResult
 import com.ai.assistance.operit.voice.v2.perception.ScreenAnalysis
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-
-data class ActionResult(
-    val isDone: Boolean = false,
-    val success: Boolean? = null,
-    val error: String? = null,
-    val longTermMemory: String? = null
-)
 
 class ActionExecutor(private val finger: Finger) {
 
