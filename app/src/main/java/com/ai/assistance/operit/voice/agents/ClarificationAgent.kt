@@ -2,7 +2,7 @@ package com.ai.assistance.operit.voice.agents
 
 import android.content.Context
 import com.ai.assistance.operit.voice.api.GeminiApi
-import com.google.ai.client.generativeai.type.TextPart
+import com.ai.assistance.operit.voice.utilities.TextPart
 import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

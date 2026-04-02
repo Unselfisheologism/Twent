@@ -1,8 +1,7 @@
 package com.ai.assistance.operit.voice.data
 
 import android.util.Log
-//import com.ai.assistance.operit.voice.api.GeminiApi
-import com.google.ai.client.generativeai.type.TextPart
+import com.ai.assistance.operit.voice.utilities.TextPart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

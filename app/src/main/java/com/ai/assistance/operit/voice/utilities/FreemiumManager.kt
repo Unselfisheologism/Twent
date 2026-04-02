@@ -1,26 +1,18 @@
 package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.queryPurchasesAsync
-import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Calendar
 
 class FreemiumManager(private val context: Context) {
 
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .setListener { _, _ -> }
         .build()
@@ -44,93 +36,60 @@ class FreemiumManager(private val context: Context) {
         
         const val DAILY_TASK_LIMIT = 15
         private const val PRO_SKU = "pro"
+        private const val PREFS_NAME = "freemium_prefs"
+        private const val KEY_IS_PRO = "is_pro"
+        private const val KEY_TASKS_REMAINING = "tasks_remaining"
+        private const val KEY_LAST_RESET_DATE = "last_reset_date"
     }
 
     suspend fun getDeveloperMessage(): String {
-        return try {
-            val document = db.collection("settings").document("freemium").get().await()
-            document.getString("developerMessage") ?: ""
-        } catch (e: Exception) {
-            Log.e("FreemiumManager", "Error fetching developer message from Firestore.", e)
-            ""
-        }
+        return prefs.getString("developerMessage", "") ?: ""
     }
+
     suspend fun isUserSubscribed(): Boolean {
-        val currentUser = auth.currentUser ?: return false // If not logged in, not pro
-        return try {
-            val document = db.collection("users").document(currentUser.uid).get().await()
-            if (document.exists()) {
-                val plan = document.getString("plan")
-                plan == "pro"
-            } else {
-                false // Document doesn't exist, so user can't be pro
-            }
-        } catch (e: Exception) {
-            Logger.e("FreemiumManager", "Error checking user plan from Firestore", e)
-            false // In case of error, default to not pro
-        }
+        return prefs.getBoolean(KEY_IS_PRO, false)
     }
 
-
+    suspend fun setUserSubscribed(isPro: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_PRO, isPro).apply()
+    }
 
     suspend fun provisionUserIfNeeded() {
-        val currentUser = auth.currentUser ?: return
-        val userDocRef = db.collection("users").document(currentUser.uid)
+        resetDailyTasksIfNeeded()
+    }
 
-        try {
-            val document = userDocRef.get().await()
-            if (!document.exists()) {
-                Logger.d("FreemiumManager", "Provisioning new user: ${currentUser.uid}")
-                val newUser = hashMapOf(
-                    "email" to currentUser.email,
-                    "plan" to "free",
-                    "createdAt" to FieldValue.serverTimestamp()
-                )
-                userDocRef.set(newUser).await()
-            }
-        } catch (e: Exception) {
-            Logger.e("FreemiumManager", "Error provisioning user", e)
+    private fun resetDailyTasksIfNeeded() {
+        val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+        val lastReset = prefs.getInt(KEY_LAST_RESET_DATE, -1)
+        
+        if (lastReset != today) {
+            prefs.edit()
+                .putInt(KEY_LAST_RESET_DATE, today)
+                .putLong(KEY_TASKS_REMAINING, DAILY_TASK_LIMIT.toLong())
+                .apply()
+            Logger.d("FreemiumManager", "Reset daily tasks for day $today")
         }
     }
 
     suspend fun getTasksRemaining(): Long? {
         if (isUserSubscribed()) return Long.MAX_VALUE
-        val currentUser = auth.currentUser ?: return null
-        return try {
-            val document = db.collection("users").document(currentUser.uid).get().await()
-            document.getLong("tasksRemaining")
-        } catch (e: Exception) {
-            Logger.e("FreemiumManager", "Error fetching tasks remaining", e)
-            null
-        }
+        resetDailyTasksIfNeeded()
+        return prefs.getLong(KEY_TASKS_REMAINING, DAILY_TASK_LIMIT.toLong())
     }
 
     suspend fun canPerformTask(): Boolean {
         if (isUserSubscribed()) return true
-        val currentUser = auth.currentUser ?: return false
-
-        return try {
-            val document = db.collection("users").document(currentUser.uid).get().await()
-            val tasksRemaining = document.getLong("tasksRemaining") ?: 0
-            Logger.d("FreemiumManager", "User has $tasksRemaining tasks remaining today.")
-            tasksRemaining > 0
-        } catch (e: Exception) {
-            Logger.e("FreemiumManager", "Error fetching user task count", e)
-            false
-        }
+        val tasksRemaining = getTasksRemaining() ?: 0
+        return tasksRemaining > 0
     }
 
     suspend fun decrementTaskCount() {
         if (isUserSubscribed()) return
-        val currentUser = auth.currentUser ?: return
-
-        val userDocRef = db.collection("users").document(currentUser.uid)
         
-        try {
-            userDocRef.update("tasksRemaining", FieldValue.increment(-1)).await()
-            Logger.d("FreemiumManager", "Successfully decremented task count for user ${currentUser.uid}.")
-        } catch (e: Exception) {
-            Logger.e("FreemiumManager", "Failed to decrement task count.", e)
+        val current = prefs.getLong(KEY_TASKS_REMAINING, DAILY_TASK_LIMIT.toLong())
+        if (current > 0) {
+            prefs.edit().putLong(KEY_TASKS_REMAINING, current - 1).apply()
+            Logger.d("FreemiumManager", "Decremented task count to ${current - 1}")
         }
     }
 }
