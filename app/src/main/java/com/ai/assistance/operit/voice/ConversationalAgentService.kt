@@ -258,7 +258,7 @@ class ConversationalAgentService : Service() {
             mainHandler.post {
                 visualFeedbackManager.showInputBox(
                     onActivated = { enterTextMode() },
-                    onSubmit = { submittedText -> processUserInput(submittedText) },
+                    onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
                     onOutsideTap = { serviceScope.launch { stopSelf() } }
                 )
             }
@@ -269,7 +269,7 @@ class ConversationalAgentService : Service() {
             onResult = { text ->
                 Log.d("ConvAgent", "User said: $text")
                 pandaStateManager.setState(OperitState.PROCESSING)
-                processUserInput(text)
+                serviceScope.launch { processUserInput(text) }
             },
             onError = { error ->
                 Log.e("ConvAgent", "STT Error: $error")
@@ -305,7 +305,7 @@ class ConversationalAgentService : Service() {
             mainHandler.post {
                 visualFeedbackManager.showInputBox(
                     onActivated = { enterTextMode() },
-                    onSubmit = { submittedText -> processUserInput(submittedText) },
+                    onSubmit = { submittedText -> serviceScope.launch { processUserInput(submittedText) } },
                     onOutsideTap = { serviceScope.launch { stopSelf() } }
                 )
             }
