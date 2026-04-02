@@ -46,7 +46,7 @@ class AgentService : Service() {
     private lateinit var fileSystem: FileSystem
     private lateinit var memoryManager: MemoryManager
     private lateinit var perception: Perception
-    private lateinit var llmApi: GeminiApi
+    private lateinit var llmApi: V2LlmApi
     private lateinit var actionExecutor: ActionExecutor
     private lateinit var overlayManager: OverlayManager
 
@@ -105,10 +105,9 @@ class AgentService : Service() {
         memoryManager = MemoryManager(this, "", fileSystem, settings)
         perception = Perception(Eyes(this), SemanticParser())
         llmApi = V2LlmApi(
-            "gemini-2.5-flash",
-            apiKeyManager = ApiKeyManager,
-            context = this,
-            maxRetry = 10
+            "default",
+            this,
+            10
         )
         actionExecutor = ActionExecutor(Finger(this))
         agent = Agent(
