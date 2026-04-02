@@ -76,13 +76,6 @@ android {
         buildConfigField("String", "GITHUB_CLIENT_ID", "\"${localProperties.getProperty("GITHUB_CLIENT_ID")}\"")
         buildConfigField("String", "GITHUB_CLIENT_SECRET", "\"${localProperties.getProperty("GITHUB_CLIENT_SECRET")}\"")
         buildConfigField("String", "COMPOSIO_API_KEY", "\"${localProperties.getProperty("COMPOSIO_API_KEY")}\"")
-        buildConfigField("String", "MEM0_API", "\"${localProperties.getProperty("MEM0_API")}\"")
-        buildConfigField("String", "GOOGLE_TTS_API_KEY", "\"${localProperties.getProperty("GOOGLE_TTS_API_KEY")}\"")
-        buildConfigField("String", "GCLOUD_PROXY_URL", "\"${localProperties.getProperty("GCLOUD_PROXY_URL")}\"")
-        buildConfigField("String", "GCLOUD_PROXY_URL_KEY", "\"${localProperties.getProperty("GCLOUD_PROXY_URL_KEY")}\"")
-        buildConfigField("String", "GCLOUD_GATEWAY_URL", "\"${localProperties.getProperty("GCLOUD_GATEWAY_URL")}\"")
-        buildConfigField("String", "GCLOUD_GATEWAY_PICOVOICE_KEY", "\"${localProperties.getProperty("GCLOUD_GATEWAY_PICOVOICE_KEY")}\"")
-        buildConfigField("String", "GEMINI_API_KEYS", "\"${localProperties.getProperty("GEMINI_API_KEYS")}\"")
         buildConfigField("boolean", "ENABLE_LOGGING", "true")
         buildConfigField("boolean", "SPEAK_INSTRUCTIONS", "true")
     }
