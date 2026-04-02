@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers.ui
+package com.ai.assistance.operit.voice.triggers.ui
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,10 +20,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.triggers.PermissionUtils
-import com.ai.assistance.operit.triggers.Trigger
-import com.ai.assistance.operit.triggers.TriggerManager
-import com.ai.assistance.operit.triggers.TriggerType
+import com.ai.assistance.operit.voice.triggers.PermissionUtils
+import com.ai.assistance.operit.voice.triggers.Trigger
+import com.ai.assistance.operit.voice.triggers.TriggerManager
+import com.ai.assistance.operit.voice.triggers.TriggerType
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

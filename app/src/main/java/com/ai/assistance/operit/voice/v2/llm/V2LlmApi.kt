@@ -3,17 +3,14 @@ package com.ai.assistance.operit.voice.v2.llm
 import android.content.Context
 import android.util.Log
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.data.model.ModelParameter
 import com.ai.assistance.operit.voice.v2.AgentOutput
 import com.ai.assistance.operit.voice.v2.logging.TaskLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
 
 class V2LlmApi(
     private val modelName: String,
-    private val apiKeyManager: ApiKeyManager,
     private val context: Context,
     private val maxRetry: Int = 3
 ) {
@@ -51,11 +48,11 @@ class V2LlmApi(
             Log.d(TAG, "Sending prompt to LLM: ${prompt.take(200)}...")
 
             val stream = service.sendMessage(
-                context = context,
                 message = prompt,
                 chatHistory = emptyList(),
-                modelParameters = emptyList(),
                 enableThinking = false,
+                maxTokens = 4096,
+                tokenUsageThreshold = 0.9,
                 stream = false
             )
 
@@ -107,11 +104,11 @@ class V2LlmApi(
             }
 
             val stream = service.sendMessage(
-                context = context,
                 message = prompt,
                 chatHistory = emptyList(),
-                modelParameters = emptyList(),
                 enableThinking = false,
+                maxTokens = 4096,
+                tokenUsageThreshold = 0.9,
                 stream = false
             )
 

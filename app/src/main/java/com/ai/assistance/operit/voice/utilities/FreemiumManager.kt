@@ -5,9 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.QueryPurchasesParams
-import com.android.billingclient.api.queryPurchasesAsync
+import com.android.billingclient.api.BillingResult
 import java.util.Calendar
 
 class FreemiumManager(private val context: Context) {
@@ -19,7 +17,7 @@ class FreemiumManager(private val context: Context) {
     
     init {
         billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingClientStateListener) {}
+            override fun onBillingSetupFinished(billingResult: BillingResult) {}
             override fun onBillingServiceDisconnected() {}
         })
     }
@@ -35,7 +33,6 @@ class FreemiumManager(private val context: Context) {
         }
         
         const val DAILY_TASK_LIMIT = 15
-        private const val PRO_SKU = "pro"
         private const val PREFS_NAME = "freemium_prefs"
         private const val KEY_IS_PRO = "is_pro"
         private const val KEY_TASKS_REMAINING = "tasks_remaining"
@@ -67,7 +64,7 @@ class FreemiumManager(private val context: Context) {
                 .putInt(KEY_LAST_RESET_DATE, today)
                 .putLong(KEY_TASKS_REMAINING, DAILY_TASK_LIMIT.toLong())
                 .apply()
-            Logger.d("FreemiumManager", "Reset daily tasks for day $today")
+            Log.d("FreemiumManager", "Reset daily tasks for day $today")
         }
     }
 
@@ -89,7 +86,7 @@ class FreemiumManager(private val context: Context) {
         val current = prefs.getLong(KEY_TASKS_REMAINING, DAILY_TASK_LIMIT.toLong())
         if (current > 0) {
             prefs.edit().putLong(KEY_TASKS_REMAINING, current - 1).apply()
-            Logger.d("FreemiumManager", "Decremented task count to ${current - 1}")
+            Log.d("FreemiumManager", "Decremented task count to ${current - 1}")
         }
     }
 }

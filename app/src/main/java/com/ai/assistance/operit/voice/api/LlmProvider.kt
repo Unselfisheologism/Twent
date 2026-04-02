@@ -9,6 +9,7 @@ import com.ai.assistance.operit.voice.utilities.TextPart
 import com.ai.assistance.operit.voice.utilities.ImagePart
 import com.ai.assistance.operit.voice.utilities.NetworkConnectivityManager
 import com.ai.assistance.operit.voice.utilities.NetworkNotifier
+import com.ai.assistance.operit.util.stream.Stream
 import kotlinx.coroutines.delay
 
 object LlmProvider {
@@ -65,11 +66,11 @@ object LlmProvider {
                 Log.d("LlmProvider", "Prompt: ${prompt.take(200)}...")
 
                 val stream = service.sendMessage(
-                    context = MyApplication.appContext,
                     message = prompt,
                     chatHistory = emptyList(),
-                    modelParameters = emptyList(),
                     enableThinking = false,
+                    maxTokens = 4096,
+                    tokenUsageThreshold = 0.9,
                     stream = false
                 )
 

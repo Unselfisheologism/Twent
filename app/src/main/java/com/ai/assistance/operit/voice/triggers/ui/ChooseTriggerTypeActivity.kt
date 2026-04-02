@@ -1,11 +1,11 @@
-package com.ai.assistance.operit.triggers.ui
+package com.ai.assistance.operit.voice.triggers.ui
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.triggers.TriggerType
+import com.ai.assistance.operit.voice.triggers.TriggerType
 
 class ChooseTriggerTypeActivity : AppCompatActivity() {
 

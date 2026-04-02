@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers.ui
+package com.ai.assistance.operit.voice.triggers.ui
 
 import android.content.Context
 import android.content.Intent
@@ -14,9 +14,9 @@ import com.ai.assistance.operit.BaseNavigationActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.triggers.TriggerManager
-import com.ai.assistance.operit.triggers.TriggerMonitoringService
-import com.ai.assistance.operit.triggers.TriggerType
+import com.ai.assistance.operit.voice.triggers.TriggerManager
+import com.ai.assistance.operit.voice.triggers.TriggerMonitoringService
+import com.ai.assistance.operit.voice.triggers.TriggerType
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 
 class TriggersActivity : BaseNavigationActivity() {

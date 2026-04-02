@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers.ui
+package com.ai.assistance.operit.voice.triggers.ui
 
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater

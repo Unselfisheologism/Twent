@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers.ui
+package com.ai.assistance.operit.voice.triggers.ui
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,8 +7,8 @@ import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.triggers.Trigger
-import com.ai.assistance.operit.triggers.TriggerType
+import com.ai.assistance.operit.voice.triggers.Trigger
+import com.ai.assistance.operit.voice.triggers.TriggerType
 import java.util.Locale
 
 class TriggerAdapter(

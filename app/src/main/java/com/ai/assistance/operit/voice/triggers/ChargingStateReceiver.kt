@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.triggers
+package com.ai.assistance.operit.voice.triggers
 
 import android.content.BroadcastReceiver
 import android.content.Context
