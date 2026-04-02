@@ -80,7 +80,7 @@ class Eyes(context: Context) {
         val service = OperitAutomationService.instance
         if (service == null) {
             Log.e("AccessibilityController", "Accessibility Service is not running!")
-            return RawScreenData(null, 0,0, 0, 0)
+            return RawScreenData(null, null, 0, 0, 0, 0)
         }
         return service.getScreenAnalysisData()
     }
@@ -91,7 +91,7 @@ class Eyes(context: Context) {
         val service = OperitAutomationService.instance
         if (service == null) {
             Log.e("AccessibilityController", "Accessibility Service is not running!")
-            return RawScreenData(null, 0,0, 0, 0)
+            return RawScreenData(null, null, 0, 0, 0, 0)
         }
         return service.getAllScreenAnalysisData()
     }

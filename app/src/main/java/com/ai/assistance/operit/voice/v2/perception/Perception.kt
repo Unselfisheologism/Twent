@@ -41,7 +41,7 @@ class Perception(
         val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
         val currentActivity = async { eyes.getCurrentActivityName() }
         val rawTree = rawDataDeferred.await() ?: RawScreenData(
-            null, 0, 0, 0,0
+            null, null, 0, 0, 0, 0
         )
         val isKeyboardOpen = keyboardStatusDeferred.await()
         val activityName = currentActivity.await()

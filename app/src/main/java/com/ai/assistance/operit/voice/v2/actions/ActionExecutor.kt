@@ -8,6 +8,10 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.services.automation.OperitAutomationService
+import com.ai.assistance.operit.voice.v2.perception.ScreenAnalysis
+import com.ai.assistance.operit.voice.v2.AgentModel.ActionResult
+import com.ai.assistance.operit.voice.v2.fs.FileSystem
+import com.ai.assistance.operit.intents.IntentRegistry
 import com.ai.assistance.operit.voice.api.Finger
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
 import com.ai.assistance.operit.voice.utilities.UserInputManager

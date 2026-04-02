@@ -181,7 +181,11 @@ class ConversationalAgentService : Service() {
 
     private fun showInputBoxIfNeeded() {
         if (isTextModeActive) {
-            visualFeedbackManager.showInputBox()
+            visualFeedbackManager.showInputBox(
+                onActivated = { enterTextMode() },
+                onSubmit = { submittedText -> processUserInput(submittedText) },
+                onOutsideTap = { serviceScope.launch { instantShutdown() } }
+            )
         }
     }
 
@@ -251,14 +255,17 @@ class ConversationalAgentService : Service() {
         if (isTextModeActive) {
             Log.d("ConvAgent", "In text mode, ensuring input box is visible and skipping voice listening.")
             mainHandler.post {
-                visualFeedbackManager.showInputBox()
+                visualFeedbackManager.showInputBox(
+                    onActivated = { enterTextMode() },
+                    onSubmit = { submittedText -> processUserInput(submittedText) },
+                    onOutsideTap = { serviceScope.launch { instantShutdown() } }
+                )
             }
             return
         }
 
         speechCoordinator.startListening(
-            onResult = { text, isFinal ->
-                if (!isFinal) return@startListening
+            onResult = { text ->
                 Log.d("ConvAgent", "User said: $text")
                 pandaStateManager.setState(OperitState.PROCESSING)
                 processUserInput(text)
@@ -295,7 +302,11 @@ class ConversationalAgentService : Service() {
         if (isTextModeActive) {
             Log.d("ConvAgent", "In text mode, ensuring input box is visible and skipping voice listening.")
             mainHandler.post {
-                visualFeedbackManager.showInputBox()
+                visualFeedbackManager.showInputBox(
+                    onActivated = { enterTextMode() },
+                    onSubmit = { submittedText -> processUserInput(submittedText) },
+                    onOutsideTap = { serviceScope.launch { instantShutdown() } }
+                )
             }
             return
         }

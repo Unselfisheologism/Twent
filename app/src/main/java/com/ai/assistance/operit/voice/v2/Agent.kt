@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.V2LlmApi
+import com.ai.assistance.operit.core.agent.v2.llm.GeminiApi
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
@@ -111,9 +111,9 @@ class Agent(
             val sharedPrefs = context.getSharedPreferences(OperitSettings.PREFS_NAME, Context.MODE_PRIVATE)
             if (sharedPrefs.getBoolean(OperitSettings.KEY_SHOW_THOUGHTS, false)) {
                 val thoughtText = buildString {
-                    agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
-                    agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
-                    agentOutput.nextGoal?.let { if (it.isNotEmpty()) append("Next Goal: ${agentOutput.nextGoal}") }
+                    agentOutput.thinking?.let { thinking -> if (thinking.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
+                    agentOutput.memory?.let { memory -> if (memory.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
+                    agentOutput.nextGoal?.let { goal -> if (goal.isNotEmpty()) append("Next Goal: ${agentOutput.nextGoal}") }
                 }.trim()
 
                 if (thoughtText.isNotEmpty()) {
