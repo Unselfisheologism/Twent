@@ -70,7 +70,7 @@ object GeminiApi {
         val lastUserPrompt = chat.lastOrNull { it.first == "user" }
             ?.second
             ?.filterIsInstance<TextPart>()
-            ?.joinToString(separator: "\n") { it.text } ?: "No text prompt found"
+            ?.joinToString("\n") { it.text } ?: "No text prompt found"
 
         var attempts = 0
         while (attempts < maxRetry) {
