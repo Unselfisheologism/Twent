@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-object GeminiApi {
+object LlmProvider {
     private val proxyUrl: String = BuildConfig.GCLOUD_PROXY_URL
     private val proxyKey: String = BuildConfig.GCLOUD_PROXY_URL_KEY
 

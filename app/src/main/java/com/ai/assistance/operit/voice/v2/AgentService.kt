@@ -21,7 +21,7 @@ import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
 import com.ai.assistance.operit.voice.overlay.OverlayManager
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.GeminiApi
+import com.ai.assistance.operit.voice.v2.llm.V2LlmApi
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
@@ -104,7 +104,7 @@ class AgentService : Service() {
         fileSystem = FileSystem(this)
         memoryManager = MemoryManager(this, "", fileSystem, settings)
         perception = Perception(Eyes(this), SemanticParser())
-        llmApi = GeminiApi(
+        llmApi = V2LlmApi(
             "gemini-2.5-flash",
             apiKeyManager = ApiKeyManager,
             context = this,

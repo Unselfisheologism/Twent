@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
-class GeminiApi(
+class V2LlmApi(
     private val modelName: String,
     private val apiKeyManager: ApiKeyManager,
     private val context: Context,
@@ -126,23 +126,4 @@ class GeminiApi(
             null
         }
     }
-}
-
-object ApiKeyManager {
-    private val apiKeys = mutableListOf<String>()
-
-    fun addKey(key: String) {
-        if (key.isNotBlank()) {
-            apiKeys.add(key)
-        }
-    }
-
-    fun getNextKey(): String {
-        if (apiKeys.isEmpty()) {
-            return ""
-        }
-        return apiKeys.random()
-    }
-
-    fun hasKeys(): Boolean = apiKeys.isNotEmpty()
 }

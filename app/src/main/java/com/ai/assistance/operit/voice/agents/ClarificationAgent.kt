@@ -1,7 +1,7 @@
 package com.ai.assistance.operit.voice.agents
 
 import android.content.Context
-import com.ai.assistance.operit.voice.api.GeminiApi
+import com.ai.assistance.operit.voice.api.LlmProvider
 import com.ai.assistance.operit.voice.utilities.TextPart
 import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +47,7 @@ class ClarificationAgent {
 
             // 3. Call the Gemini API.
             val responseJson = withContext(Dispatchers.IO) {
-                GeminiApi.generateContent(
+                LlmProvider.generateContent(
                     chat = apiChat,
                     modelName = "gemini-1.5-flash-latest", // Using a fast, modern model for this task.
                     context = context

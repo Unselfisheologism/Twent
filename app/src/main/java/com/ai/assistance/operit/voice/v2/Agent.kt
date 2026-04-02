@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.GeminiApi
+import com.ai.assistance.operit.voice.v2.llm.V2LlmApi
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
