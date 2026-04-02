@@ -141,14 +141,13 @@ class FloatingOperitButtonService : Service() {
     }
 
     private fun hideFloatingButton() {
-        floatingButton?.let { button ->
+        val button = floatingButton
+        if (button != null) {
             try {
                 if (button.isAttachedToWindow) {
                     windowManager?.removeView(button)
                 }
             } catch (e: Exception) {
-                Unit
-            }
                 Log.e(TAG, "Error removing floating button", e)
             }
         }
