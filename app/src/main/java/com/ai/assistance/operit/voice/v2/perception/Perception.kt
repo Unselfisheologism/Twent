@@ -3,7 +3,7 @@ package com.ai.assistance.operit.voice.v2.perception
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.services.automation.RawScreenData
+import com.ai.assistance.operit.voice.RawScreenData
 import com.ai.assistance.operit.voice.api.Eyes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
@@ -41,7 +41,7 @@ class Perception(
         val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
         val currentActivity = async { eyes.getCurrentActivityName() }
         val rawTree = rawDataDeferred.await() ?: RawScreenData(
-            null, null, 0, 0, 0, 0
+            null, 0, 0, 0,0
         )
         val isKeyboardOpen = keyboardStatusDeferred.await()
         val activityName = currentActivity.await()

@@ -1,5 +1,6 @@
 package com.ai.assistance.operit.voice.data
 
+import com.google.firebase.Timestamp
 import java.util.Date
 
 data class UserMemory(

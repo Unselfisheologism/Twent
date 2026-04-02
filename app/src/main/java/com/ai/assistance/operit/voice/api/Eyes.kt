@@ -7,8 +7,8 @@ import android.os.Environment
 import java.io.File
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.services.automation.RawScreenData
-import com.ai.assistance.operit.services.automation.OperitAutomationService
+import com.ai.assistance.operit.voice.RawScreenData
+import com.ai.assistance.operit.voice.OperitAutomationService
 
 class Eyes(context: Context) {
 
@@ -80,7 +80,7 @@ class Eyes(context: Context) {
         val service = OperitAutomationService.instance
         if (service == null) {
             Log.e("AccessibilityController", "Accessibility Service is not running!")
-            return RawScreenData(null, null, 0, 0, 0, 0)
+            return RawScreenData(null, 0,0, 0, 0)
         }
         return service.getScreenAnalysisData()
     }
@@ -91,7 +91,7 @@ class Eyes(context: Context) {
         val service = OperitAutomationService.instance
         if (service == null) {
             Log.e("AccessibilityController", "Accessibility Service is not running!")
-            return RawScreenData(null, null, 0, 0, 0, 0)
+            return RawScreenData(null, 0,0, 0, 0)
         }
         return service.getAllScreenAnalysisData()
     }

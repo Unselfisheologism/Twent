@@ -11,6 +11,7 @@ class AssistEntryActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleAssistLaunch(intent)
+        // No UI — finish immediately
         finish()
     }
 
@@ -23,13 +24,15 @@ class AssistEntryActivity : Activity() {
     private fun handleAssistLaunch(intent: Intent?) {
         Log.d("AssistEntryActivity", "Assistant invoked via ACTION_ASSIST, intent=$intent")
 
+        // If agent already running, you can signal it to focus/show UI instead of starting again
         if (!ConversationalAgentService.isRunning) {
             val serviceIntent = Intent(this, ConversationalAgentService::class.java).apply {
                 action = "com.ai.assistance.operit.voice.ACTION_START_FROM_ASSIST"
-                putExtra("source", "assist_gesture")
+                putExtra("source", "assist_gesture")       // optional metadata
             }
             ContextCompat.startForegroundService(this, serviceIntent)
         } else {
+            // e.g., tell the service to bring its overlay/mic UI to front
             sendBroadcast(Intent("com.ai.assistance.operit.voice.ACTION_SHOW_OVERLAY"))
         }
     }

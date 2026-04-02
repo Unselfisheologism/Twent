@@ -75,7 +75,7 @@ class PorcupineWakeWordDetector(
             // Build and start PorcupineManager
             porcupineManager = PorcupineManager.Builder()
                 .setAccessKey(accessKey)
-                .setKeywordPaths(arrayOf("Operit_en_android_v3_0_0.ppn"))
+                .setKeywordPaths(arrayOf("Panda_en_android_v3_0_0.ppn"))
                 .setSensitivity(0.5f) // Set sensitivity to 0.5 for better detection
                 .setErrorCallback(errorCallback)
                 .build(context, wakeWordCallback)

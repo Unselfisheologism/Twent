@@ -2,7 +2,7 @@ package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
 import androidx.core.content.ContextCompat
-import com.ai.assistance.operit.R
+import com.ai.assistance.operit.voice.R
 
 /**
  * Utility class for mapping OperitState values to their corresponding colors

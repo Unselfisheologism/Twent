@@ -5,22 +5,17 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
-import com.ai.assistance.operit.voice.v2.ActionResult
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.V2LlmApi
+import com.ai.assistance.operit.voice.v2.llm.GeminiApi
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayPriority
-import com.ai.assistance.operit.overlay.OverlayPosition
+import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
+import com.ai.assistance.operit.voice.overlay.OverlayPriority
+import com.ai.assistance.operit.voice.overlay.OverlayPosition
+import com.ai.assistance.operit.voice.SettingsActivity
 import kotlinx.coroutines.delay
-
-object OperitSettings {
-    const val PREFS_NAME = "OperitSettings"
-    const val KEY_SHOW_THOUGHTS = "show_thoughts"
-}
 
 /**
  * The main conductor of the agent.
@@ -39,7 +34,7 @@ class Agent(
     private val settings: AgentSettings,
     private val memoryManager: MemoryManager,
     private val perception: Perception,
-    private val llmApi: V2LlmApi,
+    private val llmApi: GeminiApi,
     private val actionExecutor: ActionExecutor,
     private val fileSystem: FileSystem,
     private val context: Context
@@ -109,12 +104,12 @@ class Agent(
             Log.d(TAG,"🤖 LLM decided: ${agentOutput.nextGoal}")
 
             // Show thoughts if enabled
-            val sharedPrefs = context.getSharedPreferences(OperitSettings.PREFS_NAME, Context.MODE_PRIVATE)
-            if (sharedPrefs.getBoolean(OperitSettings.KEY_SHOW_THOUGHTS, false)) {
+            val sharedPrefs = context.getSharedPreferences("BlurrSettings", Context.MODE_PRIVATE)
+            if (sharedPrefs.getBoolean(SettingsActivity.KEY_SHOW_THOUGHTS, false)) {
                 val thoughtText = buildString {
-                    agentOutput.thinking?.let { thinking -> if (thinking.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
-                    agentOutput.memory?.let { memory -> if (memory.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
-                    agentOutput.nextGoal?.let { goal -> if (goal.isNotEmpty()) append("Next Goal: ${agentOutput.nextGoal}") }
+                    agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
+                    agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
+                    agentOutput.nextGoal?.let { if (it.isNotEmpty()) append("Next Goal: ${agentOutput.nextGoal}") }
                 }.trim()
 
                 if (thoughtText.isNotEmpty()) {

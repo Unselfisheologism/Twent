@@ -29,9 +29,7 @@ class OperitVoiceInteractionSessionService : VoiceInteractionSessionService() {
         override fun onShow(args: Bundle?, showFlags: Int) {
             super.onShow(args, showFlags)
             AppLogger.d(TAG, "Session show requested with flags: $showFlags")
-            
             startConversationalAgent()
-            
             finish()
         }
         

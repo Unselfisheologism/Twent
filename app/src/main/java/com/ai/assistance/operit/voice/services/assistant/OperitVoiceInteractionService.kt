@@ -7,12 +7,6 @@ import android.service.voice.VoiceInteractionService
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.voice.ConversationalAgentService
 
-/**
- * Operit 语音交互服务
- * 
- * 这是让 Operit 能够被 Android 系统识别为数字助理应用的核心服务。
- * 当用户长按 Home 键或触发其他助手调用方式时，系统会启动这个服务。
- */
 class OperitVoiceInteractionService : VoiceInteractionService() {
     
     companion object {
@@ -26,7 +20,8 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
     
     override fun onReady() {
         super.onReady()
-        AppLogger.d(TAG, "VoiceInteractionService ready")
+        AppLogger.d(TAG, "VoiceInteractionService ready - starting conversational agent")
+        startConversationalAgent()
     }
     
     override fun onGetSupportedVoiceActions(voiceActions: MutableSet<String>): MutableSet<String> {
@@ -36,9 +31,7 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         AppLogger.d(TAG, "onStartCommand received")
-        
         startConversationalAgent()
-        
         return START_NOT_STICKY
     }
 
@@ -47,6 +40,7 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
             val serviceIntent = Intent(this, ConversationalAgentService::class.java).apply {
                 action = "com.ai.assistance.operit.voice.ACTION_START_FROM_VOICE_INTERACTION"
                 putExtra("source", "voice_interaction_service")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(serviceIntent)
@@ -69,4 +63,3 @@ class OperitVoiceInteractionService : VoiceInteractionService() {
         super.onDestroy()
     }
 }
-

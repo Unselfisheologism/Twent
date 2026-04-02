@@ -15,26 +15,26 @@ import android.view.WindowManager
 import android.widget.Button
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.ConversationalAgentService
-import com.ai.assistance.operit.R
+import com.ai.assistance.operit.voice.R
 
-class FloatingOperitButtonService : Service() {
+class FloatingPandaButtonService : Service() {
 
     private var windowManager: WindowManager? = null
     private var floatingButton: View? = null
 
     companion object {
-        private const val TAG = "FloatingOperitButton"
+        private const val TAG = "FloatingPandaButton"
         var isRunning = false
     }
 
     override fun onCreate() {
         super.onCreate()
         isRunning = true
-        Log.d(TAG, "Floating Operit Button Service created")
+        Log.d(TAG, "Floating Panda Button Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Floating Operit Button Service starting...")
+        Log.d(TAG, "Floating Panda Button Service starting...")
 
         if (!Settings.canDrawOverlays(this)) {
             Log.w(TAG, "Cannot show floating button: 'Draw over other apps' permission not granted.")
@@ -73,8 +73,8 @@ class FloatingOperitButtonService : Service() {
 
             // Set up the button click listener
             button.setOnClickListener {
-                Log.d(TAG, "Floating Operit button clicked!")
-                triggerOperitActivation()
+                Log.d(TAG, "Floating Panda button clicked!")
+                triggerPandaActivation()
             }
 
             val displayMetrics = resources.displayMetrics
@@ -100,7 +100,7 @@ class FloatingOperitButtonService : Service() {
             }
 
             windowManager?.addView(floatingButton, params)
-            Log.d(TAG, "Floating Operit button added successfully")
+            Log.d(TAG, "Floating Panda button added successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error adding floating button", e)
             floatingButton = null
@@ -109,7 +109,7 @@ class FloatingOperitButtonService : Service() {
 
     private fun createFloatingView(): Button {
         return Button(this).apply {
-            text = "Hey Operit"
+            text = "Hey Panda"
             // Prevent text from being all caps for a softer look
             isAllCaps = false
             setTextColor(Color.WHITE)
@@ -126,7 +126,7 @@ class FloatingOperitButtonService : Service() {
     }
 
 
-    private fun triggerOperitActivation() {
+    private fun triggerPandaActivation() {
         try {
             if (!ConversationalAgentService.isRunning) {
                 Log.d(TAG, "Starting ConversationalAgentService from floating button")
@@ -141,8 +141,7 @@ class FloatingOperitButtonService : Service() {
     }
 
     private fun hideFloatingButton() {
-        val button = floatingButton
-        if (button != null) {
+        floatingButton?.let { button ->
             try {
                 if (button.isAttachedToWindow) {
                     windowManager?.removeView(button)
@@ -156,7 +155,7 @@ class FloatingOperitButtonService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "Floating Operit Button Service destroying...")
+        Log.d(TAG, "Floating Panda Button Service destroying...")
         hideFloatingButton()
         isRunning = false
     }

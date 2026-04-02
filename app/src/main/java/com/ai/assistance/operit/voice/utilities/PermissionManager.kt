@@ -12,7 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.ai.assistance.operit.services.automation.OperitAutomationService
+import com.ai.assistance.operit.voice.OperitAutomationService
 
 /**
  * Utility class to handle all permission-related functionality

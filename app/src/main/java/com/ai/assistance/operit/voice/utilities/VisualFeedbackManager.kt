@@ -24,7 +24,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.ai.assistance.operit.voice.AudioWaveView
-import com.ai.assistance.operit.R
+import com.ai.assistance.operit.voice.R
 import com.ai.assistance.operit.voice.ui.SmallDeltaGlowView
 import com.ai.assistance.operit.voice.utilities.OperitState
 import com.ai.assistance.operit.voice.utilities.OperitStateManager

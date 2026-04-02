@@ -15,8 +15,8 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.ConversationalAgentService
-import com.ai.assistance.operit.ui.main.MainActivity
-import com.ai.assistance.operit.R
+import com.ai.assistance.operit.voice.MainActivity
+import com.ai.assistance.operit.voice.R
 import com.ai.assistance.operit.voice.api.PorcupineWakeWordDetector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,8 +68,8 @@ class EnhancedWakeWordService : Service() {
 
         val engineName = if (usePorcupine) "Porcupine" else "STT"
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Operit Wake Word")
-            .setContentText("Listening for 'Operit' with Porcupine engine...")
+            .setContentTitle("Blurr Wake Word")
+            .setContentText("Listening for 'Panda' with Porcupine engine...")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .build()
@@ -98,7 +98,7 @@ class EnhancedWakeWordService : Service() {
                 val serviceIntent = Intent(this, ConversationalAgentService::class.java)
                 ContextCompat.startForegroundService(this, serviceIntent)
 
-                Toast.makeText(this, "Operit listening...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Panda listening...", Toast.LENGTH_SHORT).show()
             } else {
                 Log.d("EnhancedWakeWordService", "Conversational agent is already running.")
             }

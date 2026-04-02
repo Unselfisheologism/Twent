@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.overlay
+package com.ai.assistance.operit.voice.overlay
 
 enum class OverlayPriority(val level: Int) {
     CAPTION(1),

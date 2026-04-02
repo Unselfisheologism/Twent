@@ -15,12 +15,12 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
-import com.ai.assistance.operit.BuildConfig
+import com.ai.assistance.operit.voice.BuildConfig
 import com.ai.assistance.operit.voice.api.GoogleTts
 import com.ai.assistance.operit.voice.api.TTSVoice
-import com.ai.assistance.operit.overlay.OverlayDispatcher
-import com.ai.assistance.operit.overlay.OverlayManager
-import com.ai.assistance.operit.overlay.OverlayPriority
+import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
+import com.ai.assistance.operit.voice.overlay.OverlayManager
+import com.ai.assistance.operit.voice.overlay.OverlayPriority
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

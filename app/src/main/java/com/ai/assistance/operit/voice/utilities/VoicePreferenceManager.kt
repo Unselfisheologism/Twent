@@ -6,7 +6,7 @@ import com.ai.assistance.operit.voice.api.TTSVoice
 object VoicePreferenceManager {
     // FIX: Changed PREFS_NAME to match SettingsActivity for consistency.
     // This ensures both read/write to the same preferences file.
-    private const val PREFS_NAME = "OperitSettings"
+    private const val PREFS_NAME = "BlurrSettings" // THIS LINE WAS CHANGED
 
     private const val KEY_SELECTED_VOICE = "selected_voice"
 
@@ -14,9 +14,9 @@ object VoicePreferenceManager {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         // Ensure this default also matches your intended default (CHIRP_PUCK)
-        val selectedVoiceName = sharedPreferences.getString(KEY_SELECTED_VOICE, TTSVoice.DEFAULT.name)
+        val selectedVoiceName = sharedPreferences.getString(KEY_SELECTED_VOICE, TTSVoice.CHIRP_LAOMEDEIA.name)
 
-        return TTSVoice.valueOf(selectedVoiceName ?: TTSVoice.DEFAULT.name)
+        return TTSVoice.valueOf(selectedVoiceName ?: TTSVoice.CHIRP_LAOMEDEIA.name)
     }
 
     fun saveSelectedVoice(context: Context, voice: TTSVoice) {

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.services.automation.OperitAutomationService
+import com.ai.assistance.operit.voice.OperitAutomationService
 
 /**
  * A rewritten Finger class that uses the AccessibilityService for all actions,
@@ -20,7 +20,7 @@ class Finger(private val context: Context) {
         get() {
             val instance = OperitAutomationService.instance
             if (instance == null) {
-                Log.e(TAG, "ScreenInteractionService is not running or not connected!")
+                Log.e(TAG, "OperitAutomationService is not running or not connected!")
             }
             return instance
         }
@@ -33,7 +33,7 @@ class Finger(private val context: Context) {
         try {
             val intent = Intent().apply {
                 // Use the app's own context to find the activity class
-                setClassName(context, "com.ai.assistance.operit/com.ai.assistance.operit.ui.activities.ChatActivity")
+                setClassName(context, "com.ai.assistance.operit.app.ChatActivity")
                 putExtra("custom_message", message)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
@@ -98,7 +98,7 @@ class Finger(private val context: Context) {
      */
     fun longPress(x: Int, y: Int) {
         Log.d(TAG, "Long pressing at ($x, $y)")
-        // This assumes your ScreenInteractionService has a method `longClickOnPoint`
+        // This assumes your OperitAutomationService has a method `longClickOnPoint`
         service?.longClickOnPoint(x.toFloat(), y.toFloat())
     }
 
