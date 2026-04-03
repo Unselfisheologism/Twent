@@ -156,6 +156,8 @@ class ConversationalAgentService : Service() {
         super.onCreate()
         Log.d("ConvAgent", "Service onCreate")
 
+        MyApplication.init(this)
+
         isRunning = true
         createNotificationChannel()
         initializeConversation()

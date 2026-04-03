@@ -1,6 +1,5 @@
 package com.ai.assistance.operit.voice
 
-import android.app.Application
 import android.content.Context
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -12,42 +11,41 @@ import com.ai.assistance.operit.voice.intents.impl.EmailComposeIntent
 import com.ai.assistance.operit.voice.intents.impl.ShareTextIntent
 import com.ai.assistance.operit.voice.intents.impl.ViewUrlIntent
 
-class MyApplication : Application(), PurchasesUpdatedListener {
-
-    companion object {
-        lateinit var appContext: Context
-            private set
-
-        lateinit var billingClient: BillingClient
-            private set
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        appContext = applicationContext
-
-        billingClient = BillingClient.newBuilder(this)
-            .setListener(this)
+object MyApplication {
+    private var _appContext: Context? = null
+    val appContext: Context
+        get() = _appContext ?: throw IllegalStateException("MyApplication not initialized. Call init() first.")
+    
+    private var _billingClient: BillingClient? = null
+    val billingClient: BillingClient
+        get() = _billingClient ?: throw IllegalStateException("BillingClient not initialized. Call init() first.")
+    
+    private var initialized = false
+    
+    fun init(context: Context) {
+        if (initialized) return
+        initialized = true
+        
+        _appContext = context.applicationContext
+        
+        _billingClient = BillingClient.newBuilder(context.applicationContext)
+            .setListener(object : PurchasesUpdatedListener {
+                override fun onPurchasesUpdated(result: BillingResult, purchases: MutableList<com.android.billingclient.api.Purchase>?) {
+                    // Handled by FreemiumManager
+                }
+            })
             .enablePendingPurchases()
             .build()
-
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                // Billing setup handled by FreemiumManager
-            }
-            override fun onBillingServiceDisconnected() {
-                // Will reconnect when needed
-            }
+        
+        _billingClient?.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(result: BillingResult) {}
+            override fun onBillingServiceDisconnected() {}
         })
-
+        
         IntentRegistry.register(DialIntent())
         IntentRegistry.register(ViewUrlIntent())
         IntentRegistry.register(ShareTextIntent())
         IntentRegistry.register(EmailComposeIntent())
-        IntentRegistry.init(this)
-    }
-
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<com.android.billingclient.api.Purchase>?) {
-        // Handled by FreemiumManager
+        IntentRegistry.init(context.applicationContext)
     }
 }
