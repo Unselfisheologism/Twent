@@ -1,6 +1,5 @@
 package com.ai.assistance.operit.voice.data
 
-import com.google.firebase.Timestamp
 
 data class TaskHistoryItem(
     val task: String,

@@ -4,11 +4,6 @@ import android.util.Log
 import com.ai.assistance.operit.voice.BuildConfig
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.v2.AgentOutput
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.Content
-import com.google.ai.client.generativeai.type.GenerationConfig
-import com.google.ai.client.generativeai.type.RequestOptions
-import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

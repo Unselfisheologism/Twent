@@ -2,8 +2,6 @@ package com.ai.assistance.operit.voice.utilities
 
 import android.graphics.Bitmap
 import com.ai.assistance.operit.voice.api.GeminiApi
-import com.google.ai.client.generativeai.type.ImagePart
-import com.google.ai.client.generativeai.type.TextPart
 
 fun addResponse(
     role: String,

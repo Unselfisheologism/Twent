@@ -1,4 +1,4 @@
-package com.blurr.voice.ui.theme
+package com.ai.assistance.operit.voice.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
