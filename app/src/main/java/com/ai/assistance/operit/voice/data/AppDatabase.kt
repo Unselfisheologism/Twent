@@ -22,7 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "blurr_memory_database"
+                    "operit_memory_database"
                 )
                 .fallbackToDestructiveMigration() // This will recreate the database if schema changes
                 .build()

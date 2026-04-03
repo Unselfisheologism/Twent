@@ -3,7 +3,7 @@ package com.ai.assistance.operit.voice.v2.perception
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.voice.RawScreenData
+import com.ai.assistance.operit.services.automation.RawScreenData
 import com.ai.assistance.operit.voice.api.Eyes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async

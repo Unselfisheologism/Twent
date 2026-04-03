@@ -78,10 +78,6 @@ android {
         buildConfigField("String", "COMPOSIO_API_KEY", "\"${localProperties.getProperty("COMPOSIO_API_KEY")}\"")
         buildConfigField("boolean", "ENABLE_LOGGING", "true")
         buildConfigField("boolean", "SPEAK_INSTRUCTIONS", "true")
-        buildConfigField("String", "GCLOUD_PROXY_URL", "\"\"")
-        buildConfigField("String", "GCLOUD_PROXY_URL_KEY", "\"\"")
-        buildConfigField("String", "GCLOUD_PROXY_URL", "\"\"")
-        buildConfigField("String", "GCLOUD_PROXY_URL_KEY", "\"\"")
     }
 
     buildTypes {
@@ -248,12 +244,6 @@ dependencies {
     implementation(libs.exoplayer)
     implementation(libs.exoplayer.core)
     implementation(libs.exoplayer.ui)
-    
-    // Picovoice for wake word detection
-    implementation(libs.picovoice.porcupine)
-    
-    // Google Play Billing
-    implementation(libs.billing.client)
     
     // Material 3 Window Size Class
     implementation(libs.material3.window)

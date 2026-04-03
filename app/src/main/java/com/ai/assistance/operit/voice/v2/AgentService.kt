@@ -12,13 +12,13 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.api.Eyes
 import com.ai.assistance.operit.voice.api.Finger
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
-import com.ai.assistance.operit.voice.overlay.OverlayManager
+import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
 import com.ai.assistance.operit.voice.v2.llm.GeminiApi
@@ -90,15 +90,8 @@ class AgentService : Service() {
             val intent = Intent(context, AgentService::class.java).apply {
                 putExtra(EXTRA_TASK, task)
             }
-            try {
-                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                    try {
-                        com.ai.assistance.operit.voice.utilities.FreemiumManager().decrementTaskCount()
-                    } catch (_: Exception) {
-                    }
-                }
-            } catch (_: Exception) {
-            }
+            context.startService(intent)
+        }
             context.startService(intent)
         }
     }
@@ -255,11 +248,11 @@ class AgentService : Service() {
         )
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Panda Doing Task (Expand to stop Panda)")
+            .setContentTitle("Operit Doing Task (Expand to stop)")
             .setContentText(contentText)
             .addAction(
-                android.R.drawable.ic_media_pause, // Using built-in pause icon as stop button
-                "Stop Panda",
+                android.R.drawable.ic_media_pause,
+                "Stop",
                 stopPendingIntent
             )
             .setOngoing(true) // Makes notification persistent and harder to dismiss

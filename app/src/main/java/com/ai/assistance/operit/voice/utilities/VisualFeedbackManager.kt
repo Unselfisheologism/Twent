@@ -24,7 +24,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.ai.assistance.operit.voice.AudioWaveView
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.ui.SmallDeltaGlowView
 import com.ai.assistance.operit.voice.utilities.OperitState
 import com.ai.assistance.operit.voice.utilities.OperitStateManager
@@ -43,7 +43,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var inputBoxView: View? = null
     private var thinkingIndicatorView: View? = null
     private var smallDeltaGlowView: SmallDeltaGlowView? = null
-    private val pandaStateManager by lazy { OperitStateManager.getInstance(context) }
+    private val operitStateManager by lazy { OperitStateManager.getInstance(context) }
     private val stateChangeListener: (OperitState) -> Unit
     private var speakingOverlay: View? = null
 
@@ -51,7 +51,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         stateChangeListener = { newState ->
             updateSmallDeltaVisuals(newState)
         }
-        pandaStateManager.addStateChangeListener(stateChangeListener)
+        operitStateManager.addStateChangeListener(stateChangeListener)
 
     }
 
@@ -504,7 +504,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             try {
                 windowManager.addView(smallDeltaGlowView, params)
                 // Set the initial color and glow based on the *current* state
-                updateSmallDeltaVisuals(pandaStateManager.getCurrentState())
+                updateSmallDeltaVisuals(operitStateManager.getCurrentState())
                 Log.d(TAG, "Small delta glow view added.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding small delta glow view", e)

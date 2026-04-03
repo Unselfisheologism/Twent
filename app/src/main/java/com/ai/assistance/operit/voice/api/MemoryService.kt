@@ -1,7 +1,7 @@
 package com.ai.assistance.operit.voice.api
 
 import android.util.Log
-import com.ai.assistance.operit.voice.BuildConfig
+import com.ai.assistance.operit.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType

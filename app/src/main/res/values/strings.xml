@@ -4809,8 +4809,46 @@
 
     <!-- Auto-generated missing string resources -->
 
-
-
     <!-- Auto-generated missing string resources -->
+
+    <!-- Tool Registration -->
+    <string name="toolreg_list_character_cards_desc">List all character cards</string>
+
+    <!-- Toast Messages -->
+    <string name="toast_apk_extract_failed">Failed to extract APK</string>
+
+    <!-- Shizuku Demo -->
+    <string name="shizuku_demo_shizuku_permission_granted">Shizuku permission granted</string>
+    <string name="shizuku_demo_shizuku_permission_denied">Shizuku permission denied</string>
+
+    <!-- Root Wizard -->
+    <string name="root_wizard_completed">Root wizard completed</string>
+    <string name="root_wizard_success_message">Device is rooted successfully</string>
+    <string name="root_wizard_test_command">Test root command</string>
+    <string name="root_wizard_device_rooted_message">Your device is rooted</string>
+    <string name="root_wizard_how_to_get_root">How to get root access</string>
+    <string name="root_wizard_how_to_get_root_steps">Steps to root your device</string>
+    <string name="root_wizard_request_permission">Request root permission</string>
+    <string name="root_wizard_view_tutorial">View root tutorial</string>
+    <string name="root_wizard_device_not_rooted">Device is not rooted</string>
+    <string name="root_wizard_risk_notice">Root risk notice</string>
+    <string name="root_wizard_risk_details">Root risk details</string>
+
+    <!-- Shizuku Wizard -->
+    <string name="shizuku_wizard_permission_notice">Shizuku permission notice</string>
+    <string name="shizuku_wizard_permission_notice_details">Shizuku permission details</string>
+    <string name="shizuku_wizard_current_version">Current Shizuku version</string>
+    <string name="shizuku_wizard_latest_version">Latest Shizuku version</string>
+
+    <!-- Permission Guide -->
+    <string name="permission_guide_storage_setting_failed">Storage permission setting failed</string>
+    <string name="permission_guide_overlay_setting_failed">Overlay permission setting failed</string>
+    <string name="permission_guide_battery_hint">Battery optimization may affect app functionality</string>
+    <string name="permission_guide_battery_setting_failed">Battery optimization setting failed</string>
+
+    <!-- Theme Settings -->
+    <string name="theme_loop_enabled">Video loop enabled</string>
+    <string name="theme_loop_disabled">Video loop disabled</string>
+
 
 </resources>

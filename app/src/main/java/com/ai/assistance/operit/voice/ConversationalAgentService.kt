@@ -34,7 +34,6 @@ import androidx.core.graphics.toColorInt
 import com.ai.assistance.operit.voice.agents.ClarificationAgent
 import com.ai.assistance.operit.voice.utilities.TTSManager
 import com.ai.assistance.operit.voice.utilities.addResponse
-import com.ai.assistance.operit.voice.utilities.FreemiumManager
 import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.utilities.OperitState
@@ -58,6 +57,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.toList
 import org.json.JSONObject
 import java.io.IOException
 
@@ -80,7 +83,6 @@ class ConversationalAgentService : Service() {
     private val visualFeedbackManager by lazy { VisualFeedbackManager.getInstance(this) }
     private val stateManager by lazy { OperitStateManager.getInstance(this) }
     private var isTextModeActive = false
-    private val freemiumManager by lazy { FreemiumManager.getInstance(this) }
     private val servicePermissionManager by lazy { ServicePermissionManager(this) }
 
     private var clarificationAttempts = 0
@@ -106,8 +108,8 @@ class ConversationalAgentService : Service() {
     private fun getAIService(): AIService? {
         return try {
             val modelConfigManager = ModelConfigManager(this)
-            val userPrefs = UserPreferencesManager(this)
-            val activeConfigId = userPrefs.getActiveModelConfigId()
+            val userPrefs = UserPreferencesManager.getInstance(this)
+            val activeConfigId = runBlocking { userPrefs.activeProfileIdFlow.first() }
             if (activeConfigId.isEmpty()) {
                 Log.w("ConvAgent", "No active model config found")
                 return null
@@ -117,7 +119,7 @@ class ConversationalAgentService : Service() {
                     Log.w("ConvAgent", "Model config not found for id: $activeConfigId")
                     return null
                 }
-            val customHeaders = userPrefs.getCustomHeaders()
+            val customHeaders = runBlocking { com.ai.assistance.operit.data.preferences.ApiPreferences.getInstance(this@ConversationalAgentService).getCustomHeaders() }
             AIServiceFactory.createService(config, customHeaders, modelConfigManager, this)
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to create AIService", e)
@@ -141,7 +143,7 @@ class ConversationalAgentService : Service() {
                 chatHistory = chatHistory.dropLast(1),
                 stream = false
             )
-            val fullResponse = responseStream.collectAll().joinToString("")
+            val fullResponse = responseStream.toList().joinToString("")
             aiService.release()
             fullResponse
         } catch (e: Exception) {
@@ -535,10 +537,7 @@ Current Time : {time_context}
                         Log.d("ConvAgent", "Model identified a task. Checking for clarification...")
                         removeClarificationQuestions()
 
-                        if (freemiumManager.canPerformTask()) {
-                            Log.d("ConvAgent", "Allowance check passed. Proceeding with task.")
-
-                            if (clarificationAttempts < maxClarificationAttempts) {
+                        if (clarificationAttempts < maxClarificationAttempts) {
                                 val (needsClarification, questions) = checkIfClarificationNeeded(decision.instruction)
                                 Log.d("ConvAgent", "Needs clarification: $needsClarification")
                                 Log.d("ConvAgent", "Questions: $questions")
@@ -562,11 +561,7 @@ Current Time : {time_context}
                                 conversationHistory = conversationHistory + ("model" to decision.reply)
                                 gracefulShutdown(decision.reply, "task_executed")
                             }
-                        } else {
-                            Log.w("ConvAgent", "User has no tasks remaining. Denying request.")
-                            val upgradeMessage = "Hey! You've used all your free tasks for the month. Please upgrade in the app to unlock more. We can still talk in voice mode."
-                            conversationHistory = conversationHistory + ("model" to upgradeMessage)
-                            speakAndThenListen(upgradeMessage)
+                        }
                         }
                     }
                     "KillTask" -> {

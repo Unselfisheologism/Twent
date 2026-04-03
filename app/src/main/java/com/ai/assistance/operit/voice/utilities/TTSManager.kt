@@ -15,12 +15,11 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
-import com.ai.assistance.operit.voice.BuildConfig
-import com.ai.assistance.operit.voice.api.GoogleTts
+import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.voice.api.TTSVoice
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
-import com.ai.assistance.operit.voice.overlay.OverlayManager
-import com.ai.assistance.operit.voice.overlay.OverlayPriority
+import com.ai.assistance.operit.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayManager
+import com.ai.assistance.operit.overlay.OverlayPriority
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,13 +98,14 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
     }
 
     /**
-     * Initialize the cache directory and load existing cached items
+     * Cloud-based TTS chunk playback - DISABLED. Use native TTS via speak() instead.
      */
-    private fun initializeCache() {
-        try {
-            if (!cacheDir.exists()) {
-                cacheDir.mkdirs()
-            }
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun speakChunk(chunk: String, selectedVoice: TTSVoice) {
+        Log.w("TTSManager", "Cloud TTS is disabled. Using native TTS fallback.")
+        isNativeTtsInitialized.await()
+        nativeTts?.speak(chunk, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
+    }
             loadCacheFromDisk()
         } catch (e: Exception) {
             Log.e("TTSManager", "Failed to initialize cache", e)
@@ -317,144 +317,23 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
 
     private suspend fun speak(text: String) {
         try {
-            val selectedVoice = VoicePreferenceManager.getSelectedVoice(context)
-            
-            // Smart chunking: Break text into sentences of ~50 words each
-            val textChunks = chunkTextIntoSentences(text, maxWordsPerChunk = 50)
-
-            if (textChunks.size == 1) {
-                // Single chunk - process normally
-                speakChunk(textChunks[0].trim(), selectedVoice)
-            } else {
-                // Multiple chunks - use smart queue-based playback
-                playWithSmartQueue(textChunks, selectedVoice)
-            }
-
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e // Re-throw cancellation to stop execution
-            Log.e("TTSManager", "Google TTS failed: ${e.message}. Falling back to native engine.")
             isNativeTtsInitialized.await()
             nativeTts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Log.e("TTSManager", "TTS failed: ${e.message}")
         }
+    }
     }
     
     /**
-     * Smart queue-based playback that starts playing immediately while preloading in background
+     * Cloud-based TTS playback - DISABLED. Use native TTS via speak() instead.
      */
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun playWithSmartQueue(textChunks: List<String>, selectedVoice: TTSVoice) {
-        val audioQueue = mutableListOf<Pair<String, ByteArray>>()
-        val queueMutex = Any()
-        
-        // Start preloading the first chunk immediately
-        val firstChunk = textChunks[0].trim()
-        val firstAudioData = getCachedAudio(firstChunk, selectedVoice) ?: try {
-            GoogleTts.synthesize(firstChunk, selectedVoice).also { audioData ->
-                cacheAudio(firstChunk, audioData, selectedVoice)
-            }
-        } catch (e: Exception) {
-            Log.e("TTSManager", "Failed to synthesize first chunk: ${e.message}")
-            return
-        }
-        
-        // Add first chunk to queue and start playing
-        synchronized(queueMutex) {
-            audioQueue.add(Pair(firstChunk, firstAudioData))
-        }
-        
-        // Start background preloading for remaining chunks
-        val preloadJob = CoroutineScope(Dispatchers.IO).launch {
-            for (i in 1 until textChunks.size) {
-                val chunk = textChunks[i].trim()
-                if (chunk.isNotEmpty()) {
-                    try {
-                        val audioData = getCachedAudio(chunk, selectedVoice) ?: GoogleTts.synthesize(chunk, selectedVoice).also { audioData ->
-                            cacheAudio(chunk, audioData, selectedVoice)
-                        }
-                        synchronized(queueMutex) {
-                            audioQueue.add(Pair(chunk, audioData))
-                        }
-                        Log.d("TTSManager", "Preloaded chunk ${i + 1}/${textChunks.size}: ${chunk.take(50)}...")
-                    } catch (e: Exception) {
-                        Log.e("TTSManager", "Failed to preload chunk ${i + 1}: ${e.message}")
-                    }
-                }
-            }
-        }
-        
-        // Start playing from queue
-        while (true) {
-            val currentChunk: Pair<String, ByteArray>?
-            
-            synchronized(queueMutex) {
-                if (audioQueue.isNotEmpty()) {
-                    currentChunk = audioQueue.removeAt(0)
-                } else {
-                    currentChunk = null
-                }
-            }
-            
-            if (currentChunk == null) {
-                // No more chunks in queue, check if preloading is complete
-                if (preloadJob.isCompleted) {
-                    break
-                } else {
-                    // Wait a bit for more chunks to be preloaded
-                    delay(100)
-                    continue
-                }
-            }
-            
-            // Play current chunk
-            try {
-                val (chunkText, audioData) = currentChunk
-                
-                // This deferred will complete when onMarkerReached is called.
-                googleTtsPlaybackDeferred = CompletableDeferred()
-
-                var currentCaptionId = ""
-
-                withContext(Dispatchers.Main) {
-                    currentCaptionId = OverlayDispatcher.show(
-                        chunkText,
-                        OverlayPriority.CAPTION
-                    )
-                    utteranceListener?.invoke(true)
-                }
-
-                
-                // Play audio on background thread
-                withContext(Dispatchers.IO) {
-                    audioTrack?.play()
-                    val numFrames = audioData.size / 2
-                    audioTrack?.setNotificationMarkerPosition(numFrames)
-                    audioTrack?.write(audioData, 0, audioData.size)
-                }
-                
-                // Wait for playback completion
-                withTimeoutOrNull(10000) { // 10-second timeout per chunk
-                    googleTtsPlaybackDeferred?.await()
-                }
-                
-                audioTrack?.stop()
-                audioTrack?.flush()
-                
-                withContext(Dispatchers.Main) {
-                        OverlayDispatcher.dismiss(currentCaptionId)
-                        utteranceListener?.invoke(false)
-                }
-
-                Log.d("TTSManager", "Successfully played queued audio chunk: ${chunkText.take(50)}...")
-                
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.e("TTSManager", "Failed to play queued chunk: ${currentChunk.first.take(50)}... Error: ${e.message}")
-            }
-        }
-        
-        // Cancel preloading job if it's still running
-        if (preloadJob.isActive) {
-            preloadJob.cancel()
-        }
+        // Cloud TTS disabled - using native TTS instead
+        Log.w("TTSManager", "Cloud TTS is disabled. Use native TTS via speak() instead.")
+        return
     }
     
     /**
@@ -522,62 +401,13 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
     }
     
     /**
-     * Speaks a single chunk of text (used for single chunks or fallback)
+     * Cloud-based TTS chunk playback - DISABLED. Use native TTS via speak() instead.
      */
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun speakChunk(chunk: String, selectedVoice: TTSVoice) {
-        try {
-            // Check cache first
-            val audioData = getCachedAudio(chunk, selectedVoice) ?: GoogleTts.synthesize(chunk, selectedVoice).also { audioData ->
-                cacheAudio(chunk, audioData, selectedVoice)
-            }
-
-            // This deferred will complete when onMarkerReached is called.
-            googleTtsPlaybackDeferred = CompletableDeferred()
-
-            // Correctly signal start and wait for completion.
-
-            var currentCaptionId = ""
-
-            withContext(Dispatchers.Main) {
-                currentCaptionId = OverlayDispatcher.show(
-                    chunk,
-                    OverlayPriority.CAPTION
-                )
-                utteranceListener?.invoke(true)
-
-            }
-
-
-            // Write and play audio on a background thread
-            withContext(Dispatchers.IO) {
-                audioTrack?.play()
-                // The number of frames is the size of the data divided by the size of each frame (2 bytes for 16-bit audio).
-                val numFrames = audioData.size / 2
-                audioTrack?.setNotificationMarkerPosition(numFrames)
-                audioTrack?.write(audioData, 0, audioData.size)
-            }
-
-            // Wait for the playback to complete, with a timeout for safety.
-            withTimeoutOrNull(15000) { // 15-second timeout per chunk
-                googleTtsPlaybackDeferred?.await()
-            }
-
-            audioTrack?.stop()
-            audioTrack?.flush()
-
-            withContext(Dispatchers.Main) {
-                OverlayDispatcher.dismiss(currentCaptionId)
-                utteranceListener?.invoke(false)
-            }
-
-
-            Log.d("TTSManager", "Successfully played audio chunk: ${chunk.take(50)}...")
-
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.e("TTSManager", "Failed to speak chunk: ${chunk.take(50)}... Error: ${e.message}")
-            // Continue with next chunk instead of falling back to native TTS for the entire text
-        }
+        Log.w("TTSManager", "Cloud TTS is disabled. Using native TTS fallback.")
+        isNativeTtsInitialized.await()
+        nativeTts?.speak(chunk, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
     }
 
     suspend fun playAudioData(audioData: ByteArray) {

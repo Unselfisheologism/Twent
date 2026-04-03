@@ -1,6 +1,6 @@
 package com.ai.assistance.operit.voice.utilities
 
-import com.ai.assistance.operit.voice.BuildConfig
+import com.ai.assistance.operit.BuildConfig
 import java.util.concurrent.atomic.AtomicInteger
 
 /**

@@ -10,8 +10,8 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.ai.assistance.operit.voice.MainActivity
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.MainActivity
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.api.WakeWordDetector
 
 class WakeWordService : Service() {
@@ -49,8 +49,8 @@ class WakeWordService : Service() {
         )
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Blurr Wake Word")
-            .setContentText("Listening for 'Panda'...")
+            .setContentTitle("Operit Wake Word")
+            .setContentText("Listening for wake word...")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .build()

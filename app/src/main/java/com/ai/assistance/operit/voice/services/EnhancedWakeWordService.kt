@@ -15,50 +15,40 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.ConversationalAgentService
-import com.ai.assistance.operit.voice.MainActivity
-import com.ai.assistance.operit.voice.R
-import com.ai.assistance.operit.voice.api.PorcupineWakeWordDetector
+import com.ai.assistance.operit.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 class EnhancedWakeWordService : Service() {
 
-    private var porcupineDetector: PorcupineWakeWordDetector? = null
-    private var usePorcupine = false
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     companion object {
         const val CHANNEL_ID = "EnhancedWakeWordServiceChannel"
         var isRunning = false
-        const val ACTION_WAKE_WORD_FAILED = "com.ai.assistance.operit.voice.WAKE_WORD_FAILED"
-        const val EXTRA_USE_PORCUPINE = "use_porcupine"
     }
 
     override fun onCreate() {
         super.onCreate()
         isRunning = true
-        Log.d("EnhancedWakeWordService", "Service onCreate() called, isRunning set to true")
+        Log.d("EnhancedWakeWordService", "Service onCreate()")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("EnhancedWakeWordService", "Service starting...")
         
-        // Check if we have the required RECORD_AUDIO permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("EnhancedWakeWordService", "RECORD_AUDIO permission not granted. Cannot start foreground service.")
+            Log.e("EnhancedWakeWordService", "RECORD_AUDIO permission not granted.")
             Toast.makeText(this, "Microphone permission required for wake word", Toast.LENGTH_LONG).show()
-            // Make sure to reset the isRunning flag
             isRunning = false
             stopSelf()
             return START_NOT_STICKY
         }
         
-        usePorcupine = intent?.getBooleanExtra(EXTRA_USE_PORCUPINE, false) ?: false
-        
         createNotificationChannel()
 
-        val notificationIntent = Intent(this, MainActivity::class.java)
+        val notificationIntent = Intent(this, com.ai.assistance.operit.MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
@@ -66,10 +56,9 @@ class EnhancedWakeWordService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val engineName = if (usePorcupine) "Porcupine" else "STT"
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Blurr Wake Word")
-            .setContentText("Listening for 'Panda' with Porcupine engine...")
+            .setContentTitle("Operit Wake Word")
+            .setContentText("Listening for wake word...")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .build()
@@ -78,72 +67,21 @@ class EnhancedWakeWordService : Service() {
             startForeground(1338, notification)
         } catch (e: SecurityException) {
             Log.e("EnhancedWakeWordService", "Failed to start foreground service: ${e.message}")
-            Toast.makeText(this, "Cannot start wake word service - permission missing", Toast.LENGTH_LONG).show()
-            // Make sure to reset the isRunning flag
             isRunning = false
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // Start the appropriate wake word detector
-        startWakeWordDetection()
-
         return START_STICKY
-    }
-
-    private fun startWakeWordDetection() {
-        val onWakeWordDetected: () -> Unit = {
-            // Check if the conversational agent isn't already running
-            if (!ConversationalAgentService.isRunning) {
-                val serviceIntent = Intent(this, ConversationalAgentService::class.java)
-                ContextCompat.startForegroundService(this, serviceIntent)
-
-                Toast.makeText(this, "Panda listening...", Toast.LENGTH_SHORT).show()
-            } else {
-                Log.d("EnhancedWakeWordService", "Conversational agent is already running.")
-            }
-        }
-
-        val onApiFailure: () -> Unit = {
-            Log.d("EnhancedWakeWordService", "Porcupine API failed, starting floating button service")
-            // Start the floating button service when API fails
-            val intent = Intent(ACTION_WAKE_WORD_FAILED)
-            sendBroadcast(intent)
-            stopSelf()
-        }
-
-        try {
-            if (usePorcupine) {
-                Log.d("EnhancedWakeWordService", "Using Porcupine wake word detection")
-                porcupineDetector = PorcupineWakeWordDetector(this, onWakeWordDetected, onApiFailure)
-                porcupineDetector?.start()
-            } else {
-                Log.d("EnhancedWakeWordService", "Using Porcupine wake word detection")
-                porcupineDetector = PorcupineWakeWordDetector(this, onWakeWordDetected, onApiFailure)
-                porcupineDetector?.start()
-            }
-        } catch (e: Exception) {
-            Log.e("EnhancedWakeWordService", "Error starting wake word detection: ${e.message}")
-            // If there's any error, start the floating button service
-            onApiFailure()
-        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        
-        Log.d("EnhancedWakeWordService", "Service onDestroy() called")
-        
-        porcupineDetector?.stop()
-        porcupineDetector = null
-        
         isRunning = false
-        Log.d("EnhancedWakeWordService", "Service destroyed, isRunning set to false")
+        Log.d("EnhancedWakeWordService", "Service destroyed")
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -156,4 +94,4 @@ class EnhancedWakeWordService : Service() {
             manager.createNotificationChannel(serviceChannel)
         }
     }
-} 
+}

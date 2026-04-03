@@ -4,9 +4,7 @@ import android.content.Context
 import com.ai.assistance.operit.voice.api.TTSVoice
 
 object VoicePreferenceManager {
-    // FIX: Changed PREFS_NAME to match SettingsActivity for consistency.
-    // This ensures both read/write to the same preferences file.
-    private const val PREFS_NAME = "BlurrSettings" // THIS LINE WAS CHANGED
+    private const val PREFS_NAME = "OperitVoiceSettings"
 
     private const val KEY_SELECTED_VOICE = "selected_voice"
 

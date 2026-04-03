@@ -11,10 +11,9 @@ import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
-import com.ai.assistance.operit.voice.overlay.OverlayDispatcher
-import com.ai.assistance.operit.voice.overlay.OverlayPriority
-import com.ai.assistance.operit.voice.overlay.OverlayPosition
-import com.ai.assistance.operit.voice.SettingsActivity
+import com.ai.assistance.operit.overlay.OverlayDispatcher
+import com.ai.assistance.operit.overlay.OverlayPriority
+import com.ai.assistance.operit.overlay.OverlayPosition
 import kotlinx.coroutines.delay
 
 /**
@@ -100,13 +99,10 @@ class Agent(
             state.consecutiveFailures = 0
             state.lastModelOutput = agentOutput
             Log.d(TAG, agentOutput.toString())
-            Log.d(TAG, agentOutput.toString())
             Log.d(TAG,"🤖 LLM decided: ${agentOutput.nextGoal}")
 
-            // Show thoughts if enabled
-            val sharedPrefs = context.getSharedPreferences("BlurrSettings", Context.MODE_PRIVATE)
-            if (sharedPrefs.getBoolean(SettingsActivity.KEY_SHOW_THOUGHTS, false)) {
-                val thoughtText = buildString {
+            // Show thoughts overlay
+            val thoughtText = buildString {
                     agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
                     agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
                     agentOutput.nextGoal?.let { if (it.isNotEmpty()) append("Next Goal: ${agentOutput.nextGoal}") }
@@ -116,11 +112,10 @@ class Agent(
                     OverlayDispatcher.show(
                         text = thoughtText,
                         priority = OverlayPriority.TASKS,
-                        duration = 8000L, // Show for 8 seconds
+                        duration = 8000L,
                         position = OverlayPosition.TOP
                     )
                 }
-            }
 
             // 4. ACT: Execute the LLM's planned actions.
             Log.d(TAG,"💪 Executing actions...")

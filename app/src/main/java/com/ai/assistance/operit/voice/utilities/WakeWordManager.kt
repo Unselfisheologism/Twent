@@ -8,10 +8,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.ai.assistance.operit.voice.R
+import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.services.EnhancedWakeWordService
-import kotlinx.coroutines.launch
 
 class WakeWordManager(
     private val context: Context,
@@ -29,11 +27,9 @@ class WakeWordManager(
 
     private fun startWakeWordService() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            val serviceIntent = Intent(context, EnhancedWakeWordService::class.java).apply {
-                putExtra(EnhancedWakeWordService.EXTRA_USE_PORCUPINE, true)
-            }
+            val serviceIntent = Intent(context, EnhancedWakeWordService::class.java)
             ContextCompat.startForegroundService(context, serviceIntent)
-            Toast.makeText(context, context.getString(R.string.wake_word_enabled, "Porcupine"), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.wake_word_enabled, "Operit"), Toast.LENGTH_SHORT).show()
         } else {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }

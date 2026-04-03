@@ -2,7 +2,6 @@ package com.ai.assistance.operit.voice.utilities
 
 import android.content.Context
 import android.util.Log
-import com.ai.assistance.operit.voice.api.GoogleTts
 import com.ai.assistance.operit.voice.api.TTSVoice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -138,12 +137,7 @@ class SpeechCoordinator private constructor(private val context: Context) {
                         isListening = false
                         delay(200)
                     }
-                    // 1. Synthesize audio with the specific voice HERE
-                    val audioData = GoogleTts.synthesize(text, voice)
-
-                    // 2. Play the synthesized audio data
-                    ttsManager.playAudioData(audioData)
-
+                    ttsManager.speakText(text)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

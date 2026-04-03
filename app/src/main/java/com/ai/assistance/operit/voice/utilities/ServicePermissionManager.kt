@@ -7,7 +7,7 @@ import android.os.Build
 import android.provider.Settings
 import android.text.TextUtils
 import androidx.core.content.ContextCompat
-import com.ai.assistance.operit.voice.OperitAutomationService
+import com.ai.assistance.operit.services.automation.OperitAutomationService
 
 /**
  * Utility class to handle all permission-related functionality from a Service context.

@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.voice.overlay
+package com.ai.assistance.operit.overlay
 
 import android.content.Context
 import android.graphics.PixelFormat

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.ai.assistance.operit.voice.OperitAutomationService
+import com.ai.assistance.operit.services.automation.OperitAutomationService
 
 /**
  * A rewritten Finger class that uses the AccessibilityService for all actions,
