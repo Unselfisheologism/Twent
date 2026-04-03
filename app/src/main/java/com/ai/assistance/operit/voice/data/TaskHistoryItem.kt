@@ -1,11 +1,12 @@
 package com.ai.assistance.operit.voice.data
 
+import java.util.Date
 
 data class TaskHistoryItem(
     val task: String,
     val status: String,
-    val startedAt: Timestamp?,
-    val completedAt: Timestamp?,
+    val startedAt: Date?,
+    val completedAt: Date?,
     val success: Boolean?,
     val errorMessage: String?
 ) {
@@ -19,14 +20,14 @@ data class TaskHistoryItem(
     }
     
     fun getFormattedStartTime(): String {
-        return startedAt?.toDate()?.let { date ->
+        return startedAt?.let { date ->
             val formatter = java.text.SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", java.util.Locale.getDefault())
             formatter.format(date)
         } ?: "Unknown"
     }
     
     fun getFormattedCompletionTime(): String {
-        return completedAt?.toDate()?.let { date: java.util.Date ->
+        return completedAt?.let { date ->
             val formatter = java.text.SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", java.util.Locale.getDefault())
             formatter.format(date)
         } ?: "Not completed"

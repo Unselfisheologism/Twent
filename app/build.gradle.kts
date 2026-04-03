@@ -78,6 +78,10 @@ android {
         buildConfigField("String", "COMPOSIO_API_KEY", "\"${localProperties.getProperty("COMPOSIO_API_KEY")}\"")
         buildConfigField("boolean", "ENABLE_LOGGING", "true")
         buildConfigField("boolean", "SPEAK_INSTRUCTIONS", "true")
+        buildConfigField("String", "GCLOUD_PROXY_URL", "\"\"")
+        buildConfigField("String", "GCLOUD_PROXY_URL_KEY", "\"\"")
+        buildConfigField("String", "GCLOUD_PROXY_URL", "\"\"")
+        buildConfigField("String", "GCLOUD_PROXY_URL_KEY", "\"\"")
     }
 
     buildTypes {
