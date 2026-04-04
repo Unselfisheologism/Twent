@@ -700,47 +700,6 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         }
     }
 
-            return ModelDecision(type, finalReply, instruction, shouldEnd)
-        } catch (e: org.json.JSONException) {
-            Log.e("ConvAgent", "JSON parse error. Raw response: ${response.take(500)}", e)
-            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
-            return ModelDecision("Reply", fallbackReply, "", false)
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "Generic error parsing model response. Raw response: ${response.take(500)}", e)
-            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
-            return ModelDecision("Reply", fallbackReply, "", false)
-        }
-    }
-
-    private fun extractJsonFromResponse(response: String): String {
-        val trimmed = response.trim()
-        if (trimmed.startsWith("{")) return trimmed
-
-        val jsonBlockRegex = Regex("```(?:json)?\\s*([\\s\\S]*?)```")
-        val match = jsonBlockRegex.find(trimmed)
-        if (match != null) {
-            return match.groupValues[1].trim()
-        }
-
-        val firstBrace = trimmed.indexOf('{')
-        val lastBrace = trimmed.lastIndexOf('}')
-        if (firstBrace != -1 && lastBrace > firstBrace) {
-            return trimmed.substring(firstBrace, lastBrace + 1)
-        }
-
-        return trimmed
-    }
-
-            return ModelDecision(type, finalReply, instruction, shouldEnd)
-        } catch (e: org.json.JSONException) {
-            Log.e("ConvAgent", "Error parsing JSON response, falling back. Response: $response", e)
-            return ModelDecision(reply = "I seem to have gotten my thoughts tangled. Could you repeat that?")
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "Generic error parsing model response, falling back. Response: $response", e)
-            return ModelDecision(reply = "I had a minor issue processing that. Could you try again?")
-        }
-    }
-
     private fun extractJsonFromResponse(response: String): String {
         val trimmed = response.trim()
         if (trimmed.startsWith("{")) return trimmed
