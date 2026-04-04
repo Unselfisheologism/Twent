@@ -561,7 +561,6 @@ Current Time : {time_context}
                                 conversationHistory = conversationHistory + ("model" to decision.reply)
                                 gracefulShutdown(decision.reply, "task_executed")
                             }
-                        }
                     }
                     "KillTask" -> {
                         Log.d("ConvAgent", "Model requested to kill the running agent service.")
