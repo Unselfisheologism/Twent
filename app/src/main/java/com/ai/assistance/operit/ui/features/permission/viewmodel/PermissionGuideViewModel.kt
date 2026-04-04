@@ -77,6 +77,12 @@ class PermissionGuideViewModel : ViewModel() {
                     context,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
+
+        // 麦克风权限
+        val hasMicrophonePermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
         
         // 更新UI状态
         _uiState.update { currentState ->
@@ -85,17 +91,20 @@ class PermissionGuideViewModel : ViewModel() {
                 hasOverlayPermission = hasOverlayPermission,
                 hasBatteryOptimizationExemption = hasBatteryOptimizationExemption,
                 hasLocationPermission = hasLocationPermission,
+                hasMicrophonePermission = hasMicrophonePermission,
                 allBasicPermissionsGranted = hasStoragePermission && 
                         hasOverlayPermission && 
                         hasBatteryOptimizationExemption && 
-                        hasLocationPermission
+                        hasLocationPermission &&
+                        hasMicrophonePermission
             )
         }
         
         AppLogger.d(TAG, "Permissions checked: Storage=$hasStoragePermission, " +
                 "Overlay=$hasOverlayPermission, " +
                 "Battery=$hasBatteryOptimizationExemption, " +
-                "Location=$hasLocationPermission")
+                "Location=$hasLocationPermission, " +
+                "Microphone=$hasMicrophonePermission")
     }
     
     // 更新当前步骤
@@ -143,10 +152,43 @@ class PermissionGuideViewModel : ViewModel() {
                 allBasicPermissionsGranted = newState.hasStoragePermission && 
                         newState.hasOverlayPermission && 
                         newState.hasBatteryOptimizationExemption && 
-                        newState.hasLocationPermission
+                        newState.hasLocationPermission &&
+                        newState.hasMicrophonePermission
             )
         }
         AppLogger.d(TAG, "Location permission updated: $granted")
+    }
+
+    // 更新麦克风权限状态
+    fun updateMicrophonePermission(granted: Boolean) {
+        _uiState.update { currentState ->
+            val newState = currentState.copy(hasMicrophonePermission = granted)
+            newState.copy(
+                allBasicPermissionsGranted = newState.hasStoragePermission && 
+                        newState.hasOverlayPermission && 
+                        newState.hasBatteryOptimizationExemption && 
+                        newState.hasLocationPermission &&
+                        newState.hasMicrophonePermission
+            )
+        }
+        AppLogger.d(TAG, "Microphone permission updated: $granted")
+    }
+        AppLogger.d(TAG, "Location permission updated: $granted")
+    }
+
+    // 更新麦克风权限状态
+    fun updateMicrophonePermission(granted: Boolean) {
+        _uiState.update { currentState ->
+            val newState = currentState.copy(hasMicrophonePermission = granted)
+            newState.copy(
+                allBasicPermissionsGranted = newState.hasStoragePermission && 
+                        newState.hasOverlayPermission && 
+                        newState.hasBatteryOptimizationExemption && 
+                        newState.hasLocationPermission &&
+                        newState.hasMicrophonePermission
+            )
+        }
+        AppLogger.d(TAG, "Microphone permission updated: $granted")
     }
     
     // UI状态数据类
@@ -156,6 +198,7 @@ class PermissionGuideViewModel : ViewModel() {
         val hasOverlayPermission: Boolean = false,
         val hasBatteryOptimizationExemption: Boolean = false,
         val hasLocationPermission: Boolean = false,
+        val hasMicrophonePermission: Boolean = false,
         val allBasicPermissionsGranted: Boolean = false,
         val selectedPermissionLevel: AndroidPermissionLevel? = null,
         val isCompleted: Boolean = false

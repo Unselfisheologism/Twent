@@ -2685,8 +2685,10 @@
 <string name="permission_guide_intro_page_indicator">Permission Guide Intro Page Indicator</string>
 <string name="permission_guide_level_desc">Permission Guide Level Desc</string>
 <string name="permission_guide_level_title">Permission Guide Level Title</string>
-<string name="permission_guide_location_desc">Permission Guide Location Desc</string>
-<string name="permission_guide_location_title">Permission Guide Location Title</string>
+ <string name="permission_guide_location_desc">Permission Guide Location Desc</string>
+ <string name="permission_guide_location_title">Permission Guide Location Title</string>
+ <string name="permission_guide_microphone_desc">Permission Guide Microphone Desc</string>
+ <string name="permission_guide_microphone_title">Permission Guide Microphone Title</string>
 <string name="permission_guide_next">Permission Guide Next</string>
 <string name="permission_guide_not_granted">Permission Guide Not Granted</string>
 <string name="permission_guide_overlay_desc">Permission Guide Overlay Desc</string>

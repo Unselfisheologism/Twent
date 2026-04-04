@@ -134,6 +134,26 @@ fun PermissionGuideScreen(
                 }
             }
 
+    // 麦克风权限请求启动器
+    val microphonePermissionLauncher =
+            rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                if (granted) {
+                    viewModel.updateMicrophonePermission(true)
+                }
+            }
+
+    // 麦克风权限请求启动器
+    val microphonePermissionLauncher =
+            rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                if (granted) {
+                    viewModel.updateMicrophonePermission(true)
+                }
+            }
+
     // 页面切换效果
     LaunchedEffect(pagerState.currentPage) {
         when (pagerState.currentPage) {
@@ -250,6 +270,7 @@ fun PermissionGuideScreen(
                                 hasBatteryOptimizationExemption =
                                         uiState.hasBatteryOptimizationExemption,
                                 hasLocationPermission = uiState.hasLocationPermission,
+                                hasMicrophonePermission = uiState.hasMicrophonePermission,
                                 onStoragePermissionClick = {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                         // Android 11+: 使用更精确的ALL_FILES_ACCESS权限页面
@@ -370,6 +391,9 @@ fun PermissionGuideScreen(
                                                     Manifest.permission.ACCESS_COARSE_LOCATION
                                             )
                                     )
+                                },
+                                onMicrophonePermissionClick = {
+                                    microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 },
                                 onRefresh = { viewModel.checkPermissions(context) }
                         )
@@ -595,10 +619,12 @@ private fun BasicPermissionsPage(
         hasOverlayPermission: Boolean,
         hasBatteryOptimizationExemption: Boolean,
         hasLocationPermission: Boolean,
+        hasMicrophonePermission: Boolean,
         onStoragePermissionClick: () -> Unit,
         onOverlayPermissionClick: () -> Unit,
         onBatteryOptimizationClick: () -> Unit,
         onLocationPermissionClick: () -> Unit,
+        onMicrophonePermissionClick: () -> Unit,
         onRefresh: () -> Unit
 ) {
     var refreshRotation by remember { mutableStateOf(0f) }
@@ -679,6 +705,16 @@ private fun BasicPermissionsPage(
                         isGranted = hasLocationPermission,
                         onClick = onLocationPermissionClick
                 )
+
+                HorizontalDivider()
+
+                // 麦克风权限
+                PermissionItem(
+                        title = stringResource(R.string.permission_guide_microphone_title),
+                        description = stringResource(R.string.permission_guide_microphone_desc),
+                        isGranted = hasMicrophonePermission,
+                        onClick = onMicrophonePermissionClick
+                )
             }
         }
 
@@ -709,7 +745,8 @@ private fun BasicPermissionsPage(
                 hasStoragePermission &&
                         hasOverlayPermission &&
                         hasBatteryOptimizationExemption &&
-                        hasLocationPermission
+                        hasLocationPermission &&
+                        hasMicrophonePermission
 
         AnimatedVisibility(visible = allGranted, enter = fadeIn(), exit = fadeOut()) {
             Row(

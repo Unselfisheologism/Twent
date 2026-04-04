@@ -48,6 +48,7 @@ import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIServiceFactory
+import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.CoroutineScope
@@ -106,20 +107,13 @@ class ConversationalAgentService : Service() {
 
     private fun getAIService(): AIService? {
         return try {
-            val modelConfigManager = ModelConfigManager(this)
-            val userPrefs = UserPreferencesManager.getInstance(this)
-            val activeConfigId = runBlocking { userPrefs.activeProfileIdFlow.first() }
-            if (activeConfigId.isEmpty()) {
-                Log.w("ConvAgent", "No active model config found")
+            val config = runBlocking { EnhancedAIService.getModelConfigForFunction(this@ConversationalAgentService, com.ai.assistance.operit.api.chat.FunctionType.CHAT) }
+            if (config == null) {
+                Log.w("ConvAgent", "No AI model config found in EnhancedAIService")
                 return null
             }
-            val config = runBlocking { modelConfigManager.getModelConfig(activeConfigId) }
-                ?: run {
-                    Log.w("ConvAgent", "Model config not found for id: $activeConfigId")
-                    return null
-                }
             val customHeaders = runBlocking { com.ai.assistance.operit.data.preferences.ApiPreferences.getInstance(this@ConversationalAgentService).getCustomHeaders() }
-            AIServiceFactory.createService(config, customHeaders, modelConfigManager, this)
+            AIServiceFactory.createService(config, customHeaders, ModelConfigManager(this), this)
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to create AIService", e)
             null
