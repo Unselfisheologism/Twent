@@ -154,12 +154,6 @@ class FloatingOperitButtonService : Service() {
         }
         floatingButton = null
     }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error removing floating button", e)
-            }
-        }
-        floatingButton = null
-    }
 
     override fun onDestroy() {
         super.onDestroy()
