@@ -671,7 +671,9 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
     private fun parseModelResponse(response: String): ModelDecision {
         try {
-            val json = JSONObject(response)
+            val cleanedResponse = extractJsonFromResponse(response)
+            Log.d("ConvAgent", "Cleaned response for parsing: $cleanedResponse")
+            val json = JSONObject(cleanedResponse)
             Log.d("justchecking", json.toString())
             val type = json.optString("Type", "Reply")
             val reply = json.optString("Reply", "")
@@ -693,6 +695,54 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             Log.e("ConvAgent", "Generic error parsing model response, falling back. Response: $response", e)
             return ModelDecision(reply = "I had a minor issue processing that. Could you try again?")
         }
+    }
+
+    private fun extractJsonFromResponse(response: String): String {
+        val trimmed = response.trim()
+        if (trimmed.startsWith("{")) return trimmed
+
+        val jsonBlockRegex = Regex("```(?:json)?\\s*([\\s\\S]*?)```")
+        val match = jsonBlockRegex.find(trimmed)
+        if (match != null) {
+            return match.groupValues[1].trim()
+        }
+
+        val firstBrace = trimmed.indexOf('{')
+        val lastBrace = trimmed.lastIndexOf('}')
+        if (firstBrace != -1 && lastBrace > firstBrace) {
+            return trimmed.substring(firstBrace, lastBrace + 1)
+        }
+
+        return trimmed
+    }
+
+            return ModelDecision(type, finalReply, instruction, shouldEnd)
+        } catch (e: org.json.JSONException) {
+            Log.e("ConvAgent", "Error parsing JSON response, falling back. Response: $response", e)
+            return ModelDecision(reply = "I seem to have gotten my thoughts tangled. Could you repeat that?")
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Generic error parsing model response, falling back. Response: $response", e)
+            return ModelDecision(reply = "I had a minor issue processing that. Could you try again?")
+        }
+    }
+
+    private fun extractJsonFromResponse(response: String): String {
+        val trimmed = response.trim()
+        if (trimmed.startsWith("{")) return trimmed
+
+        val jsonBlockRegex = Regex("```(?:json)?\\s*([\\s\\S]*?)```")
+        val match = jsonBlockRegex.find(trimmed)
+        if (match != null) {
+            return match.groupValues[1].trim()
+        }
+
+        val firstBrace = trimmed.indexOf('{')
+        val lastBrace = trimmed.lastIndexOf('}')
+        if (firstBrace != -1 && lastBrace > firstBrace) {
+            return trimmed.substring(firstBrace, lastBrace + 1)
+        }
+
+        return trimmed
     }
 
     private fun displayClarificationQuestions(questions: List<String>) {
