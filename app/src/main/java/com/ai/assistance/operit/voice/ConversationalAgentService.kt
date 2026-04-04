@@ -673,6 +673,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         try {
             val cleanedResponse = extractJsonFromResponse(response)
             Log.d("ConvAgent", "Cleaned response for parsing: $cleanedResponse")
+            Log.d("ConvAgent", "Raw LLM response (first 500 chars): ${response.take(500)}")
             val json = JSONObject(cleanedResponse)
             Log.d("justchecking", json.toString())
             val type = json.optString("Type", "Reply")
@@ -689,11 +690,25 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
             return ModelDecision(type, finalReply, instruction, shouldEnd)
         } catch (e: org.json.JSONException) {
-            Log.e("ConvAgent", "Error parsing JSON response, falling back. Response: $response", e)
-            return ModelDecision(reply = "I seem to have gotten my thoughts tangled. Could you repeat that?")
+            Log.e("ConvAgent", "JSON parse error. Raw response: ${response.take(500)}", e)
+            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
+            return ModelDecision("Reply", fallbackReply, "", false)
         } catch (e: Exception) {
-            Log.e("ConvAgent", "Generic error parsing model response, falling back. Response: $response", e)
-            return ModelDecision(reply = "I had a minor issue processing that. Could you try again?")
+            Log.e("ConvAgent", "Generic error parsing model response. Raw response: ${response.take(500)}", e)
+            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
+            return ModelDecision("Reply", fallbackReply, "", false)
+        }
+    }
+
+            return ModelDecision(type, finalReply, instruction, shouldEnd)
+        } catch (e: org.json.JSONException) {
+            Log.e("ConvAgent", "JSON parse error. Raw response: ${response.take(500)}", e)
+            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
+            return ModelDecision("Reply", fallbackReply, "", false)
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Generic error parsing model response. Raw response: ${response.take(500)}", e)
+            val fallbackReply = response.take(200).replace("\"", "").replace("\n", " ")
+            return ModelDecision("Reply", fallbackReply, "", false)
         }
     }
 
