@@ -584,8 +584,26 @@ class AIForegroundService : Service() {
             serviceScope.launch {
                 try {
                     val current = wakePrefs.alwaysListeningEnabledFlow.first()
-                    AppLogger.d(TAG, "切换唤醒监听: $current -> ${!current}")
-                    wakePrefs.saveAlwaysListeningEnabled(!current)
+                    val newState = !current
+                    AppLogger.d(TAG, "切换唤醒监听: $current -> $newState")
+                    wakePrefs.saveAlwaysListeningEnabled(newState)
+
+                    if (newState) {
+                        AppLogger.d(TAG, "Wake listening enabled, starting ConversationalAgentService to show overlay")
+                        try {
+                            val overlayIntent = Intent(this@AIForegroundService, com.ai.assistance.operit.voice.ConversationalAgentService::class.java).apply {
+                                action = "com.ai.assistance.operit.voice.ACTION_START_FROM_WAKE_TOGGLE"
+                                putExtra("source", "wake_toggle_notification")
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                ContextCompat.startForegroundService(this@AIForegroundService, overlayIntent)
+                            } else {
+                                startService(overlayIntent)
+                            }
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "Failed to start ConversationalAgentService from wake toggle", e)
+                        }
+                    }
                 } catch (e: Exception) {
                     AppLogger.e(TAG, "切换唤醒监听失败: ${e.message}", e)
                 }

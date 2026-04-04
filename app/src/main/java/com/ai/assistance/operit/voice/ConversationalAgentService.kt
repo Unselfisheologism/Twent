@@ -177,13 +177,18 @@ class ConversationalAgentService : Service() {
     }
 
     private fun initializeOverlays() {
+        Log.d("ConvAgent", "initializeOverlays: starting overlay initialization")
         OverlayDispatcher.clearAll()
         overlayManager.startObserving()
         visualFeedbackManager.showSpeakingOverlay()
+        Log.d("ConvAgent", "initializeOverlays: speaking overlay requested")
         visualFeedbackManager.showTtsWave()
+        Log.d("ConvAgent", "initializeOverlays: tts wave requested")
 
         showInputBoxIfNeeded()
+        Log.d("ConvAgent", "initializeOverlays: input box requested")
         visualFeedbackManager.showSmallDeltaGlow()
+        Log.d("ConvAgent", "initializeOverlays: small delta glow requested")
     }
 
     private fun createNotificationChannel() {
