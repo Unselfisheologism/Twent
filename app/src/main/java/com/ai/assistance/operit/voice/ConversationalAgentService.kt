@@ -172,6 +172,11 @@ class ConversationalAgentService : Service() {
 
         fetchMemories()
 
+        stateManager.startMonitoring()
+        stateManager.setState(OperitState.IDLE)
+    }
+
+    private fun initializeOverlays() {
         OverlayDispatcher.clearAll()
         overlayManager.startObserving()
         visualFeedbackManager.showSpeakingOverlay()
@@ -179,9 +184,16 @@ class ConversationalAgentService : Service() {
 
         showInputBoxIfNeeded()
         visualFeedbackManager.showSmallDeltaGlow()
+    }
 
-        stateManager.startMonitoring()
-        stateManager.setState(OperitState.IDLE)
+    private fun initializeOverlays() {
+        OverlayDispatcher.clearAll()
+        overlayManager.startObserving()
+        visualFeedbackManager.showSpeakingOverlay()
+        visualFeedbackManager.showTtsWave()
+
+        showInputBoxIfNeeded()
+        visualFeedbackManager.showSmallDeltaGlow()
     }
 
     private fun createNotificationChannel() {
@@ -325,6 +337,8 @@ Current Time : {time_context}
             Toast.makeText(this, "Cannot start voice assistant - permission missing", Toast.LENGTH_LONG).show()
             return START_NOT_STICKY
         }
+
+        initializeOverlays()
 
         if (!servicePermissionManager.isMicrophonePermissionGranted()) {
             Log.e("ConvAgent", "RECORD_AUDIO permission not granted. Shutting down.")
