@@ -49,7 +49,7 @@ import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIServiceFactory
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.FunctionType
+import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.CoroutineScope
