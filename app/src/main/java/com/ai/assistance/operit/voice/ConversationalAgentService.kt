@@ -186,16 +186,6 @@ class ConversationalAgentService : Service() {
         visualFeedbackManager.showSmallDeltaGlow()
     }
 
-    private fun initializeOverlays() {
-        OverlayDispatcher.clearAll()
-        overlayManager.startObserving()
-        visualFeedbackManager.showSpeakingOverlay()
-        visualFeedbackManager.showTtsWave()
-
-        showInputBoxIfNeeded()
-        visualFeedbackManager.showSmallDeltaGlow()
-    }
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
