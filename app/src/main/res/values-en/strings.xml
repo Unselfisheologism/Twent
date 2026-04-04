@@ -1155,8 +1155,6 @@
     <string name="permission_guide_location_desc">Allow the app to access location information</string>
     <string name="permission_guide_microphone_title">Microphone Permission</string>
     <string name="permission_guide_microphone_desc">Allow the app to use the microphone for voice commands</string>
-    <string name="permission_guide_microphone_title">Microphone Permission</string>
-    <string name="permission_guide_microphone_desc">Allow the app to use the microphone for voice commands</string>
     <string name="permission_guide_check_permissions">Check Permission Status</string>
     <string name="permission_guide_all_granted">All basic permissions granted, you can continue to the next step</string>
     
