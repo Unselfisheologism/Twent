@@ -363,25 +363,7 @@
             android:foregroundServiceType="specialUse"
             android:exported="false"         />
         
-        <!-- Voice Interaction Service -->
-        <service
-            android:name=".services.assistant.OperitVoiceInteractionService"
-            android:exported="true"
-            android:label="Operit"
-            android:permission="android.permission.BIND_VOICE_INTERACTION">
-            <intent-filter>
-                <action android:name="android.service.voice.VoiceInteractionService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.voice_interaction"
-                android:resource="@xml/interaction_service" />
-        </service>
-        
-        <service
-            android:name=".services.assistant.OperitVoiceInteractionSessionService"
-            android:exported="false" />
-        
-        <!-- Assist Entry Activity - makes app appear as digital assistant option -->
+        <!-- Assist Entry Activity - makes app appear as digital assistant option (same as blurr) -->
         <activity
             android:name=".voice.AssistEntryActivity"
             android:excludeFromRecents="true"

@@ -47,11 +47,8 @@ import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
-import com.ai.assistance.operit.api.chat.llmprovider.AIServiceFactory
 import com.ai.assistance.operit.api.chat.EnhancedAIService
 import com.ai.assistance.operit.data.model.FunctionType
-import com.ai.assistance.operit.data.preferences.ModelConfigManager
-import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -108,15 +105,9 @@ class ConversationalAgentService : Service() {
 
     private fun getAIService(): AIService? {
         return try {
-            val config = runBlocking { EnhancedAIService.getModelConfigForFunction(this@ConversationalAgentService, FunctionType.CHAT) }
-            if (config == null) {
-                Log.w("ConvAgent", "No AI model config found in EnhancedAIService")
-                return null
-            }
-            val customHeaders = runBlocking { com.ai.assistance.operit.data.preferences.ApiPreferences.getInstance(this@ConversationalAgentService).getCustomHeaders() }
-            AIServiceFactory.createService(config, customHeaders, ModelConfigManager(this), this)
+            runBlocking { EnhancedAIService.getAIServiceForFunction(this@ConversationalAgentService, FunctionType.CHAT) }
         } catch (e: Exception) {
-            Log.e("ConvAgent", "Failed to create AIService", e)
+            Log.e("ConvAgent", "Failed to get AIService", e)
             null
         }
     }
@@ -142,7 +133,7 @@ class ConversationalAgentService : Service() {
                 responseBuilder.append(chunk)
             }
             val fullResponse = responseBuilder.toString()
-            aiService.release()
+            // Don't release - it's a shared instance managed by EnhancedAIService
             fullResponse
         } catch (e: Exception) {
             Log.e("ConvAgent", "LLM call failed", e)
