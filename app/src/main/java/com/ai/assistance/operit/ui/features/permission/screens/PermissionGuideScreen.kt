@@ -144,16 +144,6 @@ fun PermissionGuideScreen(
                 }
             }
 
-    // 麦克风权限请求启动器
-    val microphonePermissionLauncher =
-            rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-            ) { granted ->
-                if (granted) {
-                    viewModel.updateMicrophonePermission(true)
-                }
-            }
-
     // 页面切换效果
     LaunchedEffect(pagerState.currentPage) {
         when (pagerState.currentPage) {

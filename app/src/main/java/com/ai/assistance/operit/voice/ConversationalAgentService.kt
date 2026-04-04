@@ -49,6 +49,7 @@ import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIServiceFactory
 import com.ai.assistance.operit.api.chat.EnhancedAIService
+import com.ai.assistance.operit.api.chat.FunctionType
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.CoroutineScope
@@ -107,7 +108,7 @@ class ConversationalAgentService : Service() {
 
     private fun getAIService(): AIService? {
         return try {
-            val config = runBlocking { EnhancedAIService.getModelConfigForFunction(this@ConversationalAgentService, com.ai.assistance.operit.api.chat.FunctionType.CHAT) }
+            val config = runBlocking { EnhancedAIService.getModelConfigForFunction(this@ConversationalAgentService, FunctionType.CHAT) }
             if (config == null) {
                 Log.w("ConvAgent", "No AI model config found in EnhancedAIService")
                 return null
