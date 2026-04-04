@@ -142,7 +142,11 @@ class ConversationalAgentService : Service() {
                 chatHistory = chatHistory.dropLast(1),
                 stream = false
             )
-            val fullResponse = runBlocking { responseStream.toList().joinToString("") }
+            val responseBuilder = StringBuilder()
+            responseStream.collect { chunk ->
+                responseBuilder.append(chunk)
+            }
+            val fullResponse = responseBuilder.toString()
             aiService.release()
             fullResponse
         } catch (e: Exception) {
