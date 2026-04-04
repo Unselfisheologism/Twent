@@ -106,6 +106,50 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
         isNativeTtsInitialized.await()
         nativeTts?.speak(chunk, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
     }
+
+    private fun initializeCache() {
+        try {
+            loadCacheFromDisk()
+        } catch (e: Exception) {
+            Log.e("TTSManager", "Failed to initialize cache", e)
+        }
+    }
+
+    /**
+     * Data class for cached audio entries
+     */
+    private data class CachedAudio(
+        val text: String,
+        val audioData: ByteArray,
+        val voiceName: String,
+        val timestamp: Long = System.currentTimeMillis()
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as CachedAudio
+            return text == other.text && voiceName == other.voiceName
+        }
+
+        override fun hashCode(): Int {
+            var result = text.hashCode()
+            result = 31 * result + voiceName.hashCode()
+            return result
+        }
+    }
+
+    /**
+     * Cloud-based TTS chunk playback - DISABLED. Use native TTS via speak() instead.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun speakChunk(chunk: String, selectedVoice: TTSVoice) {
+        Log.w("TTSManager", "Cloud TTS is disabled. Using native TTS fallback.")
+        isNativeTtsInitialized.await()
+        nativeTts?.speak(chunk, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
+    }
+
+    private fun initializeCache() {
+        try {
             loadCacheFromDisk()
         } catch (e: Exception) {
             Log.e("TTSManager", "Failed to initialize cache", e)
@@ -398,16 +442,6 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
         }
         
         return chunks
-    }
-    
-    /**
-     * Cloud-based TTS chunk playback - DISABLED. Use native TTS via speak() instead.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun speakChunk(chunk: String, selectedVoice: TTSVoice) {
-        Log.w("TTSManager", "Cloud TTS is disabled. Using native TTS fallback.")
-        isNativeTtsInitialized.await()
-        nativeTts?.speak(chunk, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
     }
 
     suspend fun playAudioData(audioData: ByteArray) {

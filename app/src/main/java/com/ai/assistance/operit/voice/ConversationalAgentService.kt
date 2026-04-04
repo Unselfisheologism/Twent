@@ -562,7 +562,6 @@ Current Time : {time_context}
                                 gracefulShutdown(decision.reply, "task_executed")
                             }
                         }
-                        }
                     }
                     "KillTask" -> {
                         Log.d("ConvAgent", "Model requested to kill the running agent service.")

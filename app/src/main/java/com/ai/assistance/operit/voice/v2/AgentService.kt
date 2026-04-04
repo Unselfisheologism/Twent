@@ -92,8 +92,6 @@ class AgentService : Service() {
             }
             context.startService(intent)
         }
-            context.startService(intent)
-        }
     }
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate() {
