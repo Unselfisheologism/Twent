@@ -365,7 +365,7 @@
         
         <!-- Voice Interaction Service -->
         <service
-            android:name=".voice.services.OperitVoiceInteractionService"
+            android:name=".services.assistant.OperitVoiceInteractionService"
             android:exported="true"
             android:label="Operit"
             android:permission="android.permission.BIND_VOICE_INTERACTION">
@@ -378,7 +378,7 @@
         </service>
         
         <service
-            android:name=".voice.services.OperitVoiceInteractionSessionService"
+            android:name=".services.assistant.OperitVoiceInteractionSessionService"
             android:exported="false" />
         
         <!-- Assist Entry Activity - makes app appear as digital assistant option -->
