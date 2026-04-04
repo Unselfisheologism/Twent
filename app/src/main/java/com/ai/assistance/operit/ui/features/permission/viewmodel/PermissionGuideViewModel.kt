@@ -173,23 +173,6 @@ class PermissionGuideViewModel : ViewModel() {
         }
         AppLogger.d(TAG, "Microphone permission updated: $granted")
     }
-        AppLogger.d(TAG, "Location permission updated: $granted")
-    }
-
-    // 更新麦克风权限状态
-    fun updateMicrophonePermission(granted: Boolean) {
-        _uiState.update { currentState ->
-            val newState = currentState.copy(hasMicrophonePermission = granted)
-            newState.copy(
-                allBasicPermissionsGranted = newState.hasStoragePermission && 
-                        newState.hasOverlayPermission && 
-                        newState.hasBatteryOptimizationExemption && 
-                        newState.hasLocationPermission &&
-                        newState.hasMicrophonePermission
-            )
-        }
-        AppLogger.d(TAG, "Microphone permission updated: $granted")
-    }
     
     // UI状态数据类
     data class UiState(
