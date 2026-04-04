@@ -114,7 +114,7 @@ class FloatingOperitButtonService : Service() {
             isAllCaps = false
             setTextColor(Color.WHITE)
             // Use the new pill-shaped background
-            background = ContextCompat.getDrawable(context, R.drawable.floating_operit_text_background)
+            background = ContextCompat.getDrawable(context, R.drawable.floating_button_background)
 
             // Add elevation for a floating shadow effect
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -145,7 +145,15 @@ class FloatingOperitButtonService : Service() {
             try {
                 if (button.isAttachedToWindow) {
                     windowManager?.removeView(button)
+                } else {
+                    Log.d(TAG, "Button not attached, skipping removal")
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing floating button", e)
+            }
+        }
+        floatingButton = null
+    }
             } catch (e: Exception) {
                 Log.e(TAG, "Error removing floating button", e)
             }

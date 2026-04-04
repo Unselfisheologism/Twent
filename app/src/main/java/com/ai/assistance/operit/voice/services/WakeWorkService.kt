@@ -10,7 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.ai.assistance.operit.MainActivity
+import com.ai.assistance.operit.ui.main.MainActivity
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.api.WakeWordDetector
 

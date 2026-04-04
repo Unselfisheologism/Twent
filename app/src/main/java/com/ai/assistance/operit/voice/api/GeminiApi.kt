@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import com.ai.assistance.operit.voice.utilities.ApiKeyManager
+import com.ai.assistance.operit.voice.utilities.TextPart
+import com.ai.assistance.operit.voice.utilities.ImagePart
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

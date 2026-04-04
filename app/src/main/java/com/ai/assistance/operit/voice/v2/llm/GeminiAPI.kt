@@ -7,9 +7,6 @@ import com.ai.assistance.operit.voice.v2.AgentOutput
 import com.ai.assistance.operit.voice.v2.llm.TextPart
 import com.ai.assistance.operit.voice.v2.llm.MessageRole
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
-import com.ai.assistance.operit.voice.v2.llm.TextPart
-import com.ai.assistance.operit.voice.v2.llm.MessageRole
-import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

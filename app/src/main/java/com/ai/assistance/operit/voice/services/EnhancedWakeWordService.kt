@@ -48,7 +48,7 @@ class EnhancedWakeWordService : Service() {
         
         createNotificationChannel()
 
-        val notificationIntent = Intent(this, com.ai.assistance.operit.MainActivity::class.java)
+        val notificationIntent = Intent(this, com.ai.assistance.operit.ui.main.MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,

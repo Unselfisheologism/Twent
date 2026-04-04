@@ -58,8 +58,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import org.json.JSONObject
 import java.io.IOException
@@ -114,7 +113,7 @@ class ConversationalAgentService : Service() {
                 Log.w("ConvAgent", "No active model config found")
                 return null
             }
-            val config = modelConfigManager.getModelConfig(activeConfigId)
+            val config = runBlocking { modelConfigManager.getModelConfig(activeConfigId) }
                 ?: run {
                     Log.w("ConvAgent", "Model config not found for id: $activeConfigId")
                     return null
@@ -143,7 +142,7 @@ class ConversationalAgentService : Service() {
                 chatHistory = chatHistory.dropLast(1),
                 stream = false
             )
-            val fullResponse = responseStream.toList().joinToString("")
+            val fullResponse = runBlocking { responseStream.toList().joinToString("") }
             aiService.release()
             fullResponse
         } catch (e: Exception) {
