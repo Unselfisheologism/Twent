@@ -25,6 +25,7 @@ import android.view.WindowManager
 import android.graphics.PixelFormat
 import com.ai.assistance.operit.util.AppLogger
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.graphics.drawable.IconCompat
