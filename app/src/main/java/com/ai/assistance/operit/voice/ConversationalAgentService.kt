@@ -259,7 +259,7 @@ Here are the rules for the JSON values:
   - Use "Task" if the user is asking you to DO something on the device (e.g., "open brave browser", "go to x.com", "check my notifications", "send a text to Mom").
   - Use "Reply" for conversational questions (e.g., "what's the weather?", "tell me a joke").
   - Use "KillTask" ONLY if an automation task is running and the user wants to stop it.
-- "Reply": The text to speak to the user. For a "Task", this should be a confirmation like "Sure, I'll open Brave and check your X notifications." For a "Reply", this is the direct answer.
+- "Reply": The text to speak to the user. For a "Task", this MUST be a SHORT, natural confirmation spoken to the user, like "Sure, I'm on it." or "Opening Brave to check your notifications now." DO NOT include step-by-step instructions, tap coordinates, or execution details in the Reply. The user does not need to hear how you will do it — only that you are doing it. Keep it under 15 words.
 - "Instruction": The precise, literal instruction for the task agent. This should be a clear, step-by-step description of what to do on screen. Example: "Open Brave browser app. Navigate to x.com in the address bar. Wait for the page to load. Tap on the notifications icon. Read out any new notifications." This field should be an empty string "" if the "Type" is not "Task".
 - "Should End": Must be either "Continue" or "Finished". Use "Finished" only when the conversation is naturally over.
 
