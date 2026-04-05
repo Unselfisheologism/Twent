@@ -115,9 +115,20 @@ class ConversationalAgentService : Service() {
             val apiKey = runBlocking { apiPrefs.apiKeyFlow.first() }
             if (apiKey.isNotBlank()) {
                 ApiKeyManager.setApiKeys(listOf(apiKey))
-                Log.d("ConvAgent", "API key loaded from preferences")
+                Log.d("ConvAgent", "Legacy API key loaded (note: voice agent now uses chat's AI provider config)")
+            }
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to load legacy API key", e)
+        }
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to load legacy API key", e)
+        }
             } else {
-                Log.e("ConvAgent", "No API key configured in settings")
+                Log.e("ConvAgent", "No API key configured")
+                serviceScope.launch {
+                    delay(1000)
+                    ttsManager.speakText("No API key configured. Please go to settings and add your Google Gemini API key.")
+                }
             }
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to load API key", e)
@@ -499,11 +510,18 @@ Current Time : {time_context}
                 stateManager.setState(OperitState.PROCESSING)
                 visualFeedbackManager.showThinkingIndicator()
 
-                val defaultJsonResponse = """{"Type": "Reply", "Reply": "I'm sorry, I had an issue.", "Instruction": "", "Should End": "Continue"}"""
+                val defaultJsonResponse = """{"Type": "Reply", "Reply": "I couldn't reach the AI service. Please check your API provider configuration in Models & Parameters settings, and make sure your API key is valid.", "Instruction": "", "Should End": "Continue"}"""
                 val rawModelResponse = try {
-                    getReasoningModelApiResponse(conversationHistory, this@ConversationalAgentService) ?: defaultJsonResponse
+                    Log.d("ConvAgent", "Calling LLM API with conversation history size: ${conversationHistory.size}")
+                    val apiResult = getReasoningModelApiResponse(conversationHistory, this@ConversationalAgentService)
+                    if (apiResult == null) {
+                        Log.e("ConvAgent", "LLM API returned null — most likely cause: invalid API key (needs a Google Gemini key, not a DeepSeek key)")
+                    } else {
+                        Log.d("ConvAgent", "LLM API returned successfully (first 200 chars): ${apiResult.take(200)}")
+                    }
+                    apiResult ?: defaultJsonResponse
                 } catch (e: Exception) {
-                    Log.e("ConvAgent", "LLM call failed", e)
+                    Log.e("ConvAgent", "LLM call failed with exception: ${e.message}", e)
                     defaultJsonResponse
                 }
 

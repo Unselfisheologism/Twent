@@ -15,48 +15,47 @@ import java.io.IOException
 import java.net.URL
 import java.net.URLConnection
 
-/**
- * Utility class to handle network connectivity checks and provide a clean API
- * for the rest of the app to check internet connectivity.
- */
 class NetworkConnectivityManager(private val context: Context) {
     
     companion object {
         private const val TAG = "NetworkConnectivityManager"
-        private const val CONNECTIVITY_TIMEOUT_MS = 5000L // 5 seconds timeout
-        private const val TEST_URL = "https://www.google.com" // URL to test connectivity
+        private const val CONNECTIVITY_TIMEOUT_MS = 5000L
+        private const val TEST_URL = "https://www.google.com"
     }
     
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     
-    /**
-     * Check if the device has an active internet connection
-     * @return true if internet is available, false otherwise
-     */
     suspend fun isNetworkAvailable(): Boolean = withContext(Dispatchers.IO) {
-        val sc = SpeechCoordinator.getInstance(context)
-
         try {
-
-            // First check if network is connected
             if (!isNetworkConnected()) {
-                sc.speakText("Network is not connected")
                 Log.d(TAG, "Network is not connected")
                 return@withContext false
             }
-
-            // Then check if internet is actually accessible
-            return@withContext checkInternetConnectivity()
+            // Try connectivity check but don't block the request if it fails
+            return@withContext try {
+                checkInternetConnectivity()
+            } catch (e: Exception) {
+                Log.d(TAG, "Connectivity check threw exception, assuming connected: ${e.message}")
+                true
+            }
         } catch (e: Exception) {
-            sc.speakText("Network is not connected")
+            Log.e(TAG, "Error checking network availability", e)
+            return@withContext false
+        }
+    }
+            // Try connectivity check but don't block the request if it fails
+            return@withContext try {
+                checkInternetConnectivity()
+            } catch (e: Exception) {
+                Log.d(TAG, "Connectivity check threw exception, assuming connected: ${e.message}")
+                true
+            }
+        } catch (e: Exception) {
             Log.e(TAG, "Error checking network availability", e)
             return@withContext false
         }
     }
     
-    /**
-     * Check if network is connected (doesn't guarantee internet access)
-     */
     private fun isNetworkConnected(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork
@@ -70,9 +69,6 @@ class NetworkConnectivityManager(private val context: Context) {
         }
     }
     
-    /**
-     * Check if internet is actually accessible by trying to connect to a test URL
-     */
     private suspend fun checkInternetConnectivity(): Boolean = withTimeoutOrNull(CONNECTIVITY_TIMEOUT_MS) {
         try {
             val url = URL(TEST_URL)
@@ -91,9 +87,6 @@ class NetworkConnectivityManager(private val context: Context) {
         }
     } ?: false
     
-    /**
-     * Check network connectivity with a timeout and return detailed result
-     */
     suspend fun checkConnectivityWithTimeout(timeoutMs: Long = CONNECTIVITY_TIMEOUT_MS): ConnectivityResult {
         return try {
             withTimeout(timeoutMs) {
@@ -110,9 +103,6 @@ class NetworkConnectivityManager(private val context: Context) {
         }
     }
     
-    /**
-     * Register a network callback to listen for network state changes
-     */
     fun registerNetworkCallback(callback: NetworkCallback) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val networkRequest = NetworkRequest.Builder()
@@ -133,29 +123,20 @@ class NetworkConnectivityManager(private val context: Context) {
         }
     }
     
-    /**
-     * Unregister network callback
-     */
     fun unregisterNetworkCallback(callback: ConnectivityManager.NetworkCallback) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             connectivityManager.unregisterNetworkCallback(callback)
         }
     }
     
-    /**
-     * Result of connectivity check
-     */
     sealed class ConnectivityResult {
         object Success : ConnectivityResult()
         object NoInternet : ConnectivityResult()
         object Timeout : ConnectivityResult()
     }
     
-    /**
-     * Callback interface for network state changes
-     */
     interface NetworkCallback {
         fun onNetworkAvailable()
         fun onNetworkLost()
     }
-} 
+}

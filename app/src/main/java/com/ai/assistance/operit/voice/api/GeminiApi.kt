@@ -38,15 +38,19 @@ object GeminiApi {
         context: Context? = null
     ): String? {
         try {
-            val appCtx = context ?: return null
+            val appCtx = context ?: run {
+                Log.e("GeminiApi", "Context is null, cannot proceed")
+                return null
+            }
             val isOnline = NetworkConnectivityManager(appCtx).isNetworkAvailable()
             if (!isOnline) {
-                Log.e("GeminiApi", "No internet connection.")
+                Log.e("GeminiApi", "No internet connection detected.")
                 NetworkNotifier.notifyOffline()
                 return null
             }
+            Log.d("GeminiApi", "Network check passed")
         } catch (e: Exception) {
-            Log.e("GeminiApi", "Network check failed: ${e.message}")
+            Log.e("GeminiApi", "Network check failed: ${e.message}", e)
             return null
         }
 
@@ -55,22 +59,33 @@ object GeminiApi {
             ?.filterIsInstance<TextPart>()
             ?.joinToString(separator = "\n") { it.text } ?: "No text prompt found"
 
+        Log.d("GeminiApi", "Starting API calls with model: $modelName, retries: $maxRetry")
+        Log.d("GeminiApi", "Chat history has ${chat.size} messages")
+
         var attempts = 0
         while (attempts < maxRetry) {
-            val currentApiKey = ApiKeyManager.getNextKey()
-            Log.d("GeminiApi", "API Request attempt ${attempts + 1}/$maxRetry, model: $modelName")
+            val currentApiKey = try {
+                ApiKeyManager.getNextKey()
+            } catch (e: IllegalStateException) {
+                Log.e("GeminiApi", "No API keys configured: ${e.message}")
+                return null
+            }
+            Log.d("GeminiApi", "API Request attempt ${attempts + 1}/$maxRetry, model: $modelName, key ends with: ...${currentApiKey.takeLast(4)}")
 
             val attemptStartTime = System.currentTimeMillis()
             val url = "$BASE_URL/$modelName:generateContent?key=$currentApiKey"
 
             try {
                 val payload = buildDirectPayload(chat, modelName)
+                Log.d("GeminiApi", "Payload built, size: ${payload.toString().length} chars")
+
                 val request = Request.Builder()
                     .url(url)
                     .post(payload.toString().toRequestBody("application/json".toMediaType()))
                     .addHeader("Content-Type", "application/json")
                     .build()
 
+                Log.d("GeminiApi", "Sending HTTP request to: $BASE_URL/$modelName:generateContent?key=...${currentApiKey.takeLast(4)}")
                 val requestStartTime = System.currentTimeMillis()
                 client.newCall(request).execute().use { response ->
                     val responseEndTime = System.currentTimeMillis()
@@ -78,12 +93,15 @@ object GeminiApi {
                     val totalAttemptTime = responseEndTime - attemptStartTime
                     val responseBody = response.body?.string()
 
+                    Log.d("GeminiApi", "HTTP ${response.code} in ${requestTime}ms")
+
                     if (!response.isSuccessful || responseBody.isNullOrEmpty()) {
-                        Log.e("GeminiApi", "API call failed with HTTP ${response.code}")
+                        Log.e("GeminiApi", "API call failed with HTTP ${response.code}. Body: ${responseBody?.take(500)}")
                         throw Exception("API Error ${response.code}: $responseBody")
                     }
 
                     val parsedResponse = parseSuccessResponse(responseBody)
+                    Log.d("GeminiApi", "Response parsed successfully, length: ${parsedResponse?.length ?: 0}")
 
                     val logEntry = createLogEntry(
                         attempt = attempts + 1,
@@ -104,7 +122,7 @@ object GeminiApi {
                 val attemptEndTime = System.currentTimeMillis()
                 val totalAttemptTime = attemptEndTime - attemptStartTime
 
-                Log.e("GeminiApi", "API Error attempt ${attempts + 1}: ${e.message}")
+                Log.e("GeminiApi", "API Error attempt ${attempts + 1}: ${e.message}", e)
 
                 val logEntry = createLogEntry(
                     attempt = attempts + 1,
@@ -162,7 +180,7 @@ object GeminiApi {
         }
 
         rootObject.put("contents", contentsArray)
-        rootObject.put("generationConfig", JSONObject().put("responseMimeType", "text/plain"))
+        rootObject.put("generationConfig", JSONObject().put("responseMimeType", "application/json"))
         return rootObject
     }
 
