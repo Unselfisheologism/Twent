@@ -90,7 +90,12 @@ class Finger(private val context: Context) {
      */
     fun tap(x: Int, y: Int) {
         Log.d(TAG, "Tapping at ($x, $y)")
-        service?.clickOnPoint(x.toFloat(), y.toFloat())
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT TAP: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform tap gesture.")
+        }
+        svc.clickOnPoint(x.toFloat(), y.toFloat())
     }
 
     /**
@@ -98,8 +103,12 @@ class Finger(private val context: Context) {
      */
     fun longPress(x: Int, y: Int) {
         Log.d(TAG, "Long pressing at ($x, $y)")
-        // This assumes your OperitAutomationService has a method `longClickOnPoint`
-        service?.longClickOnPoint(x.toFloat(), y.toFloat())
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT LONG PRESS: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform long press gesture.")
+        }
+        svc.longClickOnPoint(x.toFloat(), y.toFloat())
     }
 
     /**
@@ -107,16 +116,26 @@ class Finger(private val context: Context) {
      */
     fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, duration: Int = 1000) {
         Log.d(TAG, "Swiping from ($x1, $y1) to ($x2, $y2)")
-        service?.swipe(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), duration.toLong())
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT SWIPE: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform swipe gesture.")
+        }
+        svc.swipe(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), duration.toLong())
     }
 
     /**
-     * Types text i)nto the focused input field. This is now much more efficient.
+     * Types text into the focused input field. This is now much more efficient.
      */
     @RequiresApi(Build.VERSION_CODES.R)
     fun type(text: String) {
         Log.d(TAG, "Typing text: $text")
-        service?.typeTextInFocusedField(text)
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT TYPE: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot type text.")
+        }
+        svc.typeTextInFocusedField(text)
         this.enter()
     }
 
@@ -126,7 +145,12 @@ class Finger(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.R)
     fun enter() {
         Log.d(TAG, "Performing 'Enter' action")
-        service?.performEnter()
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT PRESS ENTER: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform Enter action.")
+        }
+        svc.performEnter()
     }
 
     /**
@@ -134,7 +158,12 @@ class Finger(private val context: Context) {
      */
     fun back() {
         Log.d(TAG, "Performing 'Back' action")
-        service?.performBack()
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT GO BACK: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform Back action.")
+        }
+        svc.performBack()
     }
 
     /**
@@ -142,7 +171,12 @@ class Finger(private val context: Context) {
      */
     fun home() {
         Log.d(TAG, "Performing 'Home' action")
-        service?.performHome()
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT GO HOME: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform Home action.")
+        }
+        svc.performHome()
     }
 
     /**
@@ -150,7 +184,12 @@ class Finger(private val context: Context) {
      */
     fun switchApp() {
         Log.d(TAG, "Performing 'App Switch' action")
-        service?.performRecents()
+        val svc = service
+        if (svc == null) {
+            Log.e(TAG, "❌ CANNOT SWITCH APPS: Automation service is not connected!")
+            throw IllegalStateException("OperitAutomationService is not connected. Cannot perform App Switch action.")
+        }
+        svc.performRecents()
     }
     /**
      * Scrolls the screen down by a given number of pixels.

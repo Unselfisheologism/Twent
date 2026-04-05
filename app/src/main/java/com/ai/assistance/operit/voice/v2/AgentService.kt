@@ -173,6 +173,21 @@ class AgentService : Service() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
 
+        // Check if automation service is available before processing
+        if (!ensureAutomationServiceAvailable()) {
+            Log.e(TAG, "OperitAutomationService is not available. Cannot execute tasks.")
+            visualFeedbackManager.showTtsWave()
+            // Speak error message to user
+            android.speech.tts.TextToSpeech(this) { status ->
+                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                    it?.speak("Automation service not available. Please re-enable accessibility service for Operit in settings.", android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+            }
+            isRunning = false
+            stopSelf()
+            return
+        }
+
         while (taskQueue.isNotEmpty()) {
             val task = taskQueue.poll() ?: continue // Dequeue task, continue if null
             currentTask = task
@@ -189,8 +204,34 @@ class AgentService : Service() {
             }
         }
 
-        Log.i(TAG, "Task queue is ActionExecutorempty. Stopping service.")
+        Log.i(TAG, "Task queue is empty. Stopping service.")
         stopSelf() // Stop the service only when the queue is empty
+    }
+
+    /**
+     * Ensures that the OperitAutomationService is connected and available.
+     * Waits up to 5 seconds for the service to become available.
+     */
+    private suspend fun ensureAutomationServiceAvailable(): Boolean {
+        var attempts = 0
+        val maxAttempts = 50 // 5 seconds with 100ms delays
+        
+        while (attempts < maxAttempts) {
+            if (com.ai.assistance.operit.services.automation.OperitAutomationService.instance != null) {
+                Log.d(TAG, "OperitAutomationService is connected and available.")
+                return true
+            }
+            
+            if (attempts == 0) {
+                Log.w(TAG, "OperitAutomationService not connected yet. Waiting for connection...")
+            }
+            
+            kotlinx.coroutines.delay(100)
+            attempts++
+        }
+        
+        Log.e(TAG, "OperitAutomationService failed to connect after ${maxAttempts * 100}ms")
+        return false
     }
 
     override fun onDestroy() {

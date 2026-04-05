@@ -121,7 +121,12 @@ class Agent(
             Log.d(TAG,"💪 Executing actions...")
             val actionResults = mutableListOf<ActionResult>()
             for (action in agentOutput.action) {
-                val result = actionExecutor.execute(action, screenState, context, fileSystem)
+                val result = try {
+                    actionExecutor.execute(action, screenState, context, fileSystem)
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Exception executing action '${action::class.simpleName}': ${e.message}", e)
+                    ActionResult(error = "Exception during execution: ${e.message}")
+                }
                 actionResults.add(result)
                 Log.d(TAG,"  - Action '${action::class.simpleName}' executed. Result: ${result.longTermMemory ?: result.error ?: "OK"}")
 

@@ -33,21 +33,26 @@ class Perception(
      */
     suspend fun analyze(previousState: Set<String>? = null, all: Boolean? =  false): ScreenAnalysis {
         return coroutineScope {
-        val rawDataDeferred = if (all == true) {
-            async { eyes.getAllRawScreenData() }
-        } else {
-            async { eyes.getRawScreenData() }
-        }
-        val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
-        val currentActivity = async { eyes.getCurrentActivityName() }
-        val rawTree = rawDataDeferred.await() ?: RawScreenData(
-            null, null, 0, 0, 0, 0
-        )
-        val isKeyboardOpen = keyboardStatusDeferred.await()
-        val activityName = currentActivity.await()
-        val rootNode = rawTree.rootNode
+            val rawDataDeferred = if (all == true) {
+                async { eyes.getAllRawScreenData() }
+            } else {
+                async { eyes.getRawScreenData() }
+            }
+            val keyboardStatusDeferred = async { eyes.getKeyBoardStatus() }
+            val currentActivity = async { eyes.getCurrentActivityName() }
+            val rawTree = rawDataDeferred.await() ?: RawScreenData(
+                null, null, 0, 0, 0, 0
+            )
+            val isKeyboardOpen = keyboardStatusDeferred.await()
+            val activityName = currentActivity.await()
+            val rootNode = rawTree.rootNode
 
-        // Parse the XML from the raw data
+            // Check if automation service is available
+            if (rootNode == null) {
+                Log.w("Perception", "⚠️ Root node is null - automation service may not be connected properly")
+            }
+
+            // Parse the XML from the raw data
             if(rootNode != null) {
                 var (uiRepresentation, elementMap) =
                     semanticParser.parseNodeTree(
@@ -93,6 +98,6 @@ class Perception(
                     scrollDown = rawTree.pixelsBelow  // Store the raw numbers
                 )
             }
-    }
+        }
     }
 }
