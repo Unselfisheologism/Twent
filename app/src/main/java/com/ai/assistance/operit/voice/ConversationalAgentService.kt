@@ -24,6 +24,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.ai.assistance.operit.voice.api.GeminiApi
+import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
 import android.os.Handler
 import android.os.Looper
@@ -48,6 +49,7 @@ import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.voice.api.Eyes
+import com.ai.assistance.operit.data.preferences.ApiPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,6 +57,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 import java.io.IOException
 
@@ -105,6 +109,19 @@ class ConversationalAgentService : Service() {
         Log.d("ConvAgent", "Service onCreate")
 
         MyApplication.init(this)
+
+        try {
+            val apiPrefs = ApiPreferences.getInstance(this)
+            val apiKey = runBlocking { apiPrefs.apiKeyFlow.first() }
+            if (apiKey.isNotBlank()) {
+                ApiKeyManager.setApiKeys(listOf(apiKey))
+                Log.d("ConvAgent", "API key loaded from preferences")
+            } else {
+                Log.e("ConvAgent", "No API key configured in settings")
+            }
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to load API key", e)
+        }
 
         isRunning = true
         createNotificationChannel()

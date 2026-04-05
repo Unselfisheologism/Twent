@@ -94,6 +94,9 @@ class ApiPreferences private constructor(private val context: Context) {
         // Key for Disable Stream Output
         val DISABLE_STREAM_OUTPUT = booleanPreferencesKey("disable_stream_output")
 
+        // API Key for voice agent
+        val API_KEY = stringPreferencesKey("voice_agent_api_key")
+
         // Custom System Prompt Template (Advanced Configuration)
         val CUSTOM_SYSTEM_PROMPT_TEMPLATE = stringPreferencesKey("custom_system_prompt_template")
 
@@ -249,6 +252,12 @@ class ApiPreferences private constructor(private val context: Context) {
     val disableStreamOutputFlow: Flow<Boolean> =
         context.apiDataStore.data.map { preferences ->
             preferences[DISABLE_STREAM_OUTPUT] ?: DEFAULT_DISABLE_STREAM_OUTPUT
+        }
+
+    // Flow for API Key
+    val apiKeyFlow: Flow<String> =
+        context.apiDataStore.data.map { preferences ->
+            preferences[API_KEY] ?: DEFAULT_API_KEY
         }
 
     // Custom System Prompt Template Flow
