@@ -40,6 +40,28 @@ sealed class Action {
     data class Done(val success: Boolean, val text: String, val filesToDisplay: List<String>? = null) : Action()
     // New: Launch an Android AppIntent by name with parameters
     data class LaunchIntent(val intentName: String, val parameters: Map<String, String>) : Action()
+    
+    // Coordinate-based actions for full UI automation parity
+    data class TapAt(val x: Int, val y: Int) : Action()
+    data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
+    data class DoubleTapAt(val x: Int, val y: Int) : Action()
+    data class Swipe(val startX: Int, val startY: Int, val endX: Int, val endY: Int, val durationMs: Long = 500) : Action()
+    data class SwipeLeft(val pixels: Int = 500) : Action()
+    data class SwipeRight(val pixels: Int = 500) : Action()
+    data class SwipeUp(val pixels: Int = 500) : Action()
+    data class SwipeDown(val pixels: Int = 500) : Action()
+    data class PressKey(val key: String) : Action()
+    
+    // Coordinate-based actions for full UI automation parity
+    data class TapAt(val x: Int, val y: Int) : Action()
+    data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
+    data class DoubleTapAt(val x: Int, val y: Int) : Action()
+    data class Swipe(val startX: Int, val startY: Int, val endX: Int, val endY: Int, val durationMs: Long = 500) : Action()
+    data class SwipeLeft(val pixels: Int = 500) : Action()
+    data class SwipeRight(val pixels: Int = 500) : Action()
+    data class SwipeUp(val pixels: Int = 500) : Action()
+    data class SwipeDown(val pixels: Int = 500) : Action()
+    data class PressKey(val key: String) : Action()
 
     // --- The Custom Serializer ---
     // This serializer is now data-driven, using the `allSpecs` map as its source of truth.
@@ -222,6 +244,173 @@ sealed class Action {
                         intentName = args["intent_name"] as String,
                         parameters = args["parameters"] as? Map<String, String> ?: emptyMap()
                     )
+                }
+            ),
+            // Coordinate-based action specs for full UI automation parity
+            "tap" to Spec(
+                name = "tap",
+                description = "Tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> TapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "long_press" to Spec(
+                name = "long_press",
+                description = "Long press at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> LongPressAt(args["x"] as Int, args["y"] as Int, (args["duration_ms"] as? Int ?: 1500).toLong()) }
+            ),
+            "double_tap" to Spec(
+                name = "double_tap",
+                description = "Double tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> DoubleTapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "swipe" to Spec(
+                name = "swipe",
+                description = "Swipe from one coordinate to another.",
+                params = listOf(
+                    ParamSpec("start_x", Int::class, "Start X coordinate"),
+                    ParamSpec("start_y", Int::class, "Start Y coordinate"),
+                    ParamSpec("end_x", Int::class, "End X coordinate"),
+                    ParamSpec("end_y", Int::class, "End Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> Swipe(
+                    startX = args["start_x"] as Int,
+                    startY = args["start_y"] as Int,
+                    endX = args["end_x"] as Int,
+                    endY = args["end_y"] as Int,
+                    durationMs = (args["duration_ms"] as? Int ?: 500).toLong()
+                )}
+            ),
+            "swipe_left" to Spec(
+                name = "swipe_left",
+                description = "Swipe left by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe left.")),
+                build = { args -> SwipeLeft(args["pixels"] as Int) }
+            ),
+            "swipe_right" to Spec(
+                name = "swipe_right",
+                description = "Swipe right by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe right.")),
+                build = { args -> SwipeRight(args["pixels"] as Int) }
+            ),
+            "press_key" to Spec(
+                name = "press_key",
+                description = "Press a system key.",
+                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
+                build = { args -> PressKey(args["key"] as String) }
+            ),
+            "click_element" to Spec(
+                name = "click_element",
+                description = "Click an element by index, text, or content_description.",
+                params = listOf(
+                    ParamSpec("index", Int::class, "Numeric index of the element."),
+                    ParamSpec("text", String::class, "Text of the element to click."),
+                    ParamSpec("content_description", String::class, "Content description of the element.")
+                ),
+                build = { args ->
+                    val index = args["index"] as? Int
+                    if (index != null && index >= 0) {
+                        TapElement(index)
+                    } else {
+                        TapElement(0)
+                    }
+                }
+            ),
+        )
+                }
+            ),
+            // Coordinate-based action specs for full UI automation parity
+            "tap" to Spec(
+                name = "tap",
+                description = "Tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> TapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "long_press" to Spec(
+                name = "long_press",
+                description = "Long press at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> LongPressAt(args["x"] as Int, args["y"] as Int, (args["duration_ms"] as? Int ?: 1500).toLong()) }
+            ),
+            "double_tap" to Spec(
+                name = "double_tap",
+                description = "Double tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> DoubleTapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "swipe" to Spec(
+                name = "swipe",
+                description = "Swipe from one coordinate to another.",
+                params = listOf(
+                    ParamSpec("start_x", Int::class, "Start X coordinate"),
+                    ParamSpec("start_y", Int::class, "Start Y coordinate"),
+                    ParamSpec("end_x", Int::class, "End X coordinate"),
+                    ParamSpec("end_y", Int::class, "End Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> Swipe(
+                    startX = args["start_x"] as Int,
+                    startY = args["start_y"] as Int,
+                    endX = args["end_x"] as Int,
+                    endY = args["end_y"] as Int,
+                    durationMs = (args["duration_ms"] as? Int ?: 500).toLong()
+                )}
+            ),
+            "swipe_left" to Spec(
+                name = "swipe_left",
+                description = "Swipe left by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe left.")),
+                build = { args -> SwipeLeft(args["pixels"] as Int) }
+            ),
+            "swipe_right" to Spec(
+                name = "swipe_right",
+                description = "Swipe right by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe right.")),
+                build = { args -> SwipeRight(args["pixels"] as Int) }
+            ),
+            "press_key" to Spec(
+                name = "press_key",
+                description = "Press a system key.",
+                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
+                build = { args -> PressKey(args["key"] as String) }
+            ),
+            "click_element" to Spec(
+                name = "click_element",
+                description = "Click an element by index, text, or content_description.",
+                params = listOf(
+                    ParamSpec("index", Int::class, "Numeric index of the element."),
+                    ParamSpec("text", String::class, "Text of the element to click."),
+                    ParamSpec("content_description", String::class, "Content description of the element.")
+                ),
+                build = { args ->
+                    val index = args["index"] as? Int
+                    if (index != null && index >= 0) {
+                        TapElement(index)
+                    } else {
+                        TapElement(0)
+                    }
                 }
             ),
         )

@@ -23,7 +23,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.ai.assistance.operit.voice.api.Eyes
+import com.ai.assistance.operit.voice.api.GeminiApi
 import com.ai.assistance.operit.voice.utilities.SpeechCoordinator
 import android.os.Handler
 import android.os.Looper
@@ -34,21 +34,20 @@ import androidx.core.graphics.toColorInt
 import com.ai.assistance.operit.voice.agents.ClarificationAgent
 import com.ai.assistance.operit.voice.utilities.TTSManager
 import com.ai.assistance.operit.voice.utilities.addResponse
+import com.ai.assistance.operit.voice.utilities.getReasoningModelApiResponse
 import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.overlay.OverlayDispatcher
 import com.ai.assistance.operit.voice.utilities.OperitState
 import com.ai.assistance.operit.voice.utilities.UserProfileManager
 import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
+import com.ai.assistance.operit.voice.utilities.TextPart
 import com.ai.assistance.operit.voice.v2.AgentService
 import com.ai.assistance.operit.voice.data.UserMemory
-import com.ai.assistance.operit.voice.utilities.TextPart
 import com.ai.assistance.operit.voice.utilities.ServicePermissionManager
 import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
-import com.ai.assistance.operit.api.chat.llmprovider.AIService
-import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.data.model.FunctionType
+import com.ai.assistance.operit.voice.api.Eyes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,9 +55,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import org.json.JSONObject
 import java.io.IOException
 
@@ -73,7 +69,7 @@ class ConversationalAgentService : Service() {
 
     private val speechCoordinator by lazy { SpeechCoordinator.getInstance(this) }
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var conversationHistory = listOf<Pair<String, String>>()
+    private var conversationHistory = listOf<Pair<String, List<Any>>>()
     private val ttsManager by lazy { TTSManager.getInstance(this) }
     private val overlayManager by lazy { OverlayManager.getInstance(this) }
     private val clarificationQuestionViews = mutableListOf<View>()
@@ -103,45 +99,6 @@ class ConversationalAgentService : Service() {
         const val MEMORY_ENABLED = true
     }
 
-    private fun getAIService(): AIService? {
-        return try {
-            runBlocking { EnhancedAIService.getAIServiceForFunction(this@ConversationalAgentService, FunctionType.CHAT) }
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "Failed to get AIService", e)
-            null
-        }
-    }
-
-    private suspend fun getLLMResponse(messages: List<Pair<String, String>>): String {
-        val aiService = getAIService()
-            ?: return """{"Type": "Reply", "Reply": "Please configure an AI model in Operit settings first.", "Instruction": "", "Should End": "Continue"}"""
-
-        val systemPrompt = messages.firstOrNull()?.second ?: ""
-        val userMessages = messages.drop(1)
-        val chatHistory = userMessages.map { it.first to it.second }
-        val lastUserMessage = chatHistory.lastOrNull()?.second ?: "Hello"
-
-        return try {
-            val responseStream = aiService.sendMessage(
-                context = this,
-                message = lastUserMessage,
-                chatHistory = chatHistory.dropLast(1),
-                stream = false
-            )
-            val responseBuilder = StringBuilder()
-            responseStream.collect { chunk ->
-                responseBuilder.append(chunk)
-            }
-            val fullResponse = responseBuilder.toString()
-            // Don't release - it's a shared instance managed by EnhancedAIService
-            fullResponse
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "LLM call failed", e)
-            aiService.release()
-            """{"Type": "Reply", "Reply": "I'm having trouble connecting to the AI service.", "Instruction": "", "Should End": "Continue"}"""
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate() {
         super.onCreate()
@@ -157,6 +114,13 @@ class ConversationalAgentService : Service() {
         hasHeardFirstUtterance = false
 
         fetchMemories()
+
+        OverlayDispatcher.clearAll()
+        overlayManager.startObserving()
+        visualFeedbackManager.showSpeakingOverlay()
+        visualFeedbackManager.showTtsWave()
+        showInputBoxIfNeeded()
+        visualFeedbackManager.showSmallDeltaGlow()
 
         stateManager.startMonitoring()
         stateManager.setState(OperitState.IDLE)
@@ -275,7 +239,7 @@ Rules for JSON values:
 Current Time : {time_context}
         """.trimIndent()
 
-        conversationHistory = listOf("user" to systemPrompt)
+        conversationHistory = addResponse("user", systemPrompt, emptyList())
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -507,7 +471,7 @@ Current Time : {time_context}
                 }
             }
 
-            conversationHistory = conversationHistory + ("user" to userInput)
+            conversationHistory = addResponse("user", userInput, conversationHistory)
 
             try {
                 if (userInput.equals("stop", ignoreCase = true) || userInput.equals("exit", ignoreCase = true)) {
@@ -520,7 +484,7 @@ Current Time : {time_context}
 
                 val defaultJsonResponse = """{"Type": "Reply", "Reply": "I'm sorry, I had an issue.", "Instruction": "", "Should End": "Continue"}"""
                 val rawModelResponse = try {
-                    getLLMResponse(conversationHistory)
+                    getReasoningModelApiResponse(conversationHistory) ?: defaultJsonResponse
                 } catch (e: Exception) {
                     Log.e("ConvAgent", "LLM call failed", e)
                     defaultJsonResponse
@@ -535,13 +499,13 @@ Current Time : {time_context}
                         if (AgentService.isRunning) {
                             val busyMessage = "I'm already working on '${AgentService.currentTask}'. Please let me finish that first, or you can ask me to stop it."
                             speakAndThenListen(busyMessage)
-                            conversationHistory = conversationHistory + ("model" to busyMessage)
+                            conversationHistory = addResponse("model", busyMessage, conversationHistory)
                             return@launch
                         }
 
                         if (!servicePermissionManager.isAccessibilityServiceEnabled()) {
                             speakAndThenListen(getString(R.string.accessibility_permission_needed_for_task))
-                            conversationHistory = conversationHistory + ("model" to getString(R.string.accessibility_permission_needed_for_task))
+                            conversationHistory = addResponse("model", getString(R.string.accessibility_permission_needed_for_task), conversationHistory)
                             return@launch
                         }
 
@@ -558,18 +522,18 @@ Current Time : {time_context}
                                     displayClarificationQuestions(questions)
                                     val questionToAsk = "I can help with that, but first: ${questions.joinToString(" and ")}"
                                     Log.d("ConvAgent", "Task needs clarification. Asking: '$questionToAsk' (Attempt $clarificationAttempts/$maxClarificationAttempts)")
-                                    conversationHistory = conversationHistory + ("model" to "Clarification needed for task: ${decision.instruction}")
+                                    conversationHistory = addResponse("model", "Clarification needed for task: ${decision.instruction}", conversationHistory)
                                     speakAndThenListen(questionToAsk, false)
                                 } else {
                                     Log.d("ConvAgent", "Task is clear. Executing: ${decision.instruction}")
                                     AgentService.start(applicationContext, decision.instruction)
-                                    conversationHistory = conversationHistory + ("model" to decision.reply)
+                                    conversationHistory = addResponse("model", decision.reply, conversationHistory)
                                     gracefulShutdown(decision.reply, "task_executed")
                                 }
                             } else {
                                 Log.d("ConvAgent", "Max clarification attempts reached. Proceeding with task execution.")
                                 AgentService.start(applicationContext, decision.instruction)
-                                conversationHistory = conversationHistory + ("model" to decision.reply)
+                                conversationHistory = addResponse("model", decision.reply, conversationHistory)
                                 gracefulShutdown(decision.reply, "task_executed")
                             }
                     }
@@ -577,11 +541,11 @@ Current Time : {time_context}
                         Log.d("ConvAgent", "Model requested to kill the running agent service.")
                         if (AgentService.isRunning) {
                             AgentService.stop(applicationContext)
-                            conversationHistory = conversationHistory + ("model" to decision.reply)
+                            conversationHistory = addResponse("model", decision.reply, conversationHistory)
                             gracefulShutdown(decision.reply, "task_killed")
                         } else {
                             val noTaskMessage = "There was no automation running, but I can help with something else."
-                            conversationHistory = conversationHistory + ("model" to noTaskMessage)
+                            conversationHistory = addResponse("model", noTaskMessage, conversationHistory)
                             speakAndThenListen(noTaskMessage)
                         }
                     }
@@ -590,7 +554,7 @@ Current Time : {time_context}
                             Log.d("ConvAgent", "Model decided to end the conversation.")
                             gracefulShutdown(decision.reply, "model_ended")
                         } else {
-                            conversationHistory = conversationHistory + ("model" to rawModelResponse)
+                            conversationHistory = addResponse("model", rawModelResponse, conversationHistory)
                             speakAndThenListen(decision.reply)
                         }
                     }
@@ -611,7 +575,8 @@ Current Time : {time_context}
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateSystemPromptWithTime() {
-        val currentPromptText = conversationHistory.firstOrNull()?.second ?: return
+        val currentPromptText = conversationHistory.firstOrNull()?.second
+            ?.filterIsInstance<TextPart>()?.firstOrNull()?.text ?: return
 
         val currentTime = java.time.ZonedDateTime.now(java.time.ZoneId.systemDefault())
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
@@ -621,12 +586,15 @@ Current Time : {time_context}
         val newTimeLine = "Current Time : $formattedTime"
         val updatedPromptText = timeRegex.replace(currentPromptText, newTimeLine)
 
-        conversationHistory = listOf("user" to updatedPromptText) + conversationHistory.drop(1)
+        conversationHistory = conversationHistory.toMutableList().apply {
+            set(0, "user" to listOf(TextPart(updatedPromptText)))
+        }
         Log.d("ConvAgent", "System prompt updated with time: $formattedTime")
     }
 
     private fun updateSystemPromptWithAgentStatus() {
-        val currentPromptText = conversationHistory.firstOrNull()?.second ?: return
+        val currentPromptText = conversationHistory.firstOrNull()?.second
+            ?.filterIsInstance<TextPart>()?.firstOrNull()?.text ?: return
 
         val agentStatusContext = if (AgentService.isRunning) {
             """
@@ -640,7 +608,9 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
         val updatedPromptText = currentPromptText.replace("{agent_status_context}", agentStatusContext)
 
-        conversationHistory = listOf("user" to updatedPromptText) + conversationHistory.drop(1)
+        conversationHistory = conversationHistory.toMutableList().apply {
+            set(0, "user" to listOf(TextPart(updatedPromptText)))
+        }
         Log.d("ConvAgent", "System prompt updated with agent status: ${AgentService.isRunning}")
     }
 
@@ -650,7 +620,8 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             perception = Perception(Eyes(this), SemanticParser())
             val analysis = perception.analyze(all = true)
             Log.d("ConvAgent", "Screen analysis: ${analysis.uiRepresentation}")
-            val currentPrompt = conversationHistory.firstOrNull()?.second ?: return
+            val currentPrompt = conversationHistory.firstOrNull()?.second
+                ?.filterIsInstance<TextPart>()?.firstOrNull()?.text ?: return
 
             var updatedPrompt = currentPrompt.replace("{screen_context}", analysis.uiRepresentation)
 
@@ -674,7 +645,9 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             }
 
             if (updatedPrompt.isNotEmpty()) {
-                conversationHistory = listOf("user" to updatedPrompt) + conversationHistory.drop(1)
+                conversationHistory = conversationHistory.toMutableList().apply {
+                    set(0, "user" to listOf(TextPart(updatedPrompt)))
+                }
                 Log.d("ConvAgent", "Updated system prompt with screen context and memories")
             }
         } catch (e: Exception) {

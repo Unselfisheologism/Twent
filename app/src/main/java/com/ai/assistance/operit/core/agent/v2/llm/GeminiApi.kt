@@ -182,7 +182,29 @@ class OperitLlmApi(
                 }
                 "swipe_left" -> Action.SwipeLeft(params?.optInt("pixels") ?: 500)
                 "swipe_right" -> Action.SwipeRight(params?.optInt("pixels") ?: 500)
-                "double_tap" -> Action.DoubleTapAt(params?.optInt("x") ?: 0, params?.optInt("y") ?: 0)
+                "swipe" -> {
+                    val startX = params?.optInt("start_x") ?: 0
+                    val startY = params?.optInt("start_y") ?: 0
+                    val endX = params?.optInt("end_x") ?: 0
+                    val endY = params?.optInt("end_y") ?: 0
+                    val durationMs = params?.optLong("duration_ms")?.toInt() ?: 500
+                    if (startX > 0 && startY > 0 && endX > 0 && endY > 0) {
+                        Action.Swipe(startX, startY, endX, endY, durationMs.toLong())
+                    } else {
+                        Log.w(TAG, "Swipe action requires valid start_x, start_y, end_x, end_y, got: $params")
+                        null
+                    }
+                }
+                "double_tap" -> {
+                    val x = params?.optInt("x") ?: 0
+                    val y = params?.optInt("y") ?: 0
+                    if (x > 0 && y > 0) {
+                        Action.DoubleTapAt(x, y)
+                    } else {
+                        Log.w(TAG, "Double tap action requires valid x,y coords, got: $params")
+                        null
+                    }
+                }
                 "long_press" -> Action.LongPressAt(
                     params?.optInt("x") ?: 0,
                     params?.optInt("y") ?: 0,

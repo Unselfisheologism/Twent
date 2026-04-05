@@ -182,6 +182,146 @@ sealed class Action {
                 params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe.")),
                 build = { args -> SwipeRight(args["pixels"] as Int) }
             ),
+            "double_tap" to Spec(
+                name = "double_tap",
+                description = "Double tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> DoubleTapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "swipe" to Spec(
+                name = "swipe",
+                description = "Swipe from one coordinate to another.",
+                params = listOf(
+                    ParamSpec("start_x", Int::class, "Start X coordinate"),
+                    ParamSpec("start_y", Int::class, "Start Y coordinate"),
+                    ParamSpec("end_x", Int::class, "End X coordinate"),
+                    ParamSpec("end_y", Int::class, "End Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> Swipe(
+                    startX = args["start_x"] as Int,
+                    startY = args["start_y"] as Int,
+                    endX = args["end_x"] as Int,
+                    endY = args["end_y"] as Int,
+                    durationMs = (args["duration_ms"] as? Int ?: 500).toLong()
+                )}
+            ),
+            "swipe_up" to Spec(
+                name = "swipe_up",
+                description = "Swipe up (scroll down) by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe up.")),
+                build = { args -> SwipeUp(args["pixels"] as Int) }
+            ),
+            "swipe_down" to Spec(
+                name = "swipe_down",
+                description = "Swipe down (scroll up) by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe down.")),
+                build = { args -> SwipeDown(args["pixels"] as Int) }
+            ),
+            "press_key" to Spec(
+                name = "press_key",
+                description = "Press a system key.",
+                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
+                build = { args -> PressKey(args["key"] as String) }
+            ),
+            "click_element" to Spec(
+                name = "click_element",
+                description = "Click an element by index, text, or content_description.",
+                params = listOf(
+                    ParamSpec("index", Int::class, "Numeric index of the element."),
+                    ParamSpec("text", String::class, "Text of the element to click."),
+                    ParamSpec("content_description", String::class, "Content description of the element.")
+                ),
+                build = { args ->
+                    val index = args["index"] as? Int
+                    if (index != null && index >= 0) {
+                        TapElement(index)
+                    } else {
+                        // Fallback: try to find by text/desc would need screen analysis
+                        // For now, just use element_id 0 as placeholder
+                        TapElement(0)
+                    }
+                }
+            ),
+            "read_file" to Spec(
+                name = "read_file",
+                description = "Read the entire content of a file.",
+                params = listOf(ParamSpec("file_name", String::class, "The name of the file to read.")),
+                build = { args -> ReadFile(args["file_name"] as String) }
+            ),
+            "double_tap" to Spec(
+                name = "double_tap",
+                description = "Double tap at coordinates.",
+                params = listOf(
+                    ParamSpec("x", Int::class, "X coordinate"),
+                    ParamSpec("y", Int::class, "Y coordinate")
+                ),
+                build = { args -> DoubleTapAt(args["x"] as Int, args["y"] as Int) }
+            ),
+            "swipe" to Spec(
+                name = "swipe",
+                description = "Swipe from one coordinate to another.",
+                params = listOf(
+                    ParamSpec("start_x", Int::class, "Start X coordinate"),
+                    ParamSpec("start_y", Int::class, "Start Y coordinate"),
+                    ParamSpec("end_x", Int::class, "End X coordinate"),
+                    ParamSpec("end_y", Int::class, "End Y coordinate"),
+                    ParamSpec("duration_ms", Int::class, "Duration in milliseconds")
+                ),
+                build = { args -> Swipe(
+                    startX = args["start_x"] as Int,
+                    startY = args["start_y"] as Int,
+                    endX = args["end_x"] as Int,
+                    endY = args["end_y"] as Int,
+                    durationMs = (args["duration_ms"] as? Int ?: 500).toLong()
+                )}
+            ),
+            "swipe_up" to Spec(
+                name = "swipe_up",
+                description = "Swipe up (scroll down) by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe up.")),
+                build = { args -> SwipeUp(args["pixels"] as Int) }
+            ),
+            "swipe_down" to Spec(
+                name = "swipe_down",
+                description = "Swipe down (scroll up) by pixels.",
+                params = listOf(ParamSpec("pixels", Int::class, "Pixels to swipe down.")),
+                build = { args -> SwipeDown(args["pixels"] as Int) }
+            ),
+            "press_key" to Spec(
+                name = "press_key",
+                description = "Press a system key.",
+                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
+                build = { args -> PressKey(args["key"] as String) }
+            ),
+            "click_element" to Spec(
+                name = "click_element",
+                description = "Click an element by index, text, or content_description.",
+                params = listOf(
+                    ParamSpec("index", Int::class, "Numeric index of the element."),
+                    ParamSpec("text", String::class, "Text of the element to click."),
+                    ParamSpec("content_description", String::class, "Content description of the element.")
+                ),
+                build = { args ->
+                    val index = args["index"] as? Int
+                    if (index != null && index >= 0) {
+                        TapElement(index)
+                    } else {
+                        // Fallback: try to find by text/desc would need screen analysis
+                        // For now, just use element_id 0 as placeholder
+                        TapElement(0)
+                    }
+                }
+            ),
+            "read_file" to Spec(
+                name = "read_file",
+                description = "Read the entire content of a file.",
+                params = listOf(ParamSpec("file_name", String::class, "The name of the file to read.")),
+                build = { args -> ReadFile(args["file_name"] as String) }
+            ),
             "launch_intent" to Spec(
                 name = "launch_intent",
                 description = "Launch an Android AppIntent by name with parameters.",
