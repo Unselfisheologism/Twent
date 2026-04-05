@@ -40,18 +40,7 @@ sealed class Action {
     data class Done(val success: Boolean, val text: String, val filesToDisplay: List<String>? = null) : Action()
     // New: Launch an Android AppIntent by name with parameters
     data class LaunchIntent(val intentName: String, val parameters: Map<String, String>) : Action()
-    
-    // Coordinate-based actions for full UI automation parity
-    data class TapAt(val x: Int, val y: Int) : Action()
-    data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
-    data class DoubleTapAt(val x: Int, val y: Int) : Action()
-    data class Swipe(val startX: Int, val startY: Int, val endX: Int, val endY: Int, val durationMs: Long = 500) : Action()
-    data class SwipeLeft(val pixels: Int = 500) : Action()
-    data class SwipeRight(val pixels: Int = 500) : Action()
-    data class SwipeUp(val pixels: Int = 500) : Action()
-    data class SwipeDown(val pixels: Int = 500) : Action()
-    data class PressKey(val key: String) : Action()
-    
+
     // Coordinate-based actions for full UI automation parity
     data class TapAt(val x: Int, val y: Int) : Action()
     data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
@@ -311,23 +300,6 @@ sealed class Action {
                 params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
                 build = { args -> PressKey(args["key"] as String) }
             ),
-            "click_element" to Spec(
-                name = "click_element",
-                description = "Click an element by index, text, or content_description.",
-                params = listOf(
-                    ParamSpec("index", Int::class, "Numeric index of the element."),
-                    ParamSpec("text", String::class, "Text of the element to click."),
-                    ParamSpec("content_description", String::class, "Content description of the element.")
-                ),
-                build = { args ->
-                    val index = args["index"] as? Int
-                    if (index != null && index >= 0) {
-                        TapElement(index)
-                    } else {
-                        TapElement(0)
-                    }
-                }
-            ),
         )
                 }
             ),
@@ -396,39 +368,7 @@ sealed class Action {
                 params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
                 build = { args -> PressKey(args["key"] as String) }
             ),
-            "click_element" to Spec(
-                name = "click_element",
-                description = "Click an element by index, text, or content_description.",
-                params = listOf(
-                    ParamSpec("index", Int::class, "Numeric index of the element."),
-                    ParamSpec("text", String::class, "Text of the element to click."),
-                    ParamSpec("content_description", String::class, "Content description of the element.")
-                ),
-                build = { args ->
-                    val index = args["index"] as? Int
-                    if (index != null && index >= 0) {
-                        TapElement(index)
-                    } else {
-                        TapElement(0)
-                    }
-                }
-            ),
         )
-
-//        /**
-//         * Returns the specifications for all actions, respecting the agent's configuration.
-//         */
-//        fun getAvailableSpecs(config: AgentConfig, infoPool: InfoPool): List<Spec> {
-//            return allSpecs.values.filter { spec ->
-//                when (spec.name) {
-//                    "open_app" -> config.enableDirectAppOpening
-//                    "type" -> infoPool.keyboardPre
-//                    else -> true
-//                }
-//            }
-//        }
-
-        // Add this function inside the companion object in v2/actions/Action.kt
 
         fun getAllSpecs(): Collection<Spec> {
             return allSpecs.values
