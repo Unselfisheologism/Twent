@@ -116,13 +116,6 @@ class ConversationalAgentService : Service() {
             if (apiKey.isNotBlank()) {
                 ApiKeyManager.setApiKeys(listOf(apiKey))
                 Log.d("ConvAgent", "Legacy API key loaded (note: voice agent now uses chat's AI provider config)")
-            }
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "Failed to load legacy API key", e)
-        }
-        } catch (e: Exception) {
-            Log.e("ConvAgent", "Failed to load legacy API key", e)
-        }
             } else {
                 Log.e("ConvAgent", "No API key configured")
                 serviceScope.launch {
@@ -131,7 +124,7 @@ class ConversationalAgentService : Service() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("ConvAgent", "Failed to load API key", e)
+            Log.e("ConvAgent", "Failed to load legacy API key", e)
         }
 
         isRunning = true

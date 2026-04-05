@@ -43,18 +43,6 @@ class NetworkConnectivityManager(private val context: Context) {
             return@withContext false
         }
     }
-            // Try connectivity check but don't block the request if it fails
-            return@withContext try {
-                checkInternetConnectivity()
-            } catch (e: Exception) {
-                Log.d(TAG, "Connectivity check threw exception, assuming connected: ${e.message}")
-                true
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking network availability", e)
-            return@withContext false
-        }
-    }
     
     private fun isNetworkConnected(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
