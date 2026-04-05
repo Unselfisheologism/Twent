@@ -484,7 +484,7 @@ Current Time : {time_context}
 
                 val defaultJsonResponse = """{"Type": "Reply", "Reply": "I'm sorry, I had an issue.", "Instruction": "", "Should End": "Continue"}"""
                 val rawModelResponse = try {
-                    getReasoningModelApiResponse(conversationHistory) ?: defaultJsonResponse
+                    getReasoningModelApiResponse(conversationHistory, this@ConversationalAgentService) ?: defaultJsonResponse
                 } catch (e: Exception) {
                     Log.e("ConvAgent", "LLM call failed", e)
                     defaultJsonResponse

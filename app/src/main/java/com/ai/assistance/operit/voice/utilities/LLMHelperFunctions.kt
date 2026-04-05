@@ -50,7 +50,8 @@ fun addResponsePrePost(
 
 suspend fun getReasoningModelApiResponse(
     chat: List<Pair<String, List<Any>>>,
+    context: android.content.Context? = null,
 ): String? {
-    return GeminiApi.generateContent(chat) // MODIFIED: Pass agent state
+    return GeminiApi.generateContent(chat, context = context ?: return null)
 }
 
