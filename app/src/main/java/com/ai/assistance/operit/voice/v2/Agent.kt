@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.GeminiApi
+import com.ai.assistance.operit.voice.v2.llm.AgentLlmAdapter
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
@@ -23,7 +23,7 @@ import kotlinx.coroutines.delay
  * @param settings The agent's configuration.
  * @param memoryManager The agent's short-term memory and prompt builder.
  * @param perception The agent's "eyes," responsible for analyzing the screen.
- * @param llmApi The client for communicating with the Gemini LLM.
+ * @param llmAdapter The LLM adapter for communicating with the AI provider (uses user's configured provider).
  * @param actionExecutor The agent's "hands," responsible for executing actions on the device.
  * @param fileSystem The agent's long-term file storage.
  * @param context The Android application context.
@@ -33,7 +33,7 @@ class Agent(
     private val settings: AgentSettings,
     private val memoryManager: MemoryManager,
     private val perception: Perception,
-    private val llmApi: GeminiApi,
+    private val llmAdapter: AgentLlmAdapter,
     private val actionExecutor: ActionExecutor,
     private val fileSystem: FileSystem,
     private val context: Context
@@ -80,7 +80,7 @@ class Agent(
             // 3. THINK (Get Decision): Send the prepared messages to the LLM.
             Log.d(TAG,"🤔 Asking LLM for next action...")
             val messages = memoryManager.getMessages()
-            val agentOutput = llmApi.generateAgentOutput(messages)
+            val agentOutput = llmAdapter.generateAgentOutput(messages)
 
             // --- Handle LLM Failure ---
             if (agentOutput == null) {

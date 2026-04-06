@@ -13,7 +13,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.voice.utilities.ApiKeyManager
 import com.ai.assistance.operit.voice.api.Eyes
 import com.ai.assistance.operit.voice.api.Finger
 import com.ai.assistance.operit.overlay.OverlayDispatcher
@@ -21,7 +20,7 @@ import com.ai.assistance.operit.voice.utilities.VisualFeedbackManager
 import com.ai.assistance.operit.overlay.OverlayManager
 import com.ai.assistance.operit.voice.v2.actions.ActionExecutor
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
-import com.ai.assistance.operit.voice.v2.llm.GeminiApi
+import com.ai.assistance.operit.voice.v2.llm.AgentLlmAdapter
 import com.ai.assistance.operit.voice.v2.message_manager.MemoryManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
@@ -56,7 +55,7 @@ class AgentService : Service() {
     private lateinit var fileSystem: FileSystem
     private lateinit var memoryManager: MemoryManager
     private lateinit var perception: Perception
-    private lateinit var llmApi: GeminiApi
+    private lateinit var llmAdapter: AgentLlmAdapter
     private lateinit var actionExecutor: ActionExecutor
     private lateinit var overlayManager: OverlayManager
 
@@ -108,9 +107,7 @@ class AgentService : Service() {
         fileSystem = FileSystem(this,)
         memoryManager = MemoryManager(this, "", fileSystem, settings)
         perception = Perception(Eyes(this), SemanticParser())
-        llmApi = GeminiApi(
-            "gemini-2.5-flash",
-            apiKeyManager = ApiKeyManager,
+        llmAdapter = AgentLlmAdapter(
             context = this,
             maxRetry = 10
         )
@@ -119,7 +116,7 @@ class AgentService : Service() {
             settings,
             memoryManager,
             perception,
-            llmApi,
+            llmAdapter,
             actionExecutor,
             fileSystem,
             this
