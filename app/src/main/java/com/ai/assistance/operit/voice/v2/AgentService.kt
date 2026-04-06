@@ -170,15 +170,6 @@ class AgentService : Service() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
 
-        // Check if automation service is available before processing
-        if (!ensureAutomationServiceAvailable()) {
-            Log.e(TAG, "OperitAutomationService is not available. Cannot execute tasks.")
-            visualFeedbackManager.showTtsWave()
-            isRunning = false
-            stopSelf()
-            return
-        }
-
         while (taskQueue.isNotEmpty()) {
             val task = taskQueue.poll() ?: continue // Dequeue task, continue if null
             currentTask = task

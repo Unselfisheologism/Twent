@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gradlew.bat *)"
+      "Bash(gradlew.bat *)",
+      "Bash(python *)",
+      "Bash(fc *)"
     ]
-  }
+  },
+  "$version": 3
 }
