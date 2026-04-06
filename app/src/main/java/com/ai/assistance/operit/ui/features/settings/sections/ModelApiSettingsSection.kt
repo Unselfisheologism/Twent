@@ -117,7 +117,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.MNN -> ""
             ApiProviderType.LLAMA_CPP -> ""
             ApiProviderType.PPINFRA -> "gpt-4o-mini"
-            ApiProviderType.KILO_GATEWAY -> "minimax/minimax-m2.5:free"
+            ApiProviderType.KILO_GATEWAY -> "kilo-auto/free"
             ApiProviderType.OTHER -> ""
         }
     }

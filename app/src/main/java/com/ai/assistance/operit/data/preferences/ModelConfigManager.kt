@@ -91,7 +91,7 @@ class ModelConfigManager(private val context: Context) {
     private fun createFreshDefaultConfig(): ModelConfigData {
         // Kilo Gateway defaults
         val defaultEndpoint = "https://api.kilo.ai/api/gateway/chat/completions"
-        val defaultModelName = "minimax/minimax-m2.5:free"
+        val defaultModelName = "kilo-auto/free"
         
         return ModelConfigData(
                 id = DEFAULT_CONFIG_ID,
