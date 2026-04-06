@@ -177,12 +177,6 @@ class AgentService : Service() {
         if (!ensureAutomationServiceAvailable()) {
             Log.e(TAG, "OperitAutomationService is not available. Cannot execute tasks.")
             visualFeedbackManager.showTtsWave()
-            // Speak error message to user
-            android.speech.tts.TextToSpeech(this) { status ->
-                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                    it?.speak("Automation service not available. Please re-enable accessibility service for Operit in settings.", android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
-                }
-            }
             isRunning = false
             stopSelf()
             return
