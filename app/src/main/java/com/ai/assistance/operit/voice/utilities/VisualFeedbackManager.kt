@@ -18,11 +18,8 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.ai.assistance.operit.voice.AudioWaveView
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.voice.utilities.TTSManager
@@ -107,7 +104,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         try {
             // Create and add the AudioWaveView
             audioWaveView = AudioWaveView(context)
-            val heightInDp = 150
+            val heightInDp = 120
             val heightInPixels = (heightInDp * context.resources.displayMetrics.density).toInt()
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT, heightInPixels,
@@ -166,9 +163,9 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
 
+            // Operit: Clean, minimal white overlay (not purple-tinted)
             speakingOverlay = View(context).apply {
-                // Reduced opacity from 80 (50%) to 40 (25%) for a more subtle overlay
-                setBackgroundColor(0x40FFFFFF.toInt())
+                setBackgroundColor(0x20FFFFFF.toInt()) // Subtle 12% white
             }
 
             val params = WindowManager.LayoutParams(
@@ -189,49 +186,62 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         }
     }
 
-
-    fun showTranscription(initialText: String = "Listening...") {
-        if (transcriptionView != null) {
-            updateTranscription(initialText) // Update text if already shown
-            return
-        }
-
+    fun hideSpeakingOverlay() {
         mainHandler.post {
+            speakingOverlay?.let {
+                if (it.isAttachedToWindow) {
+                    try {
+                        windowManager.removeView(it)
+                        Log.d(TAG, "Speaking overlay removed.")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing speaking overlay", e)
+                    }
+                }
+            }
+            speakingOverlay = null
+        }
+    }
+
+    // --- Transcription View ---
+
+    fun showTranscription() {
+        mainHandler.post {
+            if (transcriptionView != null) return@post
+
             if (!hasOverlayPermission()) {
-                Log.e(TAG, "Cannot show transcription: SYSTEM_ALERT_WINDOW permission not granted")
+                Log.e(TAG, "Cannot show transcription view: SYSTEM_ALERT_WINDOW permission not granted")
                 return@post
             }
 
             transcriptionView = TextView(context).apply {
-                text = initialText
-                val glassBackground = GradientDrawable(
+                text = "Listening..."
+                // Operit: Clean dark card with teal accent (not purple glassmorphism)
+                background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(0xDD0D0D2E.toInt(), 0xDD2A0D45.toInt())
+                    intArrayOf(0xFF1A1A2E.toInt(), 0xFF16213E.toInt())
                 ).apply {
-                    cornerRadius = 28f
-                    setStroke(1, 0x80FFFFFF.toInt())
+                    cornerRadius = 16f
+                    setStroke(2, 0xFF00D4AA.toInt()) // Teal border
                 }
-                background = glassBackground
-                setTextColor(0xFFE0E0E0.toInt())
-                textSize = 16f
-                setPadding(40, 24, 40, 24)
-                typeface = Typeface.MONOSPACE
+                setTextColor(0xFFE8E8E8.toInt())
+                textSize = 15f
+                setPadding(32, 20, 32, 20)
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             }
 
             val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                y = 250 // Position it above the wave view
+                y = (200 * context.resources.displayMetrics.density).toInt()
             }
 
             try {
                 windowManager.addView(transcriptionView, params)
-                Log.d(TAG, "Transcription view added.")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to add transcription view.", e)
                 transcriptionView = null
@@ -240,9 +250,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     }
 
     fun updateTranscription(text: String) {
-        mainHandler.post {
-            transcriptionView?.text = text
-        }
+        transcriptionView?.text = text
     }
 
     fun hideTranscription() {
@@ -251,8 +259,9 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 if (it.isAttachedToWindow) {
                     try {
                         windowManager.removeView(it)
+                        Log.d(TAG, "Transcription view removed.")
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error removing transcription view.", e)
+                        Log.e(TAG, "Error removing transcription view", e)
                     }
                 }
             }
@@ -267,12 +276,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         onSubmit: (String) -> Unit,
         onOutsideTap: () -> Unit
     ) {
-        // This method creates an overlay input box that appears over other apps
-        // Key fix: Proper keyboard positioning using WindowInsetsCompat to prevent
-        // the input box from being hidden behind the keyboard when it appears
         mainHandler.post {
             if (inputBoxView?.isAttachedToWindow == true) {
-                // If already showing, just ensure focus
                 inputBoxView?.findViewById<EditText>(R.id.overlayInputField)?.requestFocus()
                 val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(inputBoxView?.findViewById(R.id.overlayInputField), InputMethodManager.SHOW_IMPLICIT)
@@ -294,6 +299,16 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val inputField = inputBoxView?.findViewById<EditText>(R.id.overlayInputField)
             val rootLayout = inputBoxView?.findViewById<View>(R.id.overlayRootLayout)
 
+            // Operit: Redesign input box with teal accent (not purple)
+            val cardBackground = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xFF1A1A2E.toInt(), 0xFF16213E.toInt())
+            ).apply {
+                cornerRadius = 20f
+                setStroke(2, 0xFF00D4AA.toInt()) // Teal border
+            }
+            rootLayout?.background = cardBackground
+
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -303,8 +318,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP
-                // Top margin with sufficient space
-                y = (80 * context.resources.displayMetrics.density).toInt() // 80dp top margin
+                y = (80 * context.resources.displayMetrics.density).toInt()
             }
 
             inputField?.setOnEditorActionListener { v, actionId, _ ->
@@ -314,7 +328,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                         onSubmit(inputText)
                         v.text = ""
                     } else {
-                        // If empty, just hide the box
                         hideInputBox()
                     }
                     true
@@ -331,7 +344,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             rootLayout?.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_OUTSIDE) {
                     Log.d(TAG, "Outside touch detected.")
-                    onOutsideTap() // Use the new callback
+                    onOutsideTap()
                     return@setOnTouchListener true
                 }
                 false
@@ -339,47 +352,32 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             try {
                 windowManager.addView(inputBoxView, params)
-                Log.d(TAG, "Input box added with initial y position: ${params.y}")
-                
-                // **IMPROVEMENT**: Explicitly request focus and show the keyboard
-                inputField?.requestFocus()
-                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT)
-
+                Log.d(TAG, "Input box overlay added.")
             } catch (e: Exception) {
-                Log.e("VisualManager", "Error adding input box view", e)
+                Log.e(TAG, "Error adding input box overlay", e)
             }
         }
     }
-    // --- REPLACE the hideInputBox method with this simplified version ---
+
     fun hideInputBox() {
         mainHandler.post {
-            inputBoxView?.let {
-                if (it.isAttachedToWindow) {
-                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(it.windowToken, 0)
-                    windowManager.removeView(it)
+            inputBoxView?.let { view ->
+                if (view.isAttachedToWindow) {
+                    try {
+                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(view.windowToken, 0)
+                        windowManager.removeView(view)
+                        Log.d(TAG, "Input box removed.")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing input box", e)
+                    }
                 }
             }
             inputBoxView = null
         }
     }
-    fun hideSpeakingOverlay() {
-        mainHandler.post {
-            speakingOverlay?.let {
-                if (it.isAttachedToWindow) {
-                    try {
-                        windowManager.removeView(it)
-                        Log.d(TAG, "Speaking overlay removed.")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error removing speaking overlay", e)
-                    }
-                }
-            }
-            speakingOverlay = null
-        }
-    }
-    // --- Thinking indicator (replace existing methods with these) ---
+
+    // --- Thinking indicator ---
     fun showThinkingIndicator(initialText: String = "Thinking...") {
         if (thinkingIndicatorView != null) {
             updateThinking(initialText)
@@ -394,28 +392,26 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
 
-            // If a previous instance exists on window manager, try to remove it silently
             thinkingIndicatorView?.let {
                 try { if (it.isAttachedToWindow) windowManager.removeView(it) } catch (_: Exception) {}
             }
 
-            // Build a TextView similar to the transcription view so it looks consistent
+            // Operit: Clean dark card with pulsing teal border
             val textView = TextView(context).apply {
                 text = initialText
-                val glassBackground = GradientDrawable(
+                val background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(0xDD0D0D2E.toInt(), 0xDD2A0D45.toInt())
+                    intArrayOf(0xFF1A1A2E.toInt(), 0xFF16213E.toInt())
                 ).apply {
-                    cornerRadius = 28f
-                    setStroke(1, 0x80FFFFFF.toInt())
+                    cornerRadius = 16f
+                    setStroke(2, 0xFF00D4AA.toInt()) // Teal border
                 }
-                background = glassBackground
-                setTextColor(0xFFE0E0E0.toInt())
-                textSize = 16f
-                setPadding(40, 24, 40, 24)
-                typeface = Typeface.MONOSPACE
-                // Optional: higher elevation on supported API levels
-                ViewCompat.setElevation(this, 12f)
+                background = background
+                setTextColor(0xFFE8E8E8.toInt())
+                textSize = 15f
+                setPadding(32, 20, 32, 20)
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                ViewCompat.setElevation(this, 8f)
             }
 
             thinkingIndicatorView = textView
@@ -427,11 +423,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 PixelFormat.TRANSLUCENT
             ).apply {
-                // Place it above the wave and near center (adjust y as needed)
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                y = 320 // tweak dp offset by multiplying with density if you want to use dp
-                // If you want the same y calculation in dp:
-                // y = (320 * context.resources.displayMetrics.density).toInt()
+                y = (280 * context.resources.displayMetrics.density).toInt()
             }
 
             try {
@@ -467,16 +460,11 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         }
     }
 
-    // ========== 4-Edge Screen Glow (replaces SmallDeltaGlowView) ==========
-    // Shows a subtle glowing border on all 4 edges during active tasks
+    // ========== 4-Edge Screen Glow (Operit: teal/cyan accent) ==========
 
     private var edgeGlowView: View? = null
     private var edgeGlowAnimator: android.animation.ValueAnimator? = null
 
-    /**
-     * Shows a subtle glowing border on all 4 edges of the screen.
-     * Used to indicate active processing/listening/speaking state.
-     */
     fun showEdgeGlow() {
         mainHandler.post {
             if (edgeGlowView?.isAttachedToWindow == true) return@post
@@ -486,16 +474,12 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
 
-            val glowThickness = (8 * context.resources.displayMetrics.density).toInt() // 8dp
+            val glowThickness = (6 * context.resources.displayMetrics.density).toInt() // 6dp - subtler
 
             edgeGlowView = View(context).apply {
-                // Create a gradient border that glows on all 4 edges
-                background = GradientDrawable(
-                    GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(0x00000000, 0x00000000) // Transparent center
-                ).apply {
+                background = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    setStroke(glowThickness, 0x668855FF.toInt()) // Subtle purple glow
+                    setStroke(glowThickness, 0x5500D4AA.toInt()) // Teal glow (#00D4AA at 33% opacity)
                     cornerRadius = 0f
                 }
             }
@@ -520,8 +504,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     }
 
     private fun startEdgeGlowAnimation() {
-        edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.3f, 0.8f, 0.3f).apply {
-            duration = 2000L
+        edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.25f, 0.65f, 0.25f).apply {
+            duration = 2500L // Slower, more subtle pulse
             repeatCount = android.animation.ValueAnimator.INFINITE
             repeatMode = android.animation.ValueAnimator.REVERSE
             interpolator = android.view.animation.AccelerateDecelerateInterpolator()
@@ -550,6 +534,4 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             edgeGlowView = null
         }
     }
-
-
 }

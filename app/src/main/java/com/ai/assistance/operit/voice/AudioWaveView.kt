@@ -12,75 +12,79 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
 
+/**
+ * Operit's voice wave visualization - completely redesigned from the original.
+ * Uses a warm amber-to-emerald gradient with smooth pill-shaped bars instead of sine waves.
+ */
 class AudioWaveView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs) {
 
-    // --- Configuration Constants ---
     companion object {
-        // Added for converting raw audio dB to a normalized value
         private const val MIN_DB_VALUE = -60f
         private const val MAX_DB_VALUE = -5f
     }
 
-    private val waveCount = 7
-    private val minIdleAmplitude = 0.15f
-    private val maxWaveHeightScale = 0.25f
-    // Corrected and swapped durations for more logical behavior
-    private val targetAmplitudeTransitionDuration = 500L
-    private val realtimeAmplitudeTransitionDuration = 100L
-    private val maxSpeedIncrease = 4.0f
-    private val jitterAmount = 0.1f
+    // Pill bar design instead of sine waves
+    private val barCount = 24
+    private val barSpacing = 3f
+    private val minIdleHeight = 6f
+    private val maxBarHeightScale = 0.85f
+    private val targetAmplitudeTransitionDuration = 400L
+    private val realtimeAmplitudeTransitionDuration = 80L
 
-    private val waveColors = intArrayOf(
-        "#8A2BE2".toColorInt(), "#4169E1".toColorInt(), "#FF1493".toColorInt(),
-        "#9370DB".toColorInt(), "#00BFFF".toColorInt(), "#FF69B4".toColorInt(),
-        "#DA70D6".toColorInt()
+    // Completely different color scheme: warm amber → coral → deep orange → teal
+    private val barColors = intArrayOf(
+        0xFFB84C.toColorInt(), // Amber
+        0xFF8A2B.toColorInt(), // Orange
+        0xFF6B1A.toColorInt(), // Deep orange
+        0xFF4D0F.toColorInt(), // Burnt orange
+        0xFF3A0D.toColorInt(), // Dark orange
+        0xFF2D6B.toColorInt(), // Teal accent
+        0xFF1A8A.toColorInt(), // Cyan-teal
     )
 
     private var amplitudeAnimator: ValueAnimator? = null
-    private val wavePaints = mutableListOf<Paint>()
-    private val wavePaths = mutableListOf<Path>()
-    private val waveFrequencies: FloatArray
-    private val wavePhaseShifts: FloatArray
-    private val waveSpeeds: FloatArray
-    private val waveAmplitudeMultipliers: FloatArray
+    private val barPaints = mutableListOf<Paint>()
+    private val barHeights = FloatArray(barCount)
+    private val barTargetHeights = FloatArray(barCount)
+    private val barSpeeds = FloatArray(barCount)
+    private val barPhases = FloatArray(barCount)
 
-    private var audioAmplitude = minIdleAmplitude
+    private var audioAmplitude = 0.15f
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
 
-        waveFrequencies = FloatArray(waveCount)
-        wavePhaseShifts = FloatArray(waveCount)
-        waveSpeeds = FloatArray(waveCount)
-        waveAmplitudeMultipliers = FloatArray(waveCount)
+        // Initialize bar properties with varied but smooth values
+        for (i in 0 until barCount) {
+            val normalizedIndex = i.toFloat() / barCount
+            // Create a wave-like height distribution
+            barPhases[i] = normalizedIndex * 3.14159f * 2f
+            barSpeeds[i] = 0.015f + Random.nextFloat() * 0.01f
+            barHeights[i] = minIdleHeight
+            barTargetHeights[i] = minIdleHeight
 
-        val blurFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
-
-        for (i in 0 until waveCount) {
-            waveFrequencies[i] = Random.nextFloat() * 0.6f + 0.8f
-            wavePhaseShifts[i] = Random.nextFloat() * (Math.PI * 2).toFloat()
-            waveSpeeds[i] = Random.nextFloat() * 0.02f + 0.01f
-            waveAmplitudeMultipliers[i] = Random.nextFloat() * 0.5f + 0.8f
-
-            wavePaints.add(Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            barPaints.add(Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
-                color = waveColors[i % waveColors.size]
-                alpha = 120
-                maskFilter = blurFilter
+                color = barColors[i % barColors.size]
+                alpha = 200
             })
-            wavePaths.add(Path())
         }
 
+        // Continuous gentle wave animation
         ValueAnimator.ofFloat(0f, 1f).apply {
             interpolator = LinearInterpolator()
-            duration = 5000
+            duration = 4000
             repeatCount = ValueAnimator.INFINITE
             addUpdateListener {
-                val speedFactor = 1.0f + (audioAmplitude * maxSpeedIncrease)
-                for (i in 0 until waveCount) {
-                    wavePhaseShifts[i] += (waveSpeeds[i] * speedFactor)
+                val speedFactor = 1.0f + (audioAmplitude * 3.0f)
+                for (i in 0 until barCount) {
+                    barPhases[i] += barSpeeds[i] * speedFactor
+                    // Smooth height updates
+                    val waveOffset = sin(barPhases[i]).toFloat()
+                    val baseHeight = minIdleHeight + (audioAmplitude * maxBarHeightScale * height * 0.5f)
+                    barTargetHeights[i] = baseHeight * (0.6f + 0.4f * (waveOffset * 0.5f + 0.5f))
                 }
                 invalidate()
             }
@@ -88,30 +92,17 @@ class AudioWaveView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * NEW: Call this from your audio processing code with the raw dB value.
-     * It normalizes the value and updates the wave animation in real-time.
-     * @param rmsdB The Root Mean Square decibel level of the current audio buffer.
-     */
     fun updateAmplitude(rmsdB: Float) {
-        // Normalize the decibel level to a 0.0 to 1.0 range
         val normalizedAmplitude = ((rmsdB - MIN_DB_VALUE) / (MAX_DB_VALUE - MIN_DB_VALUE)).coerceIn(0f, 2.0f)
-
-        // Call the existing method to update the wave's appearance
         setRealtimeAmplitude(normalizedAmplitude)
     }
 
-
-    /**
-     * Instantly sets the amplitude for real-time visualization.
-     * @param amplitude The raw amplitude from the visualizer (0.0 to 1.0).
-     */
     fun setRealtimeAmplitude(amplitude: Float) {
         val scaledAmplitude = amplitude.pow(1.5f).coerceIn(0.0f, 1.0f)
-        val targetAmplitude = minIdleAmplitude + (scaledAmplitude * maxWaveHeightScale)
+        val targetAmplitude = 0.15f + (scaledAmplitude * maxBarHeightScale)
         amplitudeAnimator?.cancel()
         amplitudeAnimator = ValueAnimator.ofFloat(audioAmplitude, targetAmplitude).apply {
-            duration = realtimeAmplitudeTransitionDuration // Use short duration for responsiveness
+            duration = realtimeAmplitudeTransitionDuration
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener { animation ->
                 audioAmplitude = animation.animatedValue as Float
@@ -120,53 +111,38 @@ class AudioWaveView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Smoothly animates the wave's amplitude to a new target level.
-     * Used for non-realtime effects like a "power up" sequence.
-     * @param target The target amplitude level (0.0f for idle, 1.0f for full).
-     */
     fun setTargetAmplitude(target: Float) {
-        val targetAmplitude = minIdleAmplitude + (target * maxWaveHeightScale)
+        val targetAmplitude = 0.15f + (target * maxBarHeightScale)
         amplitudeAnimator?.cancel()
         amplitudeAnimator = ValueAnimator.ofFloat(audioAmplitude, targetAmplitude).apply {
-            duration = targetAmplitudeTransitionDuration // Use longer duration for smooth transitions
+            duration = targetAmplitudeTransitionDuration
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener { animation ->
                 audioAmplitude = animation.animatedValue as Float
             }
             start()
-        }
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        for(i in 0 until waveCount) {
-            val paint = wavePaints[i]
-            val color = waveColors[i % waveColors.size]
-            paint.shader = LinearGradient(
-                0f, h / 2f, 0f, h.toFloat(),
-                color, Color.TRANSPARENT, Shader.TileMode.CLAMP
-            )
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        for (i in 0 until waveCount) {
-            wavePaths[i].reset()
-            wavePaths[i].moveTo(0f, height.toFloat())
-            val waveMaxHeight = height * audioAmplitude * waveAmplitudeMultipliers[i]
-            val currentJitter = (Random.nextFloat() - 0.5f) * waveMaxHeight * jitterAmount
-            for (x in 0..width step 5) {
-                val sineInput = (x * (Math.PI * 2 / width) * waveFrequencies[i]) + wavePhaseShifts[i]
-                val sineOutput = (sin(sineInput) * 0.5f + 0.5f)
-                val y = height - (waveMaxHeight * sineOutput) + currentJitter
-                wavePaths[i].lineTo(x.toFloat(), y.toFloat())
-            }
-            wavePaths[i].lineTo(width.toFloat(), height.toFloat())
-            wavePaths[i].close()
-            canvas.drawPath(wavePaths[i], wavePaints[i])
+        val totalSpacing = barSpacing * (barCount - 1)
+        val barWidth = (width - totalSpacing) / barCount
+        val cornerRadius = barWidth / 2f
+
+        for (i in 0 until barCount) {
+            // Smooth interpolation to target height
+            barHeights[i] += (barTargetHeights[i] - barHeights[i]) * 0.15f
+            val barHeight = barHeights[i].coerceAtLeast(minIdleHeight)
+
+            val x = i * (barWidth + barSpacing)
+            val y = height - barHeight
+
+            val paint = barPaints[i % barPaints.size]
+            // Draw rounded rectangle (pill shape)
+            val rect = RectF(x, y, x + barWidth, height.toFloat())
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         }
     }
 }

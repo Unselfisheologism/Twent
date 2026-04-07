@@ -739,27 +739,28 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             questions.forEachIndexed { index, questionText ->
                 val textView = TextView(this).apply {
                     text = questionText
-                    val glowEffect = GradientDrawable(
-                        GradientDrawable.Orientation.BL_TR,
-                        intArrayOf("#BE63F3".toColorInt(), "#5880F7".toColorInt())
-                    ).apply { cornerRadius = 32f }
+                    // Operit: Teal accent with dark navy background (not purple/blue)
+                    val accentBorder = GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,
+                        intArrayOf("#00D4AA".toColorInt(), "#FFB84C".toColorInt()) // Teal to amber
+                    ).apply { cornerRadius = 20f }
 
-                    val glassBackground = GradientDrawable(
+                    val cardBackground = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
-                        intArrayOf(0xEE0D0D2E.toInt(), 0xEE2A0D45.toInt())
+                        intArrayOf(0xEE1A1A2E.toInt(), 0xEE16213E.toInt()) // Dark navy
                     ).apply {
-                        cornerRadius = 28f
-                        setStroke(1, 0x80FFFFFF.toInt())
+                        cornerRadius = 18f
+                        setStroke(2, 0x6600D4AA.toInt()) // Subtle teal border
                     }
 
-                    val layerDrawable = LayerDrawable(arrayOf(glowEffect, glassBackground)).apply {
-                        setLayerInset(1, 4, 4, 4, 4)
+                    val layerDrawable = LayerDrawable(arrayOf(accentBorder, cardBackground)).apply {
+                        setLayerInset(1, 3, 3, 3, 3)
                     }
                     background = layerDrawable
-                    setTextColor(0xFFE0E0E0.toInt())
+                    setTextColor(0xFFE8E8E8.toInt())
                     textSize = 15f
-                    setPadding(40, 24, 40, 24)
-                    typeface = Typeface.MONOSPACE
+                    setPadding(36, 22, 36, 22)
+                    typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
                 }
 
                 textView.measure(
