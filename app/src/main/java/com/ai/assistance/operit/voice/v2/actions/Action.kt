@@ -52,6 +52,47 @@ sealed class Action {
     data class SwipeDown(val pixels: Int = 500) : Action()
     data class PressKey(val key: String) : Action()
 
+    // ========== Operit System Tools (bridged from core/tools/) ==========
+
+    // System Operation Tools
+    data class Toast(val message: String) : Action()
+    data class SendNotification(val title: String, val message: String) : Action()
+    data class ModifySystemSetting(val settingType: String, val key: String, val value: String) : Action()
+    data class GetSystemSetting(val settingType: String, val key: String) : Action()
+    data class StartApp(val packageName: String) : Action()
+    data class StopApp(val packageName: String) : Action()
+    data class ListInstalledApps(val limit: Int = 50) : Action()
+    data class GetNotifications(val limit: Int = 10) : Action()
+    data class GetDeviceLocation : Action()
+
+    // HTTP / Network Tools
+    data class HttpRequest(
+        val method: String = "GET",
+        val url: String,
+        val headers: Map<String, String>? = null,
+        val body: String? = null,
+        val timeoutSeconds: Int = 30
+    ) : Action()
+    data class VisitWeb(val url: String, val maxContentLength: Int = 10000) : Action()
+
+    // Shell / Terminal Tools
+    data class ExecuteShell(val command: String, val timeoutSeconds: Int = 30) : Action()
+
+    // Calculator Tool
+    data class Calculate(val expression: String) : Action()
+
+    // Device Info Tool
+    data class GetDeviceInfo : Action()
+
+    // Text-to-Speech Tool
+    data class TextToSpeech(val text: String) : Action()
+
+    // Memory Tools
+    data class QueryMemory(val query: String, val limit: Int = 5) : Action()
+    data class CreateMemory(val title: String, val content: String, val tags: List<String>? = null) : Action()
+    data class UpdateMemory(val title: String, val content: String) : Action()
+    data class DeleteMemory(val title: String) : Action()
+
     // --- The Custom Serializer ---
     // This serializer is now data-driven, using the `allSpecs` map as its source of truth.
     object ActionSerializer : KSerializer<Action> {
@@ -297,8 +338,184 @@ sealed class Action {
             "press_key" to Spec(
                 name = "press_key",
                 description = "Press a system key.",
-                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home.")),
+                params = listOf(ParamSpec("key", String::class, "Key to press: enter, back, home, recents.")),
                 build = { args -> PressKey(args["key"] as String) }
+            ),
+
+            // ========== Operit System Tools ==========
+            "toast" to Spec(
+                name = "toast",
+                description = "Show a brief toast notification on screen.",
+                params = listOf(ParamSpec("message", String::class, "The message to display in the toast.")),
+                build = { args -> Toast(args["message"] as String) }
+            ),
+            "send_notification" to Spec(
+                name = "send_notification",
+                description = "Send a system notification with title and message.",
+                params = listOf(
+                    ParamSpec("title", String::class, "The notification title."),
+                    ParamSpec("message", String::class, "The notification body text.")
+                ),
+                build = { args -> SendNotification(args["title"] as String, args["message"] as String) }
+            ),
+            "modify_system_setting" to Spec(
+                name = "modify_system_setting",
+                description = "Change an Android system setting value.",
+                params = listOf(
+                    ParamSpec("setting_type", String::class, "Type: 'system', 'secure', or 'global'."),
+                    ParamSpec("key", String::class, "The setting key name."),
+                    ParamSpec("value", String::class, "The new value to set.")
+                ),
+                build = { args -> ModifySystemSetting(args["setting_type"] as String, args["key"] as String, args["value"] as String) }
+            ),
+            "get_system_setting" to Spec(
+                name = "get_system_setting",
+                description = "Read an Android system setting value.",
+                params = listOf(
+                    ParamSpec("setting_type", String::class, "Type: 'system', 'secure', or 'global'."),
+                    ParamSpec("key", String::class, "The setting key name.")
+                ),
+                build = { args -> GetSystemSetting(args["setting_type"] as String, args["key"] as String) }
+            ),
+            "start_app" to Spec(
+                name = "start_app",
+                description = "Launch an app by its package name.",
+                params = listOf(ParamSpec("package_name", String::class, "The app package name, e.g. 'com.twitter.android'.")),
+                build = { args -> StartApp(args["package_name"] as String) }
+            ),
+            "stop_app" to Spec(
+                name = "stop_app",
+                description = "Force-stop an app by its package name.",
+                params = listOf(ParamSpec("package_name", String::class, "The app package name to stop.")),
+                build = { args -> StopApp(args["package_name"] as String) }
+            ),
+            "list_installed_apps" to Spec(
+                name = "list_installed_apps",
+                description = "List installed application package names.",
+                params = listOf(ParamSpec("limit", Int::class, "Maximum number of apps to return (default 50).")),
+                build = { args -> ListInstalledApps(args["limit"] as? Int ?: 50) }
+            ),
+            "get_notifications" to Spec(
+                name = "get_notifications",
+                description = "Retrieve the current device notifications.",
+                params = listOf(ParamSpec("limit", Int::class, "Maximum number of notifications to return (default 10).")),
+                build = { args -> GetNotifications(args["limit"] as? Int ?: 10) }
+            ),
+            "get_device_location" to Spec(
+                name = "get_device_location",
+                description = "Get the device's current GPS location.",
+                params = emptyList(),
+                build = { GetDeviceLocation }
+            ),
+
+            // HTTP / Network
+            "http_request" to Spec(
+                name = "http_request",
+                description = "Send an HTTP request to a URL. Supports GET, POST, PUT, DELETE with custom headers and body.",
+                params = listOf(
+                    ParamSpec("method", String::class, "HTTP method: GET, POST, PUT, DELETE, PATCH (default GET)."),
+                    ParamSpec("url", String::class, "The full URL to request."),
+                    ParamSpec("headers", Map::class, "Optional headers as a map of name to value."),
+                    ParamSpec("body", String::class, "Optional request body string."),
+                    ParamSpec("timeout_seconds", Int::class, "Request timeout in seconds (default 30).")
+                ),
+                build = { args ->
+                    @Suppress("UNCHECKED_CAST")
+                    HttpRequest(
+                        method = args["method"] as? String ?: "GET",
+                        url = args["url"] as String,
+                        headers = args["headers"] as? Map<String, String>,
+                        body = args["body"] as? String,
+                        timeoutSeconds = args["timeout_seconds"] as? Int ?: 30
+                    )
+                }
+            ),
+            "visit_web" to Spec(
+                name = "visit_web",
+                description = "Visit a URL and extract the page content, links, and images. Returns the page text.",
+                params = listOf(
+                    ParamSpec("url", String::class, "The URL to visit."),
+                    ParamSpec("max_content_length", Int::class, "Maximum content length to return (default 10000 chars).")
+                ),
+                build = { args -> VisitWeb(args["url"] as String, args["max_content_length"] as? Int ?: 10000) }
+            ),
+
+            // Shell
+            "execute_shell" to Spec(
+                name = "execute_shell",
+                description = "Execute a shell command on the device and return the output.",
+                params = listOf(
+                    ParamSpec("command", String::class, "The shell command to execute."),
+                    ParamSpec("timeout_seconds", Int::class, "Command timeout in seconds (default 30).")
+                ),
+                build = { args -> ExecuteShell(args["command"] as String, args["timeout_seconds"] as? Int ?: 30) }
+            ),
+
+            // Calculator
+            "calculate" to Spec(
+                name = "calculate",
+                description = "Evaluate a mathematical expression. Supports arithmetic, unit conversions, date math, and statistics.",
+                params = listOf(ParamSpec("expression", String::class, "The math expression to evaluate.")),
+                build = { args -> Calculate(args["expression"] as String) }
+            ),
+
+            // Device Info
+            "device_info" to Spec(
+                name = "device_info",
+                description = "Get comprehensive device information including model, OS version, screen size, memory, storage, battery, and CPU.",
+                params = emptyList(),
+                build = { GetDeviceInfo }
+            ),
+
+            // Text-to-Speech
+            "text_to_speech" to Spec(
+                name = "text_to_speech",
+                description = "Convert text to speech and play the audio. Use this when you need to speak without ending the conversation.",
+                params = listOf(ParamSpec("text", String::class, "The text to speak.")),
+                build = { args -> TextToSpeech(args["text"] as String) }
+            ),
+
+            // Memory
+            "query_memory" to Spec(
+                name = "query_memory",
+                description = "Search the AI's memory graph for relevant memories using similarity search.",
+                params = listOf(
+                    ParamSpec("query", String::class, "The search query."),
+                    ParamSpec("limit", Int::class, "Maximum number of results to return (default 5).")
+                ),
+                build = { args -> QueryMemory(args["query"] as String, args["limit"] as? Int ?: 5) }
+            ),
+            "create_memory" to Spec(
+                name = "create_memory",
+                description = "Create a new memory entry in the AI's memory graph.",
+                params = listOf(
+                    ParamSpec("title", String::class, "The memory title/identifier."),
+                    ParamSpec("content", String::class, "The memory content."),
+                    ParamSpec("tags", List::class, "Optional list of tags for categorization.")
+                ),
+                build = { args ->
+                    @Suppress("UNCHECKED_CAST")
+                    CreateMemory(
+                        title = args["title"] as String,
+                        content = args["content"] as String,
+                        tags = args["tags"] as? List<String>
+                    )
+                }
+            ),
+            "update_memory" to Spec(
+                name = "update_memory",
+                description = "Update an existing memory by title.",
+                params = listOf(
+                    ParamSpec("title", String::class, "The memory title to update."),
+                    ParamSpec("content", String::class, "The new content.")
+                ),
+                build = { args -> UpdateMemory(args["title"] as String, args["content"] as String) }
+            ),
+            "delete_memory" to Spec(
+                name = "delete_memory",
+                description = "Delete a memory by title.",
+                params = listOf(ParamSpec("title", String::class, "The memory title to delete.")),
+                build = { args -> DeleteMemory(args["title"] as String) }
             ),
         )
 

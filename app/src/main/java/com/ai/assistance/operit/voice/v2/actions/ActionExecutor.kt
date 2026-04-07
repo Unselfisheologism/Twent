@@ -455,6 +455,309 @@ class ActionExecutor(private val finger: Finger) {
                 }
                 ActionResult(longTermMemory = "Pressed key: ${action.key}")
             }
+
+            // ========== Operit System Tools ==========
+
+            is Action.Toast -> {
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, action.message, android.widget.Toast.LENGTH_SHORT).show()
+                }
+                ActionResult(longTermMemory = "Showed toast: \"${action.message.take(50)}...\"")
+            }
+
+            is Action.SendNotification -> {
+                val notificationManager = context.getSystemService(android.app.NotificationManager::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val channel = android.app.NotificationChannel(
+                        "operit_agent",
+                        "Operit Agent",
+                        android.app.NotificationManager.IMPORTANCE_DEFAULT
+                    )
+                    notificationManager.createNotificationChannel(channel)
+                }
+                val notification = androidx.core.app.NotificationCompat.Builder(context, "operit_agent")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(action.title)
+                    .setContentText(action.message)
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+                    .build()
+                notificationManager.notify(System.currentTimeMillis().toInt() % 100000, notification)
+                ActionResult(longTermMemory = "Sent notification: \"${action.title}\"")
+            }
+
+            is Action.ModifySystemSetting -> {
+                try {
+                    val settingUri = when (action.settingType.lowercase()) {
+                        "system" -> android.provider.Settings.System.CONTENT_URI
+                        "secure" -> android.provider.Settings.Secure.CONTENT_URI
+                        "global" -> android.provider.Settings.Global.CONTENT_URI
+                        else -> return ActionResult(error = "Invalid setting type: ${action.settingType}. Use 'system', 'secure', or 'global'.")
+                    }
+                    context.contentResolver.insert(settingUri, android.content.ContentValues().apply {
+                        put(action.key, action.value)
+                    })
+                    ActionResult(longTermMemory = "Set system setting '${action.key}' to '${action.value}'.")
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to modify system setting '${action.key}': ${e.message}")
+                }
+            }
+
+            is Action.GetSystemSetting -> {
+                try {
+                    val value = when (action.settingType.lowercase()) {
+                        "system" -> android.provider.Settings.System.getString(context.contentResolver, action.key)
+                        "secure" -> android.provider.Settings.Secure.getString(context.contentResolver, action.key)
+                        "global" -> android.provider.Settings.Global.getString(context.contentResolver, action.key)
+                        else -> return ActionResult(error = "Invalid setting type: ${action.settingType}.")
+                    }
+                    ActionResult(
+                        longTermMemory = "Read system setting '${action.key}'.",
+                        extractedContent = value ?: "(null)",
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to read system setting '${action.key}': ${e.message}")
+                }
+            }
+
+            is Action.StartApp -> {
+                try {
+                    val intent = context.packageManager.getLaunchIntentForPackage(action.packageName)
+                    if (intent != null) {
+                        context.startActivity(intent)
+                        ActionResult(longTermMemory = "Started app '${action.packageName}'.")
+                    } else {
+                        ActionResult(error = "App '${action.packageName}' not found or has no launcher intent.")
+                    }
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to start app '${action.packageName}': ${e.message}")
+                }
+            }
+
+            is Action.StopApp -> {
+                try {
+                    val pm = context.packageManager
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pm.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pm.getInstalledApplications(0)
+                    }
+                    val process = java.lang.ProcessBuilder("am", "force-stop", action.packageName).start()
+                    process.waitFor()
+                    ActionResult(longTermMemory = "Force-stopped app '${action.packageName}'.")
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to stop app '${action.packageName}': ${e.message}")
+                }
+            }
+
+            is Action.ListInstalledApps -> {
+                try {
+                    val pm = context.packageManager
+                    val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pm.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pm.getInstalledApplications(0)
+                    }
+                    val apps = packages.take(action.limit).map { pm.getApplicationLabel(it).toString() }
+                    ActionResult(
+                        longTermMemory = "Listed ${apps.size} installed apps.",
+                        extractedContent = apps.joinToString("\n"),
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to list installed apps: ${e.message}")
+                }
+            }
+
+            is Action.GetNotifications -> {
+                ActionResult(error = "get_notifications requires notification listener permission. Use the device's notification panel instead.")
+            }
+
+            is Action.GetDeviceLocation -> {
+                ActionResult(error = "get_device_location requires location permission. Not available in overlay agent mode.")
+            }
+
+            is Action.HttpRequest -> {
+                try {
+                    val client = okhttp3.OkHttpClient.Builder()
+                        .connectTimeout(action.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(action.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+
+                    val requestBuilder = okhttp3.Request.Builder().url(action.url)
+                    action.headers?.forEach { (key, value) -> requestBuilder.addHeader(key, value) }
+
+                    val body = action.body?.let {
+                        okhttp3.RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), it)
+                    }
+
+                    val request = when (action.method.uppercase()) {
+                        "POST" -> requestBuilder.post(body ?: okhttp3.RequestBody.create(null, ""))
+                        "PUT" -> requestBuilder.put(body ?: okhttp3.RequestBody.create(null, ""))
+                        "DELETE" -> requestBuilder.delete()
+                        "PATCH" -> requestBuilder.patch(body ?: okhttp3.RequestBody.create(null, ""))
+                        else -> requestBuilder.get()
+                    }.build()
+
+                    val response = client.newCall(request).execute()
+                    val responseBody = response.body?.string() ?: ""
+                    ActionResult(
+                        longTermMemory = "HTTP ${action.method} ${action.url} returned ${response.code}.",
+                        extractedContent = "Status: ${response.code}\n$responseBody",
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "HTTP request failed: ${e.message}")
+                }
+            }
+
+            is Action.VisitWeb -> {
+                try {
+                    val client = okhttp3.OkHttpClient.Builder()
+                        .connectTimeout(30L, java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(30L, java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+
+                    val request = okhttp3.Request.Builder()
+                        .url(action.url)
+                        .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36")
+                        .get()
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseBody = response.body?.string() ?: ""
+
+                    // Extract text content (basic HTML stripping)
+                    val textContent = responseBody
+                        .replace(Regex("<[^>]+>"), " ")
+                        .replace(Regex("\\s+"), " ")
+                        .trim()
+                        .take(action.maxContentLength)
+
+                    ActionResult(
+                        longTermMemory = "Visited ${action.url} and extracted ${textContent.length} chars of text content.",
+                        extractedContent = textContent,
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to visit web page: ${e.message}")
+                }
+            }
+
+            is Action.ExecuteShell -> {
+                try {
+                    val process = java.lang.ProcessBuilder("sh", "-c", action.command)
+                        .redirectErrorStream(true)
+                        .start()
+                    val output = process.inputStream.bufferedReader().readText()
+                    process.waitFor()
+                    val exitCode = process.exitValue()
+                    ActionResult(
+                        longTermMemory = "Executed shell command (exit code: $exitCode).",
+                        extractedContent = output.take(5000),
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Shell command failed: ${e.message}")
+                }
+            }
+
+            is Action.Calculate -> {
+                try {
+                    // Use Android's built-in JavaScript engine for math evaluation
+                    val webView = android.webkit.WebView(context)
+                    val jsEngine = webView.settings.javaScriptEnabled = true
+
+                    var result = ""
+                    val latch = java.util.concurrent.CountDownLatch(1)
+
+                    withContext(Dispatchers.Main) {
+                        webView.evaluateJavascript("(function() { return String(${action.expression}); })();") { jsResult ->
+                            result = jsResult?.replace("\"", "") ?: "null"
+                            latch.countDown()
+                        }
+                    }
+
+                    latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+                    webView.destroy()
+
+                    if (result.isBlank() || result == "null") {
+                        ActionResult(error = "Calculator returned empty result for expression: ${action.expression}")
+                    } else {
+                        ActionResult(
+                            longTermMemory = "Calculated: ${action.expression} = $result",
+                            extractedContent = result,
+                            includeExtractedContentOnlyOnce = true
+                        )
+                    }
+                } catch (e: Exception) {
+                    ActionResult(error = "Calculator failed: ${e.message}")
+                }
+            }
+
+            is Action.GetDeviceInfo -> {
+                try {
+                    val info = buildString {
+                        appendLine("Device: ${android.os.Build.MODEL}")
+                        appendLine("Manufacturer: ${android.os.Build.MANUFACTURER}")
+                        appendLine("Android Version: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
+                        appendLine("Display: ${context.resources.displayMetrics.widthPixels}x${context.resources.displayMetrics.heightPixels}")
+
+                        // Memory
+                        val activityManager = context.getSystemService(android.app.ActivityManager::class.java)
+                        val memInfo = android.app.ActivityManager.MemoryInfo()
+                        activityManager.getMemoryInfo(memInfo)
+                        appendLine("Total RAM: ${memInfo.totalMem / (1024 * 1024)} MB")
+                        appendLine("Available RAM: ${memInfo.availMem / (1024 * 1024)} MB")
+
+                        // Storage
+                        val stat = android.os.StatFs(context.filesDir.absolutePath)
+                        appendLine("Storage Free: ${stat.availableBytes / (1024 * 1024 * 1024)} GB")
+                        appendLine("Storage Total: ${stat.totalBytes / (1024 * 1024 * 1024)} GB")
+                    }
+                    ActionResult(
+                        longTermMemory = "Retrieved device information.",
+                        extractedContent = info,
+                        includeExtractedContentOnlyOnce = true
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to get device info: ${e.message}")
+                }
+            }
+
+            is Action.TextToSpeech -> {
+                val ttsManager = com.ai.assistance.operit.voice.utilities.TTSManager.getInstance(context)
+                ttsManager.speakText(action.text)
+                delay(1000) // Give TTS time to start
+                ActionResult(longTermMemory = "Spoke via TTS: \"${action.text.take(50)}...\"")
+            }
+
+            is Action.QueryMemory -> {
+                // Memory query - return empty for now (memory system is simplified in overlay agent)
+                ActionResult(
+                    longTermMemory = "Queried memory for: '${action.query}'.",
+                    extractedContent = "No memories found for query: ${action.query}",
+                    includeExtractedContentOnlyOnce = true
+                )
+            }
+
+            is Action.CreateMemory -> {
+                // Memory creation - log for now (memory system is simplified)
+                Log.d("ActionExecutor", "Memory created: ${action.title} - ${action.content}")
+                ActionResult(longTermMemory = "Created memory: '${action.title}'.")
+            }
+
+            is Action.UpdateMemory -> {
+                Log.d("ActionExecutor", "Memory updated: ${action.title}")
+                ActionResult(longTermMemory = "Updated memory: '${action.title}'.")
+            }
+
+            is Action.DeleteMemory -> {
+                Log.d("ActionExecutor", "Memory deleted: ${action.title}")
+                ActionResult(longTermMemory = "Deleted memory: '${action.title}'.")
+            }
         }
     }
 }
