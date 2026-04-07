@@ -68,7 +68,6 @@ Interactive Elements: All interactive elements will be provided in format as [in
 - resource_id: This is basically the id used by developer of current app to make app interactive, might be useful to identify the element's task sometime. this field is Not always present.
 - element_state: Basically state information of this particular element. for ex. (This element is clickable, enabled, focusable.)
 - element_type: This is basically which android widget is this. for ex. (widget.TextView)
-- alpha: If element is translucent, you'll see (alpha: XX%) - IT IS STILL CLICKABLE
 - SCREEN_REGION: Where the element is on screen:
   - [TOP_BAR]: Very top ~8% (browser URL bar, status bar)
   - [TOP_SECTION]: Upper ~15% (page headers, search bars)
@@ -78,14 +77,14 @@ Interactive Elements: All interactive elements will be provided in format as [in
 
 Examples:
 * [13] text:"Albums" <> <This element is clickable, enabled, focusable.> <widget.TextView> [CONTENT_AREA]
-* [25] text:"" <com.example:id/bell_icon> <This element is clickable, enabled.> <widget.ImageView> (alpha: 40%) [BOTTOM_BAR]
+* [25] text:"" <com.example:id/bell_icon> <This element is clickable, enabled.> <widget.ImageView> [BOTTOM_BAR]
 
 Note that:
 - Only elements with numeric indexes in [] are interactive
 - (stacked) indentation (with \t (tab)) is important and means that the element is a (XML) child of the element above (with a lower index)
 - Pure text elements without [] are not interactive.
 - Elements in [BOTTOM_BAR] are APP navigation, NOT browser navigation. Browser navigation (back, forward, tabs, menu) appears in Brave's own UI, separate from web page content.
-- Translucent elements (alpha < 100%) are STILL INTERACTIVE and clickable. Don't ignore them!
+- Translucent or semi-transparent elements are STILL INTERACTIVE and clickable. Don't ignore them just because they appear faded!
   </android_state>
 
 <read_state>

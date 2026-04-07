@@ -227,7 +227,6 @@ class SemanticParser {
                 val newMarker = if (isNew) "* " else ""
                 val extraInfo = getExtraInfo(node) // Helper function
                 val simpleClassName = className.removePrefix("android.widget.")
-                val alphaInfo = if (node.alpha < 1.0f) "(alpha: ${(node.alpha * 100).toInt()}%)" else ""
 
                 // Format: [1] text:"<text>" <resource-id> <ExtraInfo> <class_name> [region]
                 builder.append("$indent$newMarker[$interactiveElementCounter] ")
@@ -235,7 +234,6 @@ class SemanticParser {
                     .append("<$resourceId> ")
                     .append("<$extraInfo> ")
                     .append("<$simpleClassName> ")
-                    .append("$alphaInfo ")
                     .append("[$screenRegion]")
                     .append("\n")
 
