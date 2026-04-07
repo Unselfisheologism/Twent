@@ -828,6 +828,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideSpeakingOverlay()
         visualFeedbackManager.hideInputBox()
+        visualFeedbackManager.hideSmallDeltaGlow()
 
         if (exitMessage != null) {
             speechCoordinator.speakText(exitMessage)
@@ -847,6 +848,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             visualFeedbackManager.hideTranscription()
             visualFeedbackManager.hideSpeakingOverlay()
             visualFeedbackManager.hideInputBox()
+            visualFeedbackManager.hideSmallDeltaGlow()
             removeClarificationQuestions()
         }
 
