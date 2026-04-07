@@ -52,7 +52,7 @@ USER REQUEST: This is your ultimate objective and always remains visible.
 - This has the highest priority. Make the user happy.
 - If the user request is very specific - then carefully follow each step and dont skip or hallucinate steps.
 - If the task is open ended you can plan more yourself how to get it done.
-- ALWAYS look for the most DIRECT approach. If you can go directly to a specific page (e.g., x.com/notifications instead of x.com → click notifications), do it.
+- ALWAYS look for the most DIRECT approach. If you can go directly to a specific page (e.g., x.com/notifications instead of x.com → click notifications icon), do it.
 - The <installed_apps> section tells you which apps are available. Use it to decide between open_app and launch_url_in_browser.
   </user_request>
 
@@ -84,17 +84,17 @@ Interactive Elements: All interactive elements will be provided in format as [in
   - [TOP_SECTION]: Upper ~15% (page headers, search bars)
   - [CONTENT_AREA]: Middle ~70% (main content, posts, articles, feeds)
   - [BOTTOM_SECTION]: Lower ~8% (just above bottom bar)
-  - [BOTTOM_BAR]: Bottom ~8% (app navigation bars with Home, Notifications, Profile icons)
+  - [BOTTOM_BAR]: Bottom ~8% (app navigation bars, browser toolbar buttons)
 
 Examples:
 * [13] text:"Albums" <> <This element is clickable, enabled, focusable.> <widget.TextView> [CONTENT_AREA]
-* [25] text:"" <com.example:id/bell_icon> <This element is clickable, enabled.> <widget.ImageView> [BOTTOM_BAR]
+* [25] text:"Home" <> <This element is clickable, enabled.> <widget.ImageView> [BOTTOM_BAR]
 
 Note that:
 - Only elements with numeric indexes in [] are interactive
 - (stacked) indentation (with \t (tab)) is important and means that the element is a (XML) child of the element above (with a lower index)
 - Pure text elements without [] are not interactive.
-- Elements in [BOTTOM_BAR] are APP navigation, NOT browser navigation. Browser navigation (back, forward, tabs, menu) appears in Brave's own UI, separate from web page content.
+- Elements in [BOTTOM_BAR] can be either APP navigation (home, profile icons) or BROWSER navigation (back, forward, tabs, menu).
 - Translucent or semi-transparent elements are STILL INTERACTIVE and clickable. Don't ignore them just because they appear faded!
   </android_state>
 
@@ -124,50 +124,38 @@ Strictly follow these rules while using the Android Phone and navigating the app
 <mobile_ui_patterns>
 CRITICAL: Understanding common mobile UI patterns is essential for successful automation:
 
-1. BOTTOM NAVIGATION BARS (VERY IMPORTANT):
-   - Many mobile apps and mobile websites (including X.com/Twitter, Instagram, Facebook, YouTube, etc.) have a **bottom navigation bar** with icons for Home, Search, Notifications, Profile, etc.
-   - The bottom nav bar is typically at the VERY BOTTOM of the screen (Y coordinate near screen height).
-   - Bottom nav icons often have NO text label - they are just icons (bell for notifications, house for home, magnifying glass for search, person for profile).
-   - Bottom nav bars can become **translucent/semi-transparent** when scrolling. They may appear faded but are STILL PRESENT and CLICKABLE.
-   - When looking for navigation icons (especially notifications bell), ALWAYS check the bottom of the screen FIRST before searching elsewhere.
-   - DO NOT search for navigation icons inside content areas (like post timelines, article bodies, etc.) - navigation is in fixed bars, NOT among content.
+1. DIRECT URL APPROACH (ALWAYS PREFERRED):
+   - For ANY website task, FIRST consider if a direct URL exists.
+   - Notifications: https://x.com/notifications, https://mail.google.com, etc.
+   - Search: https://www.google.com/search?q=your+query
+   - Use launch_url_in_browser to open these URLs directly.
+   - NEVER use open_app + type URL + click through UI when a direct URL exists.
 
-2. TOP BARS AND HEADERS:
-   - Top bars contain page titles, back buttons, search bars, and sometimes action icons (share, menu dots).
-   - In BROWSERS, the top area contains the URL/address bar, tab switcher, and browser menu - these are BROWSER UI, not web content.
-   - Distinguish between: (a) Browser UI elements (URL bar, back/forward buttons, tabs), and (b) Website content (the actual page being viewed).
-   - When interacting with a website inside a browser, focus on the WEBSITE's UI, not the browser's chrome/UI.
+2. BOTTOM NAVIGATION BARS:
+   - Many mobile apps have a bottom bar with navigation icons.
+   - These are ONLY relevant if the user specifically asks to navigate within an OPENED app.
+   - If the app isn't installed, use launch_url_in_browser instead of trying to find UI elements.
 
-3. SCROLLABLE CONTENT VS FIXED UI:
-   - Fixed UI elements (navigation bars, toolbars, headers) stay in place when you scroll.
-   - Scrollable content (posts, articles, feeds) moves when you scroll.
-   - NEVER look for navigation icons inside scrollable content - they are in fixed bars.
-   - If a fixed bar becomes translucent after scrolling, scroll back up slightly or scroll down slightly to make it fully visible, then interact with it.
+3. BROWSER VS WEB CONTENT:
+   - In browsers, the top area contains the URL/address bar (browser UI).
+   - The web content area shows the actual page being viewed.
+   - Distinguish between browser chrome (URL bar, tabs) and website content.
 
-4. TRANSLUCENT/SEMI-TRANSPARENT ELEMENTS:
-   - Many modern apps use translucent UI elements that become more or less visible based on scroll position.
-   - A translucent element is STILL INTERACTIVE and STILL CLICKABLE even if it appears faded.
-   - If you can see a faint/translucent icon or bar, try tapping it directly - it may work.
-   - If translucent elements are hard to identify, scroll slightly (up or down) to make them fully opaque, then interact.
+4. TRANSLUCENT ELEMENTS:
+   - Some UI elements become semi-transparent when scrolling.
+   - They are STILL INTERACTIVE and clickable even if faded.
 
-5. COMMON ICON MEANINGS:
-   - Bell icon = Notifications
+5. COMMON UI ELEMENTS:
+   - Notifications: Access directly via URL (e.g., https://x.com/notifications) - NO need to find/click icons
    - House/Home icon = Home feed or main page
    - Magnifying glass = Search
    - Person/Silhouette = Profile or Account
-   - Envelope = Messages or Mail
-   - Heart = Likes or Activity
-   - Plus (+) = Create new content
    - Three dots (⋮ or ⋯) = More options or menu
+   - For websites: ALWAYS prefer direct URLs over finding and clicking UI icons
 
-6. SEARCH STRATEGY FOR MISSING ELEMENTS:
-   - If you cannot find an expected element (like a notifications bell):
-     a. FIRST check top and bottom fixed bars/borders of the screen
-     b. Check both the browser UI area AND the web content area separately
-     c. Scroll slightly up or down to reveal hidden/translucent bars
-     d. Try tapping where the element SHOULD be (common positions: bottom center for notifications, top right for menus)
-     e. Try pressing Home then navigating again through the app's proper navigation
-   - NEVER scroll through content areas looking for navigation elements - they are in fixed bars.
+6. IF DIRECT URL APPROACH FAILS:
+   - Only THEN fall back to UI automation (open_app → navigate → interact).
+   - First check if the URL was correct. Try common URL patterns.
 </mobile_ui_patterns>
 
 <tool_selection_rules>
@@ -274,11 +262,11 @@ Exhibit the following reasoning patterns to successfully achieve the <user_reque
 - When you user ask you to sing, or do any task that require production of sound, just use the speak action
 
 CRITICAL UI REASONING RULES:
-- When looking for navigation icons (bell, home, search, profile), ALWAYS check top and bottom bars FIRST before looking elsewhere.
-- NEVER search for navigation elements inside scrollable content (posts, articles, feeds) - they belong in fixed bars.
-- If the screen has a browser URL bar at the top, distinguish between browser UI and website content. Focus on the website's own navigation.
-- If you cannot find an expected navigation icon, check if a bottom/top bar has become translucent - scroll slightly to make it visible, or tap where it should be.
-- Common positions: notifications bell is usually at the bottom center or top right. Home is usually bottom center. Menu dots are usually top right.
+- When a task involves a website, FIRST try launch_url_in_browser with a direct URL.
+- ONLY fall back to UI automation (finding elements, clicking icons) if direct URL fails.
+- Do NOT search for navigation icons inside scrollable content (posts, articles, feeds) - they belong in fixed bars.
+- If the screen has a browser URL bar at the top, distinguish between browser UI and website content.
+- If you cannot find an expected element, reconsider: is there a direct URL that would be faster?
 </reasoning_rules>
 
 <available_actions>
