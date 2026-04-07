@@ -25,9 +25,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.ai.assistance.operit.voice.AudioWaveView
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.voice.ui.SmallDeltaGlowView
-import com.ai.assistance.operit.voice.utilities.OperitState
-import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.utilities.TTSManager
 import com.ai.assistance.operit.voice.utilities.TtsVisualizer
 
@@ -42,18 +39,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var transcriptionView: TextView? = null
     private var inputBoxView: View? = null
     private var thinkingIndicatorView: View? = null
-    private var smallDeltaGlowView: SmallDeltaGlowView? = null
-    private val operitStateManager by lazy { OperitStateManager.getInstance(context) }
-    private val stateChangeListener: (OperitState) -> Unit
     private var speakingOverlay: View? = null
-
-    init {
-        stateChangeListener = { newState ->
-            updateSmallDeltaVisuals(newState)
-        }
-        operitStateManager.addStateChangeListener(stateChangeListener)
-
-    }
 
     companion object {
         private const val TAG = "VisualFeedbackManager"
@@ -87,6 +73,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
             setupAudioWaveEffect()
+            showEdgeGlow() // Show edge glow during active TTS
         }
     }
 
@@ -104,6 +91,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             ttsVisualizer = null
             TTSManager.getInstance(context).utteranceListener = null
             hideSpeakingOverlay()
+            hideEdgeGlow() // Hide edge glow when TTS stops
 
             Log.d(TAG, "Audio wave effect has been torn down.")
         }
@@ -398,6 +386,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             return
         }
 
+        showEdgeGlow() // Show edge glow during thinking/processing
+
         mainHandler.post {
             if (!hasOverlayPermission()) {
                 Log.e(TAG, "Cannot show thinking indicator: SYSTEM_ALERT_WINDOW permission not granted")
@@ -473,81 +463,91 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 }
             }
             thinkingIndicatorView = null
+            hideEdgeGlow() // Hide edge glow when thinking is done
         }
     }
 
-    fun showSmallDeltaGlow() {
+    // ========== 4-Edge Screen Glow (replaces SmallDeltaGlowView) ==========
+    // Shows a subtle glowing border on all 4 edges during active tasks
+
+    private var edgeGlowView: View? = null
+    private var edgeGlowAnimator: android.animation.ValueAnimator? = null
+
+    /**
+     * Shows a subtle glowing border on all 4 edges of the screen.
+     * Used to indicate active processing/listening/speaking state.
+     */
+    fun showEdgeGlow() {
         mainHandler.post {
-            if (smallDeltaGlowView?.isAttachedToWindow == true) return@post
+            if (edgeGlowView?.isAttachedToWindow == true) return@post
 
             if (!hasOverlayPermission()) {
-                Log.e(TAG, "Cannot show small delta glow: SYSTEM_ALERT_WINDOW permission not granted")
+                Log.e(TAG, "Cannot show edge glow: SYSTEM_ALERT_WINDOW permission not granted")
                 return@post
             }
 
-            smallDeltaGlowView = SmallDeltaGlowView(context)
-            val sizeInDp = 64
-            val sizeInPixels = (sizeInDp * context.resources.displayMetrics.density).toInt()
-            val marginBottomInDp = 48
-            val marginBottomInPixels = (marginBottomInDp * context.resources.displayMetrics.density).toInt()
+            val glowThickness = (8 * context.resources.displayMetrics.density).toInt() // 8dp
+
+            edgeGlowView = View(context).apply {
+                // Create a gradient border that glows on all 4 edges
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    intArrayOf(0x00000000, 0x00000000) // Transparent center
+                ).apply {
+                    shape = GradientDrawable.RECTANGLE
+                    setStroke(glowThickness, 0x668855FF.toInt()) // Subtle purple glow
+                    cornerRadius = 0f
+                }
+            }
 
             val params = WindowManager.LayoutParams(
-                sizeInPixels, sizeInPixels,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 PixelFormat.TRANSLUCENT
-            ).apply {
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                y = marginBottomInPixels
-            }
+            )
 
             try {
-                windowManager.addView(smallDeltaGlowView, params)
-                // Set the initial color and glow based on the *current* state
-                updateSmallDeltaVisuals(operitStateManager.getCurrentState())
-                Log.d(TAG, "Small delta glow view added.")
+                windowManager.addView(edgeGlowView, params)
+                startEdgeGlowAnimation()
+                Log.d(TAG, "Edge glow view added.")
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding small delta glow view", e)
-                smallDeltaGlowView = null
+                Log.e(TAG, "Error adding edge glow view", e)
+                edgeGlowView = null
             }
         }
     }
 
-    fun hideSmallDeltaGlow() {
+    private fun startEdgeGlowAnimation() {
+        edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.3f, 0.8f, 0.3f).apply {
+            duration = 2000L
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = android.animation.ValueAnimator.REVERSE
+            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+            addUpdateListener { animator ->
+                val alpha = animator.animatedValue as Float
+                edgeGlowView?.background?.alpha = (alpha * 255).toInt()
+            }
+            start()
+        }
+    }
+
+    fun hideEdgeGlow() {
         mainHandler.post {
-            smallDeltaGlowView?.let {
-                it.stopGlow()
+            edgeGlowAnimator?.cancel()
+            edgeGlowAnimator = null
+            edgeGlowView?.let {
                 if (it.isAttachedToWindow) {
                     try {
                         windowManager.removeView(it)
-                        Log.d(TAG, "Small delta glow view removed.")
+                        Log.d(TAG, "Edge glow view removed.")
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error removing small delta glow view", e)
+                        Log.e(TAG, "Error removing edge glow view", e)
                     }
                 }
             }
-            smallDeltaGlowView = null
-        }
-    }
-
-    /**
-     * A new private method to update the small delta's appearance based on the app state.
-     */
-    private fun updateSmallDeltaVisuals(state: OperitState) {
-        // Run on the main thread and only if the view exists
-        mainHandler.post {
-            smallDeltaGlowView?.let { view ->
-                // 1. Get the color for the new state
-                val color = DeltaStateColorMapper.getColor(context, state)
-                view.setColor(color)
-
-                // 2. Start or stop the glow based on whether the state is "active"
-                if (DeltaStateColorMapper.isActiveState(state)) {
-                    view.startGlow()
-                } else {
-                    view.stopGlow()
-                }
-            }
+            edgeGlowView = null
         }
     }
 

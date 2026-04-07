@@ -141,7 +141,6 @@ class ConversationalAgentService : Service() {
         visualFeedbackManager.showSpeakingOverlay()
         visualFeedbackManager.showTtsWave()
         showInputBoxIfNeeded()
-        visualFeedbackManager.showSmallDeltaGlow()
 
         stateManager.startMonitoring()
         stateManager.setState(OperitState.IDLE)
@@ -158,8 +157,6 @@ class ConversationalAgentService : Service() {
 
         showInputBoxIfNeeded()
         Log.d("ConvAgent", "initializeOverlays: input box requested")
-        visualFeedbackManager.showSmallDeltaGlow()
-        Log.d("ConvAgent", "initializeOverlays: small delta glow requested")
     }
 
     private fun createNotificationChannel() {
@@ -828,7 +825,6 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideSpeakingOverlay()
         visualFeedbackManager.hideInputBox()
-        visualFeedbackManager.hideSmallDeltaGlow()
 
         if (exitMessage != null) {
             speechCoordinator.speakText(exitMessage)
@@ -848,7 +844,6 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             visualFeedbackManager.hideTranscription()
             visualFeedbackManager.hideSpeakingOverlay()
             visualFeedbackManager.hideInputBox()
-            visualFeedbackManager.hideSmallDeltaGlow()
             removeClarificationQuestions()
         }
 
@@ -870,7 +865,6 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
         stateManager.setState(OperitState.IDLE)
         stateManager.stopMonitoring()
-        visualFeedbackManager.hideSmallDeltaGlow()
         visualFeedbackManager.hideSpeakingOverlay()
         visualFeedbackManager.hideTtsWave()
         visualFeedbackManager.hideTranscription()
