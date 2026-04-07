@@ -79,7 +79,7 @@ sealed class Action {
     data class Calculate(val expression: String) : Action()
 
     // Device Info Tool
-    data class GetDeviceInfo : Action()
+    data object GetDeviceInfo : Action()
 
     // Memory Tools
     data class QueryMemory(val query: String, val limit: Int = 5) : Action()
@@ -440,15 +440,7 @@ sealed class Action {
                 name = "device_info",
                 description = "Get comprehensive device information including model, OS version, screen size, memory, storage, battery, and CPU.",
                 params = emptyList(),
-                build = { GetDeviceInfo }
-            ),
-
-            // Text-to-Speech
-            "text_to_speech" to Spec(
-                name = "text_to_speech",
-                description = "Convert text to speech and play the audio. Use this when you need to speak without ending the conversation.",
-                params = listOf(ParamSpec("text", String::class, "The text to speak.")),
-                build = { args -> TextToSpeech(args["text"] as String) }
+                build = { _ -> GetDeviceInfo }
             ),
 
             // Memory

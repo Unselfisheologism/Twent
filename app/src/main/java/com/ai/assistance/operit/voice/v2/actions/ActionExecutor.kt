@@ -22,6 +22,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlin.system.measureTimeMillis
 import kotlin.text.removePrefix
 
@@ -568,14 +570,14 @@ class ActionExecutor(private val finger: Finger) {
                     action.headers?.forEach { (key, value) -> requestBuilder.addHeader(key, value) }
 
                     val body = action.body?.let {
-                        okhttp3.RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), it)
+                        it.toRequestBody("application/json; charset=utf-8".toMediaType())
                     }
 
                     val request = when (action.method.uppercase()) {
-                        "POST" -> requestBuilder.post(body ?: okhttp3.RequestBody.create(null, ""))
-                        "PUT" -> requestBuilder.put(body ?: okhttp3.RequestBody.create(null, ""))
+                        "POST" -> requestBuilder.post(body ?: "".toRequestBody())
+                        "PUT" -> requestBuilder.put(body ?: "".toRequestBody())
                         "DELETE" -> requestBuilder.delete()
-                        "PATCH" -> requestBuilder.patch(body ?: okhttp3.RequestBody.create(null, ""))
+                        "PATCH" -> requestBuilder.patch(body ?: "".toRequestBody())
                         else -> requestBuilder.get()
                     }.build()
 
@@ -646,7 +648,7 @@ class ActionExecutor(private val finger: Finger) {
                 try {
                     // Use Android's built-in JavaScript engine for math evaluation
                     val webView = android.webkit.WebView(context)
-                    val jsEngine = webView.settings.javaScriptEnabled = true
+                    webView.settings.javaScriptEnabled = true
 
                     var result = ""
                     val latch = java.util.concurrent.CountDownLatch(1)
