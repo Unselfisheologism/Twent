@@ -27,7 +27,7 @@ import com.ai.assistance.operit.voice.v2.llm.TextPart
  * @param initialState An optional initial state to resume from a previous session.
  */
 class MemoryManager(
-    context: Context,
+    private val context: Context,
     private var task: String,
     private val fileSystem: FileSystem,
     private val settings: AgentSettings,
@@ -122,11 +122,12 @@ class MemoryManager(
                 @Suppress("DEPRECATION")
                 pm.getInstalledApplications(0)
             }
-            // Return top 100 apps by label (most commonly used)
-            packages
-                .map { app -> "${pm.getApplicationLabel(app)} ($app.packageName)" }
-                .sortedBy { it.lowercase() }
-                .take(100)
+            val result = mutableListOf<String>()
+            for (app in packages) {
+                val label = pm.getApplicationLabel(app).toString()
+                result.add("$label (${app.packageName})")
+            }
+            result.sortedBy { s -> s.lowercase() }.take(100)
         } catch (e: Exception) {
             emptyList()
         }
