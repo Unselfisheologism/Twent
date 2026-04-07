@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="How Panda Remembers"
+            app:title="How Operit Remembers"
             app:titleTextColor="@android:color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:text="Panda is designed to be your personal assistant. Just like a human assistant, it becomes more helpful when it remembers key facts about you and your preferences. This screen explains exactly how that process works and how your data is protected."
+                android:text="Operit is designed to be your personal assistant. Just like a human assistant, it becomes more helpful when it remembers key facts about you and your preferences. This screen explains exactly how that process works and how your data is protected."
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:lineSpacingExtra="4dp" />
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
-                android:text="@string/at_the_end_of_a_conversation_panda_s_ai_powered_by_google_s_gemini_model_analyzes_the_dialogue_to_identify_lasting_facts_it_s_trained_to_ignore_fleeting_or_unimportant_details_for_example_if_you_say_remind_me_to_call_my_brother_ankit_tomorrow_the_ai_might_create_a_memory_like_the_user_s_brother_is_named_ankit"
+                android:text="@string/at_the_end_of_a_conversation_Operit_s_ai_powered_by_google_s_gemini_model_analyzes_the_dialogue_to_identify_lasting_facts_it_s_trained_to_ignore_fleeting_or_unimportant_details_for_example_if_you_say_remind_me_to_call_my_brother_ankit_tomorrow_the_ai_might_create_a_memory_like_the_user_s_brother_is_named_ankit"
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:layout_marginStart="16dp"
-                android:text="You have full control. You can visit the || My Memories || screen at any time to add new facts manually, ensuring Panda knows exactly what you want it to."
+                android:text="You have full control. You can visit the || My Memories || screen at any time to add new facts manually, ensuring Operit knows exactly what you want it to."
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
@@ -134,7 +134,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
-                android:text="@string/once_a_memory_is_created_e_g_the_user_lives_in_ghaziabad_it_is_stored_in_a_secure_private_database_directly_on_your_phone_this_database_is_part_of_the_panda_app_s_internal_storage_and_is_not_accessible_by_other_apps"
+                android:text="@string/once_a_memory_is_created_e_g_the_user_lives_in_ghaziabad_it_is_stored_in_a_secure_private_database_directly_on_your_phone_this_database_is_part_of_the_Operit_app_s_internal_storage_and_is_not_accessible_by_other_apps"
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:layout_marginStart="16dp"
-                android:text="To find relevant information without constantly re-reading your memories, each memory is converted into a numerical representation called an embedding. This allows Panda to find the most relevant facts for a new request by comparing numbers, not by reading the raw text of every memory you have stored."
+                android:text="To find relevant information without constantly re-reading your memories, each memory is converted into a numerical representation called an embedding. This allows Operit to find the most relevant facts for a new request by comparing numbers, not by reading the raw text of every memory you have stored."
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
@@ -197,12 +197,12 @@
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />
 
-            <!-- Only Panda -->
+            <!-- Only Operit -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="• Only Panda (On Your Device):"
+                android:text="• Only Operit (On Your Device):"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -212,7 +212,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
-                android:text="The Panda agent running on your phone accesses this local database to personalize your conversations and carry out tasks more effectively. This access is confined to your device."
+                android:text="The Operit agent running on your phone accesses this local database to personalize your conversations and carry out tasks more effectively. This access is confined to your device."
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:lineSpacingExtra="2dp" />

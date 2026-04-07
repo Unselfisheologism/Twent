@@ -6,7 +6,10 @@
       "Bash(fc *)",
       "Bash(dir *)",
       "Bash(type *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(powershell *)",
+      "Bash(git checkout *)",
+      "Bash(findstr *)"
     ]
   },
   "$version": 3

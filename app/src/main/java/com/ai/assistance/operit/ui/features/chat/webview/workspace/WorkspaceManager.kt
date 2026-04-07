@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.ui.features.chat.webview.workspace
+﻿package com.ai.assistance.operit.ui.features.chat.webview.workspace
 
 import android.annotation.SuppressLint
 import com.ai.assistance.operit.util.AppLogger
@@ -595,7 +595,7 @@ fun WorkspaceManager(
         }
         
         // 可展开的悬浮操作按钮菜单
-        ExpandableFabMenu(
+        ExOperitbleFabMenu(
             isExpanded = isFabMenuExpanded,
             onToggle = { isFabMenuExpanded = !isFabMenuExpanded },
             exportEnabled = workspaceConfig.export.enabled && !isSafEnv,
@@ -702,7 +702,7 @@ fun WorkspaceManager(
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun ExpandableFabMenu(
+fun ExOperitbleFabMenu(
     isExpanded: Boolean,
     onToggle: () -> Unit,
     exportEnabled: Boolean = true,
