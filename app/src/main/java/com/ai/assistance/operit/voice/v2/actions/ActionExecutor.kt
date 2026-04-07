@@ -520,20 +520,6 @@ class ActionExecutor(private val finger: Finger) {
                 }
             }
 
-            is Action.StartApp -> {
-                try {
-                    val intent = context.packageManager.getLaunchIntentForPackage(action.packageName)
-                    if (intent != null) {
-                        context.startActivity(intent)
-                        ActionResult(longTermMemory = "Started app '${action.packageName}'.")
-                    } else {
-                        ActionResult(error = "App '${action.packageName}' not found or has no launcher intent.")
-                    }
-                } catch (e: Exception) {
-                    ActionResult(error = "Failed to start app '${action.packageName}': ${e.message}")
-                }
-            }
-
             is Action.StopApp -> {
                 try {
                     val pm = context.packageManager
@@ -569,14 +555,6 @@ class ActionExecutor(private val finger: Finger) {
                 } catch (e: Exception) {
                     ActionResult(error = "Failed to list installed apps: ${e.message}")
                 }
-            }
-
-            is Action.GetNotifications -> {
-                ActionResult(error = "get_notifications requires notification listener permission. Use the device's notification panel instead.")
-            }
-
-            is Action.GetDeviceLocation -> {
-                ActionResult(error = "get_device_location requires location permission. Not available in overlay agent mode.")
             }
 
             is Action.HttpRequest -> {
@@ -725,13 +703,6 @@ class ActionExecutor(private val finger: Finger) {
                 } catch (e: Exception) {
                     ActionResult(error = "Failed to get device info: ${e.message}")
                 }
-            }
-
-            is Action.TextToSpeech -> {
-                val ttsManager = com.ai.assistance.operit.voice.utilities.TTSManager.getInstance(context)
-                ttsManager.speakText(action.text)
-                delay(1000) // Give TTS time to start
-                ActionResult(longTermMemory = "Spoke via TTS: \"${action.text.take(50)}...\"")
             }
 
             is Action.QueryMemory -> {

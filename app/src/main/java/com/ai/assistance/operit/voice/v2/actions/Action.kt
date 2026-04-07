@@ -59,13 +59,10 @@ sealed class Action {
     data class SendNotification(val title: String, val message: String) : Action()
     data class ModifySystemSetting(val settingType: String, val key: String, val value: String) : Action()
     data class GetSystemSetting(val settingType: String, val key: String) : Action()
-    data class StartApp(val packageName: String) : Action()
     data class StopApp(val packageName: String) : Action()
     data class ListInstalledApps(val limit: Int = 50) : Action()
-    data class GetNotifications(val limit: Int = 10) : Action()
-    data class GetDeviceLocation : Action()
 
-    // HTTP / Network Tools
+    // HTTP / Network Tools (HEADLESS - no login, no browser UI)
     data class HttpRequest(
         val method: String = "GET",
         val url: String,
@@ -83,9 +80,6 @@ sealed class Action {
 
     // Device Info Tool
     data class GetDeviceInfo : Action()
-
-    // Text-to-Speech Tool
-    data class TextToSpeech(val text: String) : Action()
 
     // Memory Tools
     data class QueryMemory(val query: String, val limit: Int = 5) : Action()
@@ -377,12 +371,6 @@ sealed class Action {
                 ),
                 build = { args -> GetSystemSetting(args["setting_type"] as String, args["key"] as String) }
             ),
-            "start_app" to Spec(
-                name = "start_app",
-                description = "Launch an app by its package name.",
-                params = listOf(ParamSpec("package_name", String::class, "The app package name, e.g. 'com.twitter.android'.")),
-                build = { args -> StartApp(args["package_name"] as String) }
-            ),
             "stop_app" to Spec(
                 name = "stop_app",
                 description = "Force-stop an app by its package name.",
@@ -395,23 +383,11 @@ sealed class Action {
                 params = listOf(ParamSpec("limit", Int::class, "Maximum number of apps to return (default 50).")),
                 build = { args -> ListInstalledApps(args["limit"] as? Int ?: 50) }
             ),
-            "get_notifications" to Spec(
-                name = "get_notifications",
-                description = "Retrieve the current device notifications.",
-                params = listOf(ParamSpec("limit", Int::class, "Maximum number of notifications to return (default 10).")),
-                build = { args -> GetNotifications(args["limit"] as? Int ?: 10) }
-            ),
-            "get_device_location" to Spec(
-                name = "get_device_location",
-                description = "Get the device's current GPS location.",
-                params = emptyList(),
-                build = { GetDeviceLocation }
-            ),
 
             // HTTP / Network
             "http_request" to Spec(
                 name = "http_request",
-                description = "Send an HTTP request to a URL. Supports GET, POST, PUT, DELETE with custom headers and body.",
+                description = "Send a HEADLESS HTTP request to a URL. Use ONLY for public APIs that don't require browser login or cookies. NEVER use for websites requiring login, JavaScript rendering, or UI interaction. For logged-in sites, use open_app + UI automation (tap_element, type, etc.) instead. Supports GET, POST, PUT, DELETE with custom headers and body.",
                 params = listOf(
                     ParamSpec("method", String::class, "HTTP method: GET, POST, PUT, DELETE, PATCH (default GET)."),
                     ParamSpec("url", String::class, "The full URL to request."),
@@ -432,7 +408,7 @@ sealed class Action {
             ),
             "visit_web" to Spec(
                 name = "visit_web",
-                description = "Visit a URL and extract the page content, links, and images. Returns the page text.",
+                description = "HEADLESS web page fetch - fetches raw HTML, NOT a real browser. Use ONLY for extracting content from PUBLIC pages that don't require login, JavaScript, or cookies. NEVER use for: (a) sites requiring login like x.com, gmail, facebook; (b) sites needing JavaScript rendering; (c) interactive tasks like clicking buttons or checking notifications. For those, use open_app + UI automation (tap_element, type, etc.) instead.",
                 params = listOf(
                     ParamSpec("url", String::class, "The URL to visit."),
                     ParamSpec("max_content_length", Int::class, "Maximum content length to return (default 10000 chars).")
