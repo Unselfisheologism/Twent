@@ -7,10 +7,8 @@ import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.voice.v2.AgentOutput
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import org.json.JSONObject
 
 /**
  * Adapter that allows the AI Agent to use the same AI provider configuration as the Chat page.
@@ -18,6 +16,10 @@ import org.json.JSONObject
  * This replaces the hardcoded GeminiApi + ApiKeyManager approach with the proper
  * ModelConfigManager + AIServiceFactory system, ensuring the agent works with ANY
  * provider the user has configured (Gemini, OpenAI, Claude, DeepSeek, etc.).
+ *
+ * CRITICAL: The first message in the agent's message list is the SYSTEM PROMPT
+ * (stored as MODEL role). We MUST send this as "user" role to OpenAI-compatible APIs,
+ * because they expect the conversation to start with user/system messages, not assistant.
  */
 class AgentLlmAdapter(
     private val context: Context,
@@ -53,7 +55,7 @@ class AgentLlmAdapter(
 
         return try {
             val result = jsonParser.decodeFromString<AgentOutput>(cleanedJson)
-            Log.d(TAG, "Successfully parsed AgentOutput: ${result.nextGoal}")
+            Log.d(TAG, "Successfully parsed AgentOutput: nextGoal=${result.nextGoal}, actions=${result.action.size}")
             result
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse AgentOutput from response. Error: ${e.message}", e)
@@ -107,38 +109,54 @@ class AgentLlmAdapter(
             context = context
         )
 
-        // Convert GeminiMessage format to chat API format
-        val textMessages = messages.mapNotNull { message ->
+        // CRITICAL FIX: Convert ALL messages to the chat API format.
+        // The first message is the SYSTEM PROMPT (stored as MODEL role).
+        // We MUST send it as "user" role for OpenAI-compatible APIs.
+        // Subsequent MODEL messages become "assistant" (model's previous responses).
+        val textMessages = messages.mapIndexed { index, message ->
             val text = message.parts.filterIsInstance<TextPart>().joinToString(separator = "\n") { it.text }
-            if (text.isBlank()) return@mapNotNull null
-            val role = when (message.role) {
-                MessageRole.USER -> "user"
-                MessageRole.MODEL -> "assistant"
-                MessageRole.TOOL -> "user"
+            if (text.isBlank()) return@mapIndexed null
+
+            val role = if (index == 0 && message.role == MessageRole.MODEL) {
+                "user" // First message is the system prompt - send as "user" for OpenAI compatibility
+            } else {
+                when (message.role) {
+                    MessageRole.USER -> "user"
+                    MessageRole.MODEL -> "assistant"
+                    MessageRole.TOOL -> "user"
+                }
             }
             role to text
-        }
+        }.filterNotNull()
 
         if (textMessages.isEmpty()) {
             throw IllegalArgumentException("No messages to send to LLM")
         }
 
-        // The first message is the system prompt, the last is the current request
+        // Find the system prompt (first "user" message)
         val systemPrompt = textMessages.firstOrNull { it.first == "user" }?.second ?: ""
+
+        // Find the last "user" message (this is the current user input / state message)
         val lastUserIndex = textMessages.indexOfLast { it.first == "user" }
         val latestUserMessage = textMessages[lastUserIndex].second
 
-        // Build conversation history (everything between system prompt and latest user message)
+        // Build conversation history: ALL messages before the last "user" message
+        // PLUS all messages after the last "user" message (context messages like corrective notes)
         val conversationHistory = mutableListOf<Pair<String, String>>()
-        if (systemPrompt.isNotBlank()) {
-            conversationHistory.add("user" to systemPrompt)
+
+        // Add all messages before the last user message (system prompt + any intermediate messages)
+        for (i in 0 until lastUserIndex) {
+            conversationHistory.add(textMessages[i])
         }
-        for (i in 1 until lastUserIndex) {
+
+        // Add all messages after the last user message (context messages)
+        for (i in lastUserIndex + 1 until textMessages.size) {
             conversationHistory.add(textMessages[i])
         }
 
         Log.d(TAG, "=== LLM API CALL ===")
         Log.d(TAG, "Provider: ${config.apiProviderType} / Model: ${config.modelName}")
+        Log.d(TAG, "Total messages: ${messages.size} → ${textMessages.size} after filtering blanks")
         Log.d(TAG, "Conversation history: ${conversationHistory.size} messages")
         Log.d(TAG, "Latest user message length: ${latestUserMessage.length} chars")
         Log.d(TAG, "System prompt length: ${systemPrompt.length} chars (first 200: ${systemPrompt.take(200)})")
