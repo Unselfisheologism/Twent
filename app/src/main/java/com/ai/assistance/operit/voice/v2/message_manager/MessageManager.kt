@@ -1,6 +1,9 @@
 package com.ai.assistance.operit.voice.v2.message_manager
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.ai.assistance.operit.voice.v2.ActionResult
 import com.ai.assistance.operit.voice.v2.AgentOutput
 import com.ai.assistance.operit.voice.v2.AgentSettings
@@ -11,8 +14,6 @@ import com.ai.assistance.operit.voice.v2.UserMessageBuilder
 import com.ai.assistance.operit.voice.v2.fs.FileSystem
 import com.ai.assistance.operit.voice.v2.llm.GeminiMessage
 import com.ai.assistance.operit.voice.v2.llm.TextPart
-import android.os.Build
-import androidx.annotation.RequiresApi
 
 /**
  * Manages the agent's short-term memory, including conversation history and prompt construction.
@@ -81,18 +82,54 @@ class MemoryManager(
 
     /**
      * Adds a new task, replacing the old one, and records this change in the history.
+     * Also includes the list of installed apps so the agent knows what's available.
      */
     fun addNewTask(newTask: String) {
         this.task = newTask
 
-        // A system notification item only needs the 'systemMessage' field.
-        // The other fields are nullable and will default to null, which is correct.
+        // Fetch installed apps list
+        val installedAppsList = getInstalledAppsList()
+
+        // Build system message with user request AND installed apps info
+        val systemMessage = buildString {
+            append("<user_request> added: $newTask\n\n")
+            if (installedAppsList.isNotEmpty()) {
+                append("<installed_apps>\n")
+                append("The following apps are installed on this device. Use this info to decide whether to open an app or launch a URL:\n")
+                append(installedAppsList.joinToString(", "))
+                append("\n</installed_apps>")
+            }
+        }
+
         val taskUpdateItem = HistoryItem(
             stepNumber = 0,
-            systemMessage = "<user_request> added: $newTask"
+            systemMessage = systemMessage
         )
 
         state.agentHistoryItems.add(taskUpdateItem)
+    }
+
+    /**
+     * Gets a list of installed app names and their package names.
+     * Limited to commonly used apps to avoid bloating the prompt.
+     */
+    private fun getInstalledAppsList(): List<String> {
+        return try {
+            val pm = context.packageManager
+            val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getInstalledApplications(0)
+            }
+            // Return top 100 apps by label (most commonly used)
+            packages
+                .map { app -> "${pm.getApplicationLabel(app)} ($app.packageName)" }
+                .sortedBy { it.lowercase() }
+                .take(100)
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     fun addContextMessage(message: GeminiMessage){

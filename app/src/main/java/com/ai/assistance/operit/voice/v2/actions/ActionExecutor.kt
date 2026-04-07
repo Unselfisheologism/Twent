@@ -731,6 +731,18 @@ class ActionExecutor(private val finger: Finger) {
                 Log.d("ActionExecutor", "Memory deleted: ${action.title}")
                 ActionResult(longTermMemory = "Deleted memory: '${action.title}'.")
             }
+
+            is Action.LaunchUrlInBrowser -> {
+                try {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                    intent.data = android.net.Uri.parse(action.url)
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    ActionResult(longTermMemory = "Opened URL in default browser: ${action.url}")
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to launch URL in browser: ${e.message}")
+                }
+            }
         }
     }
 }

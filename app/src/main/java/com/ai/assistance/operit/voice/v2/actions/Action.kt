@@ -87,6 +87,9 @@ sealed class Action {
     data class UpdateMemory(val title: String, val content: String) : Action()
     data class DeleteMemory(val title: String) : Action()
 
+    // URL Launch Tool (opens in default browser, NOT headless)
+    data class LaunchUrlInBrowser(val url: String) : Action()
+
     // --- The Custom Serializer ---
     // This serializer is now data-driven, using the `allSpecs` map as its source of truth.
     object ActionSerializer : KSerializer<Action> {
@@ -484,6 +487,14 @@ sealed class Action {
                 description = "Delete a memory by title.",
                 params = listOf(ParamSpec("title", String::class, "The memory title to delete.")),
                 build = { args -> DeleteMemory(args["title"] as String) }
+            ),
+
+            // URL Launch Tool
+            "launch_url_in_browser" to Spec(
+                name = "launch_url_in_browser",
+                description = "Opens a URL in the phone's DEFAULT BROWSER APP (e.g., Brave, Chrome). This is the FASTEST way to access websites - it opens a real browser with full JavaScript, cookies, and login sessions. ALWAYS prefer this over open_app + UI navigation for websites. Example: use 'https://x.com/notifications' instead of opening browser then typing URL. The user must already be logged in for authenticated pages.",
+                params = listOf(ParamSpec("url", String::class, "The full URL to open, e.g. 'https://x.com/notifications'.")),
+                build = { args -> LaunchUrlInBrowser(args["url"] as String) }
             ),
         )
 
