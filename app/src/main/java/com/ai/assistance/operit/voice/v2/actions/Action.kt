@@ -173,9 +173,15 @@ sealed class Action {
             ),
             "open_app" to Spec(
                 name = "open_app",
-                description = "Open the app named 'app_name'.",
+                description = "Open an installed app by its user-friendly name (e.g., 'Brave', 'Gmail'). Use ONLY when the app is confirmed installed. For websites, prefer launch_url_in_browser instead.",
                 params = listOf(ParamSpec("app_name", String::class, "The name of the app.")),
                 build = { args -> OpenApp(args["app_name"] as String) }
+            ),
+            "launch_url_in_browser" to Spec(
+                name = "launch_url_in_browser",
+                description = "OPENS A URL IN THE DEFAULT BROWSER (Brave, Chrome, etc.) with full JavaScript, cookies, and login sessions. THIS IS THE PRIMARY ACTION FOR ANY WEBSITE TASK. Use direct URLs like 'https://x.com/notifications'. DO NOT use open_app + typing for websites - use this instead. The user must be logged in for authenticated pages.",
+                params = listOf(ParamSpec("url", String::class, "The full URL to open, e.g. 'https://x.com/notifications'.")),
+                build = { args -> LaunchUrlInBrowser(args["url"] as String) }
             ),
             "swipe_down" to Spec(
                 name = "swipe_down",
@@ -487,14 +493,6 @@ sealed class Action {
                 description = "Delete a memory by title.",
                 params = listOf(ParamSpec("title", String::class, "The memory title to delete.")),
                 build = { args -> DeleteMemory(args["title"] as String) }
-            ),
-
-            // URL Launch Tool
-            "launch_url_in_browser" to Spec(
-                name = "launch_url_in_browser",
-                description = "Opens a URL in the phone's DEFAULT BROWSER APP (e.g., Brave, Chrome). This is the FASTEST way to access websites - it opens a real browser with full JavaScript, cookies, and login sessions. ALWAYS prefer this over open_app + UI navigation for websites. Example: use 'https://x.com/notifications' instead of opening browser then typing URL. The user must already be logged in for authenticated pages.",
-                params = listOf(ParamSpec("url", String::class, "The full URL to open, e.g. 'https://x.com/notifications'.")),
-                build = { args -> LaunchUrlInBrowser(args["url"] as String) }
             ),
         )
 

@@ -5,7 +5,8 @@
       "Bash(python *)",
       "Bash(fc *)",
       "Bash(dir *)",
-      "Bash(type *)"
+      "Bash(type *)",
+      "Bash(wc *)"
     ]
   },
   "$version": 3
