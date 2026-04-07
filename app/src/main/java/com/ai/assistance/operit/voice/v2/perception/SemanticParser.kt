@@ -181,9 +181,14 @@ class SemanticParser {
         builder: StringBuilder,
         previousNodes: Set<String>
     ) {
-        // 1. Pruning/Visibility Check
-        // We only process nodes visible to the user.
-        if (!node.isVisibleToUser) {
+        // 1. Relaxed Visibility Check - include translucent elements
+        // isVisibleToUser may return false for very translucent/semi-transparent elements.
+        // We also check bounds to include elements that are physically on-screen but may be translucent.
+        val bounds = android.graphics.Rect()
+        node.getBoundsInScreen(bounds)
+        val isPhysicallyOnScreen = !bounds.isEmpty && bounds.width() > 0 && bounds.height() > 0
+
+        if (!node.isVisibleToUser && !isPhysicallyOnScreen) {
             return
         }
 
@@ -194,7 +199,10 @@ class SemanticParser {
         val resourceId = node.viewIdResourceName ?: ""
         val className = node.className?.toString() ?: ""
 
-        // 3. Check Importance & Interactivity
+        // 3. Determine screen region for context (helps AI distinguish browser chrome vs web content)
+        val screenRegion = getScreenRegionDescription(bounds)
+
+        // 4. Check Importance & Interactivity
         val isSemanticallyImportant = resourceId.isNotBlank() || visibleText.isNotBlank()
         // Check if node is interactive
         val isInteractive = (node.isClickable ||
@@ -219,22 +227,26 @@ class SemanticParser {
                 val newMarker = if (isNew) "* " else ""
                 val extraInfo = getExtraInfo(node) // Helper function
                 val simpleClassName = className.removePrefix("android.widget.")
+                val alphaInfo = if (node.alpha < 1.0f) "(alpha: ${(node.alpha * 100).toInt()}%)" else ""
 
-                // Format: [1] text:"<text>" <resource-id> <ExtraInfo> <class_name>
+                // Format: [1] text:"<text>" <resource-id> <ExtraInfo> <class_name> [region]
                 builder.append("$indent$newMarker[$interactiveElementCounter] ")
                     .append("text:\"${visibleText.replace("\n", " ")}\" ")
                     .append("<$resourceId> ")
                     .append("<$extraInfo> ")
-                    .append("<$simpleClassName>\n")
+                    .append("<$simpleClassName> ")
+                    .append("$alphaInfo ")
+                    .append("[$screenRegion]")
+                    .append("\n")
 
             } else {
                 // Just text
                 val newMarker = if (isNew) "* " else ""
-                builder.append("$indent$newMarker${visibleText.replace("\n", " ")}\n")
+                builder.append("$indent$newMarker${visibleText.replace("\n", " ")} [$screenRegion]\n")
             }
         }
 
-        // 4. Recurse for children
+        // 5. Recurse for children
         // If we printed this node, children are indented.
         // If we *didn't* print this node (e.g., invisible container),
         // its children are processed at the *same* indent level (this simulates child promotion).
@@ -244,6 +256,26 @@ class SemanticParser {
             if (child != null) {
                 buildStringFromNodeRecursive(child, nextIndent, builder, previousNodes)
             }
+        }
+    }
+
+    /**
+     * Returns a human-readable description of which screen region this element is in.
+     * This helps the AI distinguish between browser chrome and web content.
+     */
+    private fun getScreenRegionDescription(bounds: android.graphics.Rect): String {
+        if (screenHeight == 0) return ""
+        val topY = bounds.top.toFloat()
+        val bottomY = bounds.bottom.toFloat()
+        val centerY = (topY + bottomY) / 2f
+        val relativeY = centerY / screenHeight
+
+        return when {
+            relativeY < 0.08f -> "TOP_BAR"
+            relativeY < 0.15f -> "TOP_SECTION"
+            relativeY < 0.85f -> "CONTENT_AREA"
+            relativeY < 0.92f -> "BOTTOM_SECTION"
+            else -> "BOTTOM_BAR"
         }
     }
     // --- Original Public API (Maintained) ---
