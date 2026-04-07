@@ -399,14 +399,14 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             // Operit: Clean dark card with pulsing teal border
             val textView = TextView(context).apply {
                 text = initialText
-                val background = GradientDrawable(
+                val bgDrawable = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     intArrayOf(0xFF1A1A2E.toInt(), 0xFF16213E.toInt())
                 ).apply {
                     cornerRadius = 16f
                     setStroke(2, 0xFF00D4AA.toInt()) // Teal border
                 }
-                background = background
+                background = bgDrawable
                 setTextColor(0xFFE8E8E8.toInt())
                 textSize = 15f
                 setPadding(32, 20, 32, 20)

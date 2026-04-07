@@ -35,13 +35,13 @@ class AudioWaveView @JvmOverloads constructor(
 
     // Completely different color scheme: warm amber → coral → deep orange → teal
     private val barColors = intArrayOf(
-        0xFFB84C.toColorInt(), // Amber
-        0xFF8A2B.toColorInt(), // Orange
-        0xFF6B1A.toColorInt(), // Deep orange
-        0xFF4D0F.toColorInt(), // Burnt orange
-        0xFF3A0D.toColorInt(), // Dark orange
-        0xFF2D6B.toColorInt(), // Teal accent
-        0xFF1A8A.toColorInt(), // Cyan-teal
+        0xFFFFB84C.toInt(), // Amber
+        0xFFFF8A2B.toInt(), // Orange
+        0xFFFF6B1A.toInt(), // Deep orange
+        0xFFFF4D0F.toInt(), // Burnt orange
+        0xFFFF3A0D.toInt(), // Dark orange
+        0xFF002D6B.toInt(), // Teal accent
+        0xFF001A8A.toInt(), // Cyan-teal
     )
 
     private var amplitudeAnimator: ValueAnimator? = null
