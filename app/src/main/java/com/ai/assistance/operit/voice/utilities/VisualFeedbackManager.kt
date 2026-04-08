@@ -304,9 +304,14 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     ) {
         mainHandler.post {
             if (inputBoxView?.isAttachedToWindow == true) {
-                inputBoxView?.findViewById<EditText>(R.id.overlayInputField)?.requestFocus()
-                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(inputBoxView?.findViewById(R.id.overlayInputField), InputMethodManager.SHOW_IMPLICIT)
+                // Input box is already showing, just ensure focus and keyboard
+                val existingField = inputBoxView?.findViewById<EditText>(R.id.overlayInputField)
+                existingField?.isFocusableInTouchMode = true
+                existingField?.postDelayed({
+                    existingField.requestFocus()
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(existingField, InputMethodManager.SHOW_IMPLICIT)
+                }, 50)
                 return@post
             }
 
@@ -335,6 +340,12 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             }
             rootLayout?.background = cardBackground
 
+            // Ensure the EditText is focusable in touch mode (critical for overlay windows)
+            inputField?.isFocusable = true
+            inputField?.isFocusableInTouchMode = true
+            inputField?.isClickable = true
+            inputField?.isLongClickable = true
+
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -350,6 +361,10 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             inputField?.setOnEditorActionListener { v, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     val inputText = v.text.toString().trim()
+                    // Hide keyboard first
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+
                     if (inputText.isNotEmpty()) {
                         onSubmit(inputText)
                         v.text = ""

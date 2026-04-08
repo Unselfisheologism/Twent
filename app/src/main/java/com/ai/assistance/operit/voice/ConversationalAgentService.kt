@@ -617,6 +617,9 @@ Format your response clearly with headings and bullet points.
 
             conversationHistory = addResponse("user", userInput, conversationHistory)
 
+            // Hide input box while processing to give clean visual feedback
+            visualFeedbackManager.hideInputBox()
+
             // Show action status display only when user actually submits a prompt
             if (isTextModeActive && actionStatusViewNotShownYet) {
                 actionStatusViewNotShownYet = false
@@ -641,7 +644,12 @@ Format your response clearly with headings and bullet points.
                 }
 
                 stateManager.setState(OperitState.PROCESSING)
-                visualFeedbackManager.showThinkingIndicator()
+                visualFeedbackManager.showThinkingIndicator("🧠 Thinking...")
+
+                // Update action status with processing status
+                if (isTextModeActive) {
+                    visualFeedbackManager.updateStatusText("🧠 Processing your request...")
+                }
 
                 val defaultJsonResponse = """{"Type": "Reply", "Reply": "I couldn't reach the AI service. Please check your API provider configuration in Models & Parameters settings, and make sure your API key is valid.", "Instruction": "", "Should End": "Continue"}"""
                 val rawModelResponse = try {
