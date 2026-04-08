@@ -743,6 +743,33 @@ class ActionExecutor(private val finger: Finger) {
                     ActionResult(error = "Failed to launch URL in browser: ${e.message}")
                 }
             }
+
+            is Action.CaptureScreenshot -> {
+                try {
+                    val screenshotDir = android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_PICTURES
+                    )
+                    val filename = action.saveAs ?: "operit_screenshot_${System.currentTimeMillis()}.png"
+                    val file = java.io.File(screenshotDir, filename)
+
+                    // Use MediaProjection or root screenshot depending on permissions
+                    // For now, use the simple screenshot via screencap command
+                    val process = java.lang.ProcessBuilder("screencap", "-p", file.absolutePath).start()
+                    process.waitFor()
+
+                    if (file.exists() && file.length() > 0) {
+                        ActionResult(
+                            longTermMemory = "Screenshot captured and saved to ${file.absolutePath}.",
+                            extractedContent = file.absolutePath,
+                            includeExtractedContentOnlyOnce = true
+                        )
+                    } else {
+                        ActionResult(error = "Screenshot capture failed: file not created or empty.")
+                    }
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to capture screenshot: ${e.message}")
+                }
+            }
         }
     }
 }

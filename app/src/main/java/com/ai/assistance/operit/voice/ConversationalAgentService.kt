@@ -49,6 +49,7 @@ import com.ai.assistance.operit.voice.utilities.OperitStateManager
 import com.ai.assistance.operit.voice.v2.perception.Perception
 import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.voice.api.Eyes
+import com.ai.assistance.operit.voice.utilities.FullPageCapture
 import com.ai.assistance.operit.data.preferences.ApiPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -282,6 +283,135 @@ Current Time : {time_context}
         speechCoordinator.stopListening()
         speechCoordinator.stopSpeaking()
         visualFeedbackManager.hideTranscription()
+
+        // Show action status display for non-UI-automation tasks
+        visualFeedbackManager.showActionStatusView(
+            onSimplifyPage = {
+                serviceScope.launch { handleSimplifyPage() }
+            },
+            onPausePlay = { isPaused ->
+                if (isPaused) {
+                    speechCoordinator.pause()
+                } else {
+                    speechCoordinator.resume()
+                }
+            }
+        )
+    }
+
+    /**
+     * Handle the "Simplify this page" button click
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private suspend fun handleSimplifyPage() {
+        try {
+            visualFeedbackManager.updateStatusText("📄 Analyzing current page content...")
+            visualFeedbackManager.showThinkingIndicator()
+
+            val fullPageCapture = FullPageCapture.getInstance(this)
+
+            // Get current screen content - use text extraction first (faster)
+            val screenText = fullPageCapture.getCurrentScreenText()
+
+            // Check if page needs scrolling (long content)
+            val estimatedLines = screenText.count { it == '\n' }
+            val needsScrolling = estimatedLines > 50 // More than 50 lines likely needs scrolling
+
+            var fullContent = screenText
+
+            if (needsScrolling) {
+                visualFeedbackManager.updateStatusText("📄 Long page detected. Capturing full content by scrolling...")
+
+                // Capture full page by scrolling
+                val screenshots = fullPageCapture.captureFullPage()
+
+                if (screenshots.isNotEmpty()) {
+                    visualFeedbackManager.updateStatusText(
+                        "📄 Captured ${screenshots.size} screenshot(s). Analyzing content..."
+                    )
+
+                    // For images in content, we'll describe them via the perception system
+                    // Use the perception to analyze screen structure including images
+                    perception = Perception(Eyes(this), SemanticParser())
+                    val analysis = perception.analyze(all = true)
+
+                    // Combine text content with structural analysis
+                    fullContent = "${analysis.uiRepresentation}\n\n--- Full Text Content ---\n\n$screenText"
+                }
+            }
+
+            // Check for images in the content and handle them
+            val hasImages = screenText.contains(Regex("(?i)(image|icon|photo|picture|graphic|logo|avatar)"))
+            val imageNote = if (hasImages) {
+                "\n\n📷 Note: This page contains images/icons. Visual descriptions would require image recognition capabilities."
+            } else {
+                ""
+            }
+
+            // Send to LLM for simplification
+            val simplifyPrompt = """
+You are a content simplifier. The user is viewing a screen/app on their Android device.
+Your job is to simplify the information on the screen into clear, easy-to-understand points.
+
+Current screen content:
+$fullContent$imageNote
+
+Please provide:
+1. A brief summary of what's on screen (1-2 sentences)
+2. Key information extracted as bullet points (max 5-7 points)
+3. Any actionable items or important warnings
+4. If it's a PDF/document: summarize the main points in plain language
+5. If it's an error/log: explain what went wrong in simple terms and suggest next steps
+6. If it contains financial data/numbers: highlight the key figures
+
+Keep language simple and direct. Focus on what the user needs to know.
+Format your response clearly with headings and bullet points.
+""".trimIndent()
+
+            val simplifyHistory = listOf(
+                "system" to listOf(TextPart("You are a helpful content simplifier. Keep responses concise and focused on key information. Use clear formatting.")),
+                "user" to listOf(TextPart(simplifyPrompt))
+            )
+
+            val simplifiedContent = try {
+                val apiPrefs = ApiPreferences.getInstance(this)
+                val apiKey = apiPrefs.apiKeyFlow.first()
+                if (apiKey.isNotBlank()) {
+                    ApiKeyManager.setApiKeys(listOf(apiKey))
+                }
+                getReasoningModelApiResponse(simplifyHistory, this)
+            } catch (e: Exception) {
+                Log.e("ConvAgent", "Failed to get simplified content", e)
+                null
+            }
+
+            visualFeedbackManager.hideThinkingIndicator()
+
+            if (simplifiedContent != null) {
+                val displayText = buildString {
+                    append("📋 Simplified Content:\n\n")
+                    append(simplifiedContent)
+                    if (hasImages) {
+                        append("\n\n💡 Tip: Images detected. For visual descriptions, describe what you see and I can help explain.")
+                    }
+                    if (needsScrolling) {
+                        append("\n\n📄 Note: This was a lengthy page. I captured all available content for simplification.")
+                    }
+                }
+
+                visualFeedbackManager.updateStatusText(displayText)
+                speechCoordinator.speakToUser("Here's a simplified summary of the current page.")
+                visualFeedbackManager.appendStatusText("\n\n🗣️ Summary spoken")
+            } else {
+                visualFeedbackManager.updateStatusText("❌ Unable to simplify page. The AI service could not be reached.")
+                speechCoordinator.speakToUser("I couldn't simplify the page. Please try again.")
+            }
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Error simplifying page", e)
+            visualFeedbackManager.hideThinkingIndicator()
+            visualFeedbackManager.updateStatusText("❌ Error simplifying page: ${e.message}")
+            speechCoordinator.speakToUser("There was an error simplifying the page.")
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -403,6 +533,12 @@ Current Time : {time_context}
     private suspend fun speakAndThenListen(text: String, draw: Boolean = true) {
         updateSystemPromptWithTime()
         stateManager.setState(OperitState.SPEAKING)
+
+        // Update status display with spoken text
+        if (isTextModeActive) {
+            visualFeedbackManager.appendStatusText("🗣️ $text")
+        }
+
         speechCoordinator.speakText(text)
         Log.d("ConvAgent", "Operit said: $text")
 
@@ -845,6 +981,8 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             visualFeedbackManager.hideTranscription()
             visualFeedbackManager.hideSpeakingOverlay()
             visualFeedbackManager.hideInputBox()
+            visualFeedbackManager.hideActionStatusView()
+            visualFeedbackManager.hideThinkingIndicator()
             removeClarificationQuestions()
         }
 
@@ -870,6 +1008,8 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         visualFeedbackManager.hideTtsWave()
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideInputBox()
+        visualFeedbackManager.hideActionStatusView()
+        visualFeedbackManager.hideThinkingIndicator()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

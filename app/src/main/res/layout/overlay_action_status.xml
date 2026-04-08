@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/statusCardRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_margin="8dp">
+
+    <!-- Status card: dark card with teal border -->
+    <LinearLayout
+        android:id="@+id/statusCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/status_card_background">
+
+        <!-- Status text (shows what the AI is doing / has spoken) -->
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFE8E8E8"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:maxLines="8"
+            android:scrollbars="vertical"
+            android:fontFamily="sans-serif" />
+
+        <!-- Controls row: pause/play + simplify button -->
+        <LinearLayout
+            android:id="@+id/controlsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
+            android:paddingTop="8dp">
+
+            <!-- Pause/Play button -->
+            <ImageButton
+                android:id="@+id/pausePlayButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_media_pause"
+                android:background="@drawable/control_button_background"
+                android:contentDescription="Pause audio output"
+                android:scaleType="centerInside"
+                android:padding="8dp" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Simplify this page button -->
+            <ImageButton
+                android:id="@+id/simplifyButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:background="@drawable/control_button_background"
+                android:contentDescription="Simplify this page"
+                android:scaleType="centerInside"
+                android:padding="8dp" />
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

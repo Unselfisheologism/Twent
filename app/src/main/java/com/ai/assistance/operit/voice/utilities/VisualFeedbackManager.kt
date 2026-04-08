@@ -37,6 +37,18 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var inputBoxView: View? = null
     private var thinkingIndicatorView: View? = null
     private var speakingOverlay: View? = null
+    private var actionStatusView: View? = null
+    private var statusTextView: TextView? = null
+    private var pausePlayButton: android.widget.ImageButton? = null
+    private var simplifyButton: android.widget.ImageButton? = null
+
+    // Callbacks for simplify and pause/play
+    private var onSimplifyPageClicked: (() -> Unit)? = null
+    private var onPausePlayClicked: ((isPaused: Boolean) -> Unit)? = null
+    private var isAudioPaused = false
+
+    // Track spoken text for display
+    private val spokenTextHistory = StringBuilder()
 
     companion object {
         private const val TAG = "VisualFeedbackManager"
@@ -69,7 +81,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 Log.d(TAG, "Audio wave is already showing.")
                 return@post
             }
-            setupAudioWaveEffect()
             showEdgeGlow() // Show edge glow during active TTS
         }
     }
@@ -88,10 +99,25 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             ttsVisualizer = null
             TTSManager.getInstance(context).utteranceListener = null
             hideSpeakingOverlay()
-            hideEdgeGlow() // Hide edge glow when TTS stops
+            // Don't hide edge glow here - it's managed by task lifecycle
 
             Log.d(TAG, "Audio wave effect has been torn down.")
         }
+    }
+
+    /**
+     * Call this when a task starts - shows persistent edge glow
+     */
+    fun showTaskActiveGlow() {
+        showEdgeGlow()
+    }
+
+    /**
+     * Call this when a task is completed - hides the edge glow
+     */
+    fun hideTaskActiveGlow() {
+        hideEdgeGlow()
+        hideTtsWave()
     }
 
     private fun setupAudioWaveEffect() {
@@ -460,12 +486,21 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         }
     }
 
-    // ========== 4-Edge Screen Glow (Operit: teal/cyan accent) ==========
+    // ========== 4-Edge Screen Glow (Operit: uniform teal glow on all 4 sides) ==========
 
     private var edgeGlowView: View? = null
     private var edgeGlowAnimator: android.animation.ValueAnimator? = null
+    private var isGlowLinkedToAudio = false
 
     fun showEdgeGlow() {
+        showEdgeGlowInternal(linkToAudio = false)
+    }
+
+    /**
+     * Show edge glow with optional audio amplitude linkage
+     * @param linkToAudio if true, the glow will pulse based on audio amplitude
+     */
+    private fun showEdgeGlowInternal(linkToAudio: Boolean) {
         mainHandler.post {
             if (edgeGlowView?.isAttachedToWindow == true) return@post
 
@@ -476,10 +511,13 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             val glowThickness = (6 * context.resources.displayMetrics.density).toInt() // 6dp - subtler
 
+            // Create a drawable with inset so the stroke is visible on all 4 edges
             edgeGlowView = View(context).apply {
+                val inset = glowThickness
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    setStroke(glowThickness, 0x5500D4AA.toInt()) // Teal glow (#00D4AA at 33% opacity)
+                    setColor(android.graphics.Color.TRANSPARENT)
+                    setStroke(glowThickness, 0x8800D4AA.toInt()) // Teal glow (#00D4AA at ~53% opacity)
                     cornerRadius = 0f
                 }
             }
@@ -494,8 +532,11 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             try {
                 windowManager.addView(edgeGlowView, params)
-                startEdgeGlowAnimation()
-                Log.d(TAG, "Edge glow view added.")
+                isGlowLinkedToAudio = linkToAudio
+                if (!linkToAudio) {
+                    startEdgeGlowAnimation()
+                }
+                Log.d(TAG, "Edge glow view added (linkToAudio=$linkToAudio).")
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding edge glow view", e)
                 edgeGlowView = null
@@ -511,9 +552,27 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             interpolator = android.view.animation.AccelerateDecelerateInterpolator()
             addUpdateListener { animator ->
                 val alpha = animator.animatedValue as Float
-                edgeGlowView?.background?.alpha = (alpha * 255).toInt()
+                (edgeGlowView?.background as? GradientDrawable)?.setStroke(
+                    (6 * context.resources.displayMetrics.density).toInt(),
+                    (alpha * 255).toInt() shl 24 or (0x00D4AA)
+                )
             }
             start()
+        }
+    }
+
+    /**
+     * Update the edge glow alpha based on audio amplitude (0.0 to 1.0)
+     */
+    fun updateEdgeGlowAmplitude(amplitude: Float) {
+        mainHandler.post {
+            if (edgeGlowView?.isAttachedToWindow == true && isGlowLinkedToAudio) {
+                val alpha = (amplitude.coerceIn(0f, 1f) * 200).toInt() or 0x00D4AA
+                (edgeGlowView?.background as? GradientDrawable)?.setStroke(
+                    (6 * context.resources.displayMetrics.density).toInt(),
+                    alpha
+                )
+            }
         }
     }
 
@@ -521,6 +580,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         mainHandler.post {
             edgeGlowAnimator?.cancel()
             edgeGlowAnimator = null
+            isGlowLinkedToAudio = false
             edgeGlowView?.let {
                 if (it.isAttachedToWindow) {
                     try {
@@ -533,5 +593,154 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             }
             edgeGlowView = null
         }
+    }
+
+    // ========== Action Status Display (for non-UI-automation tasks) ==========
+
+    /**
+     * Show the action status display - a card showing what the AI is doing,
+     * with pause/play and simplify page buttons.
+     * This is shown when the AI agent is performing a non-UI-automation task.
+     */
+    fun showActionStatusView(
+        onSimplifyPage: () -> Unit = {},
+        onPausePlay: (isPaused: Boolean) -> Unit = {}
+    ) {
+        onSimplifyPageClicked = onSimplifyPage
+        onPausePlayClicked = onPausePlay
+
+        mainHandler.post {
+            if (actionStatusView?.isAttachedToWindow == true) return@post
+
+            if (!hasOverlayPermission()) {
+                Log.e(TAG, "Cannot show action status view: SYSTEM_ALERT_WINDOW permission not granted")
+                return@post
+            }
+
+            val inflater = LayoutInflater.from(context)
+            actionStatusView = inflater.inflate(R.layout.overlay_action_status, null)
+
+            statusTextView = actionStatusView?.findViewById(R.id.statusText)
+            pausePlayButton = actionStatusView?.findViewById(R.id.pausePlayButton)
+            simplifyButton = actionStatusView?.findViewById(R.id.simplifyButton)
+
+            // Set up pause/play button
+            pausePlayButton?.setOnClickListener {
+                isAudioPaused = !isAudioPaused
+                pausePlayButton?.setImageResource(
+                    if (isAudioPaused) android.R.drawable.ic_media_play
+                    else android.R.drawable.ic_media_pause
+                )
+                pausePlayButton?.contentDescription =
+                    if (isAudioPaused) "Resume audio output" else "Pause audio output"
+                onPausePlayClicked?.invoke(isAudioPaused)
+            }
+
+            // Set up simplify button
+            simplifyButton?.setOnClickListener {
+                onSimplifyPageClicked?.invoke()
+            }
+
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                PixelFormat.TRANSLUCENT
+            ).apply {
+                gravity = Gravity.BOTTOM
+                y = (120 * context.resources.displayMetrics.density).toInt()
+            }
+
+            try {
+                windowManager.addView(actionStatusView, params)
+                Log.d(TAG, "Action status view added.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding action status view", e)
+                actionStatusView = null
+            }
+        }
+    }
+
+    /**
+     * Append text to the status display (this shows what the AI is saying/doing)
+     */
+    fun appendStatusText(text: String) {
+        mainHandler.post {
+            if (text.isBlank()) return@post
+            spokenTextHistory.append(text).append("\n\n")
+
+            // Keep only last 5000 chars to avoid overflow
+            if (spokenTextHistory.length > 5000) {
+                spokenTextHistory.delete(0, spokenTextHistory.length - 5000)
+            }
+
+            statusTextView?.text = spokenTextHistory.toString()
+            // Scroll to bottom
+            statusTextView?.let { tv ->
+                tv.post {
+                    val scrollAmount = tv.layout?.getLineTop(tv.lineCount) ?: 0
+                    tv.scrollTo(0, scrollAmount)
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the status text (replace entirely)
+     */
+    fun updateStatusText(text: String) {
+        mainHandler.post {
+            spokenTextHistory.clear()
+            spokenTextHistory.append(text)
+            statusTextView?.text = text
+        }
+    }
+
+    /**
+     * Clear the status text
+     */
+    fun clearStatusText() {
+        mainHandler.post {
+            spokenTextHistory.clear()
+            statusTextView?.text = ""
+        }
+    }
+
+    /**
+     * Hide the action status view
+     */
+    fun hideActionStatusView() {
+        mainHandler.post {
+            actionStatusView?.let { view ->
+                if (view.isAttachedToWindow) {
+                    try {
+                        windowManager.removeView(view)
+                        Log.d(TAG, "Action status view removed.")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing action status view", e)
+                    }
+                }
+            }
+            actionStatusView = null
+            statusTextView = null
+            pausePlayButton = null
+            simplifyButton = null
+        }
+    }
+
+    /**
+     * Check if audio is currently paused
+     */
+    fun isAudioPaused(): Boolean = isAudioPaused
+
+    /**
+     * Reset the pause state
+     */
+    fun resetPauseState() {
+        isAudioPaused = false
+        pausePlayButton?.setImageResource(android.R.drawable.ic_media_pause)
     }
 }

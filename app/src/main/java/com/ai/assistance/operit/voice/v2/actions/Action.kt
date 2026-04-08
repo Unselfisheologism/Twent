@@ -90,6 +90,9 @@ sealed class Action {
     // URL Launch Tool (opens in default browser, NOT headless)
     data class LaunchUrlInBrowser(val url: String) : Action()
 
+    // Screenshot Tool
+    data class CaptureScreenshot(val saveAs: String? = null) : Action()
+
     // --- The Custom Serializer ---
     // This serializer is now data-driven, using the `allSpecs` map as its source of truth.
     object ActionSerializer : KSerializer<Action> {
@@ -493,6 +496,16 @@ sealed class Action {
                 description = "Delete a memory by title.",
                 params = listOf(ParamSpec("title", String::class, "The memory title to delete.")),
                 build = { args -> DeleteMemory(args["title"] as String) }
+            ),
+
+            // Screenshot
+            "capture_screenshot" to Spec(
+                name = "capture_screenshot",
+                description = "Capture the current screen and optionally save it. Returns the screenshot file path.",
+                params = listOf(
+                    ParamSpec("save_as", String::class, "Optional filename to save the screenshot as (e.g., 'screen.png').")
+                ),
+                build = { args -> CaptureScreenshot(args["save_as"] as? String) }
             ),
         )
 

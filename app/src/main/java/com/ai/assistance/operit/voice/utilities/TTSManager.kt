@@ -240,6 +240,38 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
         }
     }
 
+    /**
+     * Pause the current TTS playback. Returns true if successfully paused.
+     */
+    fun pause(): Boolean {
+        val tts = nativeTts ?: return false
+        if (tts.isSpeaking) {
+            tts.stop()
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Resume TTS playback of the last spoken text.
+     */
+    fun resume() {
+        val tts = nativeTts ?: return
+        // Re-speak the last spoken text from our tracking
+        lastSpokenText?.let { text ->
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())
+        }
+    }
+
+    /**
+     * Check if TTS is currently speaking
+     */
+    fun isSpeaking(): Boolean {
+        return nativeTts?.isSpeaking == true || audioTrack?.playState == AudioTrack.PLAYSTATE_PLAYING
+    }
+
+    private var lastSpokenText: String? = null
+
     suspend fun speakText(text: String) {
         if (!isDebugMode) return
         speak(text)
@@ -254,6 +286,7 @@ class TTSManager private constructor(private val context: Context) : TextToSpeec
     }
 
     private suspend fun speak(text: String) {
+        lastSpokenText = text
         try {
             isNativeTtsInitialized.await()
             nativeTts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, this.hashCode().toString())

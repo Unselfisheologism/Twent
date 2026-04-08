@@ -204,6 +204,32 @@ class SpeechCoordinator private constructor(private val context: Context) {
         Log.d("SpeechCoordinator", "Speaking explicitly stopped.")
     }
 
+    /**
+     * Pause TTS playback. Returns true if successfully paused.
+     */
+    fun pause(): Boolean {
+        val paused = ttsManager.pause()
+        if (paused) {
+            isSpeaking = false
+            Log.d(TAG, "TTS playback paused.")
+        }
+        return paused
+    }
+
+    /**
+     * Resume TTS playback.
+     */
+    fun resume() {
+        ttsManager.resume()
+        isSpeaking = true
+        Log.d(TAG, "TTS playback resumed.")
+    }
+
+    /**
+     * Check if TTS is currently speaking
+     */
+    fun isTtsSpeaking(): Boolean = ttsManager.isSpeaking()
+
 
     fun isCurrentlySpeaking(): Boolean = isSpeaking
 

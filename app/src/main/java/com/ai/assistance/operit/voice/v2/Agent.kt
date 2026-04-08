@@ -41,9 +41,12 @@ class Agent(
     // The agent's internal state, which is updated at each step.
     val state: AgentState = AgentState()
     private val TAG = "AgentV2"
-    
+
     // Speech coordinator for voice notifications
     private val speechCoordinator = SpeechCoordinator.getInstance(context)
+
+    // Visual feedback manager for task glow/status
+    private val visualFeedbackManager = com.ai.assistance.operit.voice.utilities.VisualFeedbackManager.getInstance(context)
 
     // A complete, long-term record of the entire session.
     // We use <Unit> because we haven't defined a custom structured output for the 'done' action yet.
@@ -58,6 +61,10 @@ class Agent(
     suspend fun run(initialTask: String, maxSteps: Int = 150) {
         memoryManager.addNewTask(initialTask)
         state.stopped = false
+
+        // Show persistent glow when task starts
+        visualFeedbackManager.showTaskActiveGlow()
+
         Log.d(TAG, "--- Agent starting task: '$initialTask' ---")
 
         while (!state.stopped && state.nSteps <= maxSteps) {
@@ -91,6 +98,10 @@ class Agent(
                 if (state.consecutiveFailures >= settings.maxFailures) {
                     Log.d(TAG,"❌ Agent failed too many times consecutively. Stopping.")
                     speechCoordinator.speakToUser("Agent failed after multiple attempts. Stopping execution.")
+
+                    // Hide glow on failure
+                    visualFeedbackManager.hideTaskActiveGlow()
+
                     break
                 }
                 delay(1000) // Wait a moment before retrying
@@ -152,6 +163,10 @@ class Agent(
             if (actionResults.any { it.isDone == true }) {
                 Log.d(TAG,"✅ Agent finished the task.")
                 speechCoordinator.speakToUser("Task completed successfully.")
+
+                // Hide glow when task is done
+                visualFeedbackManager.hideTaskActiveGlow()
+
                 state.stopped = true
             }
 
@@ -163,6 +178,9 @@ class Agent(
         if (state.nSteps > maxSteps) {
             Log.d(TAG,"--- 🏁 Agent reached max steps. Stopping. ---")
             speechCoordinator.speakToUser("Agent reached maximum steps limit. Stopping execution.")
+
+            // Hide glow when max steps reached
+            visualFeedbackManager.hideTaskActiveGlow()
         } else {
             Log.d(TAG,"--- 🏁 Agent run finished. ---")
         }
