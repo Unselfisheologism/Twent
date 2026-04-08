@@ -449,6 +449,11 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
                 computerServer.stop()
                 AppLogger.d(TAG, "应用终止，已关闭AI电脑服务器")
             }
+            val miniAppServer = LocalWebServer.getInstance(applicationContext, LocalWebServer.ServerType.MINI_APP)
+            if (miniAppServer.isRunning()) {
+                miniAppServer.stop()
+                AppLogger.d(TAG, "应用终止，已关闭Mini-App服务器")
+            }
         } catch (e: Exception) {
             AppLogger.e(TAG, "关闭本地Web服务器失败: ${e.message}", e)
         }

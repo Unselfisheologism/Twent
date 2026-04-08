@@ -50,9 +50,13 @@ private constructor(
         .followSslRedirects(true)
         .build()
 
+    // Mini-app root directory (for MINI_APP server type)
+    private var miniAppsRootPath: String? = null
+
     enum class ServerType {
         WORKSPACE,
-        COMPUTER
+        COMPUTER,
+        MINI_APP
     }
 
     companion object {
@@ -61,6 +65,7 @@ private constructor(
         // Port constants
         const val WORKSPACE_PORT = 8093
         const val COMPUTER_PORT = 8094
+        const val MINI_APP_PORT = 8095
 
         @Volatile
         private var instances = mutableMapOf<ServerType, LocalWebServer>()
@@ -91,6 +96,19 @@ private constructor(
                             computerRoot.absolutePath,
                             ServerType.COMPUTER
                         )
+                    }
+
+                    ServerType.MINI_APP -> {
+                        val miniAppsRoot = File(context.applicationContext.filesDir, "mini_apps")
+                        if (!miniAppsRoot.exists()) miniAppsRoot.mkdirs()
+                        LocalWebServer(
+                            context.applicationContext,
+                            MINI_APP_PORT,
+                            miniAppsRoot.absolutePath,
+                            ServerType.MINI_APP
+                        ).also {
+                            it.miniAppsRootPath = miniAppsRoot.absolutePath
+                        }
                     }
                 }
                 server
@@ -160,15 +178,178 @@ private constructor(
             return handleApiRequest(session)
         }
 
-        // Serve static files
+        return when (type) {
+            ServerType.WORKSPACE -> {
+                serveWorkspace(session)
+            }
+            ServerType.COMPUTER -> {
+                serveComputer(session)
+            }
+            ServerType.MINI_APP -> {
+                serveMiniApp(session)
+            }
+        }
+    }
+
+    private fun serveWorkspace(session: IHTTPSession): Response {
         val uri = if (session.uri == "/") "/index.html" else session.uri
         val mimeType = getCustomMimeType(uri)
 
-        return if (type == ServerType.WORKSPACE && !workspaceEnv.isNullOrBlank()) {
+        return if (!workspaceEnv.isNullOrBlank()) {
             serveWorkspaceFileViaTool(uri, mimeType)
         } else {
             serveFileFromDisk(uri, mimeType)
         }
+    }
+
+    private fun serveComputer(session: IHTTPSession): Response {
+        val uri = if (session.uri == "/") "/index.html" else session.uri
+        val mimeType = getCustomMimeType(uri)
+        return serveFileFromDisk(uri, mimeType)
+    }
+
+    private fun serveMiniApp(session: IHTTPSession): Response {
+        val uri = session.uri
+
+        // Expected format: /mini_app/{id}/path/to/file
+        // Also handle legacy direct paths: /{id}/path/to/file
+        val (miniAppId, filePath) = parseMiniAppPath(uri)
+            ?: return newFixedLengthResponse(
+                Response.Status.BAD_REQUEST,
+                MIME_PLAINTEXT,
+                "Invalid mini-app path. Expected: /mini_app/{id}/file"
+            ).addCorsHeaders()
+
+        // Find the mini-app directory (try persistent first, then ephemeral)
+        val persistentDir = File(rootPath, "persistent/$miniAppId")
+        val ephemeralDir = File(rootPath, "ephemeral/$miniAppId")
+        val appDir = when {
+            persistentDir.exists() -> persistentDir
+            ephemeralDir.exists() -> ephemeralDir
+            else -> return newFixedLengthResponse(
+                Response.Status.NOT_FOUND,
+                MIME_PLAINTEXT,
+                "Mini-app not found: $miniAppId"
+            ).addCorsHeaders()
+        }
+
+        // Security check: ensure the file path doesn't escape the mini-app directory
+        val targetFile = File(appDir, filePath).canonicalFile
+        if (!targetFile.path.startsWith(appDir.canonicalPath)) {
+            return newFixedLengthResponse(
+                Response.Status.FORBIDDEN,
+                MIME_PLAINTEXT,
+                "Access denied"
+            ).addCorsHeaders()
+        }
+
+        if (!targetFile.exists() || !targetFile.isFile) {
+            return newFixedLengthResponse(
+                Response.Status.NOT_FOUND,
+                MIME_PLAINTEXT,
+                "File not found: $filePath"
+            ).addCorsHeaders()
+        }
+
+        val mimeType = getCustomMimeType(filePath)
+
+        return try {
+            val bytes = targetFile.readBytes()
+
+            if (mimeType == "text/html") {
+                val htmlContent = String(bytes, Charsets.UTF_8)
+                val injectedHtml = injectMiniAppScripts(htmlContent, miniAppId, appDir.name)
+                return newFixedLengthResponse(Response.Status.OK, mimeType, injectedHtml).addCorsHeaders()
+            }
+
+            val inputStream = ByteArrayInputStream(bytes)
+            val response = newFixedLengthResponse(Response.Status.OK, mimeType, inputStream, bytes.size.toLong())
+            response.addCorsHeaders()
+            response
+        } catch (ioe: IOException) {
+            AppLogger.e(TAG, "Error reading mini-app file: $filePath", ioe)
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                MIME_PLAINTEXT,
+                "Could not read file."
+            ).addCorsHeaders()
+        }
+    }
+
+    /**
+     * Parse a mini-app path from the URI.
+     * Supports formats:
+     *   - /mini_app/{id}/file  (canonical)
+     *   - /{id}/file           (legacy/direct)
+     * Returns Pair(miniAppId, filePath) or null.
+     */
+    private fun parseMiniAppPath(uri: String): Pair<String, String>? {
+        val path = normalizeWebPath(uri).trimStart('/')
+        val segments = path.split('/')
+
+        return when {
+            // Format: /mini_app/{id}/file
+            segments.size >= 3 && segments[0] == "mini_app" -> {
+                val id = segments[1]
+                val filePath = segments.drop(2).joinToString("/")
+                id to (filePath.ifEmpty { "index.html" })
+            }
+            // Format: /{id}/file
+            segments.size >= 2 -> {
+                val id = segments[0]
+                val filePath = segments.drop(1).joinToString("/")
+                id to (filePath.ifEmpty { "index.html" })
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * Inject permission checking and Operit mini-app bridge scripts into HTML.
+     */
+    private fun injectMiniAppScripts(htmlContent: String, miniAppId: String, appType: String): String {
+        val bridgeScript = """
+        <script>
+        (function() {
+            window.__operit_mini_app_id = '$miniAppId';
+            window.__operit_mini_app_type = '$appType';
+
+            // Operit mini-app bridge
+            window.OperitMiniApp = {
+                storage: {
+                    getItem: function(key) {
+                        return localStorage.getItem(key);
+                    },
+                    setItem: function(key, value) {
+                        localStorage.setItem(key, value);
+                        // Notify native for backup
+                        if (window.__operitNotifyStorage) {
+                            window.__operitNotifyStorage();
+                        }
+                    },
+                    clear: function() {
+                        localStorage.clear();
+                    }
+                },
+                notify: function(message) {
+                    if (window.__operitNotify) {
+                        window.__operitNotify(message);
+                    } else {
+                        console.log('[Operit Notify]', message);
+                    }
+                },
+                getAppInfo: function() {
+                    return {
+                        id: window.__operit_mini_app_id,
+                        type: window.__operit_mini_app_type
+                    };
+                }
+            };
+        })();
+        </script>
+        """.trimIndent()
+
+        return htmlContent.replace("</body>", "$bridgeScript</body>", ignoreCase = true)
     }
 
     private fun normalizeWebPath(path: String): String {
@@ -317,7 +498,12 @@ private constructor(
         val uri = session.uri
         return when {
             uri.startsWith("/api/proxy") -> {
-                handleProxyRequest(session)
+                // Only WORKSPACE and COMPUTER servers have proxy support
+                if (type == ServerType.MINI_APP) {
+                    newFixedLengthResponse(Response.Status.FORBIDDEN, MIME_PLAINTEXT, "Proxy not available for mini-apps").addCorsHeaders()
+                } else {
+                    handleProxyRequest(session)
+                }
             }
             uri.startsWith("/api/files") -> {
                 val path = session.parameters["path"]?.get(0) ?: ""

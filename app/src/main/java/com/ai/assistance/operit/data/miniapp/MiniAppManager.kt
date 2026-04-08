@@ -3,6 +3,7 @@ package com.ai.assistance.operit.data.miniapp
 import android.content.Context
 import com.ai.assistance.operit.data.model.MiniApp
 import com.ai.assistance.operit.data.model.MiniAppType
+import com.ai.assistance.operit.ui.features.chat.webview.LocalWebServer
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -305,15 +306,26 @@ class MiniAppManager private constructor(private val context: Context) {
 
     /**
      * Get the local URL that the LocalWebServer should serve this mini-app from.
-     * The actual serving is done by LocalWebServer on a specific port.
-     * 
+     *
      * Example: "http://localhost:8095/mini_app/{id}/index.html"
-     * 
-     * NOTE: The port (8095) should match what LocalWebServer uses for mini-apps.
-     * This will be configured when Phase 2 (LocalWebServer extension) is implemented.
      */
-    fun getMiniAppUrl(miniApp: MiniApp, port: Int = 8095): String {
+    fun getMiniAppUrl(miniApp: MiniApp): String {
+        val port = LocalWebServer.MINI_APP_PORT
         return "http://localhost:$port/mini_app/${miniApp.id}/${miniApp.entryFile}"
+    }
+
+    /**
+     * Start the mini-app web server if not already running.
+     */
+    fun ensureServerRunning(context: Context) {
+        try {
+            val server = LocalWebServer.getInstance(context, LocalWebServer.ServerType.MINI_APP)
+            if (!server.isRunning()) {
+                server.start()
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to start mini-app server", e)
+        }
     }
 
     /**
