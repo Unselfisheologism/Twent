@@ -533,8 +533,7 @@ Format your response clearly with headings and bullet points.
         Log.d("ConvAgent", "Operit said: $text")
 
         if (isTextModeActive) {
-            Log.d("ConvAgent", "In text mode, ensuring input box is visible and skipping voice listening.")
-            mainHandler.post { showInputBoxIfNeeded() }
+            // Text mode: keep input box and status visible, don't start listening
             return
         }
 
@@ -616,9 +615,6 @@ Format your response clearly with headings and bullet points.
             }
 
             conversationHistory = addResponse("user", userInput, conversationHistory)
-
-            // Hide input box while processing to give clean visual feedback
-            visualFeedbackManager.hideInputBox()
 
             // Show action status display only when user actually submits a prompt
             if (isTextModeActive && actionStatusViewNotShownYet) {
