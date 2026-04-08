@@ -338,16 +338,13 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                        WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_MENU,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP
                 y = (80 * context.resources.displayMetrics.density).toInt()
-                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or
-                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             }
 
             inputField?.setOnEditorActionListener { v, actionId, _ ->
@@ -382,14 +379,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             try {
                 windowManager.addView(inputBoxView, params)
                 Log.d(TAG, "Input box overlay added.")
-
-                // Explicitly request focus and show keyboard after view is attached
-                inputField?.post {
-                    inputField.requestFocus()
-                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.showSoftInput(inputField, InputMethodManager.SHOW_FORCED)
-                    Log.d(TAG, "Keyboard show requested for overlay input field")
-                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding input box overlay", e)
             }
