@@ -488,7 +488,10 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
     // ========== 4-Edge Screen Glow (Operit: uniform teal glow on all 4 sides) ==========
 
-    private var edgeGlowView: View? = null
+    private var edgeGlowViewTop: View? = null
+    private var edgeGlowViewBottom: View? = null
+    private var edgeGlowViewLeft: View? = null
+    private var edgeGlowViewRight: View? = null
     private var edgeGlowAnimator: android.animation.ValueAnimator? = null
     private var isGlowLinkedToAudio = false
 
@@ -502,76 +505,110 @@ class VisualFeedbackManager private constructor(private val context: Context) {
      */
     private fun showEdgeGlowInternal(linkToAudio: Boolean) {
         mainHandler.post {
-            if (edgeGlowView?.isAttachedToWindow == true) return@post
+            if (edgeGlowViewTop?.isAttachedToWindow == true) return@post
 
             if (!hasOverlayPermission()) {
                 Log.e(TAG, "Cannot show edge glow: SYSTEM_ALERT_WINDOW permission not granted")
                 return@post
             }
 
-            val glowThickness = (6 * context.resources.displayMetrics.density).toInt() // 6dp - subtler
+            val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            val screenHeight = displayMetrics.heightPixels
 
-            // Create a drawable with inset so the stroke is visible on all 4 edges
-            edgeGlowView = View(context).apply {
-                val inset = glowThickness
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    setColor(android.graphics.Color.TRANSPARENT)
-                    setStroke(glowThickness, 0x8800D4AA.toInt()) // Teal glow (#00D4AA at ~53% opacity)
-                    cornerRadius = 0f
-                }
+            // Create 4 thin strip views, one for each edge
+            val glowColor = 0x8800D4AA.toInt()
+
+            // Top strip
+            edgeGlowViewTop = createGlowStrip(glowThickness, screenWidth, glowColor).apply {
+                val params = WindowManager.LayoutParams(
+                    screenWidth, glowThickness,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply { gravity = Gravity.TOP }
+                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add top glow strip", e) }
             }
 
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                PixelFormat.TRANSLUCENT
-            )
+            // Bottom strip
+            edgeGlowViewBottom = createGlowStrip(glowThickness, screenWidth, glowColor).apply {
+                val params = WindowManager.LayoutParams(
+                    screenWidth, glowThickness,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply { gravity = Gravity.BOTTOM }
+                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add bottom glow strip", e) }
+            }
 
-            try {
-                windowManager.addView(edgeGlowView, params)
-                isGlowLinkedToAudio = linkToAudio
-                if (!linkToAudio) {
-                    startEdgeGlowAnimation()
-                }
-                Log.d(TAG, "Edge glow view added (linkToAudio=$linkToAudio).")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error adding edge glow view", e)
-                edgeGlowView = null
+            // Left strip
+            edgeGlowViewLeft = createGlowStrip(glowThickness, screenHeight, glowColor).apply {
+                val params = WindowManager.LayoutParams(
+                    glowThickness, screenHeight,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply { gravity = Gravity.START }
+                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add left glow strip", e) }
+            }
+
+            // Right strip
+            edgeGlowViewRight = createGlowStrip(glowThickness, screenHeight, glowColor).apply {
+                val params = WindowManager.LayoutParams(
+                    glowThickness, screenHeight,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply { gravity = Gravity.END }
+                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add right glow strip", e) }
+            }
+
+            isGlowLinkedToAudio = linkToAudio
+            if (!linkToAudio) {
+                startEdgeGlowAnimation()
+            }
+            Log.d(TAG, "Edge glow strips added (linkToAudio=$linkToAudio).")
+        }
+    }
+
+    private fun createGlowStrip(thickness: Int, length: Int, color: Int): View {
+        return View(context).apply {
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(android.graphics.Color.TRANSPARENT)
+                setStroke(thickness, color)
+                cornerRadius = 0f
             }
         }
     }
 
     private fun startEdgeGlowAnimation() {
         edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.25f, 0.65f, 0.25f).apply {
-            duration = 2500L // Slower, more subtle pulse
+            duration = 2500L
             repeatCount = android.animation.ValueAnimator.INFINITE
             repeatMode = android.animation.ValueAnimator.REVERSE
             interpolator = android.view.animation.AccelerateDecelerateInterpolator()
             addUpdateListener { animator ->
                 val alpha = animator.animatedValue as Float
-                (edgeGlowView?.background as? GradientDrawable)?.setStroke(
-                    (6 * context.resources.displayMetrics.density).toInt(),
-                    (alpha * 255).toInt() shl 24 or (0x00D4AA)
-                )
+                val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
+                val color = (alpha * 255).toInt() shl 24 or (0x00D4AA)
+                listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
+                    (view?.background as? GradientDrawable)?.setStroke(glowThickness, color)
+                }
             }
             start()
         }
     }
 
-    /**
-     * Update the edge glow alpha based on audio amplitude (0.0 to 1.0)
-     */
     fun updateEdgeGlowAmplitude(amplitude: Float) {
         mainHandler.post {
-            if (edgeGlowView?.isAttachedToWindow == true && isGlowLinkedToAudio) {
+            if (edgeGlowViewTop?.isAttachedToWindow == true && isGlowLinkedToAudio) {
                 val alpha = (amplitude.coerceIn(0f, 1f) * 200).toInt() or 0x00D4AA
-                (edgeGlowView?.background as? GradientDrawable)?.setStroke(
-                    (6 * context.resources.displayMetrics.density).toInt(),
-                    alpha
-                )
+                val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
+                listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
+                    (view?.background as? GradientDrawable)?.setStroke(glowThickness, alpha)
+                }
             }
         }
     }
@@ -581,17 +618,22 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             edgeGlowAnimator?.cancel()
             edgeGlowAnimator = null
             isGlowLinkedToAudio = false
-            edgeGlowView?.let {
-                if (it.isAttachedToWindow) {
-                    try {
-                        windowManager.removeView(it)
-                        Log.d(TAG, "Edge glow view removed.")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error removing edge glow view", e)
+            listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
+                view?.let {
+                    if (it.isAttachedToWindow) {
+                        try {
+                            windowManager.removeView(it)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error removing edge glow strip", e)
+                        }
                     }
                 }
             }
-            edgeGlowView = null
+            edgeGlowViewTop = null
+            edgeGlowViewBottom = null
+            edgeGlowViewLeft = null
+            edgeGlowViewRight = null
+            Log.d(TAG, "Edge glow strips removed.")
         }
     }
 
