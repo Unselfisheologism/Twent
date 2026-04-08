@@ -32,7 +32,7 @@ class FullPageCapture private constructor(private val context: Context) {
         }
     }
 
-    private val finger = Finger()
+    private val finger by lazy { Finger(context) }
 
     /**
      * Capture full page content by scrolling and taking multiple screenshots.
