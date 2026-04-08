@@ -82,6 +82,7 @@ class ConversationalAgentService : Service() {
     private val visualFeedbackManager by lazy { VisualFeedbackManager.getInstance(this) }
     private val stateManager by lazy { OperitStateManager.getInstance(this) }
     private var isTextModeActive = false
+    private var actionStatusViewNotShownYet = true
     private val servicePermissionManager by lazy { ServicePermissionManager(this) }
 
     private var clarificationAttempts = 0
@@ -283,20 +284,6 @@ Current Time : {time_context}
         speechCoordinator.stopListening()
         speechCoordinator.stopSpeaking()
         visualFeedbackManager.hideTranscription()
-
-        // Show action status display for non-UI-automation tasks
-        visualFeedbackManager.showActionStatusView(
-            onSimplifyPage = {
-                serviceScope.launch { handleSimplifyPage() }
-            },
-            onPausePlay = { isPaused ->
-                if (isPaused) {
-                    speechCoordinator.pause()
-                } else {
-                    speechCoordinator.resume()
-                }
-            }
-        )
     }
 
     /**
@@ -468,6 +455,9 @@ Format your response clearly with headings and bullet points.
     private suspend fun startImmediateListening() {
         Log.d("ConvAgent", "Starting immediate listening without greeting")
 
+        // Reset for next text mode session
+        actionStatusViewNotShownYet = true
+
         if (isTextModeActive) {
             Log.d("ConvAgent", "In text mode, ensuring input box is visible and skipping voice listening.")
             mainHandler.post { showInputBoxIfNeeded() }
@@ -626,6 +616,23 @@ Format your response clearly with headings and bullet points.
             }
 
             conversationHistory = addResponse("user", userInput, conversationHistory)
+
+            // Show action status display only when user actually submits a prompt
+            if (isTextModeActive && actionStatusViewNotShownYet) {
+                actionStatusViewNotShownYet = false
+                visualFeedbackManager.showActionStatusView(
+                    onSimplifyPage = {
+                        serviceScope.launch { handleSimplifyPage() }
+                    },
+                    onPausePlay = { isPaused ->
+                        if (isPaused) {
+                            speechCoordinator.pause()
+                        } else {
+                            speechCoordinator.resume()
+                        }
+                    }
+                )
+            }
 
             try {
                 if (userInput.equals("stop", ignoreCase = true) || userInput.equals("exit", ignoreCase = true)) {
@@ -962,6 +969,8 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideSpeakingOverlay()
         visualFeedbackManager.hideInputBox()
+        visualFeedbackManager.hideActionStatusView()
+        actionStatusViewNotShownYet = true
 
         if (exitMessage != null) {
             speechCoordinator.speakText(exitMessage)
@@ -1001,6 +1010,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         removeClarificationQuestions()
         serviceScope.cancel()
         isRunning = false
+        actionStatusViewNotShownYet = true
 
         stateManager.setState(OperitState.IDLE)
         stateManager.stopMonitoring()
