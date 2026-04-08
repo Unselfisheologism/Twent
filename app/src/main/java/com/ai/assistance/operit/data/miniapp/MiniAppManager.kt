@@ -257,7 +257,13 @@ class MiniAppManager private constructor(private val context: Context) {
      */
     suspend fun backupLocalStorage(miniApp: MiniApp, localStorageData: Map<String, String>): Result<Unit> {
         return try {
-            val json = kotlinx.serialization.json.Json.encodeToString(localStorageData)
+            val json = kotlinx.serialization.json.Json.encodeToString(
+                kotlinx.serialization.builtins.MapSerializer(
+                    kotlinx.serialization.builtins.serializer<String>(),
+                    kotlinx.serialization.builtins.serializer<String>()
+                ),
+                localStorageData
+            )
             storage.saveFile(miniApp, "data/localStorage.json", json)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to backup localStorage for ${miniApp.name}", e)
