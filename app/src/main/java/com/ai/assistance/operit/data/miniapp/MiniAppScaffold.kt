@@ -202,10 +202,10 @@ object MiniAppTemplates {
         function render() {
             const list = document.getElementById('todoList');
             list.innerHTML = todos.map(t => `
-                <li class="${t.done ? 'done' : ''}">
-                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})">
-                    <span>${t.text}</span>
-                    <button class="delete-btn" onclick="deleteTodo(${t.id})">✕</button>
+                <li class="${'$'}{t.done ? 'done' : ''}">
+                    <input type="checkbox" ${'$'}{t.done ? 'checked' : ''} onchange="toggleTodo(${'$'}{t.id})">
+                    <span>${'$'}{t.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${'$'}{t.id})">✕</button>
                 </li>
             `).join('');
         }
@@ -455,10 +455,10 @@ object MiniAppTemplates {
         function renderNotes() {
             const list = document.getElementById('noteList');
             list.innerHTML = notes.map(n => `
-                <div class="note-item" onclick="editNote(${n.id})">
-                    <h3>${n.title || 'Untitled'}</h3>
-                    <p>${n.content || 'No content'}</p>
-                    <div class="date">${new Date(n.createdAt).toLocaleDateString()}</div>
+                <div class="note-item" onclick="editNote(${'$'}{n.id})">
+                    <h3>${'$'}{n.title || 'Untitled'}</h3>
+                    <p>${'$'}{n.content || 'No content'}</p>
+                    <div class="date">${'$'}{new Date(n.createdAt).toLocaleDateString()}</div>
                 </div>
             `).join('');
         }
