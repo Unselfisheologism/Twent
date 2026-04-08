@@ -4,7 +4,11 @@ import android.content.Context
 import com.ai.assistance.operit.data.model.MiniApp
 import com.ai.assistance.operit.data.model.MiniAppType
 import com.ai.assistance.operit.util.AppLogger
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Central manager for mini-app lifecycle operations.
@@ -258,8 +262,12 @@ class MiniAppManager private constructor(private val context: Context) {
      */
     suspend fun backupLocalStorage(miniApp: MiniApp, localStorageData: Map<String, String>): Result<Unit> {
         return try {
-            val wrapper = LocalStorageWrapper(localStorageData)
-            val json = kotlinx.serialization.json.Json.encodeToString(wrapper)
+            val json = kotlinx.serialization.json.Json.encodeToString(
+                JsonObject.serializer(),
+                buildJsonObject {
+                    localStorageData.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+                }
+            )
             storage.saveFile(miniApp, "data/localStorage.json", json)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to backup localStorage for ${miniApp.name}", e)
@@ -276,8 +284,11 @@ class MiniAppManager private constructor(private val context: Context) {
             val result = storage.readFile(miniApp, "data/localStorage.json")
             result.map { content ->
                 if (content != null) {
-                    val wrapper = kotlinx.serialization.json.Json.decodeFromString<LocalStorageWrapper>(content)
-                    wrapper.data
+                    val jsonObject = kotlinx.serialization.json.Json.decodeFromString(
+                        JsonObject.serializer(),
+                        content
+                    )
+                    jsonObject.mapValues { it.value.jsonPrimitive.content }
                 } else {
                     null
                 }
@@ -324,10 +335,3 @@ class MiniAppManager private constructor(private val context: Context) {
         return "$baseName $counter"
     }
 }
-
-/**
- * Serializable wrapper for localStorage key-value pairs.
- * Needed because kotlinx.serialization cannot auto-infer serializers for raw Map types.
- */
-@Serializable
-private data class LocalStorageWrapper(val data: Map<String, String>)
