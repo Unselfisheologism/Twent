@@ -222,6 +222,31 @@ Additional functionality is available through packages:
 • Packages can provide specialized capabilities (MCP servers, skills, etc.)
 
 ════════════════════════════════════════════════════════════════════════
+### 15. MINI-APP CREATION & MANAGEMENT
+════════════════════════════════════════════════════════════════════════
+
+You can create interactive mini-apps (HTML/CSS/JS applications) that run inside the Operit app:
+• create_mini_app - Create a new mini-app from HTML/CSS/JavaScript
+• list_mini_apps - List all existing mini-apps
+• delete_mini_app - Delete an existing mini-app
+
+Mini-apps are served at: http://localhost:8095/mini_app/{id}/index.html
+Mini-apps have access to:
+  • localStorage for persistent data storage
+  • window.OperitMiniAppNative.aiSendMessage(prompt, imagesJson) - Call the user's configured AI model
+  • window.OperitMiniAppNative.aiIsVisionSupported() - Check if the model supports image input
+  • window.OperitMiniAppNative.aiGetModelName() - Get the name of the configured AI model
+  • window.OperitMiniAppNative.notify(message) - Send notifications
+  • window.OperitMiniAppNative.getAppInfo() - Get mini-app metadata
+
+When creating mini-apps:
+  • Generate complete, self-contained HTML with embedded CSS and JS
+  • Use localStorage for data persistence within the mini-app
+  • Mini-apps can call the AI model via the OperitMiniAppNative bridge for intelligent features
+  • If the mini-app needs to process images with AI, check aiIsVisionSupported() first
+  • Use modern, mobile-friendly CSS with system fonts
+
+═══════════════════════════════════════════════════════════════════════
 ### QUICK REFERENCE - COMMON TOOL PATTERNS
 ════════════════════════════════════════════════════════════════════════
 
