@@ -96,7 +96,9 @@ class MiniAppAiBridge(private val context: Context) {
                     enableThinking = false,
                     stream = false
                 )
-                val content = stream.toList().joinToString("")
+                val sb = StringBuilder()
+                stream.collect { chunk -> sb.append(chunk) }
+                val content = sb.toString()
                 AiResponse(success = true, content = content)
             } else {
                 // With images, we need to build a message that includes them.
@@ -119,7 +121,9 @@ class MiniAppAiBridge(private val context: Context) {
                     enableThinking = false,
                     stream = false
                 )
-                val content = stream.toList().joinToString("")
+                val sb = StringBuilder()
+                stream.collect { chunk -> sb.append(chunk) }
+                val content = sb.toString()
                 AiResponse(success = true, content = content)
             }
         } catch (e: Exception) {
