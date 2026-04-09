@@ -38,6 +38,7 @@ import com.ai.assistance.operit.data.miniapp.PermissionMapper
 import com.ai.assistance.operit.data.miniapp.MiniAppTemplates
 import com.ai.assistance.operit.data.model.MiniApp
 import com.ai.assistance.operit.data.model.MiniAppType
+import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -481,16 +482,20 @@ fun MiniAppViewer(
             // WebView
             AndroidView(
                 factory = { ctx ->
-                    android.webkit.WebView(ctx).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.allowFileAccess = false
-                        settings.allowContentAccess = false
-                        settings.loadWithOverviewMode = true
-                        settings.useWideViewPort = true
-                        webViewClient = android.webkit.WebViewClient()
-                        loadUrl(url)
-                    }
+                    val webView = createMiniAppWebView(
+                        context = ctx,
+                        onPermissionGranted = { resources ->
+                            AppLogger.d("MiniAppViewer", "Permissions granted: ${resources.joinToString()}")
+                        },
+                        onPermissionDenied = { resources ->
+                            AppLogger.w("MiniAppViewer", "Permissions denied: ${resources.joinToString()}")
+                        },
+                        onNotify = { message ->
+                            AppLogger.d("MiniAppViewer", "Mini-app notify: $message")
+                        }
+                    )
+                    webView.loadUrl(url)
+                    webView
                 },
                 modifier = Modifier.fillMaxSize()
             )
