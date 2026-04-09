@@ -478,6 +478,10 @@ fun MiniAppViewer(
     // Vision-required dialog state
     var showVisionRequiredDialog by remember { mutableStateOf(false) }
 
+    // WebView loading state - must be outside Scaffold
+    var webViewLoaded by remember { mutableStateOf(false) }
+    var webViewError by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
         topBar = {
@@ -500,11 +504,8 @@ fun MiniAppViewer(
                 )
             }
 
-            // WebView with error handling
-            var webViewLoaded by remember { mutableStateOf(false) }
-            var webViewError by remember { mutableStateOf<String?>(null) }
-
-            if (!webViewLoaded) {
+            // Loading indicator overlay
+            if (!webViewLoaded && webViewError == null) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -565,7 +566,7 @@ fun MiniAppViewer(
         }
     }
 
-    // Error state display
+    // Error state display - must be outside Scaffold to access webViewError
     if (webViewError != null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -584,7 +585,7 @@ fun MiniAppViewer(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Failed to load mini-app", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(webViewError!!, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = webViewError!!, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = {
                     webViewError = null

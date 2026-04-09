@@ -546,7 +546,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 )
                 background = android.graphics.drawable.PaintDrawable().apply {
                     paint.shader = gradient
-                    setStrokeWidth(0f)
                 }
                 setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
             }
@@ -570,7 +569,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 )
                 background = android.graphics.drawable.PaintDrawable().apply {
                     paint.shader = gradient
-                    setStrokeWidth(0f)
                 }
                 setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
             }
@@ -594,7 +592,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 )
                 background = android.graphics.drawable.PaintDrawable().apply {
                     paint.shader = gradient
-                    setStrokeWidth(0f)
                 }
                 setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
             }
@@ -618,7 +615,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 )
                 background = android.graphics.drawable.PaintDrawable().apply {
                     paint.shader = gradient
-                    setStrokeWidth(0f)
                 }
                 setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
             }
