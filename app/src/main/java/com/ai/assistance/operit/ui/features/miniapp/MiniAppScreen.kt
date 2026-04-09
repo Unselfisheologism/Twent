@@ -179,6 +179,8 @@ fun MiniAppScreen(
     LaunchedEffect(Unit) {
         viewModel.initialize(context)
         viewModel.loadMiniApps()
+        // Reset viewer state when screen is first shown (e.g. from sidebar navigation)
+        viewModel.closeApp()
     }
 
     LaunchedEffect(viewModel.error.value) {
@@ -191,44 +193,60 @@ fun MiniAppScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Mini-Apps") },
-                navigationIcon = {
-                    IconButton(onClick = onGoBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    // Filter chip
-                    FilterChip(
-                        selected = viewModel.filterType.value != null,
-                        onClick = {
-                            viewModel.setFilter(if (viewModel.filterType.value == null) MiniAppType.PERSISTENT else null)
-                        },
-                        label = {
-                            Text(
-                                if (viewModel.filterType.value == null) "All"
-                                else if (viewModel.filterType.value == MiniAppType.PERSISTENT) "Persistent"
-                                else "Ephemeral"
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                if (viewModel.filterType.value == null) Icons.Default.List else Icons.Default.FilterList,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
+            if (viewModel.isViewingApp.value && viewModel.selectedApp.value != null) {
+                // Show mini-app name in TopAppBar when viewing
+                TopAppBar(
+                    title = { Text(viewModel.selectedApp.value!!.name) },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.closeApp() }) {
+                            Icon(Icons.Default.ArrowBack, "Back to Mini-Apps")
                         }
-                    )
-                }
-            )
+                    }
+                )
+            } else {
+                // Show Mini-Apps title and filter when listing
+                TopAppBar(
+                    title = { Text("Mini-Apps") },
+                    navigationIcon = {
+                        IconButton(onClick = onGoBack) {
+                            Icon(Icons.Default.ArrowBack, "Back")
+                        }
+                    },
+                    actions = {
+                        // Filter chip
+                        FilterChip(
+                            selected = viewModel.filterType.value != null,
+                            onClick = {
+                                viewModel.setFilter(if (viewModel.filterType.value == null) MiniAppType.PERSISTENT else null)
+                            },
+                            label = {
+                                Text(
+                                    if (viewModel.filterType.value == null) "All"
+                                    else if (viewModel.filterType.value == MiniAppType.PERSISTENT) "Persistent"
+                                    else "Ephemeral"
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    if (viewModel.filterType.value == null) Icons.Default.List else Icons.Default.FilterList,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+                    }
+                )
+            }
         }
     ) { padding ->
         if (viewModel.isViewingApp.value && viewModel.selectedApp.value != null) {
-            MiniAppViewer(
-                miniApp = viewModel.selectedApp.value!!,
-                onGoBack = { viewModel.closeApp() }
-            )
+            // When viewing a mini-app, use full screen without parent padding
+            Box(modifier = Modifier.fillMaxSize()) {
+                MiniAppViewer(
+                    miniApp = viewModel.selectedApp.value!!,
+                    onGoBack = { viewModel.closeApp() }
+                )
+            }
         } else {
             Column(
                 modifier = Modifier
@@ -452,8 +470,9 @@ private fun EmptyMiniAppsView() {
 
 /**
  * Screen that displays a WebView loading the mini-app.
+ * Note: Does NOT use Scaffold - the parent MiniAppScreen handles the TopAppBar.
+ * This composable just fills the available space with the WebView.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MiniAppViewer(
     miniApp: MiniApp,
@@ -462,7 +481,6 @@ fun MiniAppViewer(
     val context = LocalContext.current
     val url = MiniAppManager.getInstance(context).getMiniAppUrl(miniApp)
     val aiBridge = remember { MiniAppAiBridge(context) }
-    val scope = rememberCoroutineScope()
 
     // Log the URL for debugging
     LaunchedEffect(miniApp.id) {
@@ -470,142 +488,103 @@ fun MiniAppViewer(
         AppLogger.d("MiniAppViewer", "Mini-app ID: ${miniApp.id}, Type: ${miniApp.type}")
     }
 
-    // Check missing permissions
-    val missingPermissions = remember {
-        PermissionMapper.getMissingPermissions(context, miniApp.requiredPermissions)
-    }
-
-    // Vision-required dialog state
-    var showVisionRequiredDialog by remember { mutableStateOf(false) }
-
-    // WebView loading state - must be outside Scaffold
+    // WebView loading state
     var webViewLoaded by remember { mutableStateOf(false) }
     var webViewError by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
-        topBar = {
-            TopAppBar(
-                title = { Text(miniApp.name) },
-                navigationIcon = {
-                    IconButton(onClick = onGoBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+    // Use a Box that fills the entire available space
+    Box(modifier = Modifier.fillMaxSize()) {
+        // WebView
+        AndroidView(
+            factory = { ctx ->
+                val webView = createMiniAppWebView(
+                    context = ctx,
+                    aiBridge = aiBridge,
+                    onPermissionGranted = { resources ->
+                        AppLogger.d("MiniAppViewer", "Permissions granted: ${resources.joinToString()}")
+                    },
+                    onPermissionDenied = { resources ->
+                        AppLogger.w("MiniAppViewer", "Permissions denied: ${resources.joinToString()}")
+                    },
+                    onNotify = { message ->
+                        AppLogger.d("MiniAppViewer", "Mini-app notify: $message")
                     }
-                }
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // Permission warning banner
-            if (missingPermissions.isNotEmpty()) {
-                PermissionWarningBanner(
-                    missingPermissions = PermissionMapper.getDisplayNames(missingPermissions.toSet()),
-                    onOpenSettings = { openAppSettings(context) }
                 )
-            }
+                // Set up error detection
+                webView.webViewClient = object : android.webkit.WebViewClient() {
+                    override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        webViewLoaded = true
+                        webViewError = null
+                    }
 
-            // Loading indicator overlay
-            if (!webViewLoaded && webViewError == null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Loading mini-app...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("URL: ${url.take(50)}...", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                    override fun onReceivedError(
+                        view: android.webkit.WebView?,
+                        request: android.webkit.WebResourceRequest?,
+                        error: android.webkit.WebResourceError?
+                    ) {
+                        super.onReceivedError(view, request, error)
+                        if (request?.isForMainFrame == true) {
+                            webViewError = error?.description?.toString() ?: "Failed to load"
+                            AppLogger.e("MiniAppViewer", "WebView error: $webViewError for URL: $url")
+                        }
                     }
                 }
-            }
-
-            AndroidView(
-                factory = { ctx ->
-                    val webView = createMiniAppWebView(
-                        context = ctx,
-                        aiBridge = aiBridge,
-                        onPermissionGranted = { resources ->
-                            AppLogger.d("MiniAppViewer", "Permissions granted: ${resources.joinToString()}")
-                        },
-                        onPermissionDenied = { resources ->
-                            AppLogger.w("MiniAppViewer", "Permissions denied: ${resources.joinToString()}")
-                        },
-                        onNotify = { message ->
-                            AppLogger.d("MiniAppViewer", "Mini-app notify: $message")
-                        }
-                    )
-                    // Set up error detection
-                    webView.webViewClient = object : android.webkit.WebViewClient() {
-                        override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            webViewLoaded = true
-                            webViewError = null
-                        }
-
-                        override fun onReceivedError(
-                            view: android.webkit.WebView?,
-                            request: android.webkit.WebResourceRequest?,
-                            error: android.webkit.WebResourceError?
-                        ) {
-                            super.onReceivedError(view, request, error)
-                            if (request?.isForMainFrame == true) {
-                                webViewError = error?.description?.toString() ?: "Failed to load"
-                                AppLogger.e("MiniAppViewer", "WebView error: $webViewError for URL: $url")
-                            }
-                        }
-                    }
-                    // Wait for server to be ready (500ms already waited in ensureServerRunning)
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        AppLogger.d("MiniAppViewer", "Loading URL: $url")
-                        webView.loadUrl(url)
-                    }, 100)
-                    webView
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
-
-    // Error state display - must be outside Scaffold to access webViewError
-    if (webViewError != null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(32.dp)
-            ) {
-                Icon(
-                    Icons.Default.Warning,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Failed to load mini-app", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = webViewError!!, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {
-                    webViewError = null
-                    webViewLoaded = false
-                }) {
-                    Text("Retry")
-                }
-            }
-        }
-    }
-
-    // Vision-required dialog
-    if (showVisionRequiredDialog) {
-        VisionRequiredDialog(
-            onDismiss = { showVisionRequiredDialog = false },
-            onOpenSettings = {
-                openAppSettings(context)
-                showVisionRequiredDialog = false
-            }
+                // Wait for server to be ready (500ms already waited in ensureServerRunning)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    AppLogger.d("MiniAppViewer", "Loading URL: $url")
+                    webView.loadUrl(url)
+                }, 100)
+                webView
+            },
+            modifier = Modifier.fillMaxSize()
         )
+
+        // Loading indicator overlay
+        if (!webViewLoaded && webViewError == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Loading mini-app...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("URL: ${url.take(50)}...", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                }
+            }
+        }
+
+        // Error state display
+        if (webViewError != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Failed to load mini-app", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = webViewError!!, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        webViewError = null
+                        webViewLoaded = false
+                    }) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
     }
 }
 
