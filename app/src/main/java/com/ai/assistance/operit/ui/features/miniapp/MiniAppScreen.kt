@@ -105,9 +105,10 @@ class MiniAppViewModel : ViewModel() {
     }
 
     fun openApp(app: MiniApp, ctx: Context) {
+        // Start server FIRST, before updating UI state
+        MiniAppManager.getInstance(ctx).ensureServerRunning(ctx)
         _selectedApp.value = app
         _isViewingApp.value = true
-        MiniAppManager.getInstance(ctx).ensureServerRunning(ctx)
     }
 
     fun closeApp() {
@@ -507,7 +508,10 @@ fun MiniAppViewer(
                             AppLogger.d("MiniAppViewer", "Mini-app notify: $message")
                         }
                     )
-                    webView.loadUrl(url)
+                    // Small delay to give the server time to bind to the port
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        webView.loadUrl(url)
+                    }, 300)
                     webView
                 },
                 modifier = Modifier.fillMaxSize()
