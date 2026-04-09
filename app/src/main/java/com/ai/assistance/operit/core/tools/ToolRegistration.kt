@@ -1479,6 +1479,226 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // Mini-App creation tool - creates a mini-app from AI-generated HTML/CSS/JS
+    handler.registerTool(
+            name = "create_mini_app",
+            dangerCheck = { false },
+            descriptionGenerator = { tool ->
+                val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                val type = tool.parameters.find { it.name == "type" }?.value ?: "persistent"
+                s(R.string.toolreg_create_mini_app_desc, name, type)
+            },
+            executor = { tool ->
+                val name = tool.parameters.find { it.name == "name" }?.value ?: "Untitled App"
+                val type = tool.parameters.find { it.name == "type" }?.value?.lowercase() ?: "persistent"
+                val html = tool.parameters.find { it.name == "html" }?.value ?: ""
+                val css = tool.parameters.find { it.name == "css" }?.value ?: ""
+                val javascript = tool.parameters.find { it.name == "javascript" }?.value ?: ""
+                val description = tool.parameters.find { it.name == "description" }?.value
+                val requiredPermissions = tool.parameters.find { it.name == "required_permissions" }?.value ?: ""
+                val webPermissions = tool.parameters.find { it.name == "web_permissions" }?.value ?: ""
+
+                if (html.isBlank()) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "HTML content is required for mini-app creation"
+                    )
+                } else {
+                    try {
+                        val miniAppType = if (type == "ephemeral") {
+                            com.ai.assistance.operit.data.model.MiniAppType.EPHEMERAL
+                        } else {
+                            com.ai.assistance.operit.data.model.MiniAppType.PERSISTENT
+                        }
+
+                        val files = mutableMapOf<String, String>()
+                        files["index.html"] = html
+                        if (css.isNotBlank()) files["style.css"] = css
+                        if (javascript.isNotBlank()) files["app.js"] = javascript
+
+                        val androidPerms = if (requiredPermissions.isNotBlank()) {
+                            requiredPermissions.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                        } else emptySet()
+                        val webPerms = if (webPermissions.isNotBlank()) {
+                            webPermissions.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                        } else emptySet()
+
+                        val scaffold = com.ai.assistance.operit.data.miniapp.MiniAppScaffold.FromFiles(
+                                files = files,
+                                name = name,
+                                type = miniAppType,
+                                description = description,
+                                entryFile = "index.html",
+                                requiredPermissions = androidPerms,
+                                webPermissions = webPerms,
+                                metadata = mapOf("created_by" to "ai_tool")
+                        )
+
+                        val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                        val ensureName = runBlocking { manager.ensureUniqueName(name, miniAppType) }
+                        val finalScaffold = scaffold.copy(name = ensureName)
+                        val result = runBlocking { manager.createMiniApp(finalScaffold) }
+
+                        result.fold(
+                                onSuccess = { miniApp ->
+                                    val url = manager.getMiniAppUrl(miniApp)
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = true,
+                                            result = StringResultData(
+                                                    "Mini-app created successfully!\n" +
+                                                            "Name: $ensureName\n" +
+                                                            "ID: ${miniApp.id}\n" +
+                                                            "Type: ${miniAppType.name.lowercase()}\n" +
+                                                            "URL: $url\n" +
+                                                            "Open with: open_mini_app?id=${miniApp.id}"
+                                            )
+                                    )
+                                },
+                                onFailure = { e ->
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = false,
+                                            result = StringResultData(""),
+                                            error = "Failed to create mini-app: ${e.message}"
+                                    )
+                                }
+                        )
+                    } catch (e: Exception) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = "Error creating mini-app: ${e.message}"
+                        )
+                    }
+                }
+            }
+    )
+
+    // Mini-App list tool - returns all available mini-apps
+    handler.registerTool(
+            name = "list_mini_apps",
+            dangerCheck = { false },
+            descriptionGenerator = { _ -> s(R.string.toolreg_list_mini_apps_desc) },
+            executor = { tool ->
+                try {
+                    val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                    val result = runBlocking { manager.listMiniApps() }
+
+                    result.fold(
+                            onSuccess = { miniApps ->
+                                if (miniApps.isEmpty()) {
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = true,
+                                            result = StringResultData("No mini-apps found.")
+                                    )
+                                } else {
+                                    val output = miniApps.joinToString("\n") { app ->
+                                        "- ${app.name} (ID: ${app.id}, Type: ${app.type.name.lowercase()}, Created: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(app.createdAt))})"
+                                    }
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = true,
+                                            result = StringResultData("Available mini-apps:\n$output")
+                                    )
+                                }
+                            },
+                            onFailure = { e ->
+                                ToolResult(
+                                        toolName = tool.name,
+                                        success = false,
+                                        result = StringResultData(""),
+                                        error = "Failed to list mini-apps: ${e.message}"
+                                )
+                            }
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error listing mini-apps: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // Mini-App delete tool
+    handler.registerTool(
+            name = "delete_mini_app",
+            dangerCheck = { true },
+            descriptionGenerator = { tool ->
+                val appId = tool.parameters.find { it.name == "app_id" }?.value ?: ""
+                s(R.string.toolreg_delete_mini_app_desc, appId)
+            },
+            executor = { tool ->
+                val appId = tool.parameters.find { it.name == "app_id" }?.value ?: ""
+                if (appId.isBlank()) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "app_id is required"
+                    )
+                } else {
+                    try {
+                        val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                        val appResult = runBlocking { manager.getMiniApp(appId) }
+                        appResult.fold(
+                                onSuccess = { app ->
+                                    if (app == null) {
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = false,
+                                                result = StringResultData(""),
+                                                error = "Mini-app not found: $appId"
+                                        )
+                                    } else {
+                                        val deleteResult = runBlocking { manager.deleteMiniApp(app.id, app.type) }
+                                        deleteResult.fold(
+                                                onSuccess = {
+                                                    ToolResult(
+                                                            toolName = tool.name,
+                                                            success = true,
+                                                            result = StringResultData("Mini-app deleted: ${app.name}")
+                                                    )
+                                                },
+                                                onFailure = { e ->
+                                                    ToolResult(
+                                                            toolName = tool.name,
+                                                            success = false,
+                                                            result = StringResultData(""),
+                                                            error = "Failed to delete mini-app: ${e.message}"
+                                                    )
+                                                }
+                                        )
+                                    }
+                                },
+                                onFailure = { e ->
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = false,
+                                            result = StringResultData(""),
+                                            error = "Error finding mini-app: ${e.message}"
+                                    )
+                                }
+                        )
+                    } catch (e: Exception) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = "Error deleting mini-app: ${e.message}"
+                        )
+                    }
+                }
+            }
+    )
+
     // Register package creator tools (create packages, MCP servers, and skills)
     PackageCreatorTools.registerCreatorTools(handler, context)
 }

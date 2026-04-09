@@ -4035,6 +4035,9 @@
 <string name="toolreg_share_file_desc">Toolreg Share File Desc</string>
 <string name="toolreg_sleep_desc">Toolreg Sleep Desc</string>
 <string name="toolreg_speech_to_text_desc">Toolreg Speech To Text Desc</string>
+<string name="toolreg_create_mini_app_desc">Create mini-app: {0} ({1})</string>
+<string name="toolreg_list_mini_apps_desc">List all available mini-apps</string>
+<string name="toolreg_delete_mini_app_desc">Delete mini-app: {0}</string>
 <string name="toolreg_ssh_exit_desc">Toolreg Ssh Exit Desc</string>
 <string name="toolreg_ssh_login_desc">Toolreg Ssh Login Desc</string>
 <string name="toolreg_start_app_desc">Toolreg Start App Desc</string>
