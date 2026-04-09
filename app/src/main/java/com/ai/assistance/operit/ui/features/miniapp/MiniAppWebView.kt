@@ -63,6 +63,8 @@ object MiniAppBackupHelper {
     }
 }
 
+private const val TAG = "MiniAppWebView"
+
 /**
  * Creates and configures a WebView for loading mini-apps.
  *
