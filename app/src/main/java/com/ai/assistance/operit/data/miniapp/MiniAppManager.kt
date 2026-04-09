@@ -316,12 +316,17 @@ class MiniAppManager private constructor(private val context: Context) {
 
     /**
      * Start the mini-app web server if not already running.
+     * Blocks until the server confirms it's listening.
      */
-    fun ensureServerRunning(context: Context) {
+    suspend fun ensureServerRunning(context: Context) {
         try {
             val server = LocalWebServer.getInstance(context, LocalWebServer.ServerType.MINI_APP)
+            AppLogger.d(TAG, "ensureServerRunning: isRunning=${server.isRunning()}, port=${LocalWebServer.MINI_APP_PORT}")
             if (!server.isRunning()) {
                 server.start()
+                // Wait for server to actually bind to the port
+                kotlinx.coroutines.delay(500)
+                AppLogger.d(TAG, "Mini-app server started on port ${LocalWebServer.MINI_APP_PORT}")
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to start mini-app server", e)

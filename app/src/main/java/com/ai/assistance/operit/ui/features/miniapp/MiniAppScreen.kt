@@ -58,19 +58,19 @@ class MiniAppViewModel : ViewModel() {
     val miniApps: List<MiniApp> = _miniApps
 
     private val _isLoading = mutableStateOf(false)
-    val isLoading: Boolean = _isLoading.value
+    val isLoading: State<Boolean> = _isLoading
 
     private val _error = mutableStateOf<String?>(null)
-    val error: String? = _error.value
+    val error: State<String?> = _error
 
     private val _selectedApp = mutableStateOf<MiniApp?>(null)
-    val selectedApp: MiniApp? = _selectedApp.value
+    val selectedApp: State<MiniApp?> = _selectedApp
 
     private val _isViewingApp = mutableStateOf(false)
-    val isViewingApp: Boolean = _isViewingApp.value
+    val isViewingApp: State<Boolean> = _isViewingApp
 
     private val _filterType = mutableStateOf<MiniAppType?>(null)
-    val filterType: MiniAppType? = _filterType.value
+    val filterType: State<MiniAppType?> = _filterType
 
     private var manager: MiniAppManager? = null
 
@@ -105,10 +105,12 @@ class MiniAppViewModel : ViewModel() {
     }
 
     fun openApp(app: MiniApp, ctx: Context) {
-        // Start server FIRST, before updating UI state
-        MiniAppManager.getInstance(ctx).ensureServerRunning(ctx)
-        _selectedApp.value = app
-        _isViewingApp.value = true
+        // Start server FIRST (this is now a suspend function that waits for server to be ready)
+        viewModelScope.launch {
+            MiniAppManager.getInstance(ctx).ensureServerRunning(ctx)
+            _selectedApp.value = app
+            _isViewingApp.value = true
+        }
     }
 
     fun closeApp() {
@@ -179,8 +181,8 @@ fun MiniAppScreen(
         viewModel.loadMiniApps()
     }
 
-    LaunchedEffect(viewModel.error) {
-        viewModel.error?.let { msg ->
+    LaunchedEffect(viewModel.error.value) {
+        viewModel.error.value?.let { msg ->
             snackbarHostState.showSnackbar(msg)
             viewModel.clearError()
         }
@@ -199,20 +201,20 @@ fun MiniAppScreen(
                 actions = {
                     // Filter chip
                     FilterChip(
-                        selected = viewModel.filterType != null,
+                        selected = viewModel.filterType.value != null,
                         onClick = {
-                            viewModel.setFilter(if (viewModel.filterType == null) MiniAppType.PERSISTENT else null)
+                            viewModel.setFilter(if (viewModel.filterType.value == null) MiniAppType.PERSISTENT else null)
                         },
                         label = {
                             Text(
-                                if (viewModel.filterType == null) "All"
-                                else if (viewModel.filterType == MiniAppType.PERSISTENT) "Persistent"
+                                if (viewModel.filterType.value == null) "All"
+                                else if (viewModel.filterType.value == MiniAppType.PERSISTENT) "Persistent"
                                 else "Ephemeral"
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                if (viewModel.filterType == null) Icons.Default.List else Icons.Default.FilterList,
+                                if (viewModel.filterType.value == null) Icons.Default.List else Icons.Default.FilterList,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -222,9 +224,9 @@ fun MiniAppScreen(
             )
         }
     ) { padding ->
-        if (viewModel.isViewingApp && viewModel.selectedApp != null) {
+        if (viewModel.isViewingApp.value && viewModel.selectedApp.value != null) {
             MiniAppViewer(
-                miniApp = viewModel.selectedApp!!,
+                miniApp = viewModel.selectedApp.value!!,
                 onGoBack = { viewModel.closeApp() }
             )
         } else {
@@ -245,7 +247,7 @@ fun MiniAppScreen(
                 )
 
                 // Mini-app list
-                if (viewModel.isLoading) {
+                if (viewModel.isLoading.value) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -462,6 +464,12 @@ fun MiniAppViewer(
     val aiBridge = remember { MiniAppAiBridge(context) }
     val scope = rememberCoroutineScope()
 
+    // Log the URL for debugging
+    LaunchedEffect(miniApp.id) {
+        AppLogger.d("MiniAppViewer", "Opening mini-app: ${miniApp.name}, URL: $url")
+        AppLogger.d("MiniAppViewer", "Mini-app ID: ${miniApp.id}, Type: ${miniApp.type}")
+    }
+
     // Check missing permissions
     val missingPermissions = remember {
         PermissionMapper.getMissingPermissions(context, miniApp.requiredPermissions)
@@ -492,7 +500,24 @@ fun MiniAppViewer(
                 )
             }
 
-            // WebView
+            // WebView with error handling
+            var webViewLoaded by remember { mutableStateOf(false) }
+            var webViewError by remember { mutableStateOf<String?>(null) }
+
+            if (!webViewLoaded) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Loading mini-app...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("URL: ${url.take(50)}...", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                    }
+                }
+            }
+
             AndroidView(
                 factory = { ctx ->
                     val webView = createMiniAppWebView(
@@ -508,14 +533,66 @@ fun MiniAppViewer(
                             AppLogger.d("MiniAppViewer", "Mini-app notify: $message")
                         }
                     )
-                    // Small delay to give the server time to bind to the port
+                    // Set up error detection
+                    webView.webViewClient = object : android.webkit.WebViewClient() {
+                        override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            webViewLoaded = true
+                            webViewError = null
+                        }
+
+                        override fun onReceivedError(
+                            view: android.webkit.WebView?,
+                            request: android.webkit.WebResourceRequest?,
+                            error: android.webkit.WebResourceError?
+                        ) {
+                            super.onReceivedError(view, request, error)
+                            if (request?.isForMainFrame == true) {
+                                webViewError = error?.description?.toString() ?: "Failed to load"
+                                AppLogger.e("MiniAppViewer", "WebView error: $webViewError for URL: $url")
+                            }
+                        }
+                    }
+                    // Wait for server to be ready (500ms already waited in ensureServerRunning)
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        AppLogger.d("MiniAppViewer", "Loading URL: $url")
                         webView.loadUrl(url)
-                    }, 300)
+                    }, 100)
                     webView
                 },
                 modifier = Modifier.fillMaxSize()
             )
+        }
+    }
+
+    // Error state display
+    if (webViewError != null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Failed to load mini-app", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(webViewError!!, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    webViewError = null
+                    webViewLoaded = false
+                }) {
+                    Text("Retry")
+                }
+            }
         }
     }
 

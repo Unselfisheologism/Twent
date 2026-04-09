@@ -501,13 +501,14 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         }
     }
 
-    // ========== 4-Edge Screen Glow (Operit: uniform teal glow on all 4 sides) ==========
+    // ========== 4-Edge Screen Glow with Subtle Traveling Shimmer ==========
 
     private var edgeGlowViewTop: View? = null
     private var edgeGlowViewBottom: View? = null
     private var edgeGlowViewLeft: View? = null
     private var edgeGlowViewRight: View? = null
     private var edgeGlowAnimator: android.animation.ValueAnimator? = null
+    private var shimmerAnimator: android.animation.ValueAnimator? = null
     private var isGlowLinkedToAudio = false
 
     fun showEdgeGlow() {
@@ -527,102 +528,192 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
 
-            val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
+            val glowThickness = (4 * context.resources.displayMetrics.density).toInt()
             val displayMetrics = context.resources.displayMetrics
             val screenWidth = displayMetrics.widthPixels
             val screenHeight = displayMetrics.heightPixels
 
-            // Create 4 thin strip views, one for each edge
+            // Teal glow with gradient for shimmer effect
             val glowColor = 0x8800D4AA.toInt()
 
-            // Top strip
-            edgeGlowViewTop = createGlowStrip(glowThickness, screenWidth, glowColor).apply {
+            // Top strip - with horizontal gradient for shimmer
+            edgeGlowViewTop = View(context).apply {
+                val gradient = android.graphics.LinearGradient(
+                    0f, 0f, screenWidth.toFloat(), 0f,
+                    intArrayOf(0x4400D4AA.toInt(), 0xCC00FFCC.toInt(), 0x4400D4AA.toInt()),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    android.graphics.Shader.TileMode.MIRROR
+                )
+                background = android.graphics.drawable.PaintDrawable().apply {
+                    paint.shader = gradient
+                    setStrokeWidth(0f)
+                }
+                setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            }
+            edgeGlowViewTop?.let { view ->
                 val params = WindowManager.LayoutParams(
                     screenWidth, glowThickness,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.TOP }
-                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add top glow strip", e) }
+                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add top glow strip", e) }
             }
 
             // Bottom strip
-            edgeGlowViewBottom = createGlowStrip(glowThickness, screenWidth, glowColor).apply {
+            edgeGlowViewBottom = View(context).apply {
+                val gradient = android.graphics.LinearGradient(
+                    0f, 0f, screenWidth.toFloat(), 0f,
+                    intArrayOf(0x4400D4AA.toInt(), 0xCC00FFCC.toInt(), 0x4400D4AA.toInt()),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    android.graphics.Shader.TileMode.MIRROR
+                )
+                background = android.graphics.drawable.PaintDrawable().apply {
+                    paint.shader = gradient
+                    setStrokeWidth(0f)
+                }
+                setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            }
+            edgeGlowViewBottom?.let { view ->
                 val params = WindowManager.LayoutParams(
                     screenWidth, glowThickness,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.BOTTOM }
-                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add bottom glow strip", e) }
+                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add bottom glow strip", e) }
             }
 
-            // Left strip
-            edgeGlowViewLeft = createGlowStrip(glowThickness, screenHeight, glowColor).apply {
+            // Left strip - with vertical gradient
+            edgeGlowViewLeft = View(context).apply {
+                val gradient = android.graphics.LinearGradient(
+                    0f, 0f, 0f, screenHeight.toFloat(),
+                    intArrayOf(0x4400D4AA.toInt(), 0xCC00FFCC.toInt(), 0x4400D4AA.toInt()),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    android.graphics.Shader.TileMode.MIRROR
+                )
+                background = android.graphics.drawable.PaintDrawable().apply {
+                    paint.shader = gradient
+                    setStrokeWidth(0f)
+                }
+                setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            }
+            edgeGlowViewLeft?.let { view ->
                 val params = WindowManager.LayoutParams(
                     glowThickness, screenHeight,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.START }
-                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add left glow strip", e) }
+                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add left glow strip", e) }
             }
 
             // Right strip
-            edgeGlowViewRight = createGlowStrip(glowThickness, screenHeight, glowColor).apply {
+            edgeGlowViewRight = View(context).apply {
+                val gradient = android.graphics.LinearGradient(
+                    0f, 0f, 0f, screenHeight.toFloat(),
+                    intArrayOf(0x4400D4AA.toInt(), 0xCC00FFCC.toInt(), 0x4400D4AA.toInt()),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    android.graphics.Shader.TileMode.MIRROR
+                )
+                background = android.graphics.drawable.PaintDrawable().apply {
+                    paint.shader = gradient
+                    setStrokeWidth(0f)
+                }
+                setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            }
+            edgeGlowViewRight?.let { view ->
                 val params = WindowManager.LayoutParams(
                     glowThickness, screenHeight,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.END }
-                try { windowManager.addView(this@apply, params) } catch (e: Exception) { Log.e(TAG, "Failed to add right glow strip", e) }
+                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add right glow strip", e) }
             }
 
             isGlowLinkedToAudio = linkToAudio
             if (!linkToAudio) {
-                startEdgeGlowAnimation()
+                startEdgeGlowShimmer()
             }
             Log.d(TAG, "Edge glow strips added (linkToAudio=$linkToAudio).")
         }
     }
 
-    private fun createGlowStrip(thickness: Int, length: Int, color: Int): View {
-        return View(context).apply {
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(android.graphics.Color.TRANSPARENT)
-                setStroke(thickness, color)
-                cornerRadius = 0f
+    private fun startEdgeGlowShimmer() {
+        // Shimmer animation: moves the gradient offset along the 4 edges
+        shimmerAnimator = android.animation.ValueAnimator.ofFloat(0f, screenWidthF()).apply {
+            duration = 3000L
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = android.animation.ValueAnimator.RESTART
+            interpolator = android.view.animation.LinearInterpolator()
+            addUpdateListener { animator ->
+                val offset = animator.animatedValue as Float
+                updateGradientOffset(offset)
             }
+            start()
         }
-    }
 
-    private fun startEdgeGlowAnimation() {
-        edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.25f, 0.65f, 0.25f).apply {
-            duration = 2500L
+        // Alpha pulse for subtle breathing effect
+        edgeGlowAnimator = android.animation.ValueAnimator.ofFloat(0.6f, 1f, 0.6f).apply {
+            duration = 2000L
             repeatCount = android.animation.ValueAnimator.INFINITE
             repeatMode = android.animation.ValueAnimator.REVERSE
             interpolator = android.view.animation.AccelerateDecelerateInterpolator()
             addUpdateListener { animator ->
                 val alpha = animator.animatedValue as Float
-                val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
-                val color = (alpha * 255).toInt() shl 24 or (0x00D4AA)
                 listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
-                    (view?.background as? GradientDrawable)?.setStroke(glowThickness, color)
+                    view?.alpha = alpha
                 }
             }
             start()
         }
     }
 
+    private fun screenWidthF(): Float {
+        return context.resources.displayMetrics.widthPixels.toFloat()
+    }
+
+    private fun screenHeightF(): Float {
+        return context.resources.displayMetrics.heightPixels.toFloat()
+    }
+
+    private fun updateGradientOffset(offset: Float) {
+        val sw = screenWidthF()
+        val sh = screenHeightF()
+        val color1 = 0x4400D4AA.toInt()
+        val color2 = 0xCC00FFCC.toInt()
+        val color3 = 0x4400D4AA.toInt()
+
+        // Top - horizontal shimmer moving right
+        (edgeGlowViewTop?.background as? android.graphics.drawable.PaintDrawable)?.paint?.shader =
+            android.graphics.LinearGradient(offset - sw, 0f, offset, 0f, intArrayOf(color1, color2, color3), floatArrayOf(0f, 0.5f, 1f), android.graphics.Shader.TileMode.MIRROR)
+
+        // Bottom - horizontal shimmer moving left
+        (edgeGlowViewBottom?.background as? android.graphics.drawable.PaintDrawable)?.paint?.shader =
+            android.graphics.LinearGradient(sw - offset, 0f, sw - offset + sw, 0f, intArrayOf(color1, color2, color3), floatArrayOf(0f, 0.5f, 1f), android.graphics.Shader.TileMode.MIRROR)
+
+        // Left - vertical shimmer moving down
+        (edgeGlowViewLeft?.background as? android.graphics.drawable.PaintDrawable)?.paint?.shader =
+            android.graphics.LinearGradient(0f, offset - sh, 0f, offset, intArrayOf(color1, color2, color3), floatArrayOf(0f, 0.5f, 1f), android.graphics.Shader.TileMode.MIRROR)
+
+        // Right - vertical shimmer moving up
+        (edgeGlowViewRight?.background as? android.graphics.drawable.PaintDrawable)?.paint?.shader =
+            android.graphics.LinearGradient(0f, sh - offset, 0f, sh - offset + sh, intArrayOf(color1, color2, color3), floatArrayOf(0f, 0.5f, 1f), android.graphics.Shader.TileMode.MIRROR)
+
+        // Force redraw
+        edgeGlowViewTop?.invalidate()
+        edgeGlowViewBottom?.invalidate()
+        edgeGlowViewLeft?.invalidate()
+        edgeGlowViewRight?.invalidate()
+    }
+
     fun updateEdgeGlowAmplitude(amplitude: Float) {
         mainHandler.post {
             if (edgeGlowViewTop?.isAttachedToWindow == true && isGlowLinkedToAudio) {
-                val alpha = (amplitude.coerceIn(0f, 1f) * 200).toInt() or 0x00D4AA
-                val glowThickness = (6 * context.resources.displayMetrics.density).toInt()
+                val alpha = amplitude.coerceIn(0f, 1f)
                 listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
-                    (view?.background as? GradientDrawable)?.setStroke(glowThickness, alpha)
+                    view?.alpha = alpha
                 }
             }
         }
@@ -632,6 +723,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         mainHandler.post {
             edgeGlowAnimator?.cancel()
             edgeGlowAnimator = null
+            shimmerAnimator?.cancel()
+            shimmerAnimator = null
             isGlowLinkedToAudio = false
             listOf(edgeGlowViewTop, edgeGlowViewBottom, edgeGlowViewLeft, edgeGlowViewRight).forEach { view ->
                 view?.let {
