@@ -51,7 +51,11 @@ val LocalTopBarActions = compositionLocalOf<(@Composable (RowScope.() -> Unit)) 
 data class NavGroup(@StringRes val titleResId: Int, val items: List<NavItem>)
 
 @Composable
-fun OperitApp(initialNavItem: NavItem = NavItem.AiChat, toolHandler: AIToolHandler? = null) {
+fun OperitApp(
+    initialNavItem: NavItem = NavItem.AiChat,
+    toolHandler: AIToolHandler? = null,
+    pendingNavigationDestination: String? = null
+) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -64,6 +68,21 @@ fun OperitApp(initialNavItem: NavItem = NavItem.AiChat, toolHandler: AIToolHandl
         mutableStateOf(OperitRouter.getScreenForNavItem(initialNavItem))
     }
     val backStack = remember { mutableStateListOf<Screen>() }
+
+    // Handle pending navigation from external intents (e.g. floating chat)
+    LaunchedEffect(pendingNavigationDestination) {
+        if (!pendingNavigationDestination.isNullOrBlank()) {
+            val targetNavItem = when (pendingNavigationDestination) {
+                "mini_apps" -> NavItem.MiniApps
+                else -> null
+            }
+            targetNavItem?.let { navItem ->
+                selectedItem = navItem
+                currentScreen = OperitRouter.getScreenForNavItem(navItem)
+                backStack.clear()
+            }
+        }
+    }
 
     // 跟踪是否是返回操作
     var isNavigatingBack by remember { mutableStateOf(false) }

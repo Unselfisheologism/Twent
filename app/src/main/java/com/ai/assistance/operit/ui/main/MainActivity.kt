@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
     private var pendingSharedFileUris: List<Uri>? = null
 
     private var pendingSharedLinks: List<String>? = null
+    private var pendingNavigationDestination by mutableStateOf<String?>(null)
 
     // 通知权限请求启动器
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -285,7 +287,13 @@ class MainActivity : ComponentActivity() {
         if (isGitHubOAuthCallback) {
             return
         }
-        
+
+        // If it's a mini-app navigation, process immediately
+        if (pendingNavigationDestination != null) {
+            // The LaunchedEffect in OperitApp will handle the navigation
+            return
+        }
+
         // 如果是文件分享，立即处理
         if (intent?.action == Intent.ACTION_VIEW ||
             intent?.action == Intent.ACTION_SEND ||
@@ -297,6 +305,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        // Handle internal navigation requests
+        intent?.getStringExtra("navigate_to")?.let { destination ->
+            pendingNavigationDestination = destination
+            AppLogger.d(TAG, "Received internal navigation to: $destination")
+        }
+
         val uri = intent?.data
         if (uri != null && uri.scheme == "operit" && uri.host == "github-oauth-callback") {
             val code = uri.getQueryParameter("code")
@@ -739,7 +753,8 @@ class MainActivity : ComponentActivity() {
                                                     showPreferencesGuide -> NavItem.UserPreferencesGuide
                                                     else -> NavItem.AiChat
                                                 },
-                                        toolHandler = toolHandler
+                                        toolHandler = toolHandler,
+                                        pendingNavigationDestination = pendingNavigationDestination
                                 )
                             }
                         }

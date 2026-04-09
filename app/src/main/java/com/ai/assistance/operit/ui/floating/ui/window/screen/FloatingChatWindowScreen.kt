@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fullscreen
@@ -414,6 +415,26 @@ private fun TitleBar(
                         icon = Icons.Default.History,
                         description = stringResource(R.string.chat_history),
                         onClick = onToggleRecentChatSelector
+                    )
+                    TitleBarButton(
+                        icon = Icons.Default.Apps,
+                        description = "Mini-Apps",
+                        onClick = {
+                            try {
+                                val intent = android.content.Intent(
+                                    floatContext.context,
+                                    com.ai.assistance.operit.ui.main.MainActivity::class.java
+                                ).apply {
+                                    putExtra("navigate_to", "mini_apps")
+                                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                }
+                                floatContext.context.startActivity(intent)
+                                floatContext.onClose()
+                            } catch (e: Exception) {
+                                AppLogger.e("FloatingChatWindow", "Failed to open Mini-Apps", e)
+                            }
+                        }
                     )
                     TitleBarButton(
                         icon = Icons.Default.Fullscreen,
