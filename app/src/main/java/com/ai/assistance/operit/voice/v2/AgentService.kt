@@ -226,6 +226,7 @@ class AgentService : Service() {
         currentTask = null
         taskQueue.clear()
         serviceScope.cancel()
+        visualFeedbackManager.hideTaskActiveGlow()
         visualFeedbackManager.hideTtsWave()
         Log.i(TAG, "Service destroyed and all resources cleaned up.")
     }

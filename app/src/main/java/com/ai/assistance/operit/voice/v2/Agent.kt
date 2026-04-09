@@ -266,6 +266,9 @@ class Agent(
                     position = OverlayPosition.TOP
                 )
 
+                // Hide glow on completion
+                visualFeedbackManager.hideTaskActiveGlow()
+
                 state.stopped = true
             }
 

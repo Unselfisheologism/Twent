@@ -81,7 +81,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 Log.d(TAG, "Audio wave is already showing.")
                 return@post
             }
-            showEdgeGlow() // Show edge glow during active TTS
         }
     }
 
