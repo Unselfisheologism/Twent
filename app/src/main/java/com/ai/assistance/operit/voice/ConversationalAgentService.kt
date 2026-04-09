@@ -215,6 +215,7 @@ How the executor works:
 - The executor can open apps by name using the "open_app" action
 - The executor can type URLs into browser address bars
 - The executor can tap notification icons, menu items, buttons, etc.
+- The executor can create interactive mini-apps (HTML/CSS/JS) using the "create_mini_app" action. These are small apps the user can launch from the Mini-Apps page. Use this for calculators, trackers, dashboards, todo lists, and similar interactive tools.
 - If the user is logged into a website, the executor sees the logged-in state
 
 {agent_status_context}
@@ -249,7 +250,7 @@ The JSON object must have the following structure:
 
 Rules for JSON values:
 - "Type": Must be one of "Task", "Reply", or "KillTask".
-  - Use "Task" if the user is asking you to DO something on the device (e.g., "open brave browser", "go to x.com", "check my notifications", "send a text to Mom").
+  - Use "Task" if the user is asking you to DO something on the device (e.g., "open brave browser", "go to x.com", "check my notifications", "send a text to Mom", "create a calorie tracker mini-app", "create a todo list app").
   - Use "Reply" for conversational questions (e.g., "what's the weather?", "tell me a joke").
   - Use "KillTask" ONLY if an automation task is running and the user wants to stop it.
 - "Reply": A SHORT, natural confirmation (under 15 words). Example: "Sure, I'm on it." NEVER include execution steps, tap coordinates, or technical details.
