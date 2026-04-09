@@ -30,6 +30,7 @@ import com.ai.assistance.operit.ui.features.chat.screens.AIChatScreen
 import com.ai.assistance.operit.ui.features.demo.screens.ShizukuDemoScreen
 import com.ai.assistance.operit.ui.features.help.screens.HelpScreen
 import com.ai.assistance.operit.ui.features.memory.screens.MemoryScreen
+import com.ai.assistance.operit.ui.features.miniapp.MiniAppScreen
 import com.ai.assistance.operit.ui.features.packages.screens.PackageManagerScreen
 import com.ai.assistance.operit.ui.features.packages.screens.MCPMarketScreen
 import com.ai.assistance.operit.ui.features.packages.screens.MCPManageScreen
@@ -430,6 +431,23 @@ sealed class Screen(
                     onSqlViewerSelected = { navigateTo(SqlViewer) },
                     onAgentSessionsSelected = { navigateTo(AgentSessions) }
             )
+        }
+    }
+
+
+    data object MiniApps : Screen(navItem = NavItem.MiniApps) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            MiniAppScreen(onGoBack = onGoBack)
         }
     }
 
@@ -1526,6 +1544,7 @@ object OperitRouter {
             NavItem.UpdateHistory -> Screen.UpdateHistory
             NavItem.Workflow -> Screen.Workflow
             NavItem.AgentCLIs -> Screen.AgentCLIs
+            NavItem.MiniApps -> Screen.MiniApps
             else -> Screen.AiChat
         }
     }

@@ -175,7 +175,8 @@ fun OperitApp(initialNavItem: NavItem = NavItem.AiChat, toolHandler: AIToolHandl
                 NavItem.Packages,
                 NavItem.MemoryBase,
                 NavItem.TokenConfig,
-                NavItem.AgentCLIs
+                NavItem.AgentCLIs,
+                NavItem.MiniApps
             )
         ),
         NavGroup(

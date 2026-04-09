@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Token
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.ai.assistance.operit.R
 
@@ -65,4 +66,5 @@ sealed class NavItem(val route: String, val titleResId: Int, val icon: ImageVect
         object TokenConfig : NavItem("token_config", R.string.token_config, Icons.Default.Token)
         object Workflow : NavItem("workflow", R.string.nav_workflow, Icons.Default.AccountTree)
         object AgentCLIs : NavItem("agent_clis", R.string.nav_agent_clis, Icons.Default.SmartToy)
+        object MiniApps : NavItem("mini_apps", R.string.nav_mini_apps, Icons.Default.Apps)
 }

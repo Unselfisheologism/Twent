@@ -2388,6 +2388,7 @@
 <string name="name_colon">Name Colon</string>
 <string name="nav_about">Nav About</string>
 <string name="nav_agent_clis">Agent CLIs</string>
+<string name="nav_mini_apps">Mini-Apps</string>
 <string name="nav_ai_chat">Nav Ai Chat</string>
 <string name="nav_assistant_config">Nav Assistant Config</string>
 <string name="nav_group_ai_features">Nav Group Ai Features</string>
