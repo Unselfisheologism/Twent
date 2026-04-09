@@ -14,7 +14,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -452,13 +457,19 @@ fun MiniAppViewer(
 ) {
     val context = LocalContext.current
     val url = MiniAppManager.getInstance(context).getMiniAppUrl(miniApp)
+    val aiBridge = remember { MiniAppAiBridge(context) }
+    val scope = rememberCoroutineScope()
 
     // Check missing permissions
     val missingPermissions = remember {
         PermissionMapper.getMissingPermissions(context, miniApp.requiredPermissions)
     }
 
+    // Vision-required dialog state
+    var showVisionRequiredDialog by remember { mutableStateOf(false) }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
         topBar = {
             TopAppBar(
                 title = { Text(miniApp.name) },
@@ -484,6 +495,7 @@ fun MiniAppViewer(
                 factory = { ctx ->
                     val webView = createMiniAppWebView(
                         context = ctx,
+                        aiBridge = aiBridge,
                         onPermissionGranted = { resources ->
                             AppLogger.d("MiniAppViewer", "Permissions granted: ${resources.joinToString()}")
                         },
@@ -500,6 +512,17 @@ fun MiniAppViewer(
                 modifier = Modifier.fillMaxSize()
             )
         }
+    }
+
+    // Vision-required dialog
+    if (showVisionRequiredDialog) {
+        VisionRequiredDialog(
+            onDismiss = { showVisionRequiredDialog = false },
+            onOpenSettings = {
+                openAppSettings(context)
+                showVisionRequiredDialog = false
+            }
+        )
     }
 }
 
@@ -548,4 +571,43 @@ private fun openAppSettings(context: Context) {
         data = Uri.fromParts("package", context.packageName, null)
     }
     context.startActivity(intent)
+}
+
+@Composable
+private fun VisionRequiredDialog(
+    onDismiss: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.Visibility,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = { Text("Vision Capability Required") },
+        text = {
+            Column {
+                Text("This mini-app needs to send images to the AI model, but your currently configured model doesn't support vision.")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Please go to Settings → Models & Parameters Configuration and select a vision-enabled model (e.g. GPT-4o, Claude 3, Gemini Pro Vision).",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) {
+                Text("Open Settings")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -8,12 +8,13 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.ai.assistance.operit.data.miniapp.MiniAppManager
 import com.ai.assistance.operit.data.miniapp.PermissionMapper
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
 
 /**
  * JavaScript interface exposed to mini-app WebViews.
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
  */
 class MiniAppJsInterface(
     private val context: Context,
+    private val aiBridge: MiniAppAiBridge,
     private val onNotify: (String) -> Unit = {}
 ) {
     @JavascriptInterface
@@ -42,6 +44,49 @@ class MiniAppJsInterface(
     @JavascriptInterface
     fun getAppInfo(): String {
         return """{"platform":"operit_android","type":"mini_app"}"""
+    }
+
+    // ========== AI Bridge Methods ==========
+
+    @JavascriptInterface
+    fun aiSendMessage(prompt: String, imagesJson: String): String {
+        return runBlocking {
+            try {
+                val images = if (imagesJson.isNotBlank()) {
+                    val arr = JSONObject(imagesJson)
+                    if (arr.has("images")) {
+                        val imagesArray = arr.getJSONArray("images")
+                        List(imagesArray.length()) { imagesArray.getString(it) }
+                    } else emptyList()
+                } else emptyList()
+
+                val response = aiBridge.sendMessage(prompt, images)
+                JSONObject().apply {
+                    put("success", response.success)
+                    put("content", response.content)
+                    put("error", response.error ?: "")
+                    put("requiresVision", response.requiresVision)
+                }.toString()
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "aiSendMessage failed", e)
+                JSONObject().apply {
+                    put("success", false)
+                    put("content", "")
+                    put("error", e.message ?: "Unknown error")
+                    put("requiresVision", false)
+                }.toString()
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun aiIsVisionSupported(): Boolean {
+        return runBlocking { aiBridge.isVisionSupported() }
+    }
+
+    @JavascriptInterface
+    fun aiGetModelName(): String {
+        return runBlocking { aiBridge.getModelName() }
     }
 }
 
@@ -77,6 +122,7 @@ private const val TAG = "MiniAppWebView"
  */
 fun createMiniAppWebView(
     context: Context,
+    aiBridge: MiniAppAiBridge,
     onPermissionGranted: (resources: Array<String>) -> Unit = {},
     onPermissionDenied: (resources: Array<String>) -> Unit = {},
     onNotify: (String) -> Unit = {}
@@ -107,7 +153,7 @@ fun createMiniAppWebView(
     }
 
     // Inject JS bridge
-    webView.addJavascriptInterface(MiniAppJsInterface(context, onNotify), "OperitMiniAppNative")
+    webView.addJavascriptInterface(MiniAppJsInterface(context, aiBridge, onNotify), "OperitMiniAppNative")
 
     webView.webViewClient = WebViewClient()
 
