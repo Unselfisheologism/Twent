@@ -48,6 +48,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -381,6 +382,7 @@ private fun TitleBar(
     val primaryColor = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
     val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val ctx = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -422,14 +424,14 @@ private fun TitleBar(
                         onClick = {
                             try {
                                 val intent = android.content.Intent(
-                                    floatContext.context,
+                                    ctx,
                                     com.ai.assistance.operit.ui.main.MainActivity::class.java
                                 ).apply {
                                     putExtra("navigate_to", "mini_apps")
                                     flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
                                             android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
                                 }
-                                floatContext.context.startActivity(intent)
+                                ctx.startActivity(intent)
                                 floatContext.onClose()
                             } catch (e: Exception) {
                                 AppLogger.e("FloatingChatWindow", "Failed to open Mini-Apps", e)
