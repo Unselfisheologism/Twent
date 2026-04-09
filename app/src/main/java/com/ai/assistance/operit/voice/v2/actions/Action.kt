@@ -163,7 +163,30 @@ sealed class Action {
 
         // The single source of truth for all actions.
         // Keys and names are now consistently in snake_case for the LLM.
+        // NOTE: create_mini_app is FIRST so the LLM always sees it even if prompt is truncated.
         private val allSpecs: Map<String, Spec> = mapOf(
+            "create_mini_app" to Spec(
+                name = "create_mini_app",
+                description = "Create an interactive mini-app (HTML/CSS/JS) that the user can launch from the app. Generate COMPLETE, self-contained HTML with CSS in <style> and JS in <script> tags. Use when user asks for a calculator, tracker, dashboard, todo list, or any interactive tool.",
+                params = listOf(
+                    ParamSpec("name", String::class, "Name of the mini-app."),
+                    ParamSpec("html", String::class, "Complete HTML with CSS in <style> and JS in <script>. Must be valid, self-contained HTML."),
+                    ParamSpec("type", String::class, "App type: 'persistent' (default) or 'ephemeral'."),
+                    ParamSpec("css", String::class, "Optional separate CSS. Can embed in HTML instead."),
+                    ParamSpec("javascript", String::class, "Optional separate JS. Can embed in HTML instead."),
+                    ParamSpec("description", String::class, "Brief description of what the app does.")
+                ),
+                build = { args ->
+                    CreateMiniApp(
+                        name = args["name"] as String,
+                        html = args["html"] as String,
+                        type = args["type"] as? String ?: "persistent",
+                        css = args["css"] as? String ?: "",
+                        javascript = args["javascript"] as? String ?: "",
+                        description = args["description"] as? String ?: ""
+                    )
+                }
+            ),
             "tap_element" to Spec(
                 name = "tap_element",
                 description = "Tap the element with the specified numeric ID.",
@@ -518,30 +541,6 @@ sealed class Action {
                     ParamSpec("save_as", String::class, "Optional filename to save the screenshot as (e.g., 'screen.png').")
                 ),
                 build = { args -> CaptureScreenshot(args["save_as"] as? String) }
-            ),
-
-            // Mini-App Creation
-            "create_mini_app" to Spec(
-                name = "create_mini_app",
-                description = "Create an interactive mini-app (HTML/CSS/JS) that the user can launch from the app. Generate complete, self-contained HTML. Use for calculators, trackers, dashboards, or any interactive tool the user requests.",
-                params = listOf(
-                    ParamSpec("name", String::class, "Name of the mini-app."),
-                    ParamSpec("html", String::class, "Complete HTML content (include CSS in <style> and JS in <script> tags)."),
-                    ParamSpec("type", String::class, "App type: 'persistent' (default) or 'ephemeral'."),
-                    ParamSpec("css", String::class, "Optional separate CSS. Can embed in HTML instead."),
-                    ParamSpec("javascript", String::class, "Optional separate JS. Can embed in HTML instead."),
-                    ParamSpec("description", String::class, "Brief description of what the app does.")
-                ),
-                build = { args ->
-                    CreateMiniApp(
-                        name = args["name"] as String,
-                        html = args["html"] as String,
-                        type = args["type"] as? String ?: "persistent",
-                        css = args["css"] as? String ?: "",
-                        javascript = args["javascript"] as? String ?: "",
-                        description = args["description"] as? String ?: ""
-                    )
-                }
             ),
             "list_mini_apps" to Spec(
                 name = "list_mini_apps",
