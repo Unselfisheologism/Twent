@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ai.assistance.operit.data.miniapp.MiniAppManager
 import com.ai.assistance.operit.data.miniapp.PermissionMapper
@@ -65,21 +66,19 @@ class MiniAppViewModel : ViewModel() {
     val filterType: MiniAppType? = _filterType.value
 
     private var manager: MiniAppManager? = null
-    private var context: Context? = null
 
     fun initialize(ctx: Context) {
-        context = ctx.applicationContext
         manager = MiniAppManager.getInstance(ctx)
     }
 
     fun loadMiniApps() {
         val mgr = manager ?: return
-        val ctx = context ?: return
 
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            mgr.listMiniApps(filterType.value).fold(
+            val currentFilter = _filterType.value
+            mgr.listMiniApps(currentFilter).fold(
                 onSuccess = { apps ->
                     _miniApps.clear()
                     _miniApps.addAll(apps)
