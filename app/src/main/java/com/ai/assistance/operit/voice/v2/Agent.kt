@@ -65,6 +65,25 @@ class Agent(
         // Show persistent glow when task starts
         visualFeedbackManager.showTaskActiveGlow()
 
+        // Announce task start to user
+        val taskAnnouncement = when {
+            initialTask.contains("mini-app", ignoreCase = true) || initialTask.contains("mini app", ignoreCase = true) ->
+                "Creating your mini-app. This may take a few moments..."
+            initialTask.contains("create", ignoreCase = true) || initialTask.contains("build", ignoreCase = true) ->
+                "Starting task: ${initialTask.take(60)}..."
+            else ->
+                "Starting task execution..."
+        }
+        speechCoordinator.speakToUser(taskAnnouncement)
+
+        // Show persistent task status
+        OverlayDispatcher.show(
+            text = "🚀 Task: $initialTask",
+            priority = OverlayPriority.TASKS,
+            duration = 0L,
+            position = OverlayPosition.TOP
+        )
+
         Log.d(TAG, "--- Agent starting task: '$initialTask' ---")
 
         while (!state.stopped && state.nSteps <= maxSteps) {
@@ -112,7 +131,7 @@ class Agent(
             Log.d(TAG, agentOutput.toString())
             Log.d(TAG,"🤖 LLM decided: ${agentOutput.nextGoal}")
 
-            // Show thoughts overlay
+            // Show thoughts overlay - PERSISTENT during task execution
             val thoughtText = buildString {
                     agentOutput.thinking?.let { if (it.isNotEmpty()) append("Thinking: ${agentOutput.thinking}\n") }
                     agentOutput.memory?.let { if (it.isNotEmpty()) append("Memory: ${agentOutput.memory}\n") }
@@ -120,18 +139,48 @@ class Agent(
                 }.trim()
 
                 if (thoughtText.isNotEmpty()) {
+                    // Persistent overlay: no auto-dismiss, stays until next step updates it
                     OverlayDispatcher.show(
                         text = thoughtText,
                         priority = OverlayPriority.TASKS,
-                        duration = 8000L,
+                        duration = 0L, // 0 = persistent, never auto-dismiss
                         position = OverlayPosition.TOP
                     )
+
+                    // Speak key milestones for user awareness
+                    val nextGoal = agentOutput.nextGoal.orEmpty()
+                    val thinking = agentOutput.thinking.orEmpty()
+                    val milestoneText = when {
+                        nextGoal.contains("mini-app", ignoreCase = true) || nextGoal.contains("mini app", ignoreCase = true) ->
+                            "Creating mini-app: ${nextGoal.take(60)}..."
+                        nextGoal.contains("write", ignoreCase = true) || nextGoal.contains("save", ignoreCase = true) ->
+                            "Saving files..."
+                        nextGoal.contains("list", ignoreCase = true) || nextGoal.contains("check", ignoreCase = true) ->
+                            "Checking existing mini-apps..."
+                        nextGoal.contains("delete", ignoreCase = true) || nextGoal.contains("remove", ignoreCase = true) ->
+                            "Deleting mini-app..."
+                        thinking.isNotEmpty() && thinking.length < 100 ->
+                            "Working on: ${thinking.take(80)}..."
+                        nextGoal.isNotEmpty() && nextGoal.length < 80 ->
+                            "Step ${state.nSteps}: ${nextGoal.take(60)}..."
+                        else -> null
+                    }
+                    milestoneText?.let { speechCoordinator.speakToUser(it) }
                 }
 
             // 4. ACT: Execute the LLM's planned actions.
             Log.d(TAG,"💪 Executing actions...")
             val actionResults = mutableListOf<ActionResult>()
             for (action in agentOutput.action) {
+                // Show action being executed
+                val actionName = action::class.simpleName ?: "Action"
+                OverlayDispatcher.show(
+                    text = "⚡ $actionName...",
+                    priority = OverlayPriority.TASKS,
+                    duration = 0L,
+                    position = OverlayPosition.TOP
+                )
+
                 val result = try {
                     actionExecutor.execute(action, screenState, context, fileSystem)
                 } catch (e: Exception) {
@@ -140,6 +189,35 @@ class Agent(
                 }
                 actionResults.add(result)
                 Log.d(TAG,"  - Action '${action::class.simpleName}' executed. Result: ${result.longTermMemory ?: result.error ?: "OK"}")
+
+                // Show action result immediately
+                val resultText = when {
+                    result.error != null -> "❌ ${result.error.take(80)}"
+                    result.longTermMemory != null -> "✅ ${result.longTermMemory.take(120)}"
+                    result.extractedContent != null -> "✅ ${result.extractedContent.take(120)}"
+                    else -> "✅ Done"
+                }
+                OverlayDispatcher.show(
+                    text = resultText,
+                    priority = OverlayPriority.TASKS,
+                    duration = 0L,
+                    position = OverlayPosition.TOP
+                )
+
+                // Speak important action results for user awareness
+                val voiceResult = when {
+                    result.error != null -> "Error: ${result.error.take(60)}"
+                    result.longTermMemory?.contains("mini-app", ignoreCase = true) == true ->
+                        result.longTermMemory.take(80)
+                    result.longTermMemory?.contains("Created", ignoreCase = true) == true ->
+                        "Successfully created! ${result.longTermMemory.take(60)}"
+                    result.longTermMemory?.contains("deleted", ignoreCase = true) == true ->
+                        "Successfully deleted."
+                    result.longTermMemory?.contains("Found", ignoreCase = true) == true ->
+                        result.longTermMemory.take(80)
+                    else -> null
+                }
+                voiceResult?.let { speechCoordinator.speakToUser(it) }
 
                 // If an action fails, stop executing further actions in this step.
                 if (result.error != null) {
@@ -160,12 +238,33 @@ class Agent(
             )
 
             // --- Check for Task Completion ---
-            if (actionResults.any { it.isDone == true }) {
+            val doneAction = actionResults.find { it.isDone == true }
+            if (doneAction != null) {
                 Log.d(TAG,"✅ Agent finished the task.")
-                speechCoordinator.speakToUser("Task completed successfully.")
 
                 // Hide glow when task is done
                 visualFeedbackManager.hideTaskActiveGlow()
+
+                // Speak detailed completion
+                val completionText = when {
+                    doneAction.longTermMemory?.contains("mini-app", ignoreCase = true) == true ->
+                        doneAction.longTermMemory.take(100)
+                    doneAction.longTermMemory?.contains("completed", ignoreCase = true) == true ->
+                        doneAction.longTermMemory.take(100)
+                    doneAction.success == false ->
+                        "Task completed with issues: ${doneAction.error?.take(60) ?: "unknown error"}"
+                    else ->
+                        "Task completed successfully."
+                }
+                speechCoordinator.speakToUser(completionText)
+
+                // Show final persistent status
+                OverlayDispatcher.show(
+                    text = "✅ Task Complete: $completionText",
+                    priority = OverlayPriority.TASKS,
+                    duration = 0L,
+                    position = OverlayPosition.TOP
+                )
 
                 state.stopped = true
             }
