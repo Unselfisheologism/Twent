@@ -346,6 +346,95 @@ class ActionExecutor(private val finger: OperitFinger, private val context: Cont
                 }
                 ActionResult(longTermMemory = "Pressed key: ${action.key}")
             }
+
+            // ========== Mini-App Actions ==========
+
+            is Action.CreateMiniApp -> {
+                try {
+                    val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                    val miniAppType = if (action.type.equals("ephemeral", ignoreCase = true)) {
+                        com.ai.assistance.operit.data.model.MiniAppType.EPHEMERAL
+                    } else {
+                        com.ai.assistance.operit.data.model.MiniAppType.PERSISTENT
+                    }
+
+                    val files = mutableMapOf<String, String>()
+                    files["index.html"] = action.html
+                    if (action.css.isNotBlank()) files["style.css"] = action.css
+                    if (action.javascript.isNotBlank()) files["app.js"] = action.javascript
+
+                    val scaffold = com.ai.assistance.operit.data.miniapp.MiniAppScaffold.FromFiles(
+                        files = files,
+                        name = action.name,
+                        type = miniAppType,
+                        description = action.description,
+                        entryFile = "index.html",
+                        metadata = mapOf("created_by" to "overlay_agent")
+                    )
+
+                    val ensureName = kotlinx.coroutines.runBlocking { manager.ensureUniqueName(action.name, miniAppType) }
+                    val result = kotlinx.coroutines.runBlocking { manager.createMiniApp(scaffold.copy(name = ensureName)) }
+
+                    result.fold(
+                        onSuccess = { miniApp ->
+                            val url = manager.getMiniAppUrl(miniApp)
+                            ActionResult(
+                                longTermMemory = "Created mini-app '$ensureName' (ID: ${miniApp.id}). User can open it from the Mini-Apps page.",
+                                extractedContent = "Mini-app created: $ensureName\nURL: $url",
+                                includeExtractedContentOnlyOnce = true
+                            )
+                        },
+                        onFailure = { e ->
+                            ActionResult(error = "Failed to create mini-app: ${e.message}")
+                        }
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to create mini-app: ${e.message}")
+                }
+            }
+
+            is Action.ListMiniApps -> {
+                try {
+                    val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                    val result = kotlinx.coroutines.runBlocking { manager.listMiniApps() }
+                    result.fold(
+                        onSuccess = { miniApps ->
+                            if (miniApps.isEmpty()) {
+                                ActionResult(longTermMemory = "No mini-apps found.", extractedContent = "No mini-apps found.", includeExtractedContentOnlyOnce = true)
+                            } else {
+                                val output = miniApps.joinToString("\n") { app -> "- ${app.name} (ID: ${app.id}, Type: ${app.type.name.lowercase()})" }
+                                ActionResult(longTermMemory = "Found ${miniApps.size} mini-apps.", extractedContent = output, includeExtractedContentOnlyOnce = true)
+                            }
+                        },
+                        onFailure = { e -> ActionResult(error = "Failed to list mini-apps: ${e.message}") }
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to list mini-apps: ${e.message}")
+                }
+            }
+
+            is Action.DeleteMiniApp -> {
+                try {
+                    val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                    val appResult = kotlinx.coroutines.runBlocking { manager.getMiniApp(action.appId) }
+                    appResult.fold(
+                        onSuccess = { app ->
+                            if (app == null) {
+                                ActionResult(error = "Mini-app not found: ${action.appId}")
+                            } else {
+                                val deleteResult = kotlinx.coroutines.runBlocking { manager.deleteMiniApp(app.id, app.type) }
+                                deleteResult.fold(
+                                    onSuccess = { ActionResult(longTermMemory = "Deleted mini-app: ${app.name}.") },
+                                    onFailure = { e -> ActionResult(error = "Failed to delete mini-app: ${e.message}") }
+                                )
+                            }
+                        },
+                        onFailure = { e -> ActionResult(error = "Failed to find mini-app: ${e.message}") }
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to delete mini-app: ${e.message}")
+                }
+            }
         }
     }
 }

@@ -24,7 +24,19 @@ sealed class Action {
     data class ReadFile(val fileName: String) : Action()
     data class Done(val success: Boolean, val text: String, val filesToDisplay: List<String>? = null) : Action()
     data class LaunchIntent(val intentName: String, val parameters: Map<String, String>) : Action()
-    
+
+    // Mini-App Tools
+    data class CreateMiniApp(
+        val name: String,
+        val html: String,
+        val type: String = "persistent",
+        val css: String = "",
+        val javascript: String = "",
+        val description: String = ""
+    ) : Action()
+    data object ListMiniApps : Action()
+    data class DeleteMiniApp(val appId: String) : Action()
+
     // Coordinate-based actions
     data class TapAt(val x: Int, val y: Int) : Action()
     data class LongPressAt(val x: Int, val y: Int, val durationMs: Long = 1500) : Action()
@@ -336,6 +348,42 @@ sealed class Action {
                         parameters = args["parameters"] as? Map<String, String> ?: emptyMap()
                     )
                 }
+            ),
+
+            // Mini-App Creation
+            "create_mini_app" to Spec(
+                name = "create_mini_app",
+                description = "Create an interactive mini-app (HTML/CSS/JS) that the user can launch from the app. Generate complete, self-contained HTML with embedded CSS and JS. Use for calculators, trackers, dashboards, or any interactive tool the user requests.",
+                params = listOf(
+                    ParamSpec("name", String::class, "Name of the mini-app."),
+                    ParamSpec("html", String::class, "Complete HTML content."),
+                    ParamSpec("type", String::class, "App type: 'persistent' (default) or 'ephemeral'."),
+                    ParamSpec("css", String::class, "Optional separate CSS."),
+                    ParamSpec("javascript", String::class, "Optional separate JS."),
+                    ParamSpec("description", String::class, "Brief description of the app.")
+                ),
+                build = { args ->
+                    CreateMiniApp(
+                        name = args["name"] as String,
+                        html = args["html"] as String,
+                        type = args["type"] as? String ?: "persistent",
+                        css = args["css"] as? String ?: "",
+                        javascript = args["javascript"] as? String ?: "",
+                        description = args["description"] as? String ?: ""
+                    )
+                }
+            ),
+            "list_mini_apps" to Spec(
+                name = "list_mini_apps",
+                description = "List all existing mini-apps.",
+                params = emptyList(),
+                build = { _ -> ListMiniApps }
+            ),
+            "delete_mini_app" to Spec(
+                name = "delete_mini_app",
+                description = "Delete an existing mini-app by ID.",
+                params = listOf(ParamSpec("app_id", String::class, "The ID of the mini-app to delete.")),
+                build = { args -> DeleteMiniApp(args["app_id"] as String) }
             ),
         )
 
