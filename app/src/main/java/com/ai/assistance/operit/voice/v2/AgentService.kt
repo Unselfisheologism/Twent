@@ -98,15 +98,6 @@ class AgentService : Service() {
             context.startService(intent)
         }
         
-        fun start(context: Context, task: String) {
-            Log.d("AgentService", "Starting service with task: $task")
-            isStarting = true
-            val intent = Intent(context, AgentService::class.java).apply {
-                putExtra(EXTRA_TASK, task)
-            }
-            context.startService(intent)
-        }
-        
         /**
          * Pause the current task
          */
@@ -125,6 +116,7 @@ class AgentService : Service() {
 
         fun start(context: Context, task: String) {
             Log.d("AgentService", "Starting service with task: $task")
+            isStarting = true
             val intent = Intent(context, AgentService::class.java).apply {
                 putExtra(EXTRA_TASK, task)
             }
