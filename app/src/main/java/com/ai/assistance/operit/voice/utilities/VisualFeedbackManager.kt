@@ -41,6 +41,16 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var statusTextView: TextView? = null
     private var pausePlayButton: android.widget.ImageButton? = null
     private var simplifyButton: android.widget.ImageButton? = null
+    
+    // Top-left control buttons (same layer as shimmer glow)
+    private var topLeftControlLayout: android.widget.LinearLayout? = null
+    private var stopTaskButton: android.widget.ImageButton? = null
+    private var pauseTaskButton: android.widget.ImageButton? = null
+
+    // Callbacks for task control
+    private var onStopTaskClicked: (() -> Unit)? = null
+    private var onPauseTaskClicked: (() -> Unit)? = null
+    private var onResumeTaskClicked: (() -> Unit)? = null
 
     // Callbacks for simplify and pause/play
     private var onSimplifyPageClicked: (() -> Unit)? = null
@@ -299,7 +309,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     fun showInputBox(
         onActivated: () -> Unit,
         onSubmit: (String) -> Unit,
-        onOutsideTap: () -> Unit
+        onOutsideTap: () -> Unit,
+        onAttachClicked: (() -> Unit)? = null
     ) {
         mainHandler.post {
             if (inputBoxView?.isAttachedToWindow == true) {
@@ -379,6 +390,12 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             inputField?.setOnTouchListener { _, _ ->
                 onActivated()
                 false
+            }
+            
+            // Set up attach button
+            val attachButton = inputBoxView?.findViewById<android.widget.ImageButton>(R.id.attachButton)
+            attachButton?.setOnClickListener {
+                onAttachClicked?.invoke()
             }
 
             rootLayout?.setOnTouchListener { _, event ->
@@ -887,5 +904,132 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     fun resetPauseState() {
         isAudioPaused = false
         pausePlayButton?.setImageResource(android.R.drawable.ic_media_pause)
+    }
+    
+    /**
+     * Show top-left control buttons (stop and pause/play) during ongoing tasks
+     * These buttons are at the same layer as the shimmer glow to avoid blocking anything
+     */
+    fun showTopLeftTaskControls(
+        onStopClicked: () -> Unit = {},
+        onPauseClicked: () -> Unit = {},
+        onResumeClicked: () -> Unit = {}
+    ) {
+        onStopTaskClicked = onStopClicked
+        onPauseTaskClicked = onPauseClicked
+        onResumeTaskClicked = onResumeClicked
+        
+        mainHandler.post {
+            if (topLeftControlLayout?.isAttachedToWindow == true) return@post
+            
+            if (!hasOverlayPermission()) {
+                Log.e(TAG, "Cannot show top-left task controls: SYSTEM_ALERT_WINDOW permission not granted")
+                return@post
+            }
+            
+            // Create horizontal layout for stop and pause buttons
+            topLeftControlLayout = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                setPadding(16, 16, 16, 16)
+                
+                // Stop button (red X)
+                stopTaskButton = android.widget.ImageButton(context).apply {
+                    setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+                    setBackgroundColor(0xFFFF0000.toInt()) // Red background
+                    setPadding(16, 16, 16, 16)
+                    contentDescription = "Stop task"
+                    setOnClickListener {
+                        onStopTaskClicked?.invoke()
+                    }
+                }
+                
+                // Pause/Play button (yellow)
+                pauseTaskButton = android.widget.ImageButton(context).apply {
+                    setImageResource(android.R.drawable.ic_media_pause)
+                    setBackgroundColor(0xFFFFFF00.toInt()) // Yellow background
+                    setPadding(16, 16, 16, 16)
+                    contentDescription = "Pause task"
+                    setOnClickListener {
+                        // Toggle between pause and play
+                        val isCurrentlyPaused = tag as? Boolean ?: false
+                        if (isCurrentlyPaused) {
+                            setImageResource(android.R.drawable.ic_media_pause)
+                            contentDescription = "Pause task"
+                            onResumeTaskClicked?.invoke()
+                        } else {
+                            setImageResource(android.R.drawable.ic_media_play)
+                            contentDescription = "Resume task"
+                            onPauseTaskClicked?.invoke()
+                        }
+                        tag = !isCurrentlyPaused
+                    }
+                }
+                
+                addView(stopTaskButton, android.widget.LinearLayout.LayoutParams(
+                    120, 120
+                ).apply {
+                    setMargins(0, 0, 16, 0)
+                })
+                addView(pauseTaskButton, android.widget.LinearLayout.LayoutParams(
+                    120, 120
+                ))
+            }
+            
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+            ).apply {
+                gravity = Gravity.TOP or Gravity.START
+                x = (16 * context.resources.displayMetrics.density).toInt()
+                y = (100 * context.resources.displayMetrics.density).toInt()
+            }
+            
+            try {
+                windowManager.addView(topLeftControlLayout, params)
+                Log.d(TAG, "Top-left task controls added.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding top-left task controls", e)
+                topLeftControlLayout = null
+            }
+        }
+    }
+    
+    /**
+     * Hide top-left control buttons (stop and pause/play)
+     */
+    fun hideTopLeftTaskControls() {
+        mainHandler.post {
+            topLeftControlLayout?.let { view ->
+                if (view.isAttachedToWindow) {
+                    try {
+                        windowManager.removeView(view)
+                        Log.d(TAG, "Top-left task controls removed.")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing top-left task controls", e)
+                    }
+                }
+            }
+            topLeftControlLayout = null
+            stopTaskButton = null
+            pauseTaskButton = null
+        }
+    }
+    
+    /**
+     * Update the pause/play button icon
+     */
+    fun updateTaskPauseButtonIcon(isPaused: Boolean) {
+        mainHandler.post {
+            pauseTaskButton?.setImageResource(
+                if (isPaused) android.R.drawable.ic_media_play
+                else android.R.drawable.ic_media_pause
+            )
+            pauseTaskButton?.tag = isPaused
+        }
     }
 }

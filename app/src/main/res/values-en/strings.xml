@@ -6512,6 +6512,13 @@
     <string name="chat_history_convert_format_failed">Format conversion failed: %1$s</string>
     <string name="chat_history_parse_backup_failed">Failed to parse backup file: %1$s\nPlease ensure file format is correct</string>
 
+    <!-- Overlay Voice Chat Sources -->
+    <string name="overlay_voice_sessions">Voice Sessions</string>
+    <string name="overlay_task_executions">Task Executions</string>
+    <string name="ai_chat_sessions">AI Chat</string>
+    <string name="all_sessions">All Sessions</string>
+    <string name="source_filter">Source Filter</string>
+
     <!-- SkillRepository -->
     <string name="skill_invalid_github_url">Invalid GitHub repository URL</string>
     <string name="skill_cannot_determine_default_branch">Cannot determine default branch for %1$s</string>

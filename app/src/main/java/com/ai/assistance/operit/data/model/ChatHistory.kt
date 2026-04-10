@@ -23,5 +23,6 @@ data class ChatHistory(
     val workspaceEnv: String? = null,
     val parentChatId: String? = null,
     val characterCardName: String? = null,
-    val locked: Boolean = false
+    val locked: Boolean = false,
+    val source: String = "ai_chat" // "ai_chat", "overlay_voice", "overlay_task"
 )

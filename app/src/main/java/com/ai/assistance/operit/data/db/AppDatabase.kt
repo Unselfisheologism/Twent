@@ -15,7 +15,7 @@ import com.ai.assistance.operit.data.model.MessageEntity
 /** 应用数据库，包含问题记录表、聊天表和消息表 */
 @Database(
     entities = [ProblemEntity::class, ChatEntity::class, MessageEntity::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(StringListConverter::class)
@@ -81,6 +81,19 @@ abstract class AppDatabase : RoomDatabase() {
                     // 向chats表添加workspaceEnv列
                     try {
                         db.execSQL("ALTER TABLE chats ADD COLUMN `workspaceEnv` TEXT")
+                    } catch (_: Exception) {
+
+                    }
+                }
+            }
+        
+        // 定义从版本11到12的迁移
+        private val MIGRATION_11_12 =
+            object : Migration(11, 12) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 向chats表添加source列（区分AI聊天、覆盖语音、覆盖任务）
+                    try {
+                        db.execSQL("ALTER TABLE chats ADD COLUMN `source` TEXT NOT NULL DEFAULT 'ai_chat'")
                     } catch (_: Exception) {
 
                     }
@@ -194,8 +207,9 @@ abstract class AppDatabase : RoomDatabase() {
                                 MIGRATION_7_8,
                                 MIGRATION_8_9,
                                 MIGRATION_9_10,
-                                MIGRATION_10_11
-                            ) // 添加新的迁移
+                                MIGRATION_10_11,
+                                MIGRATION_11_12
+                            )
                             .build()
                     INSTANCE = instance
                     instance

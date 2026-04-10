@@ -746,6 +746,13 @@
 <string name="chat_history_overview">Chat History Overview</string>
 <string name="chat_history_parent_not_exist">Chat History Parent Not Exist</string>
 <string name="chat_history_parse_backup_failed">Chat History Parse Backup Failed</string>
+
+    <!-- Overlay Voice Chat Sources -->
+    <string name="overlay_voice_sessions">Voice Sessions</string>
+    <string name="overlay_task_executions">Task Executions</string>
+    <string name="ai_chat_sessions">AI Chat</string>
+    <string name="all_sessions">All Sessions</string>
+    <string name="source_filter">Source Filter</string>
 <string name="chat_history_settings">Chat History Settings</string>
 <string name="chat_history_unsupported_format">Chat History Unsupported Format</string>
 <string name="chat_input_hint">Chat Input Hint</string>

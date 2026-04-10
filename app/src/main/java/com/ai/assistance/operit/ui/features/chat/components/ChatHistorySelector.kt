@@ -154,7 +154,9 @@ fun ChatHistorySelector(
         onDisplayModeChange: (ChatHistoryDisplayMode) -> Unit,
         autoSwitchCharacterCard: Boolean,
         onAutoSwitchCharacterCardChange: (Boolean) -> Unit,
-        activeCharacterCard: CharacterCard? = null
+        activeCharacterCard: CharacterCard? = null,
+        sourceFilter: String = "all", // "all", "ai_chat", "overlay_voice", "overlay_task"
+        onSourceFilterChange: ((String) -> Unit)? = null
 ) {
     var chatToEdit by remember { mutableStateOf<ChatHistory?>(null) }
     var chatItemActionTarget by remember { mutableStateOf<ChatHistory?>(null) }
@@ -225,17 +227,23 @@ fun ChatHistorySelector(
         }
     }
 
-    val filteredHistories = remember(chatHistories, searchQuery, matchedChatIdsByContent) {
+    val filteredHistories = remember(chatHistories, searchQuery, matchedChatIdsByContent, sourceFilter) {
         val trimmedQuery = searchQuery.trim()
+        val sourceFiltered = if (sourceFilter == "all") {
+            chatHistories
+        } else {
+            chatHistories.filter { it.source == sourceFilter }
+        }
+        
         if (trimmedQuery.isNotBlank()) {
-            chatHistories.filter { history ->
+            sourceFiltered.filter { history ->
                 val matchesTitleOrGroup = history.title.contains(trimmedQuery, ignoreCase = true) ||
                         (history.group?.contains(trimmedQuery, ignoreCase = true) == true)
                 val matchesContent = matchedChatIdsByContent.contains(history.id)
                 matchesTitleOrGroup || matchesContent
             }
         } else {
-            chatHistories
+            sourceFiltered
         }
     }
 

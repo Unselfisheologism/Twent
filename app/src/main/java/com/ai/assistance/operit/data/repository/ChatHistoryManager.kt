@@ -130,7 +130,8 @@ class ChatHistoryManager private constructor(private val context: Context) {
             workspaceEnv = this.workspaceEnv, // 映射workspaceEnv字段
             parentChatId = this.parentChatId, // 映射parentChatId字段
             characterCardName = this.characterCardName, // 映射characterCardName字段
-            locked = this.locked
+            locked = this.locked,
+            source = this.source
         )
     }
 

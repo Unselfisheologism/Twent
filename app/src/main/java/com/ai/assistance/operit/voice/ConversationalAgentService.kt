@@ -51,6 +51,9 @@ import com.ai.assistance.operit.voice.v2.perception.SemanticParser
 import com.ai.assistance.operit.voice.api.Eyes
 import com.ai.assistance.operit.voice.utilities.FullPageCapture
 import com.ai.assistance.operit.data.preferences.ApiPreferences
+import com.ai.assistance.operit.data.repository.ChatHistoryManager
+import com.ai.assistance.operit.data.model.ChatHistory
+import com.ai.assistance.operit.data.model.ChatMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -84,6 +87,11 @@ class ConversationalAgentService : Service() {
     private var isTextModeActive = false
     private var actionStatusViewNotShownYet = true
     private val servicePermissionManager by lazy { ServicePermissionManager(this) }
+    private val chatHistoryManager by lazy { ChatHistoryManager.getInstance(this) }
+
+    // Track overlay chat sessions
+    private var currentOverlayChatId: String? = null
+    private var overlayChatMessageList = mutableListOf<ChatMessage>()
 
     private var clarificationAttempts = 0
     private val maxClarificationAttempts = 1
@@ -525,7 +533,7 @@ Format your response clearly with headings and bullet points.
         updateSystemPromptWithTime()
         stateManager.setState(OperitState.SPEAKING)
 
-        // Update status display with spoken text
+        // Update status display with spoken text - ALWAYS append when in text mode
         if (isTextModeActive) {
             visualFeedbackManager.appendStatusText("🗣️ $text")
         }
@@ -616,6 +624,17 @@ Format your response clearly with headings and bullet points.
             }
 
             conversationHistory = addResponse("user", userInput, conversationHistory)
+            
+            // Save user message to overlay chat history
+            if (isTextModeActive) {
+                val userMsg = ChatMessage(
+                    role = "user",
+                    content = userInput,
+                    timestamp = System.currentTimeMillis()
+                )
+                overlayChatMessageList.add(userMsg)
+                saveOverlayChatSession(userInput, isTask = false)
+            }
 
             // Show action status display only when user actually submits a prompt
             if (isTextModeActive && actionStatusViewNotShownYet) {
@@ -728,6 +747,18 @@ Format your response clearly with headings and bullet points.
                             gracefulShutdown(decision.reply, "model_ended")
                         } else {
                             conversationHistory = addResponse("model", rawModelResponse, conversationHistory)
+                            
+                            // Save AI response to overlay chat history
+                            if (isTextModeActive) {
+                                val aiMsg = ChatMessage(
+                                    role = "assistant",
+                                    content = decision.reply,
+                                    timestamp = System.currentTimeMillis()
+                                )
+                                overlayChatMessageList.add(aiMsg)
+                                saveOverlayChatSession(decision.reply, isTask = false)
+                            }
+                            
                             speakAndThenListen(decision.reply)
                         }
                     }
@@ -738,6 +769,40 @@ Format your response clearly with headings and bullet points.
                 stateManager.triggerErrorState()
                 speakAndThenListen("closing voice mode")
             }
+        }
+    }
+
+    /**
+     * Save the current overlay chat session to the ChatHistory database
+     */
+    private suspend fun saveOverlayChatSession(lastMessage: String, isTask: Boolean) {
+        try {
+            val chatId = currentOverlayChatId ?: java.util.UUID.randomUUID().toString()
+            if (currentOverlayChatId == null) {
+                currentOverlayChatId = chatId
+            }
+            
+            val source = if (isTask) "overlay_task" else "overlay_voice"
+            val title = if (overlayChatMessageList.isEmpty()) {
+                lastMessage.take(50)
+            } else {
+                overlayChatMessageList.firstOrNull { it.role == "user" }?.content?.take(50) 
+                    ?: "Voice Session"
+            }
+            
+            val chatHistory = ChatHistory(
+                id = chatId,
+                title = title,
+                messages = overlayChatMessageList.toList(),
+                source = source,
+                group = "Overlay Voice"
+            )
+            
+            chatHistoryManager.saveChatHistory(chatHistory)
+            chatHistoryManager.setCurrentChatId(chatId)
+            Log.d("ConvAgent", "Saved overlay chat session: $chatId, source: $source")
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to save overlay chat session", e)
         }
     }
 
@@ -976,6 +1041,10 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         visualFeedbackManager.hideInputBox()
         visualFeedbackManager.hideActionStatusView()
         actionStatusViewNotShownYet = true
+        
+        // Reset overlay chat tracking
+        currentOverlayChatId = null
+        overlayChatMessageList.clear()
 
         if (exitMessage != null) {
             speechCoordinator.speakText(exitMessage)
@@ -999,6 +1068,10 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             visualFeedbackManager.hideThinkingIndicator()
             removeClarificationQuestions()
         }
+
+        // Reset overlay chat tracking
+        currentOverlayChatId = null
+        overlayChatMessageList.clear()
 
         removeClarificationQuestions()
         triggerMemoryGeneration()

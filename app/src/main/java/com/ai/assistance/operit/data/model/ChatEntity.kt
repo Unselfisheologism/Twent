@@ -22,7 +22,8 @@ data class ChatEntity(
         val workspaceEnv: String? = null,
         val parentChatId: String? = null,
         val characterCardName: String? = null,
-        val locked: Boolean = false
+        val locked: Boolean = false,
+        val source: String = "ai_chat" // "ai_chat", "overlay_voice", "overlay_task"
 ) {
     /** 转换为ChatHistory对象（供UI层使用） */
     fun toChatHistory(messages: List<ChatMessage>): ChatHistory {
@@ -49,7 +50,8 @@ data class ChatEntity(
                 workspaceEnv = workspaceEnv,
                 parentChatId = parentChatId,
                 characterCardName = characterCardName,
-                locked = locked
+                locked = locked,
+                source = source
         )
     }
 
@@ -81,7 +83,8 @@ data class ChatEntity(
                     workspaceEnv = chatHistory.workspaceEnv,
                     parentChatId = chatHistory.parentChatId,
                     characterCardName = chatHistory.characterCardName,
-                    locked = chatHistory.locked
+                    locked = chatHistory.locked,
+                    source = chatHistory.source
             )
         }
     }

@@ -55,14 +55,14 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <!-- Simplify this page button -->
+            <!-- Simplify this page button (uses new simplify icon) -->
             <ImageButton
                 android:id="@+id/simplifyButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:src="@drawable/ic_simplify"
                 android:background="@drawable/control_button_background"
-                android:contentDescription="Simplify this page"
+                android:contentDescription="Simplify content"
                 android:scaleType="centerInside"
                 android:padding="8dp" />
 
