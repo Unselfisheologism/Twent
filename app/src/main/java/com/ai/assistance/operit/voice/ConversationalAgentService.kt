@@ -628,7 +628,7 @@ Format your response clearly with headings and bullet points.
             // Save user message to overlay chat history
             if (isTextModeActive) {
                 val userMsg = ChatMessage(
-                    role = "user",
+                    sender = "user",
                     content = userInput,
                     timestamp = System.currentTimeMillis()
                 )
@@ -751,7 +751,7 @@ Format your response clearly with headings and bullet points.
                             // Save AI response to overlay chat history
                             if (isTextModeActive) {
                                 val aiMsg = ChatMessage(
-                                    role = "assistant",
+                                    sender = "assistant",
                                     content = decision.reply,
                                     timestamp = System.currentTimeMillis()
                                 )
@@ -786,7 +786,7 @@ Format your response clearly with headings and bullet points.
             val title = if (overlayChatMessageList.isEmpty()) {
                 lastMessage.take(50)
             } else {
-                overlayChatMessageList.firstOrNull { it.role == "user" }?.content?.take(50) 
+                overlayChatMessageList.firstOrNull { it.sender == "user" }?.content?.take(50) 
                     ?: "Voice Session"
             }
             
