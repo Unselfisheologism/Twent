@@ -1003,7 +1003,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 (context.resources.displayMetrics.widthPixels * 0.85).toInt(),
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            // Don't use TYPE_APPLICATION_OVERLAY for Dialog - it will crash
+            // The dialog will appear as a normal modal which is fine
             dialog.show()
         }
     }
@@ -1061,16 +1062,17 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         onResumeTaskClicked = onResumeClicked
         
         mainHandler.post {
-            if (topLeftControlLayout?.isAttachedToWindow == true) return@post
-            
-            if (!hasOverlayPermission()) {
-                Log.e(TAG, "Cannot show top-left task controls: SYSTEM_ALERT_WINDOW permission not granted")
-                return@post
-            }
-            
-            val density = context.resources.displayMetrics.density
-            val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
-            val cornerRadius = 40f // More rounded (half of buttonSize)
+            try {
+                if (topLeftControlLayout?.isAttachedToWindow == true) return@post
+                
+                if (!hasOverlayPermission()) {
+                    Log.e(TAG, "Cannot show top-left task controls: SYSTEM_ALERT_WINDOW permission not granted")
+                    return@post
+                }
+                
+                val density = context.resources.displayMetrics.density
+                val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
+                val cornerRadius = 40f // More rounded (half of buttonSize)
             
             // Create rounded background drawables
             val stopButtonBg = android.graphics.drawable.GradientDrawable(
@@ -1151,6 +1153,10 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 Log.d(TAG, "Top-left task controls added.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding top-left task controls", e)
+                topLeftControlLayout = null
+            }
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error in showTopLeftTaskControls", e)
                 topLeftControlLayout = null
             }
         }

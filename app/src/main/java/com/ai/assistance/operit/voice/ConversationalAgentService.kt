@@ -921,13 +921,27 @@ Format your response clearly with headings and bullet points.
                 group = "Overlay Voice"
             )
             
-            Log.d("ConvAgent", "Saving overlay chat: $chatId, messages=${overlayChatMessageList.size}, source=$source")
+            Log.d("ConvAgent", "=== Saving overlay chat ===")
+            Log.d("ConvAgent", "Chat ID: $chatId")
+            Log.d("ConvAgent", "Total messages: ${overlayChatMessageList.size}")
+            Log.d("ConvAgent", "Source: $source")
             overlayChatMessageList.forEachIndexed { index, msg ->
-                Log.d("ConvAgent", "  Message $index: sender=${msg.sender}, content=${msg.content.take(30)}")
+                Log.d("ConvAgent", "  Msg $index: sender='${msg.sender}', content='${msg.content.take(30)}'")
             }
             
             chatHistoryManager.saveChatHistory(chatHistory)
             chatHistoryManager.setCurrentChatId(chatId)
+            
+            // Small delay to ensure database transaction completes
+            delay(100)
+            
+            // Verify save by reloading
+            val savedMessages = chatHistoryManager.loadChatMessages(chatId)
+            Log.d("ConvAgent", "Verification - Saved messages in DB: ${savedMessages.size}")
+            savedMessages.forEachIndexed { index, msg ->
+                Log.d("ConvAgent", "  DB Msg $index: sender='${msg.sender}', content='${msg.content.take(30)}'")
+            }
+            
             Log.d("ConvAgent", "Successfully saved overlay chat session: $chatId")
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to save overlay chat session", e)
