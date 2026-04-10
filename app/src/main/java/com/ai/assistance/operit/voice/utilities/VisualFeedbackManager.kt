@@ -330,6 +330,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         onActivated: () -> Unit,
         onSubmit: (String) -> Unit,
         onOutsideTap: () -> Unit,
+        placeholderText: String = "Ask Operit",
         onAttachClicked: (() -> Unit)? = null,
         onAttachImageClicked: (() -> Unit)? = null,
         onAttachFileClicked: (() -> Unit)? = null,
@@ -370,6 +371,9 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             val inputField = inputBoxView?.findViewById<EditText>(R.id.overlayInputField)
             val rootLayout = inputBoxView?.findViewById<View>(R.id.overlayRootLayout)
+
+            // Set custom placeholder text
+            inputField?.hint = placeholderText
 
             // Operit: Redesign input box with teal accent (not purple)
             val cardBackground = GradientDrawable(

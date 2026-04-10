@@ -205,15 +205,44 @@ class AgentService : Service() {
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
 
         // Show top-left task controls when task starts (along with edge glow)
+        var stopClickedOnce = false  // Track if stop has been clicked once
+        
         visualFeedbackManager.showTaskActiveGlow(
             onStopClicked = {
-                Log.i(TAG, "Stop button clicked - stopping immediately")
-                shouldStopTask = true
-                // Hide controls immediately
-                visualFeedbackManager.hideTopLeftTaskControls()
-                visualFeedbackManager.hideTaskActiveGlow()
-                // Stop the service
-                stopSelf()
+                if (!stopClickedOnce) {
+                    // First stop click - pause task and show follow-up input
+                    Log.i(TAG, "Stop button clicked first time - pausing task and showing follow-up input")
+                    isTaskPaused = true
+                    shouldStopTask = false  // Ensure stop flag is reset for potential follow-up
+                    visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
+                    stopClickedOnce = true
+                    
+                    // Show follow-up input box with custom placeholder
+                    visualFeedbackManager.showInputBox(
+                        placeholderText = "Ask Follow-up",
+                        onActivated = {},
+                        onSubmit = { submittedText ->
+                            Log.i(TAG, "Follow-up message: $submittedText")
+                            // Resume task and add follow-up as new task
+                            isTaskPaused = false
+                            stopClickedOnce = false
+                            visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
+                            start(this@AgentService, submittedText)
+                        },
+                        onOutsideTap = {
+                            Log.i(TAG, "Follow-up input outside tap - keeping task paused, input stays visible")
+                        }
+                    )
+                } else {
+                    // Second stop click - completely remove overlay and stop service
+                    Log.i(TAG, "Stop button clicked second time - removing overlay completely")
+                    shouldStopTask = true  // Signal to Agent loop to stop
+                    isTaskPaused = false   // Unpause if it was paused, so it can check shouldStopTask
+                    visualFeedbackManager.hideTopLeftTaskControls()
+                    visualFeedbackManager.hideTaskActiveGlow()
+                    visualFeedbackManager.hideInputBox()
+                    stopSelf()
+                }
             },
             onPauseClicked = {
                 Log.i(TAG, "Pause button clicked")
@@ -251,13 +280,14 @@ class AgentService : Service() {
 
         Log.i(TAG, "Task queue empty or stop requested. Cleaning up.")
         currentTask = null
-        
+
         // Hide top-left controls after task completes
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
-        
-        // Show input box for follow-up message
+
+        // Show input box for follow-up message with custom placeholder
         visualFeedbackManager.showInputBox(
+            placeholderText = "Ask Follow-up",
             onActivated = {},
             onSubmit = { submittedText ->
                 Log.i(TAG, "Follow-up message: $submittedText")
@@ -265,12 +295,11 @@ class AgentService : Service() {
                 start(this@AgentService, submittedText)
             },
             onOutsideTap = {
-                Log.i(TAG, "Follow-up input outside tap")
+                Log.i(TAG, "Follow-up input outside tap - hiding input box and stopping service")
                 visualFeedbackManager.hideInputBox()
+                stopSelf()
             }
         )
-        
-        stopSelf()
     }
 
     /**

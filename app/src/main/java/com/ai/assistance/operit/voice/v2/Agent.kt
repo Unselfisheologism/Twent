@@ -87,6 +87,29 @@ class Agent(
         Log.d(TAG, "--- Agent starting task: '$initialTask' ---")
 
         while (!state.stopped && state.nSteps <= maxSteps) {
+            // Check if task was stopped externally (via stop button)
+            if (com.ai.assistance.operit.voice.v2.AgentService.shouldStopTask) {
+                Log.d(TAG, "--- ⛔ External stop requested - stopping execution ---")
+                speechCoordinator.speakToUser("Task stopped by user.")
+                state.stopped = true
+                visualFeedbackManager.hideTaskActiveGlow()
+                break
+            }
+
+            // Check if task is paused - wait until resumed
+            while (com.ai.assistance.operit.voice.v2.AgentService.isTaskPaused && !state.stopped) {
+                // Check for stop while paused
+                if (com.ai.assistance.operit.voice.v2.AgentService.shouldStopTask) {
+                    Log.d(TAG, "--- ⛔ External stop requested while paused - stopping execution ---")
+                    speechCoordinator.speakToUser("Task stopped by user.")
+                    state.stopped = true
+                    visualFeedbackManager.hideTaskActiveGlow()
+                    return
+                }
+                Log.d(TAG, "--- ⏸️ Task paused, waiting for resume... ---")
+                delay(500) // Check every 500ms
+            }
+            
             Log.d(TAG,"\n--- Step ${state.nSteps}/$maxSteps ---")
 
             // 1. SENSE: Observe the current state of the screen.
