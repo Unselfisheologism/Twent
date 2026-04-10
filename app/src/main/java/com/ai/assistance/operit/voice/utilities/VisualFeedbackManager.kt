@@ -1135,9 +1135,9 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                x = (16 * density).toInt()
-                y = (40 * density).toInt() // Higher: 40dp instead of 100dp
             }
+            params.x = (16 * density).toInt()
+            params.y = (40 * density).toInt() // Higher: 40dp instead of 100dp
             
             try {
                 windowManager.addView(topLeftControlLayout, params)
