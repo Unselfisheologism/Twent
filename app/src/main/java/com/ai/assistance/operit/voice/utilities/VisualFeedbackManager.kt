@@ -122,17 +122,30 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     }
 
     /**
-     * Call this when a task starts - shows persistent edge glow
+     * Call this when a task starts - shows persistent edge glow AND top-left controls
      */
-    fun showTaskActiveGlow() {
+    fun showTaskActiveGlow(
+        onStopClicked: () -> Unit = {},
+        onPauseClicked: () -> Unit = {},
+        onResumeClicked: () -> Unit = {}
+    ) {
         showEdgeGlow()
+        // Show buttons immediately after glow - they'll be at same z-order level
+        // Since both are posted to mainHandler, they'll execute in order
+        showTopLeftTaskControls(
+            onStopClicked = onStopClicked,
+            onPauseClicked = onPauseClicked,
+            onResumeClicked = onResumeClicked
+        )
+        Log.d(TAG, "=== showTaskActiveGlow: Called both showEdgeGlow + showTopLeftTaskControls ===")
     }
 
     /**
-     * Call this when a task is completed - hides the edge glow
+     * Call this when a task is completed - hides the edge glow AND top-left controls
      */
     fun hideTaskActiveGlow() {
         hideEdgeGlow()
+        hideTopLeftTaskControls()
         hideTtsWave()
     }
 
@@ -562,6 +575,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
 
+            Log.d(TAG, "=== showEdgeGlowInternal START ===")
+            
             val glowThickness = (4 * context.resources.displayMetrics.density).toInt()
             val displayMetrics = context.resources.displayMetrics
             val screenWidth = displayMetrics.widthPixels
@@ -590,7 +605,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.TOP }
-                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add top glow strip", e) }
+                try { windowManager.addView(view, params); Log.d(TAG, "Added TOP glow strip") } catch (e: Exception) { Log.e(TAG, "Failed to add top glow strip", e) }
             }
 
             // Bottom strip
@@ -613,7 +628,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.BOTTOM }
-                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add bottom glow strip", e) }
+                try { windowManager.addView(view, params); Log.d(TAG, "Added BOTTOM glow strip") } catch (e: Exception) { Log.e(TAG, "Failed to add bottom glow strip", e) }
             }
 
             // Left strip - with vertical gradient
@@ -636,7 +651,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.START }
-                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add left glow strip", e) }
+                try { windowManager.addView(view, params); Log.d(TAG, "Added LEFT glow strip") } catch (e: Exception) { Log.e(TAG, "Failed to add left glow strip", e) }
             }
 
             // Right strip
@@ -659,14 +674,14 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply { gravity = Gravity.END }
-                try { windowManager.addView(view, params) } catch (e: Exception) { Log.e(TAG, "Failed to add right glow strip", e) }
+                try { windowManager.addView(view, params); Log.d(TAG, "Added RIGHT glow strip") } catch (e: Exception) { Log.e(TAG, "Failed to add right glow strip", e) }
             }
 
             isGlowLinkedToAudio = linkToAudio
             if (!linkToAudio) {
                 startEdgeGlowShimmer()
             }
-            Log.d(TAG, "Edge glow strips added (linkToAudio=$linkToAudio).")
+            Log.d(TAG, "=== showEdgeGlowInternal END (linkToAudio=$linkToAudio) ===")
         }
     }
 
@@ -1029,48 +1044,54 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     
     /**
      * Show top-left control buttons (stop and pause/play) during ongoing tasks
-     * These buttons are at the same layer as the shimmer glow to avoid blocking anything
+     * These buttons are now part of the edge glow layer to ensure they're always visible
+     * at the same z-order as the neon glow effect
      */
     fun showTopLeftTaskControls(
         onStopClicked: () -> Unit = {},
         onPauseClicked: () -> Unit = {},
         onResumeClicked: () -> Unit = {}
     ) {
+        Log.d(TAG, "=== showTopLeftTaskControls CALLED ===")
         onStopTaskClicked = onStopClicked
         onPauseTaskClicked = onPauseClicked
         onResumeTaskClicked = onResumeClicked
-        
+
         mainHandler.post {
-            try {
-                if (topLeftControlLayout?.isAttachedToWindow == true) return@post
-                
-                if (!hasOverlayPermission()) {
-                    Log.e(TAG, "Cannot show top-left task controls: SYSTEM_ALERT_WINDOW permission not granted")
-                    return@post
-                }
-                
-                val density = context.resources.displayMetrics.density
-                val buttonSize = (36 * density).toInt() // Much smaller: 36dp
-                val cornerRadius = 18f // More rounded (half of buttonSize)
-            
+            Log.d(TAG, "=== showTopLeftTaskControls EXECUTING on main thread ===")
+            // If already showing, don't duplicate
+            if (topLeftControlLayout?.isAttachedToWindow == true) {
+                Log.d(TAG, "=== Top-left controls already attached, skipping ===")
+                return@post
+            }
+
+            if (!hasOverlayPermission()) {
+                Log.e(TAG, "Cannot show top-left task controls: SYSTEM_ALERT_WINDOW permission not granted")
+                return@post
+            }
+
+            val density = context.resources.displayMetrics.density
+            val buttonSize = (36 * density).toInt() // Much smaller: 36dp
+            val cornerRadius = 18f // More rounded (half of buttonSize)
+
             // Create rounded background drawables (need 2+ colors for GradientDrawable)
             val stopButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(0xFFFF0000.toInt(), 0xFFE00000.toInt())
             )
             stopButtonBg.cornerRadius = cornerRadius
-            
+
             val pauseButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(0xFFFFFF00.toInt(), 0xFFF5E600.toInt())
             )
             pauseButtonBg.cornerRadius = cornerRadius
-            
+
             // Create horizontal layout for stop and pause buttons
             topLeftControlLayout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.HORIZONTAL
                 setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
-                
+
                 // Stop button (red X) - with rounded background
                 stopTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
@@ -1081,7 +1102,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                         onStopTaskClicked?.invoke()
                     }
                 }
-                
+
                 // Pause/Play button (yellow) - with rounded background
                 pauseTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_media_pause)
@@ -1102,7 +1123,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                         tag = !isCurrentlyPaused
                     }
                 }
-                
+
                 addView(stopTaskButton, android.widget.LinearLayout.LayoutParams(
                     buttonSize, buttonSize
                 ).apply {
@@ -1112,43 +1133,26 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     buttonSize, buttonSize
                 ))
             }
-            
+
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                // Use a higher window type to ensure buttons are on top
-                // TYPE_APPLICATION_OVERLAY is already being used, but we can
-                // leverage the fact that later-added views appear on top
-                // by using removeView + addView pattern
             }
             params.x = (16 * density).toInt()
             params.y = (40 * density).toInt() // Higher: 40dp instead of 100dp
 
             try {
-                // If already attached, remove and re-add to ensure it's on top
-                if (topLeftControlLayout?.isAttachedToWindow == true) {
-                    try {
-                        windowManager.removeView(topLeftControlLayout)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error removing existing controls", e)
-                    }
-                }
                 windowManager.addView(topLeftControlLayout, params)
-                Log.d(TAG, "Top-left task controls added.")
+                Log.d(TAG, "Top-left task controls added at edge glow layer.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding top-left task controls", e)
-                topLeftControlLayout = null
-            }
-            } catch (e: Exception) {
-                Log.e(TAG, "Unexpected error in showTopLeftTaskControls", e)
                 topLeftControlLayout = null
             }
         }

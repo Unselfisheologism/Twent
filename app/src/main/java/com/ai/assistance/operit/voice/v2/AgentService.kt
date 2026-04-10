@@ -203,9 +203,9 @@ class AgentService : Service() {
         Log.i(TAG, "Starting task processing loop.")
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
-        
-        // Show top-left task controls when task starts
-        visualFeedbackManager.showTopLeftTaskControls(
+
+        // Show top-left task controls when task starts (along with edge glow)
+        visualFeedbackManager.showTaskActiveGlow(
             onStopClicked = {
                 Log.i(TAG, "Stop button clicked - stopping immediately")
                 shouldStopTask = true
@@ -226,7 +226,6 @@ class AgentService : Service() {
                 visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
             }
         )
-        visualFeedbackManager.showTaskActiveGlow()
 
         while (taskQueue.isNotEmpty()) {
             // Check if stop was requested

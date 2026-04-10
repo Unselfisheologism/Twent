@@ -109,15 +109,6 @@ class OverlayManager private constructor(context: Context) {
             (bottomOverlayView as? TextView)?.text = content.text
         }
 
-        // After updating overlay, bring the top-left controls to front if they exist
-        // This ensures the stop/pause buttons remain visible during task execution
-        try {
-            com.ai.assistance.operit.voice.utilities.VisualFeedbackManager.getInstance(applicationContext)
-                .bringTopLeftControlsToFront()
-        } catch (e: Exception) {
-            Log.d("OverlayManager", "No top-left controls to bring to front")
-        }
-
         // Handle Auto-dismiss (e.g., for system info toasts)
         if (content.duration > 0) {
             val runnable = Runnable {
