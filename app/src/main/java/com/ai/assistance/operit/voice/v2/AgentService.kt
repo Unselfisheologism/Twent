@@ -191,6 +191,8 @@ class AgentService : Service() {
             return
         }
         isRunning = true
+        shouldStopTask = false
+        isTaskPaused = false
 
         Log.i(TAG, "Starting task processing loop.")
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -199,9 +201,13 @@ class AgentService : Service() {
         // Show top-left task controls when task starts
         visualFeedbackManager.showTopLeftTaskControls(
             onStopClicked = {
-                Log.i(TAG, "Stop button clicked")
+                Log.i(TAG, "Stop button clicked - stopping immediately")
                 shouldStopTask = true
-                stop(this@AgentService)
+                // Hide controls immediately
+                visualFeedbackManager.hideTopLeftTaskControls()
+                visualFeedbackManager.hideTaskActiveGlow()
+                // Stop the service
+                stopSelf()
             },
             onPauseClicked = {
                 Log.i(TAG, "Pause button clicked")
@@ -217,10 +223,14 @@ class AgentService : Service() {
         visualFeedbackManager.showTaskActiveGlow()
 
         while (taskQueue.isNotEmpty()) {
+            // Check if stop was requested
+            if (shouldStopTask) {
+                Log.i(TAG, "Stop requested during task execution")
+                break
+            }
+            
             val task = taskQueue.poll() ?: continue
             currentTask = task
-            shouldStopTask = false
-            isTaskPaused = false
 
             // Update notification for the new task
             notificationManager.notify(NOTIFICATION_ID, createNotification("Agent is running task: $task"))
@@ -234,7 +244,8 @@ class AgentService : Service() {
             }
         }
 
-        Log.i(TAG, "Task queue is empty. Stopping service.")
+        Log.i(TAG, "Task queue empty or stop requested. Cleaning up.")
+        currentTask = null
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
         stopSelf()

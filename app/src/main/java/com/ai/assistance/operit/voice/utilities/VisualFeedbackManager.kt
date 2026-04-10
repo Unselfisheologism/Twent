@@ -916,29 +916,93 @@ class VisualFeedbackManager private constructor(private val context: Context) {
      */
     private fun showAttachSelectionMenu() {
         mainHandler.post {
-            // Create a simple dialog/popup for selection
+            // Create custom dark themed dialog
+            val dialog = android.app.Dialog(context, android.R.style.Theme_Translucent_NoTitleBar)
             val options = arrayOf(
-                "🖼️ Image",
-                "📁 File (PDF, DOC, etc.)",
-                "🎵 Audio",
-                "📱 Current Screen"
+                "🖼️  Image",
+                "📁  File (PDF, DOC, etc.)",
+                "🎵  Audio",
+                "📱  Current Screen"
             )
             
-            val alertDialog = android.app.AlertDialog.Builder(context)
-                .setTitle("Attach Content")
-                .setItems(options) { _, which ->
-                    when (which) {
-                        0 -> onAttachImageClicked?.invoke()
-                        1 -> onAttachFileClicked?.invoke()
-                        2 -> onAttachAudioClicked?.invoke()
-                        3 -> captureAndAttachCurrentScreen()
-                    }
+            // Create ListView with dark theme
+            val listView = android.widget.ListView(context).apply {
+                background = null
+                divider = android.graphics.drawable.ColorDrawable(0x33FFFFFF.toInt())
+                dividerHeight = 1
+                adapter = android.widget.ArrayAdapter(context, android.R.layout.simple_list_item_1, options).apply {
+                    // This will be overridden by the custom view below
                 }
-                .setNegativeButton("Cancel", null)
-                .create()
+            }
             
-            alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
-            alertDialog.show()
+            // Create custom layout with dark theme
+            val layout = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    cornerRadius = 20f
+                    setColor(0xFF1A1A2E.toInt()) // Dark navy background
+                }
+                setPadding(0, 0, 0, 0)
+                
+                // Title
+                addView(android.widget.TextView(context).apply {
+                    text = "📎 Attach Content"
+                    textSize = 18f
+                    setTextColor(0xFF00D4AA.toInt()) // Teal color
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    setPadding(48, 32, 48, 24)
+                })
+                
+                // Options
+                options.forEachIndexed { index, option ->
+                    addView(android.widget.TextView(context).apply {
+                        text = option
+                        textSize = 16f
+                        setTextColor(0xFFE8E8E8.toInt()) // Light text
+                        setPadding(48, 24, 48, 24)
+                        background = android.graphics.drawable.RippleDrawable(
+                            android.content.res.ColorStateList.valueOf(0x3300D4AA.toInt()),
+                            null,
+                            android.graphics.drawable.ColorDrawable(0x00000000)
+                        )
+                        setOnClickListener {
+                            dialog.dismiss()
+                            when (index) {
+                                0 -> onAttachImageClicked?.invoke()
+                                1 -> onAttachFileClicked?.invoke()
+                                2 -> onAttachAudioClicked?.invoke()
+                                3 -> captureAndAttachCurrentScreen()
+                            }
+                        }
+                    })
+                }
+                
+                // Cancel button
+                addView(android.widget.TextView(context).apply {
+                    text = "Cancel"
+                    textSize = 16f
+                    setTextColor(0xFFFF6B6B.toInt()) // Red for cancel
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(48, 32, 48, 32)
+                    background = android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(0x33FF6B6B.toInt()),
+                        null,
+                        android.graphics.drawable.ColorDrawable(0x00000000)
+                    )
+                    setOnClickListener {
+                        dialog.dismiss()
+                    }
+                })
+            }
+            
+            dialog.setContentView(layout)
+            dialog.window?.setLayout(
+                (context.resources.displayMetrics.widthPixels * 0.85).toInt(),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            dialog.show()
         }
     }
     
@@ -1002,30 +1066,41 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 return@post
             }
             
+            val density = context.resources.displayMetrics.density
+            val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
+            val cornerRadius = 40f // More rounded (half of buttonSize)
+            
             // Create horizontal layout for stop and pause buttons
             topLeftControlLayout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.HORIZONTAL
-                setPadding(16, 16, 16, 16)
+                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
                 
-                // Stop button (red X)
+                // Stop button (red X) - with rounded background
                 stopTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-                    setBackgroundColor(0xFFFF0000.toInt()) // Red background
-                    setPadding(16, 16, 16, 16)
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        cornerRadius = cornerRadius
+                        setColor(0xFFFF0000.toInt())
+                    }
+                    setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
                     contentDescription = "Stop task"
                     setOnClickListener {
                         onStopTaskClicked?.invoke()
                     }
                 }
                 
-                // Pause/Play button (yellow)
+                // Pause/Play button (yellow) - with rounded background
                 pauseTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_media_pause)
-                    setBackgroundColor(0xFFFFFF00.toInt()) // Yellow background
-                    setPadding(16, 16, 16, 16)
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        cornerRadius = cornerRadius
+                        setColor(0xFFFFFF00.toInt())
+                    }
+                    setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
                     contentDescription = "Pause task"
                     setOnClickListener {
-                        // Toggle between pause and play
                         val isCurrentlyPaused = tag as? Boolean ?: false
                         if (isCurrentlyPaused) {
                             setImageResource(android.R.drawable.ic_media_pause)
@@ -1041,12 +1116,12 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 }
                 
                 addView(stopTaskButton, android.widget.LinearLayout.LayoutParams(
-                    120, 120
+                    buttonSize, buttonSize
                 ).apply {
-                    setMargins(0, 0, 16, 0)
+                    setMargins(0, 0, (12 * density).toInt(), 0)
                 })
                 addView(pauseTaskButton, android.widget.LinearLayout.LayoutParams(
-                    120, 120
+                    buttonSize, buttonSize
                 ))
             }
             
@@ -1060,8 +1135,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                x = (16 * context.resources.displayMetrics.density).toInt()
-                y = (100 * context.resources.displayMetrics.density).toInt()
+                x = (16 * density).toInt()
+                y = (40 * density).toInt() // Higher: 40dp instead of 100dp
             }
             
             try {

@@ -856,7 +856,9 @@ Format your response clearly with headings and bullet points.
                                     timestamp = System.currentTimeMillis()
                                 )
                                 overlayChatMessageList.add(aiMsg)
-                                // Save AFTER adding to list
+                                Log.d("ConvAgent", "AI message added to list, total messages: ${overlayChatMessageList.size}")
+                                
+                                // Save AFTER adding to list with a small delay to ensure DB transaction completes
                                 saveOverlayChatSession(decision.reply, isTask = false)
                             }
                             
@@ -1161,6 +1163,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
     }
 
     private suspend fun gracefulShutdown(exitMessage: String? = null, endReason: String = "graceful") {
+        visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTtsWave()
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideSpeakingOverlay()
@@ -1186,6 +1189,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         withContext(Dispatchers.Main) {
             speechCoordinator.stopSpeaking()
             speechCoordinator.stopListening()
+            visualFeedbackManager.hideTopLeftTaskControls()
             visualFeedbackManager.hideTtsWave()
             visualFeedbackManager.hideTranscription()
             visualFeedbackManager.hideSpeakingOverlay()
@@ -1218,6 +1222,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
         stateManager.setState(OperitState.IDLE)
         stateManager.stopMonitoring()
+        visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideSpeakingOverlay()
         visualFeedbackManager.hideTtsWave()
         visualFeedbackManager.hideTranscription()
