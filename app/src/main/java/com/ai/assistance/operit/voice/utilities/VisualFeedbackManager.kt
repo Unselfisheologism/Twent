@@ -936,13 +936,16 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             }
             
             // Create custom layout with dark theme
+            val dialogBg = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xFF1A1A2E.toInt())
+            ).apply {
+                cornerRadius = 20f
+            }
+            
             val layout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    setBounds(0, 0, 0, 0)
-                    cornerRadius = 20f
-                    setColor(0xFF1A1A2E.toInt()) // Dark navy background
-                }
+                background = dialogBg
                 setPadding(0, 0, 0, 0)
                 
                 // Title
@@ -1070,6 +1073,20 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
             val cornerRadius = 40f // More rounded (half of buttonSize)
             
+            // Create rounded background drawables
+            val stopButtonBg = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xFFFF0000.toInt())
+            ).apply {
+                cornerRadius = cornerRadius
+            }
+            val pauseButtonBg = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xFFFFFF00.toInt())
+            ).apply {
+                cornerRadius = cornerRadius
+            }
+            
             // Create horizontal layout for stop and pause buttons
             topLeftControlLayout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.HORIZONTAL
@@ -1078,11 +1095,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 // Stop button (red X) - with rounded background
                 stopTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-                    background = android.graphics.drawable.GradientDrawable().apply {
-                        setBounds(0, 0, 0, 0)
-                        cornerRadius = cornerRadius
-                        setColor(0xFFFF0000.toInt())
-                    }
+                    background = stopButtonBg
                     setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
                     contentDescription = "Stop task"
                     setOnClickListener {
@@ -1093,11 +1106,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 // Pause/Play button (yellow) - with rounded background
                 pauseTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_media_pause)
-                    background = android.graphics.drawable.GradientDrawable().apply {
-                        setBounds(0, 0, 0, 0)
-                        cornerRadius = cornerRadius
-                        setColor(0xFFFFFF00.toInt())
-                    }
+                    background = pauseButtonBg
                     setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
                     contentDescription = "Pause task"
                     setOnClickListener {
