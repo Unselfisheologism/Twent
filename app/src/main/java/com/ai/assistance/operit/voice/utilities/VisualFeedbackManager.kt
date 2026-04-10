@@ -939,7 +939,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val layout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
                 background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    setBounds(0, 0, 0, 0)
                     cornerRadius = 20f
                     setColor(0xFF1A1A2E.toInt()) // Dark navy background
                 }
@@ -1079,7 +1079,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 stopTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
                     background = android.graphics.drawable.GradientDrawable().apply {
-                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        setBounds(0, 0, 0, 0)
                         cornerRadius = cornerRadius
                         setColor(0xFFFF0000.toInt())
                     }
@@ -1094,7 +1094,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 pauseTaskButton = android.widget.ImageButton(context).apply {
                     setImageResource(android.R.drawable.ic_media_pause)
                     background = android.graphics.drawable.GradientDrawable().apply {
-                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        setBounds(0, 0, 0, 0)
                         cornerRadius = cornerRadius
                         setColor(0xFFFFFF00.toInt())
                     }
