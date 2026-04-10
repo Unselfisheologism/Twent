@@ -916,8 +916,6 @@ class VisualFeedbackManager private constructor(private val context: Context) {
      */
     private fun showAttachSelectionMenu() {
         mainHandler.post {
-            // Create custom dark themed dialog
-            val dialog = android.app.Dialog(context, android.R.style.Theme_Translucent_NoTitleBar)
             val options = arrayOf(
                 "🖼️  Image",
                 "📁  File (PDF, DOC, etc.)",
@@ -925,33 +923,20 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 "📱  Current Screen"
             )
             
-            // Create ListView with dark theme
-            val listView = android.widget.ListView(context).apply {
-                background = null
-                divider = android.graphics.drawable.ColorDrawable(0x33FFFFFF.toInt())
-                dividerHeight = 1
-                adapter = android.widget.ArrayAdapter(context, android.R.layout.simple_list_item_1, options).apply {
-                    // This will be overridden by the custom view below
-                }
-            }
-            
-            // Create custom layout with dark theme
-            val dialogBg = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(0xFF1A1A2E.toInt())
-            )
-            dialogBg.cornerRadius = 20f
-            
+            // Create a custom view for the menu
             val layout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
-                background = dialogBg
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = 20f
+                    setColor(0xFF1A1A2E.toInt())
+                }
                 setPadding(0, 0, 0, 0)
                 
                 // Title
                 addView(android.widget.TextView(context).apply {
                     text = "📎 Attach Content"
                     textSize = 18f
-                    setTextColor(0xFF00D4AA.toInt()) // Teal color
+                    setTextColor(0xFF00D4AA.toInt())
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     setPadding(48, 32, 48, 24)
                 })
@@ -961,15 +946,11 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                     addView(android.widget.TextView(context).apply {
                         text = option
                         textSize = 16f
-                        setTextColor(0xFFE8E8E8.toInt()) // Light text
+                        setTextColor(0xFFE8E8E8.toInt())
                         setPadding(48, 24, 48, 24)
-                        background = android.graphics.drawable.RippleDrawable(
-                            android.content.res.ColorStateList.valueOf(0x3300D4AA.toInt()),
-                            null,
-                            android.graphics.drawable.ColorDrawable(0x00000000)
-                        )
                         setOnClickListener {
-                            dialog.dismiss()
+                            // Remove this view first
+                            (parent as? android.view.ViewGroup)?.removeView(this@apply)
                             when (index) {
                                 0 -> onAttachImageClicked?.invoke()
                                 1 -> onAttachFileClicked?.invoke()
@@ -984,27 +965,25 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 addView(android.widget.TextView(context).apply {
                     text = "Cancel"
                     textSize = 16f
-                    setTextColor(0xFFFF6B6B.toInt()) // Red for cancel
+                    setTextColor(0xFFFF6B6B.toInt())
                     gravity = android.view.Gravity.CENTER
                     setPadding(48, 32, 48, 32)
-                    background = android.graphics.drawable.RippleDrawable(
-                        android.content.res.ColorStateList.valueOf(0x33FF6B6B.toInt()),
-                        null,
-                        android.graphics.drawable.ColorDrawable(0x00000000)
-                    )
                     setOnClickListener {
-                        dialog.dismiss()
+                        (parent as? android.view.ViewGroup)?.removeView(this@apply)
                     }
                 })
             }
             
-            dialog.setContentView(layout)
+            // Create AlertDialog with custom view
+            val dialog = android.app.AlertDialog.Builder(context)
+                .setView(layout)
+                .create()
+            
+            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
             dialog.window?.setLayout(
                 (context.resources.displayMetrics.widthPixels * 0.85).toInt(),
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            // Don't use TYPE_APPLICATION_OVERLAY for Dialog - it will crash
-            // The dialog will appear as a normal modal which is fine
             dialog.show()
         }
     }
@@ -1074,16 +1053,16 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
                 val cornerRadius = 40f // More rounded (half of buttonSize)
             
-            // Create rounded background drawables
+            // Create rounded background drawables (need 2+ colors for GradientDrawable)
             val stopButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(0xFFFF0000.toInt())
+                intArrayOf(0xFFFF0000.toInt(), 0xFFE00000.toInt())
             )
             stopButtonBg.cornerRadius = cornerRadius
             
             val pauseButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(0xFFFFFF00.toInt())
+                intArrayOf(0xFFFFFF00.toInt(), 0xFFF5E600.toInt())
             )
             pauseButtonBg.cornerRadius = cornerRadius
             

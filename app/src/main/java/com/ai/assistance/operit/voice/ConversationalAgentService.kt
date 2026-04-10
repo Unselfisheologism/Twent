@@ -726,15 +726,13 @@ Format your response clearly with headings and bullet points.
             conversationHistory = addResponse("user", userInput, conversationHistory)
             
             // Save user message to overlay chat history
-            if (isTextModeActive) {
-                val userMsg = ChatMessage(
-                    sender = "user",
-                    content = userInput,
-                    timestamp = System.currentTimeMillis()
-                )
-                overlayChatMessageList.add(userMsg)
-                saveOverlayChatSession(userInput, isTask = false)
-            }
+            val userMsg = ChatMessage(
+                sender = "user",
+                content = userInput,
+                timestamp = System.currentTimeMillis()
+            )
+            overlayChatMessageList.add(userMsg)
+            saveOverlayChatSession(userInput, isTask = false)
 
             // Show action status display only when user actually submits a prompt
             if (isTextModeActive && actionStatusViewNotShownYet) {
@@ -845,49 +843,42 @@ Format your response clearly with headings and bullet points.
                         if (decision.shouldEnd) {
                             Log.d("ConvAgent", "Model decided to end the conversation.")
                             // Save AI response before shutting down
-                            if (isTextModeActive && overlayChatMessageList.isNotEmpty()) {
-                                val aiMsg = ChatMessage(
-                                    sender = "assistant",
-                                    content = decision.reply,
-                                    timestamp = System.currentTimeMillis()
-                                )
-                                overlayChatMessageList.add(aiMsg)
-                                saveOverlayChatSession(decision.reply, isTask = false)
-                            }
+                            val aiMsg = ChatMessage(
+                                sender = "assistant",
+                                content = decision.reply,
+                                timestamp = System.currentTimeMillis()
+                            )
+                            overlayChatMessageList.add(aiMsg)
+                            saveOverlayChatSession(decision.reply, isTask = false)
                             gracefulShutdown(decision.reply, "model_ended")
                         } else {
                             conversationHistory = addResponse("model", rawModelResponse, conversationHistory)
 
-                            // Save AI response to overlay chat history - BLOCKING save
-                            if (isTextModeActive) {
-                                val aiMsg = ChatMessage(
-                                    sender = "assistant",
-                                    content = decision.reply,
-                                    timestamp = System.currentTimeMillis()
-                                )
-                                overlayChatMessageList.add(aiMsg)
-                                // Force save immediately and wait for it
-                                saveOverlayChatSession(decision.reply, isTask = false)
-                            }
+                            // Save AI response to overlay chat history
+                            val aiMsg = ChatMessage(
+                                sender = "assistant",
+                                content = decision.reply,
+                                timestamp = System.currentTimeMillis()
+                            )
+                            overlayChatMessageList.add(aiMsg)
+                            saveOverlayChatSession(decision.reply, isTask = false)
 
                             speakAndThenListen(decision.reply)
                             
-                            // Show top-left controls AFTER saving and speaking
-                            if (isTextModeActive) {
-                                visualFeedbackManager.showTopLeftTaskControls(
-                                    onStopClicked = {
-                                        serviceScope.launch { instantShutdown() }
-                                    },
-                                    onPauseClicked = {
-                                        speechCoordinator.pause()
-                                        visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
-                                    },
-                                    onResumeClicked = {
-                                        speechCoordinator.resume()
-                                        visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
-                                    }
-                                )
-                            }
+                            // Show top-left controls during Reply conversations
+                            visualFeedbackManager.showTopLeftTaskControls(
+                                onStopClicked = {
+                                    serviceScope.launch { instantShutdown() }
+                                },
+                                onPauseClicked = {
+                                    speechCoordinator.pause()
+                                    visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
+                                },
+                                onResumeClicked = {
+                                    speechCoordinator.resume()
+                                    visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
+                                }
+                            )
                         }
                     }
                 }
@@ -1183,7 +1174,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
 
     private suspend fun gracefulShutdown(exitMessage: String? = null, endReason: String = "graceful") {
         // CRITICAL: Save final chat history BEFORE clearing the list
-        if (isTextModeActive && overlayChatMessageList.isNotEmpty()) {
+        if (overlayChatMessageList.isNotEmpty()) {
             saveOverlayChatSession(exitMessage ?: "Session ended", isTask = false)
         }
         
@@ -1212,7 +1203,7 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         Log.d("ConvAgent", "Instant shutdown triggered by user.")
         
         // CRITICAL: Save final chat history BEFORE clearing
-        if (isTextModeActive && overlayChatMessageList.isNotEmpty()) {
+        if (overlayChatMessageList.isNotEmpty()) {
             saveOverlayChatSession("Session ended", isTask = false)
         }
         
