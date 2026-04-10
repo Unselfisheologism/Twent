@@ -54,6 +54,9 @@ import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.data.repository.ChatHistoryManager
 import com.ai.assistance.operit.data.model.ChatHistory
 import com.ai.assistance.operit.data.model.ChatMessage
+import com.ai.assistance.operit.services.core.AttachmentDelegate
+import com.ai.assistance.operit.core.tools.AIToolHandler
+import com.ai.assistance.operit.voice.activities.OverlayFilePickerActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -88,10 +91,12 @@ class ConversationalAgentService : Service() {
     private var actionStatusViewNotShownYet = true
     private val servicePermissionManager by lazy { ServicePermissionManager(this) }
     private val chatHistoryManager by lazy { ChatHistoryManager.getInstance(this) }
+    private val attachmentDelegate by lazy { AttachmentDelegate(this, AIToolHandler.getInstance(this)) }
 
     // Track overlay chat sessions
     private var currentOverlayChatId: String? = null
     private var overlayChatMessageList = mutableListOf<ChatMessage>()
+    private var attachedFiles = mutableListOf<String>()
 
     private var clarificationAttempts = 0
     private val maxClarificationAttempts = 1
@@ -280,8 +285,39 @@ Current Time : {time_context}
             },
             onOutsideTap = {
                 serviceScope.launch { instantShutdown() }
+            },
+            onAttachImageClicked = {
+                launchFilePicker(OverlayFilePickerActivity.PICKER_TYPE_IMAGE)
+            },
+            onAttachFileClicked = {
+                launchFilePicker(OverlayFilePickerActivity.PICKER_TYPE_FILE)
+            },
+            onAttachAudioClicked = {
+                launchFilePicker(OverlayFilePickerActivity.PICKER_TYPE_AUDIO)
+            },
+            onAttachScreenClicked = {
+                serviceScope.launch { handleScreenAttachment() }
             }
         )
+    }
+    
+    /**
+     * Launch the file picker activity for attachment
+     */
+    private fun launchFilePicker(pickerType: String) {
+        try {
+            val intent = Intent(this, OverlayFilePickerActivity::class.java).apply {
+                putExtra(OverlayFilePickerActivity.EXTRA_PICKER_TYPE, pickerType)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+            }
+            startActivity(intent)
+            visualFeedbackManager.updateStatusText("📎 Selecting files...")
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to launch file picker", e)
+            visualFeedbackManager.updateStatusText("❌ Failed to open file picker")
+        }
     }
 
     private fun enterTextMode() {
@@ -293,6 +329,70 @@ Current Time : {time_context}
         speechCoordinator.stopListening()
         speechCoordinator.stopSpeaking()
         visualFeedbackManager.hideTranscription()
+    }
+
+    /**
+     * Handle screen attachment - captures current screen content using the same logic as Simplify Page
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private suspend fun handleScreenAttachment() {
+        try {
+            visualFeedbackManager.updateStatusText("📱 Capturing current screen...")
+            
+            val fullPageCapture = FullPageCapture.getInstance(this)
+            
+            // Get current screen content - use text extraction first (faster)
+            val screenText = fullPageCapture.getCurrentScreenText()
+            
+            // Check if page needs scrolling (long content)
+            val estimatedLines = screenText.count { it == '\n' }
+            val needsScrolling = estimatedLines > 50
+            
+            var fullContent = screenText
+            
+            if (needsScrolling) {
+                visualFeedbackManager.updateStatusText("📱 Long page detected. Capturing full content...")
+                
+                // Capture full page by scrolling (same as simplify page)
+                val screenshots = fullPageCapture.captureFullPage()
+                
+                if (screenshots.isNotEmpty()) {
+                    visualFeedbackManager.updateStatusText(
+                        "📱 Captured ${screenshots.size} screenshot(s)."
+                    )
+                    
+                    // Use perception to analyze screen structure including images
+                    perception = Perception(Eyes(this), SemanticParser())
+                    val analysis = perception.analyze(all = true)
+                    
+                    // Combine text content with structural analysis
+                    fullContent = "${analysis.uiRepresentation}\n\n--- Full Screen Content ---\n\n$screenText"
+                }
+            }
+            
+            // Add the screen content as a system message to the conversation
+            val screenContextMessage = "user" to listOf(
+                TextPart("[SCREEN CAPTURED]\n\nCurrent screen content:\n\n$fullContent")
+            )
+            conversationHistory = conversationHistory + screenContextMessage
+            
+            visualFeedbackManager.updateStatusText("✅ Screen content attached as context. You can now ask questions about it.")
+            speechCoordinator.speakToUser("Screen content captured. You can now ask me questions about what's on screen.")
+            
+            // Save to chat history
+            val screenMsg = ChatMessage(
+                sender = "user",
+                content = "[Screen captured - ${fullContent.length} chars]",
+                timestamp = System.currentTimeMillis()
+            )
+            overlayChatMessageList.add(screenMsg)
+            saveOverlayChatSession("Screen captured", isTask = false)
+            
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Error capturing screen", e)
+            visualFeedbackManager.updateStatusText("❌ Error capturing screen: ${e.message}")
+            speechCoordinator.speakToUser("There was an error capturing the screen.")
+        }
     }
 
     /**
@@ -756,7 +856,28 @@ Format your response clearly with headings and bullet points.
                                     timestamp = System.currentTimeMillis()
                                 )
                                 overlayChatMessageList.add(aiMsg)
+                                // Save AFTER adding to list
                                 saveOverlayChatSession(decision.reply, isTask = false)
+                            }
+                            
+                            // Show top-left controls during Reply conversations in text mode
+                            if (isTextModeActive) {
+                                visualFeedbackManager.showTopLeftTaskControls(
+                                    onStopClicked = {
+                                        Log.d("ConvAgent", "Stop clicked during Reply")
+                                        serviceScope.launch { instantShutdown() }
+                                    },
+                                    onPauseClicked = {
+                                        Log.d("ConvAgent", "Pause clicked during Reply")
+                                        speechCoordinator.pause()
+                                        visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
+                                    },
+                                    onResumeClicked = {
+                                        Log.d("ConvAgent", "Resume clicked during Reply")
+                                        speechCoordinator.resume()
+                                        visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
+                                    }
+                                )
                             }
                             
                             speakAndThenListen(decision.reply)
@@ -798,9 +919,14 @@ Format your response clearly with headings and bullet points.
                 group = "Overlay Voice"
             )
             
+            Log.d("ConvAgent", "Saving overlay chat: $chatId, messages=${overlayChatMessageList.size}, source=$source")
+            overlayChatMessageList.forEachIndexed { index, msg ->
+                Log.d("ConvAgent", "  Message $index: sender=${msg.sender}, content=${msg.content.take(30)}")
+            }
+            
             chatHistoryManager.saveChatHistory(chatHistory)
             chatHistoryManager.setCurrentChatId(chatId)
-            Log.d("ConvAgent", "Saved overlay chat session: $chatId, source: $source")
+            Log.d("ConvAgent", "Successfully saved overlay chat session: $chatId")
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to save overlay chat session", e)
         }

@@ -310,7 +310,11 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         onActivated: () -> Unit,
         onSubmit: (String) -> Unit,
         onOutsideTap: () -> Unit,
-        onAttachClicked: (() -> Unit)? = null
+        onAttachClicked: (() -> Unit)? = null,
+        onAttachImageClicked: (() -> Unit)? = null,
+        onAttachFileClicked: (() -> Unit)? = null,
+        onAttachAudioClicked: (() -> Unit)? = null,
+        onAttachScreenClicked: (() -> Unit)? = null
     ) {
         mainHandler.post {
             if (inputBoxView?.isAttachedToWindow == true) {
@@ -392,10 +396,10 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 false
             }
             
-            // Set up attach button
+            // Set up attach button - shows selection menu
             val attachButton = inputBoxView?.findViewById<android.widget.ImageButton>(R.id.attachButton)
             attachButton?.setOnClickListener {
-                onAttachClicked?.invoke()
+                showAttachSelectionMenu()
             }
 
             rootLayout?.setOnTouchListener { _, event ->
@@ -893,6 +897,63 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Show attach selection menu (file or screen)
+     */
+    private fun showAttachSelectionMenu() {
+        mainHandler.post {
+            // Create a simple dialog/popup for selection
+            val options = arrayOf(
+                "🖼️ Image",
+                "📁 File (PDF, DOC, etc.)",
+                "🎵 Audio",
+                "📱 Current Screen"
+            )
+            
+            val alertDialog = android.app.AlertDialog.Builder(context)
+                .setTitle("Attach Content")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> onAttachImageClicked?.invoke()
+                        1 -> onAttachFileClicked?.invoke()
+                        2 -> onAttachAudioClicked?.invoke()
+                        3 -> captureAndAttachCurrentScreen()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .create()
+            
+            alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            alertDialog.show()
+        }
+    }
+    
+    /**
+     * Capture current screen content using the same logic as Simplify Page button
+     */
+    private fun captureAndAttachCurrentScreen() {
+        try {
+            // Use FullPageCapture to get screen content (same as simplify page)
+            val fullPageCapture = com.ai.assistance.operit.voice.utilities.FullPageCapture.getInstance(context)
+            
+            // Get screen text content
+            val screenText = fullPageCapture.getCurrentScreenText()
+            
+            // Notify that screen content is captured
+            mainHandler.post {
+                android.widget.Toast.makeText(context, "Screen content captured (${screenText.length} chars)", android.widget.Toast.LENGTH_SHORT).show()
+            }
+            
+            // The actual attachment would be handled by the callback in ConversationalAgentService
+            onAttachScreenClicked?.invoke()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to capture screen", e)
+            mainHandler.post {
+                android.widget.Toast.makeText(context, "Failed to capture screen", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
     /**
      * Check if audio is currently paused
      */

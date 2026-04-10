@@ -42,7 +42,7 @@
             android:id="@+id/attachButtonText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Attach file or screenshot"
+            android:text="Tap to attach"
             android:textColor="#A0A0A0"
             android:textSize="12sp"
             android:layout_marginStart="12dp" />

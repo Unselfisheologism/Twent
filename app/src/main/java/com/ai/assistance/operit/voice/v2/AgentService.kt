@@ -72,16 +72,42 @@ class AgentService : Service() {
         @Volatile
         var currentTask: String? = null
             private set
+        
+        // Task control flags
+        @Volatile
+        var isTaskPaused: Boolean = false
+            private set
+        
+        @Volatile
+        var shouldStopTask: Boolean = false
+            private set
 
         /**
          * A public method to request the service to stop from outside.
          */
         fun stop(context: Context) {
             Log.d("AgentService", "External stop request received.")
+            shouldStopTask = true
             val intent = Intent(context, AgentService::class.java).apply {
                 action = ACTION_STOP_SERVICE
             }
             context.startService(intent)
+        }
+        
+        /**
+         * Pause the current task
+         */
+        fun pauseTask() {
+            Log.d("AgentService", "Task pause requested.")
+            isTaskPaused = true
+        }
+        
+        /**
+         * Resume the current task
+         */
+        fun resumeTask() {
+            Log.d("AgentService", "Task resume requested.")
+            isTaskPaused = false
         }
 
         fun start(context: Context, task: String) {
@@ -169,10 +195,32 @@ class AgentService : Service() {
         Log.i(TAG, "Starting task processing loop.")
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
+        
+        // Show top-left task controls when task starts
+        visualFeedbackManager.showTopLeftTaskControls(
+            onStopClicked = {
+                Log.i(TAG, "Stop button clicked")
+                shouldStopTask = true
+                stop(this@AgentService)
+            },
+            onPauseClicked = {
+                Log.i(TAG, "Pause button clicked")
+                isTaskPaused = true
+                visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
+            },
+            onResumeClicked = {
+                Log.i(TAG, "Resume button clicked")
+                isTaskPaused = false
+                visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
+            }
+        )
+        visualFeedbackManager.showTaskActiveGlow()
 
         while (taskQueue.isNotEmpty()) {
-            val task = taskQueue.poll() ?: continue // Dequeue task, continue if null
+            val task = taskQueue.poll() ?: continue
             currentTask = task
+            shouldStopTask = false
+            isTaskPaused = false
 
             // Update notification for the new task
             notificationManager.notify(NOTIFICATION_ID, createNotification("Agent is running task: $task"))
@@ -187,7 +235,9 @@ class AgentService : Service() {
         }
 
         Log.i(TAG, "Task queue is empty. Stopping service.")
-        stopSelf() // Stop the service only when the queue is empty
+        visualFeedbackManager.hideTopLeftTaskControls()
+        visualFeedbackManager.hideTaskActiveGlow()
+        stopSelf()
     }
 
     /**
@@ -219,13 +269,13 @@ class AgentService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: Service is being destroyed.")
-//        overlayManager.stopObserving()
         OverlayDispatcher.clearAll()
         overlayManager.stopObserving()
         isRunning = false
         currentTask = null
         taskQueue.clear()
         serviceScope.cancel()
+        visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
         visualFeedbackManager.hideTtsWave()
         Log.i(TAG, "Service destroyed and all resources cleaned up.")

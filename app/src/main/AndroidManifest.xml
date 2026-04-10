@@ -396,7 +396,14 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone" />
-        
+
+        <!-- Overlay File Picker Activity -->
+        <activity
+            android:name=".voice.activities.OverlayFilePickerActivity"
+            android:enabled="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- Floating Button Service -->
         <service
             android:name=".voice.services.FloatingOperitButtonService"
