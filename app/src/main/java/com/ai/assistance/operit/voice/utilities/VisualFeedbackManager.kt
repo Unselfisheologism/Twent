@@ -939,9 +939,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val dialogBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(0xFF1A1A2E.toInt())
-            ).apply {
-                cornerRadius = 20f
-            }
+            )
+            dialogBg.cornerRadius = 20f
             
             val layout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
@@ -1077,15 +1076,14 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             val stopButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(0xFFFF0000.toInt())
-            ).apply {
-                cornerRadius = cornerRadius
-            }
+            )
+            stopButtonBg.cornerRadius = cornerRadius
+            
             val pauseButtonBg = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(0xFFFFFF00.toInt())
-            ).apply {
-                cornerRadius = cornerRadius
-            }
+            )
+            pauseButtonBg.cornerRadius = cornerRadius
             
             // Create horizontal layout for stop and pause buttons
             topLeftControlLayout = android.widget.LinearLayout(context).apply {
