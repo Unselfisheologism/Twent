@@ -843,7 +843,7 @@ Format your response clearly with headings and bullet points.
                             Log.d("ConvAgent", "Model decided to end the conversation.")
                             // Accumulate AI response (save happens at shutdown)
                             val aiMsg = ChatMessage(
-                                sender = "assistant",
+                                sender = "ai",
                                 content = decision.reply,
                                 timestamp = System.currentTimeMillis()
                             )
@@ -854,7 +854,7 @@ Format your response clearly with headings and bullet points.
 
                             // Accumulate AI response (save happens at shutdown)
                             val aiMsg = ChatMessage(
-                                sender = "assistant",
+                                sender = "ai",
                                 content = decision.reply,
                                 timestamp = System.currentTimeMillis()
                             )
