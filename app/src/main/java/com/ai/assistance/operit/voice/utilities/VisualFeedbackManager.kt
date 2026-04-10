@@ -56,6 +56,13 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var onSimplifyPageClicked: (() -> Unit)? = null
     private var onPausePlayClicked: ((isPaused: Boolean) -> Unit)? = null
     private var isAudioPaused = false
+    
+    // Callbacks for attach functionality
+    private var onAttachClicked: (() -> Unit)? = null
+    private var onAttachImageClicked: (() -> Unit)? = null
+    private var onAttachFileClicked: (() -> Unit)? = null
+    private var onAttachAudioClicked: (() -> Unit)? = null
+    private var onAttachScreenClicked: (() -> Unit)? = null
 
     // Track spoken text for display
     private val spokenTextHistory = StringBuilder()
@@ -340,6 +347,13 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             val inflater = LayoutInflater.from(context)
             inputBoxView = inflater.inflate(R.layout.overlay_input_box, null)
+            
+            // Store the callbacks for later use
+            this.onAttachClicked = onAttachClicked
+            this.onAttachImageClicked = onAttachImageClicked
+            this.onAttachFileClicked = onAttachFileClicked
+            this.onAttachAudioClicked = onAttachAudioClicked
+            this.onAttachScreenClicked = onAttachScreenClicked
 
             val inputField = inputBoxView?.findViewById<EditText>(R.id.overlayInputField)
             val rootLayout = inputBoxView?.findViewById<View>(R.id.overlayRootLayout)
