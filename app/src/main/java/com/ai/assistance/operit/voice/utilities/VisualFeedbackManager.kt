@@ -1117,17 +1117,30 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
+                // Use a higher window type to ensure buttons are on top
+                // TYPE_APPLICATION_OVERLAY is already being used, but we can
+                // leverage the fact that later-added views appear on top
+                // by using removeView + addView pattern
             }
             params.x = (16 * density).toInt()
             params.y = (40 * density).toInt() // Higher: 40dp instead of 100dp
-            
+
             try {
+                // If already attached, remove and re-add to ensure it's on top
+                if (topLeftControlLayout?.isAttachedToWindow == true) {
+                    try {
+                        windowManager.removeView(topLeftControlLayout)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing existing controls", e)
+                    }
+                }
                 windowManager.addView(topLeftControlLayout, params)
                 Log.d(TAG, "Top-left task controls added.")
             } catch (e: Exception) {
@@ -1159,6 +1172,44 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             topLeftControlLayout = null
             stopTaskButton = null
             pauseTaskButton = null
+        }
+    }
+
+    /**
+     * Bring top-left task controls to front (re-add to ensure highest z-order)
+     * This should be called after other overlays are shown during task execution
+     */
+    fun bringTopLeftControlsToFront() {
+        mainHandler.post {
+            val layout = topLeftControlLayout ?: return@post
+            if (!layout.isAttachedToWindow) return@post
+            
+            try {
+                // Remove and re-add to bring to front
+                windowManager.removeView(layout)
+                
+                // Re-add with same parameters
+                val density = context.resources.displayMetrics.density
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.START
+                }
+                params.x = (16 * density).toInt()
+                params.y = (40 * density).toInt()
+                
+                windowManager.addView(layout, params)
+                Log.d(TAG, "Top-left task controls brought to front.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error bringing top-left controls to front", e)
+            }
         }
     }
     

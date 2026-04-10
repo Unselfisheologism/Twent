@@ -9,7 +9,9 @@
       "Bash(wc *)",
       "Bash(powershell *)",
       "Bash(git checkout *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "Bash(.\\gradlew.bat *)",
+      "Bash(select-string *)"
     ]
   },
   "$version": 3
