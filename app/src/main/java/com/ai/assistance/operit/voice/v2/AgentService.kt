@@ -70,6 +70,10 @@ class AgentService : Service() {
             private set
 
         @Volatile
+        var isStarting: Boolean = false
+            private set
+
+        @Volatile
         var currentTask: String? = null
             private set
         
@@ -90,6 +94,15 @@ class AgentService : Service() {
             shouldStopTask = true
             val intent = Intent(context, AgentService::class.java).apply {
                 action = ACTION_STOP_SERVICE
+            }
+            context.startService(intent)
+        }
+        
+        fun start(context: Context, task: String) {
+            Log.d("AgentService", "Starting service with task: $task")
+            isStarting = true
+            val intent = Intent(context, AgentService::class.java).apply {
+                putExtra(EXTRA_TASK, task)
             }
             context.startService(intent)
         }
@@ -191,6 +204,7 @@ class AgentService : Service() {
             return
         }
         isRunning = true
+        isStarting = false
         shouldStopTask = false
         isTaskPaused = false
 

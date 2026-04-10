@@ -725,14 +725,13 @@ Format your response clearly with headings and bullet points.
 
             conversationHistory = addResponse("user", userInput, conversationHistory)
             
-            // Save user message to overlay chat history
+            // Accumulate user message in list (don't save yet, save at shutdown)
             val userMsg = ChatMessage(
                 sender = "user",
                 content = userInput,
                 timestamp = System.currentTimeMillis()
             )
             overlayChatMessageList.add(userMsg)
-            saveOverlayChatSession(userInput, isTask = false)
 
             // Show action status display only when user actually submits a prompt
             if (isTextModeActive && actionStatusViewNotShownYet) {
@@ -842,26 +841,24 @@ Format your response clearly with headings and bullet points.
                     else -> {
                         if (decision.shouldEnd) {
                             Log.d("ConvAgent", "Model decided to end the conversation.")
-                            // Save AI response before shutting down
+                            // Accumulate AI response (save happens at shutdown)
                             val aiMsg = ChatMessage(
                                 sender = "assistant",
                                 content = decision.reply,
                                 timestamp = System.currentTimeMillis()
                             )
                             overlayChatMessageList.add(aiMsg)
-                            saveOverlayChatSession(decision.reply, isTask = false)
                             gracefulShutdown(decision.reply, "model_ended")
                         } else {
                             conversationHistory = addResponse("model", rawModelResponse, conversationHistory)
 
-                            // Save AI response to overlay chat history
+                            // Accumulate AI response (save happens at shutdown)
                             val aiMsg = ChatMessage(
                                 sender = "assistant",
                                 content = decision.reply,
                                 timestamp = System.currentTimeMillis()
                             )
                             overlayChatMessageList.add(aiMsg)
-                            saveOverlayChatSession(decision.reply, isTask = false)
 
                             speakAndThenListen(decision.reply)
                             
@@ -892,7 +889,8 @@ Format your response clearly with headings and bullet points.
     }
 
     /**
-     * Save the current overlay chat session to the ChatHistory database
+     * Save the current overlay chat session to the ChatHistory database.
+     * Called only at shutdown to ensure all messages are persisted.
      */
     private suspend fun saveOverlayChatSession(lastMessage: String, isTask: Boolean) {
         try {
@@ -920,12 +918,8 @@ Format your response clearly with headings and bullet points.
                 group = "Overlay Voice"
             )
             
-            // Save to database
             chatHistoryManager.saveChatHistory(chatHistory)
             chatHistoryManager.setCurrentChatId(chatId)
-            
-            // Ensure database transaction completes by waiting
-            delay(200)
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to save overlay chat session", e)
         }
@@ -1165,8 +1159,10 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             saveOverlayChatSession(exitMessage ?: "Session ended", isTask = false)
         }
         
-        // Do NOT hide top-left controls if AgentService is running a task
-        if (!com.ai.assistance.operit.voice.v2.AgentService.isRunning) {
+        // Do NOT hide top-left controls if AgentService is running or starting a task
+        val agentActive = com.ai.assistance.operit.voice.v2.AgentService.isRunning ||
+                         com.ai.assistance.operit.voice.v2.AgentService.isStarting
+        if (!agentActive) {
             visualFeedbackManager.hideTopLeftTaskControls()
         }
         visualFeedbackManager.hideTtsWave()
@@ -1197,11 +1193,14 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             saveOverlayChatSession("Session ended", isTask = false)
         }
         
+        // Do NOT hide top-left controls if AgentService is running or starting a task
+        val agentActive = com.ai.assistance.operit.voice.v2.AgentService.isRunning ||
+                         com.ai.assistance.operit.voice.v2.AgentService.isStarting
+        
         withContext(Dispatchers.Main) {
             speechCoordinator.stopSpeaking()
             speechCoordinator.stopListening()
-            // Do NOT hide top-left controls if AgentService is running a task
-            if (!com.ai.assistance.operit.voice.v2.AgentService.isRunning) {
+            if (!agentActive) {
                 visualFeedbackManager.hideTopLeftTaskControls()
             }
             visualFeedbackManager.hideTtsWave()
