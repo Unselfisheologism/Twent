@@ -909,36 +909,23 @@ Format your response clearly with headings and bullet points.
                     ?: "Voice Session"
             }
             
+            // Copy the list to avoid issues if it's cleared during save
+            val messagesToSave = overlayChatMessageList.toList()
+            
             val chatHistory = ChatHistory(
                 id = chatId,
                 title = title,
-                messages = overlayChatMessageList.toList(),
+                messages = messagesToSave,
                 source = source,
                 group = "Overlay Voice"
             )
             
-            Log.d("ConvAgent", "=== Saving overlay chat ===")
-            Log.d("ConvAgent", "Chat ID: $chatId")
-            Log.d("ConvAgent", "Total messages: ${overlayChatMessageList.size}")
-            Log.d("ConvAgent", "Source: $source")
-            overlayChatMessageList.forEachIndexed { index, msg ->
-                Log.d("ConvAgent", "  Msg $index: sender='${msg.sender}', content='${msg.content.take(30)}'")
-            }
-            
+            // Save to database
             chatHistoryManager.saveChatHistory(chatHistory)
             chatHistoryManager.setCurrentChatId(chatId)
             
-            // Small delay to ensure database transaction completes
-            delay(100)
-            
-            // Verify save by reloading
-            val savedMessages = chatHistoryManager.loadChatMessages(chatId)
-            Log.d("ConvAgent", "Verification - Saved messages in DB: ${savedMessages.size}")
-            savedMessages.forEachIndexed { index, msg ->
-                Log.d("ConvAgent", "  DB Msg $index: sender='${msg.sender}', content='${msg.content.take(30)}'")
-            }
-            
-            Log.d("ConvAgent", "Successfully saved overlay chat session: $chatId")
+            // Ensure database transaction completes by waiting
+            delay(200)
         } catch (e: Exception) {
             Log.e("ConvAgent", "Failed to save overlay chat session", e)
         }
@@ -1178,7 +1165,10 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
             saveOverlayChatSession(exitMessage ?: "Session ended", isTask = false)
         }
         
-        visualFeedbackManager.hideTopLeftTaskControls()
+        // Do NOT hide top-left controls if AgentService is running a task
+        if (!com.ai.assistance.operit.voice.v2.AgentService.isRunning) {
+            visualFeedbackManager.hideTopLeftTaskControls()
+        }
         visualFeedbackManager.hideTtsWave()
         visualFeedbackManager.hideTranscription()
         visualFeedbackManager.hideSpeakingOverlay()
@@ -1210,7 +1200,10 @@ If the user asks to stop, cancel, or kill this task, you MUST use the "KillTask"
         withContext(Dispatchers.Main) {
             speechCoordinator.stopSpeaking()
             speechCoordinator.stopListening()
-            visualFeedbackManager.hideTopLeftTaskControls()
+            // Do NOT hide top-left controls if AgentService is running a task
+            if (!com.ai.assistance.operit.voice.v2.AgentService.isRunning) {
+                visualFeedbackManager.hideTopLeftTaskControls()
+            }
             visualFeedbackManager.hideTtsWave()
             visualFeedbackManager.hideTranscription()
             visualFeedbackManager.hideSpeakingOverlay()

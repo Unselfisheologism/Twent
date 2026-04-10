@@ -1050,8 +1050,8 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 }
                 
                 val density = context.resources.displayMetrics.density
-                val buttonSize = (80 * density).toInt() // Smaller: 80dp instead of 120dp
-                val cornerRadius = 40f // More rounded (half of buttonSize)
+                val buttonSize = (36 * density).toInt() // Much smaller: 36dp
+                val cornerRadius = 18f // More rounded (half of buttonSize)
             
             // Create rounded background drawables (need 2+ colors for GradientDrawable)
             val stopButtonBg = android.graphics.drawable.GradientDrawable(

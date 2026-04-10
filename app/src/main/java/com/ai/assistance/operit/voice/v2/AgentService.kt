@@ -246,8 +246,25 @@ class AgentService : Service() {
 
         Log.i(TAG, "Task queue empty or stop requested. Cleaning up.")
         currentTask = null
+        
+        // Hide top-left controls after task completes
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
+        
+        // Show input box for follow-up message
+        visualFeedbackManager.showInputBox(
+            onActivated = {},
+            onSubmit = { submittedText ->
+                Log.i(TAG, "Follow-up message: $submittedText")
+                // Start a new task with the follow-up
+                start(this@AgentService, submittedText)
+            },
+            onOutsideTap = {
+                Log.i(TAG, "Follow-up input outside tap")
+                visualFeedbackManager.hideInputBox()
+            }
+        )
+        
         stopSelf()
     }
 
@@ -289,6 +306,7 @@ class AgentService : Service() {
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
         visualFeedbackManager.hideTtsWave()
+        // Do NOT hide input box - it may be needed for follow-up messages
         Log.i(TAG, "Service destroyed and all resources cleaned up.")
     }
 
