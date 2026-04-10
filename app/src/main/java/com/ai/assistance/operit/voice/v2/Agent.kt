@@ -195,6 +195,27 @@ class Agent(
             Log.d(TAG,"💪 Executing actions...")
             val actionResults = mutableListOf<ActionResult>()
             for (action in agentOutput.action) {
+                // Check for stop/pause BEFORE each action
+                if (com.ai.assistance.operit.voice.v2.AgentService.shouldStopTask) {
+                    Log.d(TAG, "--- ⛔ Stop requested before action - stopping ---")
+                    speechCoordinator.speakToUser("Task stopped by user.")
+                    state.stopped = true
+                    visualFeedbackManager.hideTaskActiveGlow()
+                    return
+                }
+                
+                while (com.ai.assistance.operit.voice.v2.AgentService.isTaskPaused && !state.stopped) {
+                    if (com.ai.assistance.operit.voice.v2.AgentService.shouldStopTask) {
+                        Log.d(TAG, "--- ⛔ Stop requested while paused - stopping ---")
+                        speechCoordinator.speakToUser("Task stopped by user.")
+                        state.stopped = true
+                        visualFeedbackManager.hideTaskActiveGlow()
+                        return
+                    }
+                    Log.d(TAG, "--- ⏸️ Paused before action, waiting... ---")
+                    delay(500)
+                }
+                
                 // Show action being executed
                 val actionName = action::class.simpleName ?: "Action"
                 OverlayDispatcher.show(
@@ -209,6 +230,15 @@ class Agent(
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Exception executing action '${action::class.simpleName}': ${e.message}", e)
                     ActionResult(error = "Exception during execution: ${e.message}")
+                }
+                
+                // Check for stop/pause AFTER each action
+                if (com.ai.assistance.operit.voice.v2.AgentService.shouldStopTask) {
+                    Log.d(TAG, "--- ⛔ Stop requested after action - stopping ---")
+                    speechCoordinator.speakToUser("Task stopped by user.")
+                    state.stopped = true
+                    visualFeedbackManager.hideTaskActiveGlow()
+                    return
                 }
                 actionResults.add(result)
                 Log.d(TAG,"  - Action '${action::class.simpleName}' executed. Result: ${result.longTermMemory ?: result.error ?: "OK"}")
