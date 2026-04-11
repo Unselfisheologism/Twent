@@ -2,38 +2,25 @@ package com.ai.assistance.operit.core.tools.defaultTool
 
 import android.content.Context
 import com.ai.assistance.operit.core.tools.defaultTool.accessbility.*
-import com.ai.assistance.operit.core.tools.defaultTool.admin.*
-import com.ai.assistance.operit.core.tools.defaultTool.debugger.*
-import com.ai.assistance.operit.core.tools.defaultTool.root.*
-import com.ai.assistance.operit.core.tools.defaultTool.standard.*
-import com.ai.assistance.operit.core.tools.system.AndroidPermissionLevel
-import com.ai.assistance.operit.data.preferences.androidPermissionPreferences
 import com.ai.assistance.operit.data.repository.UIHierarchyManager
 import com.ai.assistance.operit.util.AppLogger
 
-/** 工具获取器 - 根据首选权限级别获取对应的工具实现 如果特定权限级别下没有对应工具实现，则回退到标准权限级别的工具 */
+/** 工具获取器 - 统一使用无障碍权限级别的工具实现 */
 object ToolGetter {
 
     /**
      * 获取文件系统工具
      * @param context 应用上下文
-     * @return 根据首选权限级别的文件系统工具实现
+     * @return 无障碍文件系统工具实现
      */
     fun getFileSystemTools(context: Context): StandardFileSystemTools {
-        return when (androidPermissionPreferences.getPreferredPermissionLevel()) {
-            AndroidPermissionLevel.ROOT -> RootFileSystemTools(context)
-            AndroidPermissionLevel.ADMIN -> AdminFileSystemTools(context)
-            AndroidPermissionLevel.DEBUGGER -> DebuggerFileSystemTools(context)
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityFileSystemTools(context)
-            AndroidPermissionLevel.STANDARD -> StandardFileSystemTools(context)
-            null -> StandardFileSystemTools(context) // 默认使用标准权限级别
-        }
+        return AccessibilityFileSystemTools(context)
     }
 
     /**
      * 获取Shell工具执行器
      * @param context 应用上下文
-     * @return 根据首选权限级别的Shell工具执行器实现
+     * @return Shell工具执行器实现
      */
     fun getShellToolExecutor(context: Context): StandardShellToolExecutor {
         return StandardShellToolExecutor(context)
@@ -42,45 +29,28 @@ object ToolGetter {
     /**
      * 获取UI工具
      * @param context 应用上下文
-     * @return 根据实际Android权限级别的UI工具实现（优先检查系统级无障碍权限）
+     * @return 无障碍UI工具实现
      */
     fun getUITools(context: Context): StandardUITools {
-        // Always use AccessibilityUITools - it will try to use the AccessibilityService APIs
-        // and fail gracefully at runtime if the service isn't connected (with "Accessibility service not available")
-        // This bypasses the permission level check entirely
         return AccessibilityUITools(context)
     }
 
     /**
      * 获取系统操作工具
      * @param context 应用上下文
-     * @return 根据首选权限级别的系统操作工具实现
+     * @return 无障碍系统操作工具实现
      */
     fun getSystemOperationTools(context: Context): StandardSystemOperationTools {
-        return when (androidPermissionPreferences.getPreferredPermissionLevel()) {
-            AndroidPermissionLevel.ROOT -> RootSystemOperationTools(context)
-            AndroidPermissionLevel.ADMIN -> AdminSystemOperationTools(context)
-            AndroidPermissionLevel.DEBUGGER -> DebuggerSystemOperationTools(context)
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilitySystemOperationTools(context)
-            AndroidPermissionLevel.STANDARD -> StandardSystemOperationTools(context)
-            null -> StandardSystemOperationTools(context) // 默认使用标准权限级别
-        }
+        return AccessibilitySystemOperationTools(context)
     }
 
     /**
      * 获取设备信息工具执行器
      * @param context 应用上下文
-     * @return 根据首选权限级别的设备信息工具执行器实现
+     * @return 无障碍设备信息工具执行器实现
      */
     fun getDeviceInfoToolExecutor(context: Context): StandardDeviceInfoToolExecutor {
-        return when (androidPermissionPreferences.getPreferredPermissionLevel()) {
-            AndroidPermissionLevel.ROOT -> RootDeviceInfoToolExecutor(context)
-            AndroidPermissionLevel.ADMIN -> AdminDeviceInfoToolExecutor(context)
-            AndroidPermissionLevel.DEBUGGER -> DebuggerDeviceInfoToolExecutor(context)
-            AndroidPermissionLevel.ACCESSIBILITY -> AccessibilityDeviceInfoToolExecutor(context)
-            AndroidPermissionLevel.STANDARD -> StandardDeviceInfoToolExecutor(context)
-            null -> StandardDeviceInfoToolExecutor(context) // 默认使用标准权限级别
-        }
+        return AccessibilityDeviceInfoToolExecutor(context)
     }
 
     /**

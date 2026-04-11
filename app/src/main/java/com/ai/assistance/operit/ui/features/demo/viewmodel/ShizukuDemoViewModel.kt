@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ai.assistance.operit.core.tools.AIToolHandler
-import com.ai.assistance.operit.core.tools.system.RootAuthorizer
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.features.demo.state.DemoStateManager
 import kotlinx.coroutines.Dispatchers
@@ -17,9 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** ViewModel for the ShizukuDemoScreen Delegates most state management to DemoStateManager */
+/** ViewModel for the ShizukuDemoScreen. Delegates most state management to DemoStateManager */
 class ShizukuDemoViewModel(application: Application) : AndroidViewModel(application) {
-    // 初始化时直接创建stateManager
     private val stateManager: DemoStateManager = DemoStateManager(application, viewModelScope)
 
     // AIToolHandler instance
@@ -39,9 +37,6 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
 
     /** Initialize the ViewModel with context data */
     fun initialize(context: Context) {
-        // 初始化Root授权器
-        RootAuthorizer.initialize(context)
-        // 只需要调用stateManager的initialize方法
         stateManager.initialize()
     }
 
@@ -54,24 +49,10 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
     fun initializeAsync(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // 初始化Root授权器 - 在IO线程进行初始化
-                RootAuthorizer.initialize(context)
-
-                // 直接从RootAuthorizer获取当前状态
-                val isDeviceRooted = RootAuthorizer.isRooted.value
-                val hasRootAccess = RootAuthorizer.hasRootAccess.value
-
-                // 更新状态
-                withContext(Dispatchers.Main) {
-                    stateManager.updateRootStatus(isDeviceRooted, hasRootAccess)
-                }
-
-                // 调用stateManager的异步初始化方法
                 stateManager.initializeAsync()
             } catch (e: Exception) {
-                AppLogger.e("ShizukuDemoViewModel", "初始化时出错: ${e.message}", e)
+                AppLogger.e("ShizukuDemoViewModel", "Initialization error: ${e.message}", e)
             } finally {
-                // 完成后关闭加载指示器
                 withContext(Dispatchers.Main) { setLoading(false) }
             }
         }
@@ -79,64 +60,7 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
 
     /** Refresh app status */
     fun refreshStatus(context: Context) {
-        // 检查Root状态
-        checkRootStatus(context)
         stateManager.refreshStatus()
-    }
-
-    /** Check root status */
-    fun checkRootStatus(context: Context) {
-        viewModelScope.launch {
-            val isDeviceRooted = RootAuthorizer.isDeviceRooted()
-            val hasRootAccess = RootAuthorizer.checkRootStatus(context)
-            stateManager.updateRootStatus(isDeviceRooted, hasRootAccess)
-            AppLogger.d(
-                    "ShizukuDemoViewModel",
-                    "Root状态更新: 设备已Root=$isDeviceRooted, 应用有Root权限=$hasRootAccess"
-            )
-        }
-    }
-
-    /** Request root permission */
-    fun requestRootPermission(context: Context) {
-        viewModelScope.launch {
-            // 如果已有Root权限，则直接执行测试命令
-            if (RootAuthorizer.hasRootAccess.value) {
-                executeRootCommand("id", context)
-                return@launch
-            }
-
-            // 如果没有Root权限，则先请求权限
-            Toast.makeText(context, context.getString(R.string.requesting_root_permission), Toast.LENGTH_SHORT).show()
-
-            RootAuthorizer.requestRootPermission { granted ->
-                viewModelScope.launch {
-                    if (granted) {
-                        Toast.makeText(context, context.getString(R.string.root_permission_granted), Toast.LENGTH_SHORT).show()
-                        // 权限授予后执行一个简单的测试命令
-                        executeRootCommand("id", context)
-                    } else {
-                        Toast.makeText(context, context.getString(R.string.root_permission_denied), Toast.LENGTH_SHORT).show()
-                    }
-                    // 刷新状态
-                    checkRootStatus(context)
-                }
-            }
-        }
-    }
-
-    /** Execute root command */
-    fun executeRootCommand(command: String, context: Context) {
-        viewModelScope.launch {
-            val result = RootAuthorizer.executeRootCommand(command, context)
-            if (result.first) {
-                Toast.makeText(context, context.getString(R.string.command_execution_success), Toast.LENGTH_SHORT).show()
-                stateManager.updateResultText("${context.getString(R.string.command_execution_success)}:\n${result.second}")
-            } else {
-                Toast.makeText(context, context.getString(R.string.command_execution_failed), Toast.LENGTH_SHORT).show()
-                stateManager.updateResultText("${context.getString(R.string.command_execution_failed)}:\n${result.second}")
-            }
-        }
     }
 
     /** Dialog management */
@@ -149,16 +73,8 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     /** UI visibility toggles */
-    fun toggleShizukuWizard() {
-        stateManager.toggleShizukuWizard()
-    }
-
     fun toggleOperitTerminalWizard() {
         stateManager.toggleOperitTerminalWizard()
-    }
-
-    fun toggleRootWizard() {
-        stateManager.toggleRootWizard()
     }
 
     fun toggleAccessibilityWizard() {
@@ -181,13 +97,9 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
     /** Refresh all registered tools */
     fun refreshTools(context: Context) {
         AppLogger.d("ShizukuDemoViewModel", "Refreshing all registered tools")
-        // First clear the current tool execution state
         toolHandler.reset()
-
-        // Re-register all default tools
         toolHandler.registerDefaultTools()
 
-        // Show a toast notification for feedback
         viewModelScope.launch(Dispatchers.Main) {
             Toast.makeText(context, context.getString(R.string.all_tools_reregistered), Toast.LENGTH_SHORT).show()
         }

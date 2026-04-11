@@ -1,8 +1,8 @@
 package com.ai.assistance.operit.core.tools.defaultTool.debugger
 
 import android.content.Context
-import com.ai.assistance.operit.core.tools.defaultTool.standard.StandardUITools
+import com.ai.assistance.operit.core.tools.defaultTool.accessbility.AccessibilityUITools
 
-open class DebuggerUITools(context: Context) : StandardUITools(context) {
-    
+open class DebuggerUITools(context: Context) : AccessibilityUITools(context) {
+
 }

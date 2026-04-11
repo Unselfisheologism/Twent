@@ -14,14 +14,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-/** 基于标准Android权限的Shell命令执行器 实现STANDARD权限级别的命令执行 */
+/** 基于ACCESSIBILITY权限的Shell命令执行器 */
 class StandardShellExecutor(private val context: Context) : ShellExecutor {
     companion object {
         private const val TAG = "StandardShellExecutor"
         private const val COMMAND_TIMEOUT = 30L // 秒
     }
 
-    override fun getPermissionLevel(): AndroidPermissionLevel = AndroidPermissionLevel.STANDARD
+    override fun getPermissionLevel(): AndroidPermissionLevel = AndroidPermissionLevel.ACCESSIBILITY
 
     override fun isAvailable(): Boolean = true // 标准执行器始终可用
 
@@ -42,7 +42,7 @@ class StandardShellExecutor(private val context: Context) : ShellExecutor {
         identity: ShellIdentity
     ): ShellExecutor.CommandResult =
             withContext(Dispatchers.IO) {
-                AppLogger.d(TAG, "Executing standard command: $command")
+                AppLogger.d(TAG, "Executing ACCESSIBILITY command: $command")
 
                 try {
                     // 判断是否包含shell特殊字符

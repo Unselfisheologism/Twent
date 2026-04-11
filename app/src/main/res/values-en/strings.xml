@@ -1137,8 +1137,7 @@
     <string name="permission_guide_complete">Complete</string>
     <string name="permission_guide_welcome">Welcome</string>
     <string name="permission_guide_basic_permissions">Basic Permissions</string>
-    <string name="permission_guide_permission_level">Permission Level</string>
-    
+
     <string name="permission_guide_welcome_title">Welcome</string>
     <string name="permission_guide_welcome_desc">Before using the app, we need to set up some basic permissions and select your preferred permission level.</string>
     <string name="permission_guide_welcome_hint">This process takes just a few minutes and will help the app serve you better.</string>
@@ -1158,25 +1157,10 @@
     <string name="permission_guide_microphone_desc">Allow the app to use the microphone for voice commands</string>
     <string name="permission_guide_check_permissions">Check Permission Status</string>
     <string name="permission_guide_all_granted">All basic permissions granted, you can continue to the next step</string>
-    
-    <string name="permission_guide_warning_title">Incomplete Permissions</string>
-    <string name="permission_guide_warning_message">You have not granted all necessary permissions, which may result in incomplete functionality or abnormal app behavior. Are you sure you want to continue?</string>
-    <string name="permission_guide_warning_continue">Continue</string>
-    <string name="permission_guide_warning_return">Return to Permissions</string>
-    
-    <string name="permission_guide_level_title">Select Permission Level</string>
-    <string name="permission_guide_level_desc">Please select your preferred permission level, which will determine the range of features the app can use</string>
-    <string name="permission_guide_standard_title">Standard Permissions</string>
-    <string name="permission_guide_standard_desc">Basic app operation permissions, no special permissions required</string>
+
     <string name="permission_guide_accessibility_title">Accessibility Permissions</string>
     <string name="permission_guide_accessibility_desc">Enables screen content analysis and operation simulation via accessibility service</string>
-    <string name="permission_guide_debugger_title">Debug Permissions</string>
-    <string name="permission_guide_debugger_desc">Provides ADB-level system access through Shizuku</string>
-    <string name="permission_guide_root_title">Root Permissions</string>
-    <string name="permission_guide_root_desc">Superuser permissions, can perform any system operations</string>
-    <string name="permission_guide_confirm">Confirm Selection</string>
-    <string name="permission_guide_change_anytime">You can change the permission level in settings at any time</string>
-    
+
     <!-- Permission Guide Toast Messages -->
     <string name="permission_guide_storage_setting_failed">Cannot open storage permission settings, please authorize manually</string>
     <string name="permission_guide_overlay_setting_failed">Cannot open overlay settings, please authorize manually</string>
@@ -1186,55 +1170,12 @@
     <!-- Permission Status Description -->
     <string name="permission_guide_granted">Granted</string>
     <string name="permission_guide_not_granted">Not granted</string>
-    <string name="permission_guide_selected">Selected</string>
-    
+
     <!-- Wizard Cards Common -->
     <string name="wizard_collapse">Collapse</string>
     <string name="wizard_expand">Expand</string>
     <string name="wizard_open_docs">Official Docs</string>
-    
-    <!-- RootWizardCard -->
-    <string name="root_wizard_title">Root Permission Setup Wizard</string>
-    <string name="root_wizard_step1">Step 1: Root Device</string>
-    <string name="root_wizard_step2">Step 2: Grant Root Permission</string>
-    <string name="root_wizard_completed">Root Permission Setup Complete</string>
-    <string name="root_wizard_success_message">Congratulations! Root permission has been granted. You can now perform privileged operations.</string>
-    <string name="root_wizard_test_command">Test Root Command</string>
-    <string name="root_wizard_device_rooted_message">Your device is rooted, but the app hasn\'t been granted root permission. Please click the button below to request permission from your ROOT manager (like Magisk, SuperSU, etc.).</string>
-    <string name="root_wizard_how_to_get_root">How to get Root permission:</string>
-    <string name="root_wizard_how_to_get_root_steps">1. Click the \"Request Root Permission\" button below\n2. Select \"Allow\" in the ROOT manager popup\n3. If you don\'t see a popup, check your ROOT manager settings</string>
-    <string name="root_wizard_request_permission">Request Root Permission</string>
-    <string name="root_wizard_view_tutorial">View Root Tutorial</string>
-    <string name="root_wizard_device_not_rooted">Your device is not rooted. ROOT requires specific system modifications and may void your warranty. If you need to use ROOT features, please complete the device ROOT process first.</string>
-    <string name="root_wizard_risk_notice">Note: Root Operation Risk Warning</string>
-    <string name="root_wizard_risk_details">1. ROOT operations carry risk and may void your warranty\n2. Some apps may refuse to run on rooted devices\n3. Improper ROOT operations may cause system instability</string>
-    
-    <!-- ShizukuWizardCard -->
-    <string name="shizuku_wizard_title">Shizuku Setup Wizard</string>
-    <string name="shizuku_wizard_update_title">Shizuku Update Wizard</string>
-    <string name="shizuku_wizard_step1">Step 1: Install Shizuku App</string>
-    <string name="shizuku_wizard_step2">Step 2: Start Shizuku Service</string>
-    <string name="shizuku_wizard_step3">Step 3: Grant Shizuku Permission</string>
-    <string name="shizuku_wizard_completed">Shizuku Setup Complete</string>
-    <string name="shizuku_wizard_install_message">Shizuku is a tool that grants apps advanced permissions without requiring root. We need to install this app first.</string>
-    <string name="shizuku_wizard_install_bundled">Install Bundled Version</string>
-    <string name="shizuku_wizard_start_message">Shizuku is installed. Now you need to start the Shizuku service. Please follow one of the methods below:</string>
-    <string name="shizuku_wizard_method1_title">Method 1: In-App Start (Recommended)</string>
-    <string name="shizuku_wizard_method1_steps">1. Click the \"Open Shizuku\" button below\n2. In the Shizuku app, select \"Start via Wireless Debugging\"\n3. Follow the prompts to enable \"Developer Options\" and \"Wireless Debugging\"\n4. Allow Shizuku to get wireless debugging permissions</string>
-    <string name="shizuku_wizard_method2_title">Method 2: Start via USB</string>
-    <string name="shizuku_wizard_method2_steps">1. Install ADB tools on your computer\n2. Connect your phone to your computer via USB\n3. Execute in computer command line:\n   adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/files/start.sh</string>
-    <string name="shizuku_wizard_open_shizuku">Open Shizuku</string>
-    <string name="shizuku_wizard_permission_message">Shizuku service is running. Now you need to grant permission to this app. Click the button below and select \"Allow\" in the dialog that appears.</string>
-    <string name="shizuku_wizard_permission_notice">Note: If you don\'t see the authorization dialog, check:</string>
-    <string name="shizuku_wizard_permission_notice_details">1. Whether the Shizuku service is running\n2. Try restarting the Shizuku service\n3. Confirm you\'ve allowed overlay display permission</string>
-    <string name="shizuku_wizard_grant_permission">Grant Shizuku Permission</string>
-    <string name="shizuku_wizard_success_message">Congratulations! Shizuku is fully set up. You can now use debugging permission features.</string>
-    <string name="shizuku_wizard_update_available">New Version Available</string>
-    <string name="shizuku_wizard_update_message">The app has a newer version of Shizuku built in. We recommend updating for better compatibility and features.</string>
-    <string name="shizuku_wizard_current_version">Current version: %1$s</string>
-    <string name="shizuku_wizard_latest_version">Latest version: %1$s</string>
-    <string name="shizuku_wizard_update">Update Shizuku</string>
-    
+
     <!-- TermuxWizardCard -->
     <string name="termux_wizard_title">Termux Setup Wizard</string>
     <string name="termux_wizard_step1">Step 1: Install Termux</string>
@@ -1304,7 +1245,6 @@
 
     <!-- Permission Level Cards -->
     <string name="permission_level">Permission Level</string>
-    <string name="permission_level_icon">Permission Level Icon</string>
     <string name="set_as_current_level">Set as Current Level</string>
     <string name="current_level_in_use">Currently in Use</string>
     <string name="refresh_permission_status">Refresh Permission Status</string>
@@ -1315,14 +1255,6 @@
     <string name="status_not_granted">Not Granted</string>
     <string name="accessibility_permission">Accessibility Permission</string>
     <string name="accessibility_service">Accessibility Service</string>
-    <string name="admin_permission">Admin Permission</string>
-    <string name="debug_permission">Debug Permission</string>
-    <string name="shizuku_service">Shizuku Service</string>
-    <string name="root_permission">Root Permission</string>
-    <string name="root_access_permission">Root Access Permission</string>
-    <string name="status_not_installed">Not Installed</string>
-    <string name="status_not_running">Not Running</string>
-    <string name="status_update_needed">Update Needed</string>
     <string name="storage_permission">Storage Permission</string>
     <string name="overlay_permission">Overlay Permission</string>
     <string name="battery_optimization">Battery Optimization Exemption</string>
@@ -1330,27 +1262,10 @@
     <string name="operit_terminal">Operit Terminal</string>
     
     <!-- Permission Level Descriptions -->
-    <string name="permission_level_standard">Standard Permission</string>
     <string name="permission_level_accessibility">Accessibility Permission</string>
-    <string name="permission_level_admin">Admin Permission</string>
-    <string name="permission_level_debugger">Debug Permission</string>
-    <string name="permission_level_root">Root Permission</string>
-    <string name="permission_level_standard_desc">Basic application permissions, no special system authorization required</string>
     <string name="permission_level_accessibility_desc">Added accessibility service support, can simulate screen operations</string>
-    <string name="permission_level_admin_desc">Added device administrator permissions, can access more system functions</string>
-    <string name="permission_level_debugger_desc">Provides ADB-level system access through Shizuku</string>
-    <string name="permission_level_root_desc">Superuser permissions, can execute any system operations</string>
-    <string name="permission_level_standard_full_desc">Standard Permissions: Basic application permissions, no special privileges required</string>
     <string name="permission_level_accessibility_full_desc">Accessibility Permissions: Allows the app to simulate user operations, requires enabling accessibility services</string>
-    <string name="permission_level_admin_full_desc">Admin Permissions: Allows the app to access more system functions, such as location services</string>
-    <string name="permission_level_debugger_full_desc">Debug Permissions: Allows advanced operations through ADB debugging functions, requires Shizuku service</string>
-    <string name="permission_level_root_full_desc">Root Permissions: Allows the app to run as superuser, requires a rooted device</string>
-    
-    <!-- Root Status Information -->
-    <string name="root_access_granted">App has gained Root access, can execute privileged commands</string>
-    <string name="device_rooted_request_permission">Device is rooted, click to request app permissions</string>
-    <string name="device_not_rooted">Device is not rooted, unable to obtain Root permissions</string>
-    
+
     <!-- Toast Messages -->
     <string name="toast_download_link_failed">Unable to open download link</string>
     <string name="toast_apk_extract_failed">Failed to extract APK, please try again later</string>
@@ -2783,7 +2698,6 @@
     <string name="feature_plugin_market_mcp">Plugin Market MCP</string>
     <string name="supported">Supported</string>
     <string name="not_supported">Not Supported</string>
-    <string name="permission_level_set_active">Set %1$s as the current active permission level</string>
     <string name="no_description">No description</string>
     <string name="builtin">Built-in</string>
     <string name="external">External</string>
@@ -6411,17 +6325,6 @@
     <string name="exe_editor_change_icon_first">Please call changeIcon method first to set new icon</string>
     <string name="exe_editor_change_icon_failed">Failed to change EXE icon</string>
 
-    <!-- RootAuthorizer -->
-    <string name="root_authorizer_not_initialized">Root executor not initialized or no Root permission</string>
-    <string name="root_authorizer_execute_error">Execution error: %1$s</string>
-
-    <!-- StandardActionListener -->
-    <string name="standard_action_listener_started">Standard UI operation listener started</string>
-    <string name="standard_action_listener_start_failed">Start failed: %1$s</string>
-
-    <!-- RootShellExecutor -->
-    <string name="root_shell_error">Error: %1$s</string>
-
     <!-- Graph -->
     <string name="graph_from_node_not_exist">Source node \'%1$s\' does not exist</string>
     <string name="graph_to_node_not_exist">Target node \'%1$s\' does not exist</string>
@@ -6452,14 +6355,6 @@
     <string name="sys_op_location_permission_not_granted">Location permission not granted, please enable location permission in app settings</string>
     <string name="sys_op_cannot_get_location">Cannot get location information, please ensure location service is enabled</string>
 
-    <!-- AdminActionListener -->
-    <string name="admin_device_admin_component_name_not_set">Device admin component name not set</string>
-    <string name="admin_device_admin_permission_not_activated">App device admin permission not activated</string>
-    <string name="admin_need_device_admin_permission">Device admin permission required to listen to system UI operations</string>
-    <string name="admin_already_listening">Already listening</string>
-    <string name="admin_ui_listener_started">Device admin UI operation listener started</string>
-    <string name="admin_start_failed">Start failed: %1$s</string>
-
     <!-- MarkdownConverter -->
     <string name="markdown_parse_failed">Failed to parse Markdown format: %1$s</string>
     <string name="markdown_import_from">Import from Markdown</string>
@@ -6480,23 +6375,6 @@
     <string name="problem_library_question_format">Question: %1$s\n\nSolution: %2$s</string>
     <string name="problem_library_question_label">Question:</string>
     <string name="problem_library_solution_label">Solution:</string>
-
-    <!-- ShizukuAuthorizer -->
-    <string name="shizuku_start_service_intro">To start Shizuku service:\n</string>
-    <string name="shizuku_step1_ensure_installed">1. Ensure Shizuku app is installed\n</string>
-    <string name="shizuku_step2_adb_command">2. Use ADB command to start Shizuku:\n</string>
-    <string name="shizuku_or">Or\n\n</string>
-    <string name="shizuku_step2_follow_instructions">2. Open Shizuku app and follow on-screen instructions</string>
-
-    <!-- ShizukuInstaller -->
-    <string name="shizuku_install_update">Update</string>
-    <string name="shizuku_install_install">Install</string>
-    <string name="shizuku_install_unknown">Unknown</string>
-
-    <!-- RootActionListener -->
-    <string name="root_no_root_permission">No root permission on device</string>
-    <string name="root_check_permission_error">Error checking root permission: %1$s</string>
-    <string name="root_ui_listener_started">Root UI operation listener started</string>
 
     <!-- MCPLocalServer -->
     <string name="mcp_local_auto_detected_server">MCP server auto-detected from configuration file</string>
@@ -6577,9 +6455,6 @@
     <string name="ocr_cannot_read_image">Cannot read image file: %1$s</string>
     <string name="ocr_cannot_decode_bitmap_from_uri">Cannot decode Bitmap from URI</string>
     <string name="ocr_cannot_open_uri_stream">Cannot open input stream for URI</string>
-
-    <!-- DebuggerActionListener -->
-    <string name="debugger_ui_listener_started">Debugger UI operation listener started</string>
 
     <!-- ModelConfigManager -->
     <string name="model_config_default_name">Default Config</string>

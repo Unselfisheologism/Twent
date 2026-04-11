@@ -39,8 +39,6 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,9 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,9 +60,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -75,7 +69,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.core.tools.system.AndroidPermissionLevel
 import com.ai.assistance.operit.ui.features.permission.viewmodel.PermissionGuideViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,8 +76,7 @@ import kotlinx.coroutines.launch
 private const val INTRO_PAGES_COUNT = 3
 private const val WELCOME_PAGE_INDEX = INTRO_PAGES_COUNT
 private const val BASIC_PERMISSIONS_PAGE_INDEX = INTRO_PAGES_COUNT + 1
-private const val PERMISSION_LEVEL_PAGE_INDEX = INTRO_PAGES_COUNT + 2
-private const val TOTAL_PAGES_COUNT = INTRO_PAGES_COUNT + 3
+private const val TOTAL_PAGES_COUNT = INTRO_PAGES_COUNT + 2
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -98,9 +90,6 @@ fun PermissionGuideScreen(
     // 状态
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES_COUNT })
-
-    // 警告对话框状态
-    var showPermissionWarning by remember { mutableStateOf(false) }
 
     // 初始化
     LaunchedEffect(Unit) { viewModel.checkPermissions(context) }
@@ -151,8 +140,6 @@ fun PermissionGuideScreen(
                 viewModel.setCurrentStep(PermissionGuideViewModel.Step.WELCOME)
             BASIC_PERMISSIONS_PAGE_INDEX ->
                 viewModel.setCurrentStep(PermissionGuideViewModel.Step.BASIC_PERMISSIONS)
-            PERMISSION_LEVEL_PAGE_INDEX ->
-                viewModel.setCurrentStep(PermissionGuideViewModel.Step.PERMISSION_LEVEL)
         }
     }
 
@@ -162,47 +149,6 @@ fun PermissionGuideScreen(
             delay(500) // 短暂延迟，让用户看到完成状态
             onComplete()
         }
-    }
-
-    // 权限警告对话框
-    if (showPermissionWarning) {
-        AlertDialog(
-                onDismissRequest = { showPermissionWarning = false },
-                icon = {
-                    Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                    )
-                },
-                title = {
-                    Text(
-                            text = stringResource(R.string.permission_guide_warning_title),
-                            style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                text = {
-                    Text(
-                            text = stringResource(R.string.permission_guide_warning_message),
-                            style = MaterialTheme.typography.bodyMedium
-                    )
-                },
-                confirmButton = {
-                    Button(
-                            onClick = {
-                                showPermissionWarning = false
-                                scope.launch {
-                                    pagerState.animateScrollToPage(PERMISSION_LEVEL_PAGE_INDEX)
-                                }
-                            }
-                    ) { Text(stringResource(R.string.permission_guide_warning_continue)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showPermissionWarning = false }) {
-                        Text(stringResource(R.string.permission_guide_warning_return))
-                    }
-                }
-        )
     }
 
     Column(
@@ -387,14 +333,6 @@ fun PermissionGuideScreen(
                                 },
                                 onRefresh = { viewModel.checkPermissions(context) }
                         )
-                PERMISSION_LEVEL_PAGE_INDEX ->
-                        PermissionLevelPage(
-                                selectedLevel = uiState.selectedPermissionLevel,
-                                onLevelSelected = { level ->
-                                    viewModel.selectPermissionLevel(level)
-                                },
-                                onConfirm = { viewModel.savePermissionLevel() }
-                        )
             }
         }
 
@@ -440,8 +378,6 @@ fun PermissionGuideScreen(
                                 WELCOME_PAGE_INDEX -> stringResource(R.string.permission_guide_welcome)
                                 BASIC_PERMISSIONS_PAGE_INDEX ->
                                         stringResource(R.string.permission_guide_basic_permissions)
-                                PERMISSION_LEVEL_PAGE_INDEX ->
-                                        stringResource(R.string.permission_guide_permission_level)
                                 else -> ""
                             },
                     style = MaterialTheme.typography.bodyMedium,
@@ -456,15 +392,9 @@ fun PermissionGuideScreen(
                         onClick = {
                             scope.launch {
                                 when {
-                                    // 最后一页且已选择权限级别，完成设置
-                                    pagerState.currentPage == PERMISSION_LEVEL_PAGE_INDEX &&
-                                            uiState.selectedPermissionLevel != null -> {
+                                    // 最后一页（基础权限页），完成设置
+                                    pagerState.currentPage == BASIC_PERMISSIONS_PAGE_INDEX -> {
                                         viewModel.savePermissionLevel()
-                                    }
-                                    // 在基础权限页但未获得所有权限时，显示警告对话框
-                                    pagerState.currentPage == BASIC_PERMISSIONS_PAGE_INDEX &&
-                                            !uiState.allBasicPermissionsGranted -> {
-                                        showPermissionWarning = true
                                     }
                                     // 否则前进到下一页
                                     pagerState.currentPage < pagerState.pageCount - 1 -> {
@@ -477,31 +407,19 @@ fun PermissionGuideScreen(
                                 when (pagerState.currentPage) {
                                     in 0..WELCOME_PAGE_INDEX -> true // 介绍页和欢迎页总是可以前进
                                     BASIC_PERMISSIONS_PAGE_INDEX ->
-                                            true // 基础权限页现在始终可以前进，但会有警告弹窗
-                                    PERMISSION_LEVEL_PAGE_INDEX ->
-                                            uiState.selectedPermissionLevel != null // 权限级别页需要已选择级别
+                                            true // 基础权限页总是可以前进
                                     else -> false
                                 }
                 ) {
                     Icon(
-                            imageVector =
-                                    if (pagerState.currentPage == PERMISSION_LEVEL_PAGE_INDEX)
-                                            Icons.Default.Check
-                                    else Icons.Default.ArrowForward,
-                            contentDescription =
-                                    if (pagerState.currentPage == PERMISSION_LEVEL_PAGE_INDEX)
-                                            stringResource(R.string.permission_guide_complete)
-                                    else stringResource(R.string.permission_guide_next),
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = stringResource(R.string.permission_guide_next),
                             tint =
                                     when {
                                         pagerState.currentPage < BASIC_PERMISSIONS_PAGE_INDEX ->
                                                 MaterialTheme.colorScheme.primary
                                         pagerState.currentPage == BASIC_PERMISSIONS_PAGE_INDEX ->
                                                 MaterialTheme.colorScheme.primary // 基础权限页总是显示可点击状态
-                                        pagerState.currentPage ==
-                                                PERMISSION_LEVEL_PAGE_INDEX &&
-                                                uiState.selectedPermissionLevel != null ->
-                                                MaterialTheme.colorScheme.primary
                                         else ->
                                                 MaterialTheme.colorScheme.onSurface.copy(
                                                         alpha = 0.3f
@@ -841,188 +759,3 @@ private fun PermissionItem(
     }
 }
 
-@Composable
-private fun PermissionLevelPage(
-        selectedLevel: AndroidPermissionLevel?,
-        onLevelSelected: (AndroidPermissionLevel) -> Unit,
-        onConfirm: () -> Unit
-) {
-    Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-                text = stringResource(R.string.permission_guide_level_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-                text = stringResource(R.string.permission_guide_level_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 权限级别选择
-        Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 标准权限
-            PermissionLevelItem(
-                    level = AndroidPermissionLevel.STANDARD,
-                    title = stringResource(R.string.permission_guide_standard_title),
-                    description = stringResource(R.string.permission_guide_standard_desc),
-                    isSelected = selectedLevel == AndroidPermissionLevel.STANDARD,
-                    onClick = { onLevelSelected(AndroidPermissionLevel.STANDARD) }
-            )
-
-            // 无障碍权限
-            PermissionLevelItem(
-                    level = AndroidPermissionLevel.ACCESSIBILITY,
-                    title = stringResource(R.string.permission_guide_accessibility_title),
-                    description = stringResource(R.string.permission_guide_accessibility_desc),
-                    isSelected = selectedLevel == AndroidPermissionLevel.ACCESSIBILITY,
-                    onClick = { onLevelSelected(AndroidPermissionLevel.ACCESSIBILITY) }
-            )
-
-            // 调试权限
-            PermissionLevelItem(
-                    level = AndroidPermissionLevel.DEBUGGER,
-                    title = stringResource(R.string.permission_guide_debugger_title),
-                    description = stringResource(R.string.permission_guide_debugger_desc),
-                    isSelected = selectedLevel == AndroidPermissionLevel.DEBUGGER,
-                    onClick = { onLevelSelected(AndroidPermissionLevel.DEBUGGER) }
-            )
-
-            // Root权限
-            PermissionLevelItem(
-                    level = AndroidPermissionLevel.ROOT,
-                    title = stringResource(R.string.permission_guide_root_title),
-                    description = stringResource(R.string.permission_guide_root_desc),
-                    isSelected = selectedLevel == AndroidPermissionLevel.ROOT,
-                    onClick = { onLevelSelected(AndroidPermissionLevel.ROOT) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 确认按钮
-        Button(
-                onClick = onConfirm,
-                enabled = selectedLevel != null,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                colors =
-                        ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor =
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                disabledContentColor =
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        )
-        ) {
-            Text(
-                    text = stringResource(R.string.permission_guide_confirm),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 提示文本
-        Text(
-                text = stringResource(R.string.permission_guide_change_anytime),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        )
-    }
-}
-
-@Composable
-private fun PermissionLevelItem(
-        level: AndroidPermissionLevel,
-        title: String,
-        description: String,
-        isSelected: Boolean,
-        onClick: () -> Unit
-) {
-    Surface(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-            shape = RoundedCornerShape(8.dp),
-            color =
-                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    else MaterialTheme.colorScheme.surface,
-            border =
-                    if (isSelected)
-                            androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.primary
-                            )
-                    else null
-    ) {
-        Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 选择指示器
-            Box(
-                    modifier =
-                            Modifier.size(20.dp)
-                                    .background(
-                                            color =
-                                                    if (isSelected)
-                                                            MaterialTheme.colorScheme.primary
-                                                    else Color.Transparent,
-                                            shape = CircleShape
-                                    )
-                                    .border(
-                                            width = 1.dp,
-                                            color =
-                                                    if (isSelected)
-                                                            MaterialTheme.colorScheme.primary
-                                                    else
-                                                            MaterialTheme.colorScheme.onSurface
-                                                                    .copy(alpha = 0.5f),
-                                            shape = CircleShape
-                                    ),
-                    contentAlignment = Alignment.Center
-            ) {
-                if (isSelected) {
-                    Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.permission_guide_selected),
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(12.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleSmall,
-                        color =
-                                if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
-}

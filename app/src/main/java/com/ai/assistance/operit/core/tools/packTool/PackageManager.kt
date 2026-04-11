@@ -16,11 +16,8 @@ import com.ai.assistance.operit.core.tools.mcp.MCPServerConfig
 import com.ai.assistance.operit.core.tools.mcp.MCPToolExecutor
 import com.ai.assistance.operit.core.tools.skill.SkillManager
 import com.ai.assistance.operit.data.preferences.SkillVisibilityPreferences
-import com.ai.assistance.operit.core.tools.system.AndroidPermissionLevel
-import com.ai.assistance.operit.core.tools.system.ShizukuAuthorizer
 import com.ai.assistance.operit.data.preferences.DisplayPreferencesManager
 import com.ai.assistance.operit.data.preferences.EnvPreferences
-import com.ai.assistance.operit.data.preferences.androidPermissionPreferences
 import com.ai.assistance.operit.data.model.PackageToolPromptCategory
 import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.data.model.ToolResult
@@ -742,17 +739,8 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
     }
 
     private fun buildConditionCapabilitiesSnapshot(): Map<String, Any?> {
-        val level = try {
-            androidPermissionPreferences.getPreferredPermissionLevel() ?: AndroidPermissionLevel.STANDARD
-        } catch (_: Exception) {
-            AndroidPermissionLevel.STANDARD
-        }
-
-        val shizukuAvailable = try {
-            ShizukuAuthorizer.isShizukuServiceRunning() && ShizukuAuthorizer.hasShizukuPermission()
-        } catch (_: Exception) {
-            false
-        }
+        // All permission levels now default to ACCESSIBILITY behavior
+        val shizukuAvailable = false // Shizuku support has been removed
 
         val experimentalEnabled = try {
             DisplayPreferencesManager.getInstance(context).isExperimentalVirtualDisplayEnabled()
@@ -760,18 +748,12 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
             true
         }
 
-        val adbOrHigher = when (level) {
-            AndroidPermissionLevel.DEBUGGER,
-            AndroidPermissionLevel.ADMIN,
-            AndroidPermissionLevel.ROOT -> true
-            else -> false
-        }
-
-        val virtualDisplayCapable = adbOrHigher && experimentalEnabled && (level != AndroidPermissionLevel.DEBUGGER || shizukuAvailable)
+        // ACCESSIBILITY level: no ADB-level virtual display, shizuku-based if available
+        val virtualDisplayCapable = experimentalEnabled && shizukuAvailable
 
         return mapOf(
             "ui.virtual_display" to virtualDisplayCapable,
-            "android.permission_level" to level,
+            "android.permission_level" to "accessibility",
             "android.shizuku_available" to shizukuAvailable,
             "ui.shower_display" to false
         )

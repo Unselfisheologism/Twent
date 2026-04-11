@@ -37,7 +37,7 @@ class AndroidShellExecutor {
             val preferredLevel = androidPermissionPreferences.getPreferredPermissionLevel()
             AppLogger.d(TAG, "Using preferred permission level: $preferredLevel, identity=$identity")
 
-            val actualLevel = preferredLevel ?: AndroidPermissionLevel.STANDARD
+            val actualLevel = preferredLevel ?: AndroidPermissionLevel.ACCESSIBILITY
 
             val preferredExecutor = ShellExecutorFactory.getExecutor(ctx, actualLevel)
             val permStatus = preferredExecutor.hasPermission()
@@ -75,7 +75,7 @@ class AndroidShellExecutor {
             val preferredLevel = androidPermissionPreferences.getPreferredPermissionLevel()
             AppLogger.d(TAG, "Starting process with preferred permission level: $preferredLevel")
 
-            val actualLevel = preferredLevel ?: AndroidPermissionLevel.STANDARD
+            val actualLevel = preferredLevel ?: AndroidPermissionLevel.ACCESSIBILITY
             val preferredExecutor = ShellExecutorFactory.getExecutor(ctx, actualLevel)
             val permStatus = preferredExecutor.hasPermission()
 

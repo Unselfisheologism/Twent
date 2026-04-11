@@ -227,24 +227,22 @@ class ActionManager(private val context: Context) {
 
     /**
      * 获取所有可用监听器的状态信息
-     * @return 权限级别到监听器状态的映射
+     * @return ACCESSIBILITY级别监听器状态的映射
      */
     suspend fun getAvailableListenersStatus(): Map<AndroidPermissionLevel, Pair<Boolean, ActionListener.PermissionStatus>> {
         val result = mutableMapOf<AndroidPermissionLevel, Pair<Boolean, ActionListener.PermissionStatus>>()
-        
-        for (level in AndroidPermissionLevel.values()) {
-            try {
-                val listener = ActionListenerFactory.getListener(context, level)
-                val available = listener.isAvailable()
-                val permissionStatus = listener.hasPermission()
-                
-                result[level] = Pair(available, permissionStatus)
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "获取监听器状态失败: $level", e)
-                result[level] = Pair(false, ActionListener.PermissionStatus.denied(context.getString(R.string.action_get_status_failed, e.message ?: "")))
-            }
+
+        try {
+            val listener = ActionListenerFactory.getListener(context, AndroidPermissionLevel.ACCESSIBILITY)
+            val available = listener.isAvailable()
+            val permissionStatus = listener.hasPermission()
+
+            result[AndroidPermissionLevel.ACCESSIBILITY] = Pair(available, permissionStatus)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "获取监听器状态失败: ACCESSIBILITY", e)
+            result[AndroidPermissionLevel.ACCESSIBILITY] = Pair(false, ActionListener.PermissionStatus.denied(context.getString(R.string.action_get_status_failed, e.message ?: "")))
         }
-        
+
         return result
     }
 

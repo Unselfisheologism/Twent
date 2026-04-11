@@ -226,11 +226,6 @@ dependencies {
     // XML处理
     implementation(libs.androidx.core.ktx)
     
-    // libsu - root access library
-    implementation("com.github.topjohnwu.libsu:core:6.0.0")
-    implementation("com.github.topjohnwu.libsu:service:6.0.0")
-    implementation("com.github.topjohnwu.libsu:nio:6.0.0")
-    
     // Add missing SVG support
     implementation(libs.androidsvg)
     
@@ -320,10 +315,6 @@ dependencies {
 
     // Navigation Compose
     implementation(libs.navigation.compose)
-
-    // Shizuku dependencies
-    implementation(libs.shizuku.api)
-    implementation(libs.shizuku.provider)
 
     // Tasker Plugin Library
     implementation("com.joaomgcd:taskerpluginlibrary:0.4.10")

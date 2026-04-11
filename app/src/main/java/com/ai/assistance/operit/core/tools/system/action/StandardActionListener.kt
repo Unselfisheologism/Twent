@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 基于标准Android权限的UI操作监听器 实现STANDARD权限级别的操作监听 */
+/** 基于ACCESSIBILITY权限的UI操作监听器 */
 class StandardActionListener(private val context: Context) : ActionListener {
     companion object {
         private const val TAG = "StandardActionListener"
@@ -18,7 +18,7 @@ class StandardActionListener(private val context: Context) : ActionListener {
     private val isListening = AtomicBoolean(false)
     private var actionCallback: ((ActionListener.ActionEvent) -> Unit)? = null
 
-    override fun getPermissionLevel(): AndroidPermissionLevel = AndroidPermissionLevel.STANDARD
+    override fun getPermissionLevel(): AndroidPermissionLevel = AndroidPermissionLevel.ACCESSIBILITY
 
     override suspend fun isAvailable(): Boolean = true // 标准监听器始终可用
 

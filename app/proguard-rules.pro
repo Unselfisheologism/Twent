@@ -20,9 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# 保留 Shizuku 相关类
--keep class rikka.shizuku.** { *; }
-
 # 保留 Shower 相关 Binder IPC 类型，确保与 shower-server.jar 的类名保持一致
 -keep class com.ai.assistance.shower.ShowerBinderContainer { *; }
 -keep class com.ai.assistance.shower.IShowerService { *; }
