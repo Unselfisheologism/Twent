@@ -135,6 +135,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         // 主题模式常量
         const val THEME_MODE_LIGHT = "light"
         const val THEME_MODE_DARK = "dark"
+        const val THEME_MODE_AMOLED = "amoled"
 
         // AppBar 内容颜色模式常量
         const val APP_BAR_CONTENT_COLOR_MODE_LIGHT = "light"
@@ -196,6 +197,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         const val ASSISTANT_THEME_MODE_FOLLOW_SYSTEM = "follow_system"
         const val ASSISTANT_THEME_MODE_LIGHT = "light"
         const val ASSISTANT_THEME_MODE_DARK = "dark"
+        const val ASSISTANT_THEME_MODE_AMOLED = "amoled"
 
         // Assistant Theme ID 常量
         const val ASSISTANT_THEME_DEFAULT = "default"

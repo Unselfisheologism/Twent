@@ -17,6 +17,12 @@ val DarkSurface = Color(0xFF151520)
 val DarkSurfaceHigh = Color(0xFF1E1E2E)
 val DarkSurfaceHighest = Color(0xFF2A2A3E)
 
+// AMOLED Extra Dark mode (pure black, saves battery on OLED screens)
+val AmoledBg = Color(0xFF000000)
+val AmoledSurface = Color(0xFF0D0D0D)
+val AmoledSurfaceHigh = Color(0xFF1A1A1A)
+val AmoledSurfaceHighest = Color(0xFF262626)
+
 // Light mode (if they really want it)
 val LightBg = Color(0xFFFAFAFA)
 val LightSurface = Color(0xFFFFFFFF)

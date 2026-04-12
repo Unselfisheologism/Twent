@@ -77,6 +77,24 @@ private val DarkColorScheme =
                 error = ErrorRed
         )
 
+private val AmoledColorScheme =
+        darkColorScheme(
+                primary = ElectricBlue,
+                secondary = NeonPurple,
+                tertiary = HotPink,
+                background = AmoledBg,
+                surface = AmoledSurface,
+                surfaceVariant = AmoledSurfaceHigh,
+                onBackground = OnDarkBg,
+                onSurface = OnDarkBg,
+                surfaceContainer = AmoledSurface,
+                surfaceContainerHigh = AmoledSurfaceHigh,
+                surfaceContainerHighest = AmoledSurfaceHighest,
+                surfaceContainerLow = AmoledSurface,
+                surfaceContainerLowest = AmoledBg,
+                error = ErrorRed
+        )
+
 private val LightColorScheme =
         lightColorScheme(
                 primary = ElectricBlue,
@@ -170,13 +188,14 @@ fun OperitTheme(content: @Composable () -> Unit) {
         )
     }
 
-    // 确定是否使用暗色主题
+    // 确定主题模式
     val systemDarkTheme = isSystemInDarkTheme()
+    val isExtraDark = themeMode == UserPreferencesManager.THEME_MODE_AMOLED
     val darkTheme =
             if (useSystemTheme) {
                 systemDarkTheme
             } else {
-                themeMode == UserPreferencesManager.THEME_MODE_DARK
+                themeMode == UserPreferencesManager.THEME_MODE_DARK || isExtraDark
             }
 
     // Dynamic color is available on Android 12+
@@ -185,6 +204,7 @@ fun OperitTheme(content: @Composable () -> Unit) {
     // 基础主题色调
     var colorScheme =
             when {
+                isExtraDark -> AmoledColorScheme
                 dynamicColor -> {
                     if (darkTheme) dynamicDarkColorScheme(context)
                     else dynamicLightColorScheme(context)

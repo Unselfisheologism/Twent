@@ -65,9 +65,11 @@ fun FloatingWindowTheme(
 
     // 确定是否使用暗色主题
     val systemDarkTheme = isSystemInDarkTheme()
+    val isExtraDark = assistantThemeMode == UserPreferencesManager.ASSISTANT_THEME_MODE_AMOLED
     val isDarkMode = when (assistantThemeMode) {
         UserPreferencesManager.ASSISTANT_THEME_MODE_LIGHT -> false
-        UserPreferencesManager.ASSISTANT_THEME_MODE_DARK -> true
+        UserPreferencesManager.ASSISTANT_THEME_MODE_DARK,
+        UserPreferencesManager.ASSISTANT_THEME_MODE_AMOLED -> true
         else -> systemDarkTheme // follow system
     }
 

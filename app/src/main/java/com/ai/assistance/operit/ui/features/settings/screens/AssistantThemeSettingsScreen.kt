@@ -150,6 +150,7 @@ fun AssistantThemeSettingsScreen() {
                         value = when (assistantThemeMode) {
                             UserPreferencesManager.ASSISTANT_THEME_MODE_LIGHT -> stringResource(R.string.assistant_theme_light)
                             UserPreferencesManager.ASSISTANT_THEME_MODE_DARK -> stringResource(R.string.assistant_theme_dark)
+                            UserPreferencesManager.ASSISTANT_THEME_MODE_AMOLED -> stringResource(R.string.assistant_theme_amoled)
                             else -> stringResource(R.string.assistant_theme_follow_system)
                         },
                         onValueChange = {},
@@ -192,6 +193,17 @@ fun AssistantThemeSettingsScreen() {
                                 scope.launch {
                                     preferencesManager.saveAssistantThemeSettings(
                                         assistantThemeMode = UserPreferencesManager.ASSISTANT_THEME_MODE_DARK
+                                    )
+                                }
+                                expandedThemeMode = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.assistant_theme_amoled)) },
+                            onClick = {
+                                scope.launch {
+                                    preferencesManager.saveAssistantThemeSettings(
+                                        assistantThemeMode = UserPreferencesManager.ASSISTANT_THEME_MODE_AMOLED
                                     )
                                 }
                                 expandedThemeMode = false

@@ -361,6 +361,7 @@
 <string name="assistant_primary_color">Assistant Primary Color</string>
 <string name="assistant_secondary_color">Assistant Secondary Color</string>
 <string name="assistant_theme_dark">Assistant Theme Dark</string>
+<string name="assistant_theme_amoled">AMOLED Black</string>
 <string name="assistant_theme_desc">Assistant Theme Desc</string>
 <string name="assistant_theme_follow_system">Assistant Theme Follow System</string>
 <string name="assistant_theme_light">Assistant Theme Light</string>
@@ -3775,6 +3776,8 @@
 <string name="theme_custom_color">Theme Custom Color</string>
 <string name="theme_custom_color_desc">Theme Custom Color Desc</string>
 <string name="theme_dark">Theme Dark</string>
+<string name="theme_amoled">AMOLED Black</string>
+<string name="theme_amoled_desc">Pure black for OLED screens, saves battery</string>
 <string name="theme_default_character_card">Theme Default Character Card</string>
 <string name="theme_follow_system">Theme Follow System</string>
 <string name="theme_follow_system_desc">Theme Follow System Desc</string>

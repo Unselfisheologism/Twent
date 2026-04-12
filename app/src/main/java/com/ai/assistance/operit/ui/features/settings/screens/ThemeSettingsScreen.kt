@@ -111,7 +111,7 @@ fun ThemeSettingsScreen() {
     // Collect theme settings
     val themeMode =
             preferencesManager.themeMode.collectAsState(
-                            initial = UserPreferencesManager.THEME_MODE_LIGHT
+                            initial = UserPreferencesManager.THEME_MODE_DARK
                     )
                     .value
     val useSystemTheme = preferencesManager.useSystemTheme.collectAsState(initial = true).value
@@ -1004,6 +1004,20 @@ fun ThemeSettingsScreen() {
                                     saveThemeSettingsWithCharacterCard {
                                         preferencesManager.saveThemeSettings(
                                                 themeMode = UserPreferencesManager.THEME_MODE_DARK
+                                        )
+                                    }
+                                }
+                        )
+
+                        ThemeModeOption(
+                                title = stringResource(id = R.string.theme_amoled),
+                                selected = themeModeInput == UserPreferencesManager.THEME_MODE_AMOLED,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    themeModeInput = UserPreferencesManager.THEME_MODE_AMOLED
+                                    saveThemeSettingsWithCharacterCard {
+                                        preferencesManager.saveThemeSettings(
+                                                themeMode = UserPreferencesManager.THEME_MODE_AMOLED
                                         )
                                     }
                                 }
