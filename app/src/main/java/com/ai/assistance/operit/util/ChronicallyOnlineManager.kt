@@ -22,26 +22,26 @@ import kotlinx.coroutines.flow.map
  * - "Save" → "lock in"
  * - "Loading..." → "the server is having a moment 💅"
  */
-class ChronicallyOnlineManager private constructor(context: Context) {
-    
+class ChronicallyOnlineManager private constructor(private val context: Context) {
+
     companion object {
         private const val DATASTORE_NAME = "chronically_online_prefs"
         private val Context.chronicallyOnlineDataStore: DataStore<Preferences> by preferencesDataStore(DATASTORE_NAME)
-        
+
         @Volatile
         private var INSTANCE: ChronicallyOnlineManager? = null
-        
+
         fun getInstance(context: Context): ChronicallyOnlineManager {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: ChronicallyOnlineManager(context.applicationContext).also { INSTANCE = it }
             }
         }
-        
+
         const val KEY_CHRONICALLY_ONLINE = "chronically_online_mode"
     }
-    
+
     private val enabledKey = booleanPreferencesKey(KEY_CHRONICALLY_ONLINE)
-    
+
     // Flow: Is chronically online mode enabled?
     val isChronicallyOnline: Flow<Boolean> = context.chronicallyOnlineDataStore.data.map { prefs ->
         prefs[enabledKey] ?: false

@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Star
@@ -364,11 +365,16 @@ fun BadgeItem(
 @Composable
 fun DailyChallengesCard() {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(GradientStart, GradientMid, GradientEnd)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Brush.horizontalGradient(
-                colors = listOf(GradientStart, GradientMid, GradientEnd)
-            )
+            containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(16.dp)
     ) {

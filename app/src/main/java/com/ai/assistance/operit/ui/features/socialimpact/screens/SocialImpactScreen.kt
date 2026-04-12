@@ -131,11 +131,16 @@ fun ImpactHeroCard(
     impactLevel: Int
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(SuccessGreen.copy(alpha = 0.8f), LimeGreen.copy(alpha = 0.6f))
+                ),
+                shape = RoundedCornerShape(20.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Brush.horizontalGradient(
-                colors = listOf(SuccessGreen.copy(alpha = 0.8f), LimeGreen.copy(alpha = 0.6f))
-            )
+            containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(20.dp)
     ) {
