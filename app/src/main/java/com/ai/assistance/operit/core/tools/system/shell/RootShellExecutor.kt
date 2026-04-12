@@ -9,15 +9,6 @@ import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.io.InputStream
-import java.io.IOException
-import kotlinx.coroutines.isActive
 
 /** 基于ACCESSIBILITY权限的Shell命令执行器 */
 class RootShellExecutor(private val context: Context) : ShellExecutor {
@@ -183,90 +174,5 @@ class RootShellExecutor(private val context: Context) : ShellExecutor {
         }
 
         return false
-    }
-}
-
-private class StandardShellProcess(command: String) : ShellProcess {
-    private val process: Process = if (containsShellOperators(command)) {
-        Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
-    } else {
-        Runtime.getRuntime().exec(command)
-    }
-
-    override val stdout: Flow<String> = callbackFlow {
-        try {
-            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    trySend(line!!)
-                }
-            }
-        } catch (e: Exception) {
-            // Process ended or error occurred
-        }
-        close()
-        awaitClose { }
-    }.flowOn(Dispatchers.IO)
-
-    override val stderr: Flow<String> = callbackFlow {
-        try {
-            BufferedReader(InputStreamReader(process.errorStream)).use { reader ->
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    trySend(line!!)
-                }
-            }
-        } catch (e: Exception) {
-            // Process ended or error occurred
-        }
-        close()
-        awaitClose { }
-    }.flowOn(Dispatchers.IO)
-
-    override val isAlive: Boolean
-        get() = process.isAlive
-
-    override fun destroy() {
-        process.destroy()
-    }
-
-    override suspend fun waitFor(): Int = withContext(Dispatchers.IO) {
-        process.waitFor()
-    }
-
-    companion object {
-        private fun containsShellOperators(command: String): Boolean {
-            var inSingleQuotes = false
-            var inDoubleQuotes = false
-            var escaped = false
-            var i = 0
-
-            while (i < command.length) {
-                val c = command[i]
-
-                if (c == '\\' && !escaped) {
-                    escaped = true
-                    i++
-                    continue
-                }
-
-                if (c == '\'' && !escaped && !inDoubleQuotes) {
-                    inSingleQuotes = !inSingleQuotes
-                } else if (c == '"' && !escaped && !inSingleQuotes) {
-                    inDoubleQuotes = !inDoubleQuotes
-                }
-                else if (!inSingleQuotes && !inDoubleQuotes && !escaped) {
-                    if (c == '|') return true
-                    if (c == '&') return true
-                    if (c == '>' || c == '<') return true
-                    if (c == ';') return true
-                }
-
-                escaped = false
-                i++
-            }
-
-            return false
-        }
     }
 }

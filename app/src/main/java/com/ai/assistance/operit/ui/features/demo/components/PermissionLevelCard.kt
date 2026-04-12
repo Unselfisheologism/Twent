@@ -3,6 +3,7 @@ package com.ai.assistance.operit.ui.features.demo.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -86,7 +87,7 @@ fun PermissionLevelCard(
             ) {
                 Icon(
                         imageVector = Icons.Default.Shield,
-                        contentDescription = stringResource(R.string.permission_level_icon),
+                        contentDescription = "Permission level icon",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                 )
@@ -129,13 +130,13 @@ fun PermissionLevelCard(
                 ) {
                     Icon(
                             Icons.Default.CheckCircle,
-                            contentDescription = stringResource(R.string.accessibility_mode_active),
+                            contentDescription = "Accessibility mode active",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                            stringResource(R.string.accessibility_mode_active),
+                            "Accessibility mode active",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
