@@ -317,15 +317,15 @@ class UserPreferencesManager private constructor(private val context: Context) {
                 }
             }
 
-    // 主题相关Flow
+    // 主题相关Flow - Gen Z: Dark mode by default (non-negotiable)
     val themeMode: Flow<String> =
             context.userPreferencesDataStore.data.map { preferences ->
-                preferences[THEME_MODE] ?: THEME_MODE_LIGHT
+                preferences[THEME_MODE] ?: THEME_MODE_DARK
             }
 
     val useSystemTheme: Flow<Boolean> =
             context.userPreferencesDataStore.data.map { preferences ->
-                preferences[USE_SYSTEM_THEME] ?: true
+                preferences[USE_SYSTEM_THEME] ?: false // Gen Z: Don't follow system, use DARK by default
             }
 
     val customPrimaryColor: Flow<Int?> =

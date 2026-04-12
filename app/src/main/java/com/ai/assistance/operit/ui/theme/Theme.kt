@@ -60,24 +60,40 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme =
-        darkColorScheme(primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80)
+        darkColorScheme(
+                primary = ElectricBlue,
+                secondary = NeonPurple,
+                tertiary = HotPink,
+                background = DarkBg,
+                surface = DarkSurface,
+                surfaceVariant = DarkSurfaceHigh,
+                onBackground = OnDarkBg,
+                onSurface = OnDarkBg,
+                surfaceContainer = DarkSurface,
+                surfaceContainerHigh = DarkSurfaceHigh,
+                surfaceContainerHighest = DarkSurfaceHighest,
+                surfaceContainerLow = DarkSurface,
+                surfaceContainerLowest = DarkBg,
+                error = ErrorRed
+        )
 
 private val LightColorScheme =
         lightColorScheme(
-                primary = Purple40,
-                secondary = PurpleGrey40,
-                tertiary = Pink40,
-
-                /* Other default colors to override
-                background = Color(0xFFFFFBFE),
-                surface = Color(0xFFFFFBFE),
-                onPrimary = Color.White,
-                onSecondary = Color.White,
-                onTertiary = Color.White,
-                onBackground = Color(0xFF1C1B1F),
-                onSurface = Color(0xFF1C1B1F),
-                */
-                )
+                primary = ElectricBlue,
+                secondary = NeonPurple,
+                tertiary = HotPink,
+                background = LightBg,
+                surface = LightSurface,
+                surfaceVariant = LightSurfaceHigh,
+                onBackground = OnLightBg,
+                onSurface = OnLightBg,
+                surfaceContainer = LightSurface,
+                surfaceContainerHigh = LightSurfaceHigh,
+                surfaceContainerHighest = LightSurfaceHighest,
+                surfaceContainerLow = LightSurface,
+                surfaceContainerLowest = LightBg,
+                error = ErrorRed
+        )
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")

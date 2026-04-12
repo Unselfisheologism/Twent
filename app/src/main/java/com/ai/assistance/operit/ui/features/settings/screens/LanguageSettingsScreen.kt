@@ -47,8 +47,10 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.preferences.preferencesManager
 import com.ai.assistance.operit.ui.main.MainActivity
 import com.ai.assistance.operit.util.LocaleUtils
+import com.ai.assistance.operit.util.ChronicallyOnlineManager
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -64,9 +66,14 @@ fun LanguageSettingsScreen(
     val supportedLanguages = remember { LocaleUtils.getSupportedLanguages() }
     var isChangingLanguage by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
+    
+    // 🤪 Chronically Online Mode
+    val chronicallyOnlineManager = remember { ChronicallyOnlineManager.getInstance(context) }
+    var isChronicallyOnline by remember { mutableStateOf(false) }
+    
     LaunchedEffect(key1 = true) {
         currentLanguage = LocaleUtils.getCurrentLanguage(context)
+        launch { chronicallyOnlineManager.isChronicallyOnline.collectLatest { isChronicallyOnline = it } }
     }
 
     CustomScaffold() { paddingValues ->
@@ -81,6 +88,65 @@ fun LanguageSettingsScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            // 🤪 Chronically Online Mode Toggle
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        scope.launch {
+                            chronicallyOnlineManager.setChronicallyOnlineMode(!isChronicallyOnline)
+                        }
+                    }
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isChronicallyOnline) 
+                        androidx.compose.ui.graphics.Color(0xFFFF6B9D).copy(alpha = 0.2f)
+                    else 
+                        MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🤪",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                    ) {
+                        Text(
+                            text = if (isChronicallyOnline) "English (Chronically Online)" else "English (Chronically Online)",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isChronicallyOnline) 
+                                "slay, ur speaking gen z fr fr 💅✨" 
+                            else 
+                                "turn everything into memes & slang",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = isChronicallyOnline,
+                        onCheckedChange = { enabled ->
+                            scope.launch {
+                                chronicallyOnlineManager.setChronicallyOnlineMode(enabled)
+                            }
+                        }
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (isChangingLanguage) {
                 // 显示语言切换中的进度指示器
