@@ -16,7 +16,9 @@
       "Bash(rmdir *)",
       "Read(C:\\Users\\HP\\Downloads/**)",
       "Read(C:\\Users\\HP\\Downloads\\Operit|AgentTool|agent/**)",
-      "Bash(del *)"
+      "Bash(del *)",
+      "Bash(xcopy *)",
+      "Bash(rename *)"
     ]
   },
   "$version": 3

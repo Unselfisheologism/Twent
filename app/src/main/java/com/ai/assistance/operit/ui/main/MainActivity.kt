@@ -579,10 +579,10 @@ class MainActivity : ComponentActivity() {
 
         // 初始化用户偏好管理器并直接检查初始化状态
         preferencesManager = UserPreferencesManager.getInstance(this)
-        showPreferencesGuide = !preferencesManager.isPreferencesInitialized()
+        showPreferencesGuide = false
         AppLogger.d(
                 TAG,
-                "初始化检查: 用户偏好已初始化=${!showPreferencesGuide}，将${if(showPreferencesGuide) "" else "不"}显示引导界面"
+                "初始化检查: 用户偏好引导界面已禁用"
         )
 
         // 初始化协议偏好管理器
@@ -637,18 +637,17 @@ class MainActivity : ComponentActivity() {
 
     // ======== 偏好监听器设置 ========
     private fun setupPreferencesListener() {
-        // 监听偏好变化
-        lifecycleScope.launch {
-            preferencesManager.getUserPreferencesFlow().collect { profile ->
-                // 只有当状态变化时才更新UI
-                val newValue = !profile.isInitialized
-                if (showPreferencesGuide != newValue) {
-                    AppLogger.d(TAG, "偏好变更: 从 $showPreferencesGuide 变为 $newValue")
-                    showPreferencesGuide = newValue
-                    setAppContent()
-                }
-            }
-        }
+        // 用户偏好引导界面已禁用，不再监听偏好变化来显示引导
+        // lifecycleScope.launch {
+        //     preferencesManager.getUserPreferencesFlow().collect { profile ->
+        //         val newValue = !profile.isInitialized
+        //         if (showPreferencesGuide != newValue) {
+        //             AppLogger.d(TAG, "偏好变更: 从 $showPreferencesGuide 变为 $newValue")
+        //             showPreferencesGuide = newValue
+        //             setAppContent()
+        //         }
+        //     }
+        // }
     }
 
     // ======== 显示与性能配置 ========
@@ -748,11 +747,7 @@ class MainActivity : ComponentActivity() {
                             CompositionLocalProvider(LocalPluginLoadingState provides pluginLoadingState) {
                                 // 主应用界面 (始终存在于底层)
                                 OperitApp(
-                                        initialNavItem =
-                                                when {
-                                                    showPreferencesGuide -> NavItem.UserPreferencesGuide
-                                                    else -> NavItem.AiChat
-                                                },
+                                        initialNavItem = NavItem.AiChat,
                                         toolHandler = toolHandler,
                                         pendingNavigationDestination = pendingNavigationDestination
                                 )

@@ -44,22 +44,31 @@ jobs:
           chmod +x ./gradlew
           dos2unix ./gradlew || true
 
-      # Clean and compile the apk
-      - name: Clean and Generate Debug APK
+      # Setup signing keystore from secrets
+      - name: Setup signing
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/operit-release-key.jks
+          echo "RELEASE_STORE_FILE=operit-release-key.jks" >> local.properties
+          echo "RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> local.properties
+          echo "RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> local.properties
+          echo "RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> local.properties
+
+      # Clean and compile the release apk
+      - name: Clean and Generate Release APK
         env:
           ORG_GRADLE_PROJECT_org_gradle_jvmargs: -Xmx4096m
           GRADLE_OPTS: -Dorg.gradle.daemon=false
         run: |
           ./gradlew --stop-gradle-daemon || true
           ./gradlew clean
-          ./gradlew assembleDebug -x test --warning-mode=all --stacktrace
+          ./gradlew assembleRelease -x test --warning-mode=all --stacktrace
 
-      # Upload the action artifact
-      - name: Upload Debug APK (artifact)
+      # Upload the release APK artifact
+      - name: Upload Release APK (artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: release-apk
+          path: app/build/outputs/apk/release/app-release.apk
 
 
 

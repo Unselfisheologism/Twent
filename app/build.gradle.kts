@@ -31,10 +31,10 @@ android {
             releaseStorePassword != null &&
             releaseKeyAlias != null &&
             releaseKeyPassword != null &&
-            File(releaseKeystorePath).exists()
+            File(projectDir, releaseKeystorePath).exists()
         ) {
             create("release") {
-                storeFile = file(releaseKeystorePath)
+                storeFile = File(projectDir, releaseKeystorePath)
                 storePassword = releaseStorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
