@@ -85,8 +85,6 @@ import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowListScreen
 import com.ai.assistance.operit.ui.features.workflow.screens.WorkflowDetailScreen
 import com.ai.assistance.operit.ui.features.agents.screens.AgentSessionsScreen
 import com.ai.assistance.operit.ui.features.agents.screens.AgentCommandsScreen
-import com.ai.assistance.operit.ui.features.rewards.screens.RewardsScreen
-import com.ai.assistance.operit.ui.features.socialimpact.screens.SocialImpactScreen
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
@@ -463,40 +461,6 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             ShizukuDemoScreen(navigateTo = navigateTo)
-        }
-    }
-
-    // 🏆 Gen Z Rewards Screen - Streaks, XP, Badges
-    data object Rewards : Screen(navItem = NavItem.Rewards) {
-        @Composable
-        override fun Content(
-                navController: NavController,
-                navigateTo: ScreenNavigationHandler,
-                updateNavItem: NavItemChangeHandler,
-                onGoBack: () -> Unit,
-                hasBackgroundImage: Boolean,
-                onLoading: (Boolean) -> Unit,
-                onError: (String) -> Unit,
-                onGestureConsumed: (Boolean) -> Unit
-        ) {
-            RewardsScreen(onNavigateBack = onGoBack)
-        }
-    }
-
-    // 🌍 Gen Z Social Impact Screen - Make a difference!
-    data object SocialImpact : Screen(navItem = NavItem.SocialImpact) {
-        @Composable
-        override fun Content(
-                navController: NavController,
-                navigateTo: ScreenNavigationHandler,
-                updateNavItem: NavItemChangeHandler,
-                onGoBack: () -> Unit,
-                hasBackgroundImage: Boolean,
-                onLoading: (Boolean) -> Unit,
-                onError: (String) -> Unit,
-                onGestureConsumed: (Boolean) -> Unit
-        ) {
-            SocialImpactScreen(onNavigateBack = onGoBack)
         }
     }
 

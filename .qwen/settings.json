@@ -15,7 +15,8 @@
       "Read(C:\\Users\\HP\\HP\\Downloads\\Operit\\app\\src\\main\\java\\com\\ai\\assistance\\operit\\ui\\features\\chat\\screens/**)",
       "Bash(rmdir *)",
       "Read(C:\\Users\\HP\\Downloads/**)",
-      "Read(C:\\Users\\HP\\Downloads\\Operit|AgentTool|agent/**)"
+      "Read(C:\\Users\\HP\\Downloads\\Operit|AgentTool|agent/**)",
+      "Bash(del *)"
     ]
   },
   "$version": 3

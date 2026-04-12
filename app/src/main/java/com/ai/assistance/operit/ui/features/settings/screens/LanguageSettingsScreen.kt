@@ -47,10 +47,8 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.preferences.preferencesManager
 import com.ai.assistance.operit.ui.main.MainActivity
 import com.ai.assistance.operit.util.LocaleUtils
-import com.ai.assistance.operit.util.ChronicallyOnlineManager
 import java.util.Locale
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -66,14 +64,9 @@ fun LanguageSettingsScreen(
     val supportedLanguages = remember { LocaleUtils.getSupportedLanguages() }
     var isChangingLanguage by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    
-    // 🤪 Chronically Online Mode
-    val chronicallyOnlineManager = remember { ChronicallyOnlineManager.getInstance(context) }
-    var isChronicallyOnline by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(key1 = true) {
         currentLanguage = LocaleUtils.getCurrentLanguage(context)
-        launch { chronicallyOnlineManager.isChronicallyOnline.collectLatest { isChronicallyOnline = it } }
     }
 
     CustomScaffold() { paddingValues ->
@@ -88,65 +81,6 @@ fun LanguageSettingsScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            // 🤪 Chronically Online Mode Toggle
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        scope.launch {
-                            chronicallyOnlineManager.setChronicallyOnlineMode(!isChronicallyOnline)
-                        }
-                    }
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isChronicallyOnline) 
-                        androidx.compose.ui.graphics.Color(0xFFFF6B9D).copy(alpha = 0.2f)
-                    else 
-                        MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "🤪",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 12.dp)
-                    ) {
-                        Text(
-                            text = if (isChronicallyOnline) "English (Chronically Online)" else "English (Chronically Online)",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        )
-                        Text(
-                            text = if (isChronicallyOnline) 
-                                "slay, ur speaking gen z fr fr 💅✨" 
-                            else 
-                                "turn everything into memes & slang",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    androidx.compose.material3.Switch(
-                        checked = isChronicallyOnline,
-                        onCheckedChange = { enabled ->
-                            scope.launch {
-                                chronicallyOnlineManager.setChronicallyOnlineMode(enabled)
-                            }
-                        }
-                    )
-                }
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (isChangingLanguage) {
                 // 显示语言切换中的进度指示器
@@ -172,24 +106,24 @@ fun LanguageSettingsScreen(
                                 if (language.code != currentLanguage) {
                                     // 设置状态为正在切换语言
                                     isChangingLanguage = true
-                                    
+
                                     // 应用新的语言设置（使用已初始化的全局实例）
                                     LocaleUtils.setAppLanguage(context, language.code)
-                                    
+
                                     // 显示切换语言的提示
                                     Toast.makeText(
-                                        context, 
-                                        context.getString(R.string.language_changed), 
+                                        context,
+                                        context.getString(R.string.language_changed),
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    
+
                                     // 延迟重启应用以确保语言设置完全生效
                                     scope.launch {
                                         delay(600) // 短暂延迟确保设置已保存
-                                        
+
                                         // 重启应用
                                         val intent = Intent(context, MainActivity::class.java).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                                                    Intent.FLAG_ACTIVITY_CLEAR_TASK
                                         }
                                         context.startActivity(intent)
@@ -202,7 +136,7 @@ fun LanguageSettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -238,7 +172,7 @@ fun LanguageItem(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
         )
-        
+
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -254,7 +188,7 @@ fun LanguageItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         if (isSelected) {
             Icon(
                 imageVector = Icons.Default.Check,
@@ -263,10 +197,10 @@ fun LanguageItem(
             )
         }
     }
-    
+
     HorizontalDivider(
         modifier = Modifier.fillMaxWidth(),
         thickness = 0.5.dp,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     )
-} 
+}

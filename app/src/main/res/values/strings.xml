@@ -2406,10 +2406,6 @@
 <string name="nav_packages">Nav Packages</string>
 <string name="nav_settings">Nav Settings</string>
 <string name="nav_workflow">Nav Workflow</string>
-<!-- 🎮 Gen Z Navigation Strings -->
-<string name="nav_rewards">Rewards</string>
-<string name="nav_social_impact">Social Impact</string>
-<string name="nav_streaks">Streaks</string>
 <string name="need_configure_nodejs_pip">Need Configure Nodejs Pip</string>
 <string name="need_login_github_manage_plugins">Need Login Github Manage Plugins</string>
 <string name="need_login_github_manage_skills">Need Login Github Manage Skills</string>
@@ -3183,9 +3179,6 @@
 <string name="select_font_file">Select Font File</string>
 <string name="select_import_profile">Select Import Profile</string>
 <string name="select_language">Select Language</string>
-<string name="chronically_online_mode">English (Chronically Online) 🤪</string>
-<string name="chronically_online_description">Turn everything into memes &amp; slang</string>
-<string name="chronically_online_enabled">slay, ur speaking gen z fr fr 💅✨</string>
 <string name="select_mcp_plugin_zip">Select Mcp Plugin Zip</string>
 <string name="select_mcp_plugin_zip_title">Select Mcp Plugin Zip Title</string>
 <string name="select_memory_folder">Select Memory Folder</string>
