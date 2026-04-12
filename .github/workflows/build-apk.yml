@@ -44,7 +44,7 @@ jobs:
           chmod +x ./gradlew
           dos2unix ./gradlew || true
       
-      # Clean and compile the Debug apk                                                                                  │
+      # Clean and compile the apk                                                                                  │
       - name: Clean and Generate Debug APK
         env:
           ORG_GRADLE_PROJECT_org_gradle_jvmargs: -Xmx4096m
