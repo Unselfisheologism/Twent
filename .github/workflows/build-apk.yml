@@ -43,6 +43,23 @@ jobs:
         run: |
           chmod +x ./gradlew
           dos2unix ./gradlew || true
+      
+      # Clean and compile the Debug apk                                                                                  │
+      - name: Clean and Generate Debug APK
+        env:
+          ORG_GRADLE_PROJECT_org_gradle_jvmargs: -Xmx4096m
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        run: |
+          ./gradlew --stop-gradle-daemon || true
+          ./gradlew clean
+          ./gradlew assembleDebug -x test --warning-mode=all --stacktrace
+
+      # Upload the action artifact                                                                                 │
+      - name: Upload Debug APK (artifact)
+        uses: actions/upload-artifact@v4                                                                           │  
+        with:                                                                                                      │  
+          name: debug-apk                                                                                          │  
+          path: app/build/outputs/apk/debug/app-debug.apk
 
       # Setup signing keystore from secrets
       - name: Setup signing
