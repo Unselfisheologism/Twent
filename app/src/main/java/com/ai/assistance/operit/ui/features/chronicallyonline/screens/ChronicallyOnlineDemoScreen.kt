@@ -106,11 +106,16 @@ fun ChronicallyOnlineDemoScreen(
         ) {
             // Hero Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(HotPink, NeonPurple, ElectricBlue)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    ),
                 colors = CardDefaults.cardColors(
-                    containerColor = Brush.horizontalGradient(
-                        colors = listOf(HotPink, NeonPurple, ElectricBlue)
-                    )
+                    containerColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(20.dp)
             ) {
