@@ -92,8 +92,6 @@ fun ToolboxScreen(
         onDefaultAssistantGuideSelected: () -> Unit,
         onProcessLimitRemoverSelected: () -> Unit,
         onHtmlPackagerSelected: () -> Unit,
-        onAutoGlmOneClickSelected: () -> Unit,
-        onAutoGlmToolSelected: () -> Unit,
         onSqlViewerSelected: () -> Unit,
         onAgentSessionsSelected: () -> Unit
 
@@ -226,20 +224,6 @@ fun ToolboxScreen(
                                 description = stringResource(R.string.tool_html_packager_desc),
                                 category = ToolCategory.DEVELOPMENT,
                                 onClick = onHtmlPackagerSelected
-                        ),
-                        Tool(
-                                name = stringResource(R.string.tool_autoglm_one_click),
-                                icon = Icons.Default.AutoMode,
-                                description = stringResource(R.string.tool_autoglm_one_click_desc),
-                                category = ToolCategory.DEVELOPMENT,
-                                onClick = onAutoGlmOneClickSelected
-                        ),
-                        Tool(
-                                name = stringResource(R.string.tool_autoglm_tool),
-                                icon = Icons.Default.AutoMode,
-                                description = stringResource(R.string.tool_autoglm_tool_desc),
-                                category = ToolCategory.DEVELOPMENT,
-                                onClick = onAutoGlmToolSelected
                         )
                 )
 

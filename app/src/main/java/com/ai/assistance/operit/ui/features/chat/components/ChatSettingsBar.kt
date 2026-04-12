@@ -1216,15 +1216,6 @@ private fun ModelSelectorItem(
     onManageClick: () -> Unit,
     onInfoClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val showAutoGlmError: () -> Unit = {
-        Toast.makeText(
-            context,
-            context.getString(R.string.chat_autoglm_warning),
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
     val currentConfig = configSummaries.find { it.id == currentConfigMapping.configId }
     var expandedConfigId by remember { mutableStateOf<String?>(null) } // 用于记录当前展开的配置的模型列表
 
@@ -1342,13 +1333,8 @@ private fun ModelSelectorItem(
                                         expandedConfigId = if (isExpanded) null else config.id
                                     } else {
                                         // 如果只有一个模型，直接选择
-                                        val singleModelName = modelList.firstOrNull().orEmpty()
-                                        if (singleModelName.contains("autoglm", ignoreCase = true)) {
-                                            showAutoGlmError()
-                                        } else {
-                                            onSelectModel(config.id, 0)
-                                            onExpandedChange(false)
-                                        }
+                                        onSelectModel(config.id, 0)
+                                        onExpandedChange(false)
                                     }
                                 }
                                 .padding(horizontal = 8.dp, vertical = 6.dp)
@@ -1418,13 +1404,9 @@ private fun ModelSelectorItem(
                                                 else Color.Transparent
                                             )
                                             .clickable {
-                                                if (modelName.contains("autoglm", ignoreCase = true)) {
-                                                    showAutoGlmError()
-                                                } else {
-                                                    onSelectModel(config.id, index)
-                                                    onExpandedChange(false)
-                                                    expandedConfigId = null
-                                                }
+                                                onSelectModel(config.id, index)
+                                                onExpandedChange(false)
+                                                expandedConfigId = null
                                             }
                                             .padding(horizontal = 8.dp, vertical = 4.dp)
                                     ) {

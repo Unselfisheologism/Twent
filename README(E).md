@@ -65,7 +65,7 @@ Support for MNN / llama.cpp local models (GGUF)—run AI completely offline to p
 Customize AI personality and speaking style, with character card backup/export (Tavern/JSON)/QR sharing and independent histories; supports AI-to-AI chats
 
 ### 🔌 Rich Tool Ecosystem
-40+ built-in tools + MCP/Skill marketplace plugins + toolkits/workflows, including AutoGLM auto-click agent, drawing/image search, AI-to-AI & self-awareness tools, scheduled tasks, and a prompt marketplace
+40+ built-in tools + MCP/Skill marketplace plugins + toolkits/workflows, including auto-click agent, drawing/image search, AI-to-AI & self-awareness tools, scheduled tasks, and a prompt marketplace
 
 </td>
 </tr>
@@ -83,7 +83,7 @@ Customize AI personality and speaking style, with character card backup/export (
 | 🐧 **Linux Environment** | Complete Ubuntu 24 with apt package management, Python/Node.js runtime, custom repositories |
 | 📁 **File System** | Read/write files, search, compress/decompress, format conversion, Git integration, syntax checking |
 | 🌐 **Network Tools** | HTTP requests, web access, file upload/download, web development and export |
-| ⚙️ **System Operations** | App installation, permission management, UI automation via Accessibility / ADB / Root (includes AutoGLM auto-click agent, supports adb root virtual display / multi-display) |
+| ⚙️ **System Operations** | App installation, permission management, UI automation via Accessibility / ADB / Root (supports adb root virtual display / multi-display) |
 | 🎬 **Media Processing** | Video conversion, frame extraction, OCR/vision understanding, camera capture, audio/video reading |
 | 🧑‍💻 **Developer & Terminal** | Web workspace/one-click packaging, code editing/syntax highlight, terminal SSH/Chroot/vim, Ctrl shortcuts |
 | 🎨 **AI Creation** | Drawing toolkits (OpenAI/Qwen/NanoBanana), image search/download |
@@ -117,7 +117,7 @@ Customize AI personality and speaking style, with character card backup/export (
 - 🔐 **Permissions**: Per-tool authorization and safety prompts
 - 🔑 **Key Pool & Stats**: Batch test/import, token usage stats
 - 🗂️ **Workspace Binding**: SAF / SFTP / SSH workspace binding and file access
-- 🖱️ **Auto-Click Agent**: AutoGLM + UI Tree dual pipeline for automation
+- 🖱️ **Auto-Click Agent**: UI Tree dual pipeline for automation
 - 📊 **Parallel Tools**: Read-only tools execute in parallel for faster response
 
 </details>
@@ -188,7 +188,7 @@ Rich MCP ecosystem
 - **UI automation & screenshot pipeline**  
   - ✅ UI automation supported via Accessibility / ADB / Root permission modes
   - ✅ Virtual display / multi-display supported in adb root scenarios (`display` parameter)
-  - ✅ Dual UI Tree approaches: AutoGLM + local uiautomator dump
+  - ✅ Local uiautomator dump approach for UI Tree
 
 ---
 
@@ -223,7 +223,7 @@ Rich MCP ecosystem
 <td><b>v1.7.1</b></td>
 <td>2025-12-31</td>
 <td>
-• <b>Root Virtual Display Automation</b>: Virtual screen supported under root, AutoGLM concurrent multi-window tasks<br>
+• <b>Root Virtual Display Automation</b>: Virtual screen supported under root, concurrent multi-window tasks<br>
 • <b>Skill Ecosystem</b>: Added Skill protocol + Skill marketplace; optional BETA plan for nightly builds<br>
 • <b>UX Enhancements</b>: Summary editing, web access in floating window mode, selection OCR, chat lock<br>
 • <b>Fixes & Optimizations</b>: Large image crashes, ToolCall errors, code block line breaks, startup speed and virtual-screen stability
@@ -234,9 +234,9 @@ Rich MCP ecosystem
 <td><b>v1.7.0</b></td>
 <td>2025-12-19</td>
 <td>
-• <b>GUI Automation Milestone</b>: Autoglm + virtual display (virtual screen can be toggled in settings)<br>
-• <b>Automation Enhancements</b>: One-click Autoglm setup + standalone executor, virtual screen toggle logic, custom screenshot quality<br>
-• <b>UX Tweaks</b>: API key masked when unfocused; Autoglm is no longer allowed as the main model<br>
+• <b>GUI Automation Milestone</b>: Virtual display (virtual screen can be toggled in settings)<br>
+• <b>Automation Enhancements</b>: Virtual screen toggle logic, custom screenshot quality<br>
+• <b>UX Tweaks</b>: API key masked when unfocused<br>
 • <b>Tooling</b>: NanoBanana image generation pack, apply file no-overwrite support, MNN STT and more
 </td>
 </tr>

@@ -712,7 +712,6 @@
 <string name="chat_attach_memory_folders_failed">Chat Attach Memory Folders Failed</string>
 <string name="chat_attaching_memory_folders">Chat Attaching Memory Folders</string>
 <string name="chat_attachment_processing_failed">Chat Attachment Processing Failed</string>
-<string name="chat_autoglm_warning">Chat Autoglm Warning</string>
 <string name="chat_binding_announcement_acknowledge">Chat Binding Announcement Acknowledge</string>
 <string name="chat_binding_announcement_acknowledge_countdown">Chat Binding Announcement Acknowledge Countdown</string>
 <string name="chat_binding_announcement_body">Chat Binding Announcement Body</string>
@@ -3097,8 +3096,6 @@
 <string name="screen_ocr_selection_ocr_header">Screen Ocr Selection Ocr Header</string>
 <string name="screen_ocr_selection_too_small">Screen Ocr Selection Too Small</string>
 <string name="screen_title_app_permissions">Screen Title App Permissions</string>
-<string name="screen_title_autoglm_one_click">Screen Title Autoglm One Click</string>
-<string name="screen_title_autoglm_tool">Screen Title Autoglm Tool</string>
 <string name="screen_title_chat_backup_settings">Screen Title Chat Backup Settings</string>
 <string name="screen_title_chat_history_settings">Screen Title Chat History Settings</string>
 <string name="screen_title_context_summary_settings">Screen Title Context Summary Settings</string>
@@ -3870,10 +3867,6 @@
 <string name="token_price_description">Token Price Description</string>
 <string name="tool_agent_sessions">Tool Agent Sessions</string>
 <string name="tool_agent_sessions_desc">Tool Agent Sessions Desc</string>
-<string name="tool_autoglm_one_click">Tool Autoglm One Click</string>
-<string name="tool_autoglm_one_click_desc">Tool Autoglm One Click Desc</string>
-<string name="tool_autoglm_tool">Tool Autoglm Tool</string>
-<string name="tool_autoglm_tool_desc">Tool Autoglm Tool Desc</string>
 <string name="tool_call">Tool Call</string>
 <string name="tool_call_block">Tool Call Block</string>
 <string name="tool_call_parameters">Tool Call Parameters</string>

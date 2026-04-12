@@ -308,16 +308,6 @@ fun FunctionConfigCard(
         }
     }
 
-    val showAutoGlmError: () -> Unit = {
-        if (functionType == FunctionType.CHAT) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.chat_autoglm_warning),
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
     LaunchedEffect(testResult) {
         if (testResult != null) {
             kotlinx.coroutines.delay(5000)
@@ -705,13 +695,8 @@ fun FunctionConfigCard(
                                                         expandedConfigId = if (isExpanded) null else config.id
                                                     } else {
                                                         // 如果只有一个模型，直接选择
-                                                        val singleModelName = modelList.firstOrNull().orEmpty()
-                                                        if (functionType == FunctionType.CHAT && singleModelName.contains("autoglm", ignoreCase = true)) {
-                                                            showAutoGlmError()
-                                                        } else {
-                                                            onConfigSelected(config.id, 0)
-                                                            expanded = false
-                                                        }
+                                                        onConfigSelected(config.id, 0)
+                                                        expanded = false
                                                     }
                                                 },
                                         shape = RoundedCornerShape(8.dp),
@@ -800,13 +785,9 @@ fun FunctionConfigCard(
                                                     .fillMaxWidth()
                                                     .padding(vertical = 2.dp)
                                                     .clickable {
-                                                        if (functionType == FunctionType.CHAT && modelName.contains("autoglm", ignoreCase = true)) {
-                                                            showAutoGlmError()
-                                                        } else {
-                                                            onConfigSelected(config.id, index)
-                                                            expanded = false
-                                                            expandedConfigId = null
-                                                        }
+                                                        onConfigSelected(config.id, index)
+                                                        expanded = false
+                                                        expandedConfigId = null
                                                     },
                                                 shape = RoundedCornerShape(6.dp),
                                                 color = if (isModelSelected)

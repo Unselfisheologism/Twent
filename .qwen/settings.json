@@ -12,7 +12,8 @@
       "Bash(findstr *)",
       "Bash(.\\gradlew.bat *)",
       "Bash(select-string *)",
-      "Read(C:\\Users\\HP\\HP\\Downloads\\Operit\\app\\src\\main\\java\\com\\ai\\assistance\\operit\\ui\\features\\chat\\screens/**)"
+      "Read(C:\\Users\\HP\\HP\\Downloads\\Operit\\app\\src\\main\\java\\com\\ai\\assistance\\operit\\ui\\features\\chat\\screens/**)",
+      "Bash(rmdir *)"
     ]
   },
   "$version": 3
