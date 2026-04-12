@@ -4,7 +4,7 @@
         <shape android:shape="rectangle">
             <solid android:color="@color/input_box_background" />
             <corners android:radius="12dp" />
-            <stroke android:width="2dp" android:color="@color/orange" />
+            <stroke android:width="2dp" android:color="@color/blue_primary" />
         </shape>
     </item>
     <item>

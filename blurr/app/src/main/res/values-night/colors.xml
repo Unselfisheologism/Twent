@@ -1,27 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Core palette: Blue, Vermillion Orange, Grey -->
+    <color name="blue_primary">#FF1E88E5</color>
+    <color name="blue_secondary">#FF42A5F5</color>
+    <color name="blue_accent">#FF64B5F6</color>
+    <color name="blue_light">#FF90CAF9</color>
+    <color name="blue_dark">#FF1565C0</color>
+    
+    <color name="vermillion_primary">#FFFF5722</color>
+    <color name="vermillion_secondary">#FFFF7043</color>
+    <color name="vermillion_accent">#FFFF8A65</color>
+    <color name="vermillion_light">#FFFFAB91</color>
+    <color name="vermillion_dark">#FFE64A19</color>
+    
+    <color name="grey_900">#FF212121</color>
+    <color name="grey_800">#FF303030</color>
+    <color name="grey_700">#FF424242</color>
+    <color name="grey_600">#FF616161</color>
+    <color name="grey_500">#FF9E9E9E</color>
+    <color name="grey_400">#FFBDBDBD</color>
+    <color name="grey_300">#FFE0E0E0</color>
+    
+    <!-- Standard Android colors (legacy compatibility) -->
+    <color name="purple_200">#FF64B5F6</color>
+    <color name="purple_500">#FF1E88E5</color>
+    <color name="purple_700">#FF1565C0</color>
+    <color name="teal_200">#FF42A5F5</color>
+    <color name="teal_700">#FF1E88E5</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="wave_color">#00BCD4</color>
-    <color name="background_color">#161616</color> <!-- Dark background -->
-    <color name="dark_background">#161616</color>
-    <color name="button_blue">#FF3663FF</color>
-    <color name="text_gray">#FF8A8A8E</color>
-    <color name="gradient_start">#FFC882FF</color>
-    <color name="gradient_end">#FFA182FF</color>
-    <color name="input_box_background">#161616</color>
-    <color name="panel_background">#161616</color>
     
+    <!-- Brand & UI component colors -->
+    <color name="wave_color">#FF1E88E5</color>
+    <color name="background_color">#FF161616</color>
+    <color name="dark_background">#FF161616</color>
+    <color name="button_blue">#FF1E88E5</color>
+    <color name="text_gray">#FFBDBDBD</color>
+    <color name="gradient_start">#FF1E88E5</color>
+    <color name="gradient_end">#FFFF5722</color>
+    <color name="input_box_background">#FF161616</color>
+    <color name="panel_background">#FF161616</color>
+
     <!-- Memory management colors -->
-    <color name="background">#161616</color>
-    <color name="primary">#161616</color>
-    <color name="accent">#03DAC5</color>
-    <color name="surface">#161616</color>
+    <color name="background">#FF161616</color>
+    <color name="primary">#FF1E88E5</color>
+    <color name="accent">#FFFF5722</color>
+    <color name="surface">#FF161616</color>
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#CCCCCC</color>
+    <color name="orange">#FFFF5722</color>
+
+    <!-- Delta symbol state colors -->
+    <color name="delta_idle">#FFF5F5F5</color>
+    <color name="delta_listening">#FFFF5722</color>
+    <color name="delta_processing">#FF1E88E5</color>
+    <color name="delta_speaking">#FF66BB6A</color>
+    <color name="delta_error">#FFEF5350</color>
 </resources>

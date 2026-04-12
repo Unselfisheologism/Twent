@@ -14,7 +14,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="32dp"
         android:text="1 of 3"
-        android:textColor="#888888"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp" />
 
     <!-- Cancel Button -->
@@ -67,8 +67,8 @@
                 android:hint="@string/type_answer_here"
                 android:inputType="text"
                 android:padding="16dp"
-                android:textColor="#CECECE"
-                android:textColorHint="#888888"
+                android:textColor="@color/text_secondary"
+                android:textColorHint="@color/text_secondary"
                 android:textSize="16sp" />
 
             <!-- Voice Input Section -->
@@ -83,7 +83,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="@string/or_use_voice_input"
-                    android:textColor="#888888"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <LinearLayout
@@ -108,7 +108,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/hold_to_speak"
-                        android:textColor="#888888"
+                        android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
                 </LinearLayout>

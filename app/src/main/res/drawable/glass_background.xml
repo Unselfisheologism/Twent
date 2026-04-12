@@ -2,11 +2,10 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <!-- Defines the gradient background for the glass effect. -->
-    <!-- The colors are taken from your original programmatic implementation. -->
+    <!-- Blue to Vermillion gradient background -->
     <gradient
-        android:startColor="#DD0D0D2E"
-        android:endColor="#DD2A0D45"
+        android:startColor="#DD1E88E5"
+        android:endColor="#DDFF5722"
         android:angle="135"
         android:type="linear" />
 

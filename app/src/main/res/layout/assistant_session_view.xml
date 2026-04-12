@@ -30,7 +30,7 @@
         android:paddingEnd="24dp"
         android:paddingBottom="12dp"
         android:text="Listening..."
-        android:textColor="#E0E0E0"
+        android:textColor="@color/grey_300"
         android:textSize="16sp"
         android:typeface="monospace"
         android:visibility="gone" />

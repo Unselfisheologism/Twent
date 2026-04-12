@@ -3,18 +3,18 @@
     <!-- Pressed state (listening) -->
     <item android:state_pressed="true">
         <shape android:shape="oval">
-            <solid android:color="#FF4444" />
-            <stroke android:width="2dp" android:color="#FFFFFF" />
+            <solid android:color="@color/vermillion_primary" />
+            <stroke android:width="2dp" android:color="@color/white" />
             <size android:width="80dp" android:height="80dp" />
         </shape>
     </item>
-    
+
     <!-- Normal state -->
     <item>
         <shape android:shape="oval">
-            <solid android:color="#5880F7" />
-            <stroke android:width="2dp" android:color="#FFFFFF" />
+            <solid android:color="@color/blue_primary" />
+            <stroke android:width="2dp" android:color="@color/white" />
             <size android:width="80dp" android:height="80dp" />
         </shape>
     </item>
-</selector> 
+</selector>

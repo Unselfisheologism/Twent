@@ -61,9 +61,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme =
         darkColorScheme(
-                primary = ElectricBlue,
-                secondary = NeonPurple,
-                tertiary = HotPink,
+                primary = BluePrimary,
+                secondary = VermillionPrimary,
+                tertiary = BlueSecondary,
                 background = DarkBg,
                 surface = DarkSurface,
                 surfaceVariant = DarkSurfaceHigh,
@@ -79,9 +79,9 @@ private val DarkColorScheme =
 
 private val AmoledColorScheme =
         darkColorScheme(
-                primary = ElectricBlue,
-                secondary = NeonPurple,
-                tertiary = HotPink,
+                primary = BluePrimary,
+                secondary = VermillionPrimary,
+                tertiary = BlueSecondary,
                 background = AmoledBg,
                 surface = AmoledSurface,
                 surfaceVariant = AmoledSurfaceHigh,
@@ -97,9 +97,9 @@ private val AmoledColorScheme =
 
 private val LightColorScheme =
         lightColorScheme(
-                primary = ElectricBlue,
-                secondary = NeonPurple,
-                tertiary = HotPink,
+                primary = BluePrimary,
+                secondary = VermillionPrimary,
+                tertiary = BlueSecondary,
                 background = LightBg,
                 surface = LightSurface,
                 surfaceVariant = LightSurfaceHigh,

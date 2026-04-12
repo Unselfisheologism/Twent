@@ -18,14 +18,14 @@
         <ProgressBar
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:indeterminateTint="#FFFFFF" />
+            android:indeterminateTint="@color/white" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Checking subscription status..."
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -218,14 +218,14 @@
                         android:layout_height="12dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_check_circle"
-                        android:tint="#4CAF50" />
+                        android:tint="@color/blue_primary" />
 
                     <TextView
                         android:id="@+id/billing_status_textview"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Pro Active"
-                        android:textColor="#BDBDBD"
+                        android:textColor="@color/grey_400"
                         android:textSize="10sp"
                         tools:text="Pro Active"
                         tools:visibility="visible" />
@@ -252,14 +252,14 @@
                         android:layout_height="12dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_check_circle"
-                        android:tint="#4CAF50" />
+                        android:tint="@color/blue_primary" />
 
                     <TextView
                         android:id="@+id/permissions_status_tag"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="All Permissions"
-                        android:textColor="#BDBDBD"
+                        android:textColor="@color/grey_400"
                         android:textSize="10sp"
                         tools:text="All Permissions"
                         tools:visibility="visible" />
@@ -286,13 +286,13 @@
                         android:layout_height="12dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/outline_hourglass_bottom_24"
-                        android:tint="#4CAF50"  />
+                        android:tint="@color/blue_primary"  />
 
                     <TextView
                         android:id="@+id/tasks_left_tag_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#BDBDBD"
+                        android:textColor="@color/grey_400"
                         android:textSize="10sp"
                         tools:text="15 Tasks Left" />
 
@@ -309,7 +309,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="24dp"
                 android:padding="20dp"
-                android:textColor="#BDBDBD"
+                android:textColor="@color/grey_400"
                 android:textSize="16sp"
                 android:visibility="gone"
                 tools:text="15 Free Tasks Remaining"
@@ -322,7 +322,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
                 android:padding="8dp"
-                android:textColor="#BDBDBD"
+                android:textColor="@color/grey_400"
                 android:textSize="12sp"
                 android:visibility="gone" />
 

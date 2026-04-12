@@ -49,7 +49,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
-        app:tabTextColor="#BDBDBD"
+        app:tabTextColor="@color/grey_400"
         app:tabSelectedTextColor="#FFFFFF"
         app:tabIndicatorColor="@color/accent"
         app:tabMode="fixed"
