@@ -1,75 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 🔥 NEW PALETTE: Blue-dominant with Orange Accents 🔥 -->
+    <!-- Palette extracted directly from Robot_character_icon_202604132005.jpeg -->
 
-    <!-- Primary Steel Blue Palette (dominant - from logo armor) -->
-    <color name="orange_primary">#FF4A7C9B</color>
-    <color name="orange_secondary">#FF3D6A85</color>
-    <color name="orange_accent">#FF5A8FB0</color>
-    <color name="orange_light">#FF6BA3C4</color>
-    <color name="orange_dark">#FF2D5A7B</color>
-    <color name="orange_deeper">#FF1E4A66</color>
+    <!-- Primary Orange Palette (from logo face) -->
+    <color name="orange_primary">#FFF09020</color>
+    <color name="orange_secondary">#FFF08020</color>
+    <color name="orange_accent">#FFE09030</color>
+    <color name="orange_light">#FFFFA040</color>
+    <color name="orange_dark">#FFD07010</color>
+    <color name="orange_deeper">#FFC06000</color>
 
-    <!-- Cyan/Electric Blue Palette (secondary - from logo eyes) -->
-    <color name="cyan_primary">#FF7FE8E8</color>
-    <color name="cyan_secondary">#FF5DD9D9</color>
-    <color name="cyan_accent">#FF3ACACA</color>
-    <color name="cyan_light">#FFA5F0F0</color>
-    <color name="cyan_dark">#FF2DB5B5</color>
-    <color name="cyan_glow">#FF8EF5F5</color>
+    <!-- Primary Blue Palette (from logo armor) -->
+    <color name="cyan_primary">#FF80C0F0</color>
+    <color name="cyan_secondary">#FF80C0E0</color>
+    <color name="cyan_accent">#FF70B0E0</color>
+    <color name="cyan_light">#FF90D0F8</color>
+    <color name="cyan_dark">#FF60A0D0</color>
+    <color name="cyan_glow">#FFA0D0E0</color>
 
-    <!-- Accent Orange Palette (accent only - from logo face) -->
-    <color name="steel_primary">#FFFF6B35</color>
-    <color name="steel_secondary">#FFFF8555</color>
-    <color name="steel_accent">#FFFFA07A</color>
-    <color name="steel_light">#FFFFC4AD</color>
-    <color name="steel_dark">#FFE85D26</color>
-    <color name="steel_deeper">#FFD34B17</color>
+    <!-- Grey Palette (from logo shadows/details) -->
+    <color name="steel_primary">#FF809090</color>
+    <color name="steel_secondary">#FF708080</color>
+    <color name="steel_accent">#FF90A0A0</color>
+    <color name="steel_light">#FFA0B0B0</color>
+    <color name="steel_dark">#FF506060</color>
+    <color name="steel_deeper">#FF405050</color>
 
-    <!-- Dark Background Palette (modern dark navy) -->
-    <color name="grey_900">#FF0D1117</color>
-    <color name="grey_800">#FF161B22</color>
-    <color name="grey_700">#FF1A1F2E</color>
-    <color name="grey_600">#FF21263D</color>
-    <color name="grey_500">#FF30363D</color>
-    <color name="grey_400">#FF484F58</color>
-    <color name="grey_300">#FF6E7681</color>
-    <color name="grey_200">#FF8B949E</color>
-    <color name="grey_100">#FFC9D1D9</color>
+    <!-- Dark Background Palette -->
+    <color name="grey_900">#FF0A0A0A</color>
+    <color name="grey_800">#FF141414</color>
+    <color name="grey_700">#FF1E1E1E</color>
+    <color name="grey_600">#FF282828</color>
+    <color name="grey_500">#FF3C3C3C</color>
+    <color name="grey_400">#FF505050</color>
+    <color name="grey_300">#FF707080</color>
+    <color name="grey_200">#FF909090</color>
+    <color name="grey_100">#FFB0B0B0</color>
 
-    <!-- Standard Android colors (updated to blue-dominant palette) -->
-    <color name="purple_200">#FF7FE8E8</color>
-    <color name="purple_500">#FF4A7C9B</color>
-    <color name="purple_700">#FF2D5A7B</color>
-    <color name="teal_200">#FF5DD9D9</color>
-    <color name="teal_700">#FF3D6A85</color>
+    <!-- Standard Android colors -->
+    <color name="purple_200">#FF80C0F0</color>
+    <color name="purple_500">#FFF09020</color>
+    <color name="purple_700">#FFD07010</color>
+    <color name="teal_200">#FF80C0E0</color>
+    <color name="teal_700">#FF708080</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
     <!-- Brand & UI component colors -->
-    <color name="wave_color">#FF7FE8E8</color>
-    <color name="background_color">#FF1A1F2E</color>
-    <color name="dark_background">#FF1A1F2E</color>
-    <color name="button_blue">#FF4A7C9B</color>
-    <color name="text_gray">#FF8B949E</color>
-    <color name="gradient_start">#FF4A7C9B</color>
-    <color name="gradient_end">#FF7FE8E8</color>
-    <color name="input_box_background">#FF21263D</color>
-    <color name="panel_background">#FF161B22</color>
+    <color name="wave_color">#FF80C0F0</color>
+    <color name="background_color">#FF1E1E1E</color>
+    <color name="dark_background">#FF1E1E1E</color>
+    <color name="button_blue">#FF80C0F0</color>
+    <color name="text_gray">#FF909090</color>
+    <color name="gradient_start">#FFF09020</color>
+    <color name="gradient_end">#FF80C0F0</color>
+    <color name="input_box_background">#FF282828</color>
+    <color name="panel_background">#FF141414</color>
 
     <!-- Memory management colors -->
-    <color name="background">#FF1A1F2E</color>
-    <color name="primary">#FF4A7C9B</color>
-    <color name="accent">#FF7FE8E8</color>
-    <color name="surface">#FF161B22</color>
-    <color name="text_primary">#FFC9D1D9</color>
-    <color name="text_secondary">#FF8B949E</color>
-    <color name="orange">#FFFF6B35</color>
+    <color name="background">#FF1E1E1E</color>
+    <color name="primary">#FFF09020</color>
+    <color name="accent">#FF80C0F0</color>
+    <color name="surface">#FF141414</color>
+    <color name="text_primary">#FFB0B0B0</color>
+    <color name="text_secondary">#FF909090</color>
+    <color name="orange">#FFF09020</color>
 
     <!-- Delta symbol state colors -->
-    <color name="delta_idle">#FFC9D1D9</color>
-    <color name="delta_listening">#FF4A7C9B</color>
-    <color name="delta_processing">#FF7FE8E8</color>
-    <color name="delta_speaking">#FF5DD9D9</color>
+    <color name="delta_idle">#FF909090</color>
+    <color name="delta_listening">#FFF09020</color>
+    <color name="delta_processing">#FF80C0F0</color>
+    <color name="delta_speaking">#FF80C0E0</color>
     <color name="delta_error">#FFFF4444</color>
 </resources>

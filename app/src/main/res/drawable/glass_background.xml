@@ -2,10 +2,10 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <!-- Blue to Cyan gradient background -->
+    <!-- Orange to Blue gradient background (from logo colors) -->
     <gradient
-        android:startColor="#DD4A7C9B"
-        android:endColor="#DD7FE8E8"
+        android:startColor="#DDF09020"
+        android:endColor="#DD80C0F0"
         android:angle="135"
         android:type="linear" />
 
