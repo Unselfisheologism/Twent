@@ -18,6 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.SteelPrimary
+import com.ai.assistance.operit.ui.theme.SteelLight
+import com.ai.assistance.operit.ui.theme.SteelAccent
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -71,7 +74,7 @@ fun IntegrationNodeCard(
     // Determine border color based on execution state and error state
     val executionBorderColor = when {
         hasError -> Color(0xFFF44336) // Red for errors
-        executionState is NodeExecutionState.Running -> Color(0xFF2196F3) // Blue
+        executionState is NodeExecutionState.Running -> SteelPrimary // Blue
         executionState is NodeExecutionState.Success -> Color(0xFF4CAF50) // Green
         executionState is NodeExecutionState.Skipped -> Color(0xFF9E9E9E) // Gray
         executionState is NodeExecutionState.Failed -> Color(0xFFF44336) // Red
@@ -351,13 +354,13 @@ private fun ExecutionStateIndicator(
                 CircularProgressIndicator(
                     modifier = Modifier.size(10.dp),
                     strokeWidth = 1.5.dp,
-                    color = Color(0xFF2196F3)
+                    color = SteelPrimary
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = stringResource(R.string.workflow_node_running),
                     fontSize = 8.sp,
-                    color = Color(0xFF2196F3),
+                    color = SteelPrimary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -468,9 +471,9 @@ private data class IntegrationNodeStyle(
 private fun getIntegrationNodeStyle(integrationType: String): IntegrationNodeStyle {
     return when (integrationType) {
         IntegrationNodeConstants.TYPE_TOOL -> IntegrationNodeStyle(
-            primaryColor = Color(0xFF2196F3), // Blue
+            primaryColor = SteelPrimary, // Blue
             backgroundColor = Color(0xFFE3F2FD),
-            borderColor = Color(0xFF64B5F6),
+            borderColor = SteelLight,
             icon = Icons.Default.Build,
             label = stringResource(R.string.integration_type_tool)
         )

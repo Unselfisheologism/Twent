@@ -61,6 +61,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -165,7 +168,7 @@ fun BottomControlBar(
             val glowPadding = 10.dp
             val glowPaddingPx = with(density) { glowPadding.toPx() }
             val glowBaseColors = listOf(
-                Color(0xFF42A5F5),
+                CyanPrimary,
                 Color(0xFF26C6DA),
                 Color(0xFF66BB6A)
             )

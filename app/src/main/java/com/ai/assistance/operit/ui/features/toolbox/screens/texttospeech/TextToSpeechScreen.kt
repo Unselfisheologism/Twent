@@ -15,6 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -317,7 +320,7 @@ fun TextToSpeechScreen(navController: NavController) {
                                                         else Icons.AutoMirrored.Filled.VolumeOff,
                                                 contentDescription = null,
                                                 tint =
-                                                        if (isSpeaking) Color(0xFF2196F3)
+                                                        if (isSpeaking) OrangePrimary
                                                         else
                                                                 MaterialTheme.colorScheme
                                                                         .onSecondaryContainer

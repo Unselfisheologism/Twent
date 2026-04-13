@@ -40,6 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -210,7 +213,7 @@ fun FloatingFullscreenMode(floatContext: FloatContext) {
                         0.0f to Color.Transparent,
                         0.10f to Color.Transparent,
                         // 从屏幕中间往下开始出现更暗一些的蓝绿色渐变（降低明度，不是加厚遮罩）
-                        0.35f to Color(0xFF42A5F5).copy(alpha = fullscreenGradientAlpha),  // 深一点的蓝
+                        0.35f to SteelPrimary.copy(alpha = fullscreenGradientAlpha),  // 深一点的蓝
                         0.75f  to Color(0xFF26C6DA).copy(alpha = fullscreenGradientAlpha),  // 深一点的蓝绿
                         1.0f  to Color(0xFF66BB6A).copy(alpha = fullscreenGradientAlpha)   // 深一点的绿色
                     )

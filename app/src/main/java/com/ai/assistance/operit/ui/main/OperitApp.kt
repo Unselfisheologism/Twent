@@ -43,6 +43,11 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.features.update.screens.UpdateScreen
+import com.ai.assistance.operit.ui.main.components.NavigationDrawerHeader
+import com.ai.assistance.operit.ui.main.components.ModernNavigationDrawerItem
+import com.ai.assistance.operit.ui.main.components.NavigationSectionHeader
+import com.ai.assistance.operit.ui.main.components.NavigationDivider
+import com.ai.assistance.operit.ui.main.components.NavigationDrawerFooter
 
 // 为TopAppBar的actions提供CompositionLocal
 // 它允许子组件（如AIChatScreen）向上提供它们的action Composable

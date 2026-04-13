@@ -20,6 +20,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -503,7 +506,7 @@ fun SpeechToTextScreen(navController: NavController) {
                     Icon(
                         imageVector = if (isListening) Icons.Default.Mic else Icons.Default.MicOff,
                         contentDescription = null,
-                        tint = if (isListening) Color(0xFF2196F3) else MaterialTheme.colorScheme.onSecondaryContainer
+                        tint = if (isListening) OrangePrimary else MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
                         text = if (isListening) 

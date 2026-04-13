@@ -23,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -389,7 +392,7 @@ internal fun FormattedXmlText(text: String, textColor: Color, modifier: Modifier
                                     inAttr = !inAttr
                                 }
                                 inTag && char.isLetterOrDigit() -> {
-                                    withStyle(SpanStyle(color = Color(0xFF2196F3))) { // 蓝色
+                                    withStyle(SpanStyle(color = CyanPrimary)) { // 蓝色
                                         append(char)
                                     }
                                 }

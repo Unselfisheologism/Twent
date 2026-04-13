@@ -188,7 +188,7 @@ fun OperitTheme(content: @Composable () -> Unit) {
         )
     }
 
-    // 确定主题模式
+    // Determine theme mode
     val systemDarkTheme = isSystemInDarkTheme()
     val isExtraDark = themeMode == UserPreferencesManager.THEME_MODE_AMOLED
     val darkTheme =
@@ -198,17 +198,14 @@ fun OperitTheme(content: @Composable () -> Unit) {
                 themeMode == UserPreferencesManager.THEME_MODE_DARK || isExtraDark
             }
 
-    // Dynamic color is available on Android 12+
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    // DISABLE Dynamic color to use our custom Twent palette
+    // Dynamic colors override our brand colors - disabled to maintain brand consistency
+    val dynamicColor = false // Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
-    // 基础主题色调
+    // Base theme color scheme - ALWAYS use Twent palette (orange/cyan)
     var colorScheme =
             when {
                 isExtraDark -> AmoledColorScheme
-                dynamicColor -> {
-                    if (darkTheme) dynamicDarkColorScheme(context)
-                    else dynamicLightColorScheme(context)
-                }
                 darkTheme -> DarkColorScheme
                 else -> LightColorScheme
             }

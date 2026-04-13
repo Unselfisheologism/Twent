@@ -2,6 +2,8 @@ package com.ai.assistance.operit.data.repository
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.SteelPrimary
+import com.ai.assistance.operit.ui.theme.SteelLight
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.db.ObjectBoxManager
 import com.ai.assistance.operit.data.model.Memory
@@ -1303,7 +1305,7 @@ class MemoryRepository(private val context: Context, profileId: String) {
                                     } else {
                                     when (memory.tags.firstOrNull()?.name) {
                                         "Person" -> Color(0xFF81C784) // Green
-                                        "Concept" -> Color(0xFF64B5F6) // Blue
+                                        "Concept" -> SteelLight // Blue
                                         else -> Color.LightGray
                                         }
                                     }

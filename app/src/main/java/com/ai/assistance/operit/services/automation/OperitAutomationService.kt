@@ -298,7 +298,7 @@ class OperitAutomationService : AccessibilityService() {
                     background = GradientDrawable().apply {
                         shape = GradientDrawable.OVAL
                         setColor(0x802196F3.toInt())
-                        setStroke(4, 0xFF2196F3.toInt())
+                        setStroke(4, 0xFF4A7C9B.toInt())
                     }
                 }
 

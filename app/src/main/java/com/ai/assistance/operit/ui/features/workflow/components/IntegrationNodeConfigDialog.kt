@@ -18,6 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.SteelPrimary
+import com.ai.assistance.operit.ui.theme.SteelLight
+import com.ai.assistance.operit.ui.theme.SteelAccent
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -1133,7 +1136,7 @@ private fun createDefaultIntegrationNode(): IntegrationNode {
  */
 private fun getIntegrationColor(type: String): Color {
     return when (type) {
-        IntegrationNodeConstants.TYPE_TOOL -> Color(0xFF2196F3)
+        IntegrationNodeConstants.TYPE_TOOL -> SteelPrimary
         IntegrationNodeConstants.TYPE_WEBHOOK -> Color(0xFF00BCD4)
         IntegrationNodeConstants.TYPE_MCP -> Color(0xFF9C27B0)
         IntegrationNodeConstants.TYPE_OAUTH -> Color(0xFFFF9800)

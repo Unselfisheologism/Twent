@@ -21,6 +21,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.SteelPrimary
+import com.ai.assistance.operit.ui.theme.SteelLight
+import com.ai.assistance.operit.ui.theme.SteelAccent
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PointMode
@@ -386,16 +389,16 @@ fun GridWorkflowCanvas(
 
                         val activeColor =
                             when (targetState) {
-                                is NodeExecutionState.Running -> Color(0xFF2196F3)
+                                is NodeExecutionState.Running -> SteelPrimary
                                 is NodeExecutionState.Failed -> Color(0xFFF44336)
                                 is NodeExecutionState.Success -> Color(0xFF4CAF50)
-                                else -> Color(0xFF4285F4)
+                                else -> SteelAccent
                             }
 
                         val inactiveColor = Color(0xFFBDBDBD)
                         val lineColor =
                             if (!hasExecutionInfo) {
-                                Color(0xFF4285F4)
+                                SteelAccent
                             } else if (active) {
                                 activeColor
                             } else {

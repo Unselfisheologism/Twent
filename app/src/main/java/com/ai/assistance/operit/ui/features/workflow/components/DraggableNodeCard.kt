@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import com.ai.assistance.operit.ui.theme.SteelPrimary
+import com.ai.assistance.operit.ui.theme.SteelLight
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -57,16 +59,16 @@ fun DraggableNodeCard(
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
-    
+
     // 根据执行状态选择边框颜色
     val executionBorderColor = when (executionState) {
-        is NodeExecutionState.Running -> Color(0xFF2196F3) // 蓝色
+        is NodeExecutionState.Running -> SteelPrimary // 钢蓝色
         is NodeExecutionState.Success -> Color(0xFF4CAF50) // 绿色
         is NodeExecutionState.Skipped -> Color(0xFF9E9E9E) // 灰色
         is NodeExecutionState.Failed -> Color(0xFFF44336) // 红色
         else -> null
     }
-    
+
     // 根据节点类型选择颜色和图标
     val nodeStyle = when (node) {
         is TriggerNode -> NodeStyle(
@@ -77,9 +79,9 @@ fun DraggableNodeCard(
             label = stringResource(R.string.workflow_node_label_trigger)
         )
         is ExecuteNode -> NodeStyle(
-            primaryColor = Color(0xFF2196F3),
-            backgroundColor = Color(0xFFE3F2FD),
-            borderColor = Color(0xFF64B5F6),
+            primaryColor = SteelPrimary,
+            backgroundColor = Color(0xFFE8F0FE),
+            borderColor = SteelLight,
             icon = Icons.Default.Settings,
             label = stringResource(R.string.workflow_node_label_execute)
         )
@@ -119,9 +121,9 @@ fun DraggableNodeCard(
             label = stringResource(R.string.workflow_node_label_unknown)
         )
     }
-    
+
     var hasDragged by remember { mutableStateOf(false) }
-    
+
     Box(
         modifier = modifier
             .width(120.dp)
@@ -133,12 +135,12 @@ fun DraggableNodeCard(
                 .pointerInput(Unit) {
                     var longPressJob: kotlinx.coroutines.Job? = null
                     var isLongPressed = false
-                    
+
                     detectTapGestures(
                         onPress = {
                             isLongPressed = false
                             hasDragged = false
-                            
+
                             // 启动长按检测
                             longPressJob = coroutineScope.launch {
                                 delay(500)
@@ -147,10 +149,10 @@ fun DraggableNodeCard(
                                     onLongPress()
                                 }
                             }
-                            
+
                             tryAwaitRelease()
                             longPressJob?.cancel()
-                            
+
                             // 只有在没有长按、没有拖动、且不在拖动状态时才触发点击
                             if (!isLongPressed && !hasDragged && !isDragging) {
                                 onClick()
@@ -192,9 +194,9 @@ fun DraggableNodeCard(
                 defaultElevation = if (isDragging) 12.dp else 3.dp
             ),
             colors = CardDefaults.cardColors(
-                containerColor = if (isDragging) 
-                    nodeStyle.backgroundColor.copy(alpha = 0.8f) 
-                else 
+                containerColor = if (isDragging)
+                    nodeStyle.backgroundColor.copy(alpha = 0.8f)
+                else
                     Color.White
             )
         ) {
@@ -231,7 +233,7 @@ fun DraggableNodeCard(
                         )
                     }
                 }
-                
+
                 // 中间：节点名称
                 Text(
                     text = node.name,
@@ -247,7 +249,7 @@ fun DraggableNodeCard(
                         .weight(1f)
                         .wrapContentHeight(Alignment.CenterVertically)
                 )
-                
+
                 // 底部：描述或执行状态
                 if (executionState != null) {
                     Row(
@@ -260,13 +262,13 @@ fun DraggableNodeCard(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(12.dp),
                                     strokeWidth = 2.dp,
-                                    color = Color(0xFF2196F3)
+                                    color = SteelPrimary
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = stringResource(R.string.workflow_node_running),
                                     fontSize = 9.sp,
-                                    color = Color(0xFF2196F3),
+                                    color = SteelPrimary,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -344,4 +346,3 @@ private data class NodeStyle(
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
     val label: String
 )
-

@@ -1,556 +1,363 @@
 package com.ai.assistance.operit.ui.features.settings.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.text.style.TextOverflow
-import java.text.DecimalFormat
-import android.content.Intent
-import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.data.model.FunctionType
-import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
-import com.ai.assistance.operit.data.repository.ChatHistoryManager
+import com.ai.assistance.operit.ui.twent.components.*
 import kotlinx.coroutines.launch
-import androidx.compose.ui.graphics.Color
+import android.content.Intent
+import android.net.Uri
 
-// 保存滑动状态变量，使其跨重组保持
-private val SettingsScreenScrollPosition = mutableStateOf(0)
-
+/**
+ * Modern Redesigned Settings Screen - Twent UI
+ * Card-based layout with modern aesthetics
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-        onNavigateToUserPreferences: () -> Unit,
-        navigateToGitHubAccount: () -> Unit,
-        navigateToToolPermissions: () -> Unit,
-        navigateToModelConfig: () -> Unit,
-        navigateToThemeSettings: () -> Unit,
-        navigateToGlobalDisplaySettings: () -> Unit,
-        navigateToModelPrompts: () -> Unit,
-        navigateToFunctionalConfig: () -> Unit,
-        navigateToChatHistorySettings: () -> Unit,
-        navigateToChatBackupSettings: () -> Unit,
-        navigateToLanguageSettings: () -> Unit,
-        navigateToSpeechServicesSettings: () -> Unit,
-        navigateToCustomHeadersSettings: () -> Unit,
-        navigateToPersonaCardGeneration: () -> Unit,
-        navigateToWaifuModeSettings: () -> Unit,
-        navigateToTokenUsageStatistics: () -> Unit,
-        navigateToContextSummarySettings: () -> Unit,
-        navigateToLayoutAdjustmentSettings: () -> Unit,
-        navigateToAssistantThemeSettings: () -> Unit,
-        navigateToAgentPersonalitySettings: () -> Unit
+    onNavigateToUserPreferences: () -> Unit,
+    navigateToGitHubAccount: () -> Unit,
+    navigateToToolPermissions: () -> Unit,
+    navigateToModelConfig: () -> Unit,
+    navigateToThemeSettings: () -> Unit,
+    navigateToGlobalDisplaySettings: () -> Unit,
+    navigateToModelPrompts: () -> Unit,
+    navigateToFunctionalConfig: () -> Unit,
+    navigateToChatHistorySettings: () -> Unit,
+    navigateToChatBackupSettings: () -> Unit,
+    navigateToLanguageSettings: () -> Unit,
+    navigateToSpeechServicesSettings: () -> Unit,
+    navigateToCustomHeadersSettings: () -> Unit,
+    navigateToPersonaCardGeneration: () -> Unit,
+    navigateToWaifuModeSettings: () -> Unit,
+    navigateToTokenUsageStatistics: () -> Unit,
+    navigateToContextSummarySettings: () -> Unit,
+    navigateToLayoutAdjustmentSettings: () -> Unit,
+    navigateToAssistantThemeSettings: () -> Unit,
+    navigateToAgentPersonalitySettings: () -> Unit
 ) {
-        val context = LocalContext.current
-        val apiPreferences = remember { ApiPreferences.getInstance(context) }
-        val userPreferences = remember { UserPreferencesManager.getInstance(context) }
-        val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
-        val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
+    val scope = rememberCoroutineScope()
 
-        val isGitHubLoggedIn = githubAuth.isLoggedInFlow.collectAsState(initial = false).value
-        val gitHubUser = githubAuth.userInfoFlow.collectAsState(initial = null).value
+    val isGitHubLoggedIn = githubAuth.isLoggedInFlow.collectAsState(initial = false).value
+    val gitHubUser = githubAuth.userInfoFlow.collectAsState(initial = null).value
 
-        fun initiateGitHubLogin() {
-                val authUrl = githubAuth.getAuthorizationUrl()
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
-        }
+    fun initiateGitHubLogin() {
+        val authUrl = githubAuth.getAuthorizationUrl()
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
 
-        // 创建和记住滚动状态，设置为上次保存的位置
-        val scrollState = rememberScrollState(SettingsScreenScrollPosition.value)
-
-        // 当滚动状态改变时更新保存的位置
-        LaunchedEffect(scrollState) {
-                snapshotFlow { scrollState.value }.collect { position ->
-                        SettingsScreenScrollPosition.value = position
-                }
-        }
-
-        val hasBackgroundImage = userPreferences.useBackgroundImage.collectAsState(initial = false).value
-        
-        var showSaveSuccessMessage by remember { mutableStateOf(false) }
-
-        val cardContainerColor = if (hasBackgroundImage) {
-                MaterialTheme.colorScheme.surface
-        } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        }
-
-        val componentBackgroundColor = if (hasBackgroundImage) {
-                MaterialTheme.colorScheme.surface
-        } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-        }
-
+    TwentScreenPadding {
         Column(
-                modifier = Modifier.fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .verticalScroll(scrollState)
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-                // ======= 账号 =======
-                SettingsSection(
-                        title = stringResource(id = R.string.settings_section_account),
-                        icon = Icons.Default.AccountCircle,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(R.string.github_account),
-                                subtitle = if (isGitHubLoggedIn && gitHubUser != null) {
-                                        "@${gitHubUser!!.login}"
-                                } else {
-                                        stringResource(R.string.github_account_not_logged_in)
-                                },
-                                icon = Icons.Default.Person,
-                                onClick = navigateToGitHubAccount
-                        )
+            // Header
+            TwentHeading(
+                text = "Settings",
+                fontSize = 40.dp
+            )
+            Spacer(modifier = Modifier.height(TwentSpacing.lg))
 
-                        if (isGitHubLoggedIn) {
-                                CompactSettingsItem(
-                                        title = stringResource(R.string.logout),
-                                        subtitle = stringResource(R.string.github_account_logout_desc),
-                                        icon = Icons.Default.Logout,
-                                        onClick = {
-                                                scope.launch { githubAuth.logout() }
-                                        }
-                                )
-                        } else {
-                                CompactSettingsItem(
-                                        title = stringResource(R.string.login_github),
-                                        subtitle = stringResource(R.string.github_account_login_desc),
-                                        icon = Icons.Default.Login,
-                                        onClick = ::initiateGitHubLogin
-                                )
-                        }
-                }
-
-                // ======= 个性化配置 =======
-                SettingsSection(
-                        title = stringResource(id = R.string.settings_section_personalization),
-                        icon = Icons.Default.Person,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_user_preferences),
-                                subtitle = stringResource(id = R.string.settings_user_preferences_subtitle),
-                                icon = Icons.Default.Face,
-                                onClick = onNavigateToUserPreferences
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(R.string.language_settings),
-                                subtitle = stringResource(id = R.string.settings_language_subtitle),
-                                icon = Icons.Default.Language,
-                                onClick = navigateToLanguageSettings
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_theme_appearance),
-                                subtitle = stringResource(id = R.string.settings_theme_subtitle),
-                                icon = Icons.Default.Palette,
-                                onClick = navigateToThemeSettings
-                        )
-
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.assistant_theme_title),
-                                subtitle = stringResource(id = R.string.assistant_theme_desc),
-                                icon = Icons.Default.Face,
-                                onClick = navigateToAssistantThemeSettings
-                        )
-
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.agent_personality_title),
-                                subtitle = stringResource(id = R.string.agent_personality_desc),
-                                icon = Icons.Default.Psychology,
-                                onClick = navigateToAgentPersonalitySettings
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(R.string.settings_global_display),
-                                subtitle = stringResource(R.string.settings_global_display_subtitle),
-                                icon = Icons.Default.Visibility,
-                                onClick = navigateToGlobalDisplaySettings
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(R.string.layout_adjustment),
-                                subtitle = stringResource(R.string.layout_adjustment_subtitle),
-                                icon = Icons.Default.AspectRatio,
-                                onClick = navigateToLayoutAdjustmentSettings
-                        )
-                }
-
-                // ======= AI模型配置 =======
-                SettingsSection(
-                        title = stringResource(id = R.string.settings_section_ai_model),
-                        icon = Icons.Default.Settings,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_model_parameters),
-                                subtitle = stringResource(id = R.string.settings_model_params_subtitle),
-                                icon = Icons.Default.Api,
-                                onClick = navigateToModelConfig
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_functional_model),
-                                subtitle = stringResource(id = R.string.settings_functional_model_subtitle),
-                                icon = Icons.Default.Tune,
-                                onClick = navigateToFunctionalConfig
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_speech_services),
-                                subtitle = stringResource(id = R.string.settings_speech_services_subtitle),
-                                icon = Icons.Default.RecordVoiceOver,
-                                onClick = navigateToSpeechServicesSettings
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_custom_headers),
-                                subtitle = stringResource(id = R.string.settings_custom_headers_subtitle),
-                                icon = Icons.Default.AddModerator,
-                                onClick = navigateToCustomHeadersSettings
-                        )
-                }
-
-                // ======= 提示词配置 =======
-                SettingsSection(
-                        title = stringResource(R.string.settings_prompt_section),
-                        icon = Icons.Default.Message,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(R.string.settings_prompt_title),
-                                subtitle = stringResource(id = R.string.settings_system_prompts_subtitle),
-                                icon = Icons.Default.ChatBubble,
-                                onClick = navigateToModelPrompts
-                        )
-                        
-                        // 新增：人设卡生成
-                        CompactSettingsItem(
-                                title = stringResource(R.string.persona_card_generation),
-                                subtitle = stringResource(R.string.persona_card_generation_desc),
-                                icon = Icons.Default.Face,
-                                onClick = navigateToPersonaCardGeneration
-                        )
-                        
-                        // 新增：Waifu模式设置
-                        CompactSettingsItem(
-                                title = stringResource(R.string.waifu_mode_settings),
-                                subtitle = stringResource(R.string.waifu_mode_settings_desc),
-                                icon = Icons.Default.EmojiEmotions,
-                                onClick = navigateToWaifuModeSettings
-                        )
-                }
-
-                // ======= 上下文和总结设置 =======
-                SettingsSection(
-                        title = stringResource(id = R.string.settings_section_context_summary),
-                        icon = Icons.Default.Analytics,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_section_context_summary),
-                                subtitle = stringResource(id = R.string.settings_context_summary_subtitle),
-                                icon = Icons.Default.Tune,
-                                onClick = navigateToContextSummarySettings
-                        )
-                }
-
-                // ======= 数据和权限 =======
-                SettingsSection(
-                        title = stringResource(id = R.string.settings_data_permissions),
-                        icon = Icons.Default.Security,
-                        containerColor = cardContainerColor
-                ) {
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_tool_permissions),
-                                subtitle = stringResource(id = R.string.settings_tool_permissions_subtitle),
-                                icon = Icons.Default.AdminPanelSettings,
-                                onClick = navigateToToolPermissions
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_data_backup),
-                                subtitle = stringResource(id = R.string.settings_data_backup_desc),
-                                icon = Icons.Default.CloudUpload,
-                                onClick = navigateToChatBackupSettings
-                        )
-                        
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_chat_history_management),
-                                subtitle = stringResource(id = R.string.settings_chat_history_management_subtitle),
-                                icon = Icons.Default.ManageHistory,
-                                onClick = navigateToChatHistorySettings
-                        )
-
-                        CompactSettingsItem(
-                                title = stringResource(id = R.string.settings_token_usage_stats),
-                                subtitle = stringResource(id = R.string.settings_token_usage_subtitle),
-                                icon = Icons.Default.Analytics,
-                                onClick = navigateToTokenUsageStatistics
-                        )
-                }
-
-                // 底部间距
-                Spacer(modifier = Modifier.height(16.dp))
-        }
-}
-
-@Composable
-private fun SettingsSection(
-        title: String,
-        icon: ImageVector,
-        containerColor: Color,
-        content: @Composable ColumnScope.() -> Unit
-) {
-        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                // 分组标题
+            // Account Card
+            TwentCard(
+                modifier = Modifier.fillMaxWidth(),
+                gradientBorder = isGitHubLoggedIn
+            ) {
                 Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 6.dp)
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(OrangePrimary, CyanPrimary)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
+                            imageVector = if (isGitHubLoggedIn) Icons.Default.Person else Icons.Outlined.Person,
+                            contentDescription = "Account",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                            text = if (isGitHubLoggedIn) "GitHub Account" else "Sign In",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isGitHubLoggedIn)
+                                (gitHubUser?.login ?: "Connected")
+                            else
+                                "Connect your GitHub account",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    if (!isGitHubLoggedIn) {
+                        TwentButton(
+                            onClick = { initiateGitHubLogin() },
+                            text = "Sign In",
+                            modifier = Modifier.width(100.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Connected",
+                            tint = CyanPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
-                
-                // 内容区域
-                Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                                containerColor = containerColor
-                        )
-                ) {
-                        Column(
-                                modifier = Modifier.padding(12.dp),
-                                content = content
-                        )
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+
+            // Personalization Section
+            TwentSectionTitle("Personalization")
+            Spacer(modifier = Modifier.height(TwentSpacing.md))
+
+            TwentCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.Palette,
+                        title = "Theme",
+                        subtitle = "Appearance and colors",
+                        onClick = navigateToThemeSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.DarkMode,
+                        title = "Display",
+                        subtitle = "Global display settings",
+                        onClick = navigateToGlobalDisplaySettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Brush,
+                        title = "Assistant Theme",
+                        subtitle = "Customize assistant appearance",
+                        onClick = navigateToAssistantThemeSettings
+                    )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+
+            // AI & Models Section
+            TwentSectionTitle("AI & Models")
+            Spacer(modifier = Modifier.height(TwentSpacing.md))
+
+            TwentCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.Memory,
+                        title = "Model Configuration",
+                        subtitle = "API and model settings",
+                        onClick = navigateToModelConfig
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Psychology,
+                        title = "Model Prompts",
+                        subtitle = "System prompts and instructions",
+                        onClick = navigateToModelPrompts
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.PersonOutline,
+                        title = "Agent Personality",
+                        subtitle = "Customize AI behavior",
+                        onClick = navigateToAgentPersonalitySettings
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+
+            // Data & Privacy Section
+            TwentSectionTitle("Data & Privacy")
+            Spacer(modifier = Modifier.height(TwentSpacing.md))
+
+            TwentCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.History,
+                        title = "Chat History",
+                        subtitle = "Manage conversation history",
+                        onClick = navigateToChatHistorySettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Backup,
+                        title = "Backup & Restore",
+                        subtitle = "Export and import data",
+                        onClick = navigateToChatBackupSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.VpnKey,
+                        title = "Token Usage",
+                        subtitle = "View API token statistics",
+                        onClick = navigateToTokenUsageStatistics
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+
+            // Advanced Section
+            TwentSectionTitle("Advanced")
+            Spacer(modifier = Modifier.height(TwentSpacing.md))
+
+            TwentCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.Language,
+                        title = "Language",
+                        subtitle = "App language settings",
+                        onClick = navigateToLanguageSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Mic,
+                        title = "Speech Services",
+                        subtitle = "TTS and STT configuration",
+                        onClick = navigateToSpeechServicesSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Security,
+                        title = "Tool Permissions",
+                        subtitle = "Manage tool access",
+                        onClick = navigateToToolPermissions
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Settings,
+                        title = "Functional Config",
+                        subtitle = "Advanced functionality",
+                        onClick = navigateToFunctionalConfig
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.xxl))
         }
+    }
 }
 
 @Composable
-private fun CompactSettingsItem(
-        title: String,
-        subtitle: String,
-        icon: ImageVector,
-        onClick: () -> Unit
+private fun SettingsItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
 ) {
-        Row(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable { onClick() }
-                        .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(OrangePrimary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
         ) {
-                Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                )
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                                text = title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                                text = subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                        )
-                }
-                
-                Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                )
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = OrangePrimary,
+                modifier = Modifier.size(20.dp)
+            )
         }
-}
-
-@Composable
-private fun CompactToggleWithDescription(
-        title: String,
-        description: String,
-        checked: Boolean,
-        onCheckedChange: (Boolean) -> Unit
-) {
-        Row(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                        Text(
-                                text = title,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                        )
-                }
-                Switch(
-                        checked = checked,
-                        onCheckedChange = onCheckedChange,
-                        modifier = Modifier.scale(0.8f)
-                )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
         }
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowRight,
+            contentDescription = "Navigate",
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
 }
-
-@Composable
-private fun CompactSlider(
-        title: String,
-        subtitle: String,
-        value: Float,
-        onValueChange: (Float) -> Unit,
-        valueRange: ClosedFloatingPointRange<Float>,
-        steps: Int,
-        decimalFormatPattern: String,
-        unitText: String? = null,
-        backgroundColor: Color
-) {
-        val focusManager = LocalFocusManager.current
-        val df = remember(decimalFormatPattern) { DecimalFormat(decimalFormatPattern) }
-
-        var sliderValue by remember(value) { mutableStateOf(value) }
-        var textValue by remember(value) { mutableStateOf(df.format(value)) }
-
-        Column(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(backgroundColor)
-                        .padding(8.dp)
-        ) {
-                Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                        text = subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                )
-                        }
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                BasicTextField(
-                                        value = textValue,
-                                        onValueChange = { newText ->
-                                                textValue = newText
-                                                newText.toFloatOrNull()?.let {
-                                                        sliderValue = it.coerceIn(valueRange)
-                                                }
-                                        },
-                                        modifier = Modifier
-                                                .width(40.dp)
-                                                .background(
-                                                        MaterialTheme.colorScheme.surfaceVariant,
-                                                        RoundedCornerShape(4.dp)
-                                                )
-                                                .padding(horizontal = 4.dp, vertical = 2.dp),
-                                        textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp,
-                                                textAlign = TextAlign.Center
-                                        ),
-                                        keyboardOptions = KeyboardOptions(
-                                                keyboardType = KeyboardType.Number,
-                                                imeAction = ImeAction.Done
-                                        ),
-                                        keyboardActions = KeyboardActions(
-                                                onDone = {
-                                                        val finalValue = textValue.toFloatOrNull()?.coerceIn(valueRange) ?: sliderValue
-                                                        onValueChange(finalValue)
-                                                        textValue = df.format(finalValue)
-                                                        focusManager.clearFocus()
-                                                }
-                                        ),
-                                        singleLine = true
-                                )
-
-                                if (unitText != null) {
-                                        Text(
-                                                text = unitText,
-                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 10.sp
-                                                ),
-                                                modifier = Modifier.padding(start = 2.dp)
-                                        )
-                                }
-                        }
-                }
-        }
-}
-
-

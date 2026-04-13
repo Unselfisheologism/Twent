@@ -54,6 +54,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -513,7 +516,7 @@ fun FloatingScreenOcrScreen(floatContext: FloatContext) {
                 // 通过 rippleProgress 插值：从深色过渡到蓝色
                 val t = rippleProgress.value
                 val darkColor = Color.Black.copy(alpha = 0.75f)
-                val blueColor = Color(0xFF2196F3).copy(alpha = 0.35f)
+                val blueColor = SteelPrimary.copy(alpha = 0.35f)
                 Color(
                     red = darkColor.red + (blueColor.red - darkColor.red) * t,
                     green = darkColor.green + (blueColor.green - darkColor.green) * t,
@@ -521,7 +524,7 @@ fun FloatingScreenOcrScreen(floatContext: FloatContext) {
                     alpha = darkColor.alpha + (blueColor.alpha - darkColor.alpha) * t
                 )
             } else {
-                Color(0xFF2196F3).copy(alpha = 0.35f)
+                SteelPrimary.copy(alpha = 0.35f)
             }
 
             // 绘制全屏遮罩
