@@ -1141,7 +1141,8 @@
     <string name="permission_guide_welcome_desc">Before using the app, we need to set up some basic permissions and select your preferred permission level.</string>
     <string name="permission_guide_welcome_hint">This process takes just a few minutes and will help the app serve you better.</string>
     <string name="permission_guide_welcome_start">Click the button in the lower right corner to start setup</string>
-    
+    <string name="permission_guide_get_started">Get Started</string>
+
     <string name="permission_guide_basic_title">Basic Permissions</string>
     <string name="permission_guide_basic_desc">Please grant the following basic permissions to ensure the app functions properly</string>
     <string name="permission_guide_storage_title">Storage Permission</string>

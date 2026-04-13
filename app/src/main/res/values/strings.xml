@@ -2702,6 +2702,7 @@
 <string name="permission_guide_welcome_desc">Permission Guide Welcome Desc</string>
 <string name="permission_guide_welcome_hint">Permission Guide Welcome Hint</string>
 <string name="permission_guide_welcome_start">Permission Guide Welcome Start</string>
+<string name="permission_guide_get_started">开始使用</string>
 <string name="permission_guide_welcome_title">Permission Guide Welcome Title</string>
 <string name="permission_level">Permission Level</string>
 <string name="permission_level_accessibility">Permission Level Accessibility</string>

@@ -1,23 +1,7 @@
 package com.ai.assistance.operit.ui.features.permission.screens
 
-import android.Manifest
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
-import com.ai.assistance.operit.util.AppLogger
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,32 +20,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -75,8 +47,7 @@ import kotlinx.coroutines.launch
 
 private const val INTRO_PAGES_COUNT = 3
 private const val WELCOME_PAGE_INDEX = INTRO_PAGES_COUNT
-private const val BASIC_PERMISSIONS_PAGE_INDEX = INTRO_PAGES_COUNT + 1
-private const val TOTAL_PAGES_COUNT = INTRO_PAGES_COUNT + 2
+private const val TOTAL_PAGES_COUNT = INTRO_PAGES_COUNT + 1
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -86,60 +57,14 @@ fun PermissionGuideScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
-    // 状态
-    val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES_COUNT })
-
-    // 初始化
-    LaunchedEffect(Unit) { viewModel.checkPermissions(context) }
-
-    // 存储权限请求启动器 (适用于Android 10及以下版本)
-    val storagePermissionLauncher =
-            rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissions ->
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                    val readGranted =
-                            permissions[Manifest.permission.READ_EXTERNAL_STORAGE] ?: false
-                    val writeGranted =
-                            permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: false
-                    if (readGranted && writeGranted) {
-                        // 使用已存在的方法检查权限状态，而不是直接更新
-                        viewModel.checkPermissions(context)
-                    }
-                }
-            }
-
-    // 位置权限请求启动器
-    val locationPermissionLauncher =
-            rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissions ->
-                val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-                val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-                if (fineGranted || coarseGranted) {
-                    viewModel.updateLocationPermission(true)
-                }
-            }
-
-    // 麦克风权限请求启动器
-    val microphonePermissionLauncher =
-            rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-            ) { granted ->
-                if (granted) {
-                    viewModel.updateMicrophonePermission(true)
-                }
-            }
+    val uiState by viewModel.uiState.collectAsState()
 
     // 页面切换效果
     LaunchedEffect(pagerState.currentPage) {
         when (pagerState.currentPage) {
             in 0..WELCOME_PAGE_INDEX ->
                 viewModel.setCurrentStep(PermissionGuideViewModel.Step.WELCOME)
-            BASIC_PERMISSIONS_PAGE_INDEX ->
-                viewModel.setCurrentStep(PermissionGuideViewModel.Step.BASIC_PERMISSIONS)
         }
     }
 
@@ -198,141 +123,11 @@ fun PermissionGuideScreen(
                                         stringResource(R.string.permission_guide_intro_3_desc),
                                 pageIndex = 2
                         )
-                WELCOME_PAGE_INDEX -> WelcomePage()
-                BASIC_PERMISSIONS_PAGE_INDEX ->
-                        BasicPermissionsPage(
-                                hasStoragePermission = uiState.hasStoragePermission,
-                                hasOverlayPermission = uiState.hasOverlayPermission,
-                                hasBatteryOptimizationExemption =
-                                        uiState.hasBatteryOptimizationExemption,
-                                hasLocationPermission = uiState.hasLocationPermission,
-                                hasMicrophonePermission = uiState.hasMicrophonePermission,
-                                onStoragePermissionClick = {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                        // Android 11+: 使用更精确的ALL_FILES_ACCESS权限页面
-                                        try {
-                                            val intent =
-                                                    Intent(
-                                                                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
-                                                            )
-                                                            .apply {
-                                                                data =
-                                                                        Uri.parse(
-                                                                                "package:${context.packageName}"
-                                                                        )
-                                                            }
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            AppLogger.e("PermissionGuide", "无法直接打开应用存储权限页面", e)
-                                            // 回退到通用设置页面
-                                            try {
-                                                val intent =
-                                                        Intent(
-                                                                Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
-                                                        )
-                                                context.startActivity(intent)
-                                            } catch (e2: Exception) {
-                                                Toast.makeText(
-                                                                context,
-                                                                context.getString(
-                                                                        R.string
-                                                                                .permission_guide_storage_setting_failed
-                                                                ),
-                                                                Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                            }
-                                        }
-                                    } else {
-                                        // Android 10及以下: 使用标准权限请求API
-                                        storagePermissionLauncher.launch(
-                                                arrayOf(
-                                                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                )
-                                        )
-                                    }
-                                },
-                                onOverlayPermissionClick = {
-                                    try {
-                                        // 直接使用包名跳转到悬浮窗权限页面
-                                        val intent =
-                                                Intent(
-                                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                                        Uri.parse("package:" + context.packageName)
-                                                )
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        Toast.makeText(
-                                                        context,
-                                                        context.getString(
-                                                                R.string
-                                                                        .permission_guide_overlay_setting_failed
-                                                        ),
-                                                        Toast.LENGTH_SHORT
-                                                )
-                                                .show()
-                                    }
-                                },
-                                onBatteryOptimizationClick = {
-                                    try {
-                                        // 直接请求忽略电池优化，无需用户搜索应用
-                                        val intent =
-                                                Intent(
-                                                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                                                        )
-                                                        .apply {
-                                                            data =
-                                                                    Uri.parse(
-                                                                            "package:" +
-                                                                                    context.packageName
-                                                                    )
-                                                        }
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        // 如果直接请求失败，尝试打开电池优化设置页面
-                                        try {
-                                            val intent =
-                                                    Intent(
-                                                            Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-                                                    )
-                                            context.startActivity(intent)
-                                            Toast.makeText(
-                                                            context,
-                                                            context.getString(
-                                                                    R.string
-                                                                            .permission_guide_battery_hint
-                                                            ),
-                                                            Toast.LENGTH_LONG
-                                                    )
-                                                    .show()
-                                        } catch (e2: Exception) {
-                                            Toast.makeText(
-                                                            context,
-                                                            context.getString(
-                                                                    R.string
-                                                                            .permission_guide_battery_setting_failed
-                                                            ),
-                                                            Toast.LENGTH_SHORT
-                                                    )
-                                                    .show()
-                                        }
-                                    }
-                                },
-                                onLocationPermissionClick = {
-                                    // 直接请求位置权限
-                                    locationPermissionLauncher.launch(
-                                            arrayOf(
-                                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                            )
-                                    )
-                                },
-                                onMicrophonePermissionClick = {
-                                    microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                },
-                                onRefresh = { viewModel.checkPermissions(context) }
-                        )
+                WELCOME_PAGE_INDEX -> WelcomePage(
+                    onComplete = {
+                        viewModel.savePermissionLevel()
+                    }
+                )
             }
         }
 
@@ -392,8 +187,8 @@ fun PermissionGuideScreen(
                         onClick = {
                             scope.launch {
                                 when {
-                                    // 最后一页（基础权限页），完成设置
-                                    pagerState.currentPage == BASIC_PERMISSIONS_PAGE_INDEX -> {
+                                    // 最后一页（欢迎页），完成设置
+                                    pagerState.currentPage == WELCOME_PAGE_INDEX -> {
                                         viewModel.savePermissionLevel()
                                     }
                                     // 否则前进到下一页
@@ -406,8 +201,6 @@ fun PermissionGuideScreen(
                         enabled =
                                 when (pagerState.currentPage) {
                                     in 0..WELCOME_PAGE_INDEX -> true // 介绍页和欢迎页总是可以前进
-                                    BASIC_PERMISSIONS_PAGE_INDEX ->
-                                            true // 基础权限页总是可以前进
                                     else -> false
                                 }
                 ) {
@@ -416,10 +209,10 @@ fun PermissionGuideScreen(
                             contentDescription = stringResource(R.string.permission_guide_next),
                             tint =
                                     when {
-                                        pagerState.currentPage < BASIC_PERMISSIONS_PAGE_INDEX ->
+                                        pagerState.currentPage < WELCOME_PAGE_INDEX ->
                                                 MaterialTheme.colorScheme.primary
-                                        pagerState.currentPage == BASIC_PERMISSIONS_PAGE_INDEX ->
-                                                MaterialTheme.colorScheme.primary // 基础权限页总是显示可点击状态
+                                        pagerState.currentPage == WELCOME_PAGE_INDEX ->
+                                                MaterialTheme.colorScheme.primary // 欢迎页总是显示可点击状态
                                         else ->
                                                 MaterialTheme.colorScheme.onSurface.copy(
                                                         alpha = 0.3f
@@ -479,7 +272,7 @@ private fun IntroductionPage(title: String, description: String, pageIndex: Int)
 }
 
 @Composable
-private fun WelcomePage() {
+private fun WelcomePage(onComplete: () -> Unit) {
     Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -512,249 +305,15 @@ private fun WelcomePage() {
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        Text(
-                text = stringResource(R.string.permission_guide_welcome_start),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-private fun BasicPermissionsPage(
-        hasStoragePermission: Boolean,
-        hasOverlayPermission: Boolean,
-        hasBatteryOptimizationExemption: Boolean,
-        hasLocationPermission: Boolean,
-        hasMicrophonePermission: Boolean,
-        onStoragePermissionClick: () -> Unit,
-        onOverlayPermissionClick: () -> Unit,
-        onBatteryOptimizationClick: () -> Unit,
-        onLocationPermissionClick: () -> Unit,
-        onMicrophonePermissionClick: () -> Unit,
-        onRefresh: () -> Unit
-) {
-    var refreshRotation by remember { mutableStateOf(0f) }
-    val rotationAngle by
-            animateFloatAsState(
-                    targetValue = refreshRotation,
-                    animationSpec = tween(500),
-                    label = "Refresh Rotation"
-            )
-
-    Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-                text = stringResource(R.string.permission_guide_basic_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-                text = stringResource(R.string.permission_guide_basic_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 权限列表卡片
-        Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors =
-                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // 存储权限
-                PermissionItem(
-                        title = stringResource(R.string.permission_guide_storage_title),
-                        description = stringResource(R.string.permission_guide_storage_desc),
-                        isGranted = hasStoragePermission,
-                        onClick = onStoragePermissionClick
-                )
-
-                HorizontalDivider()
-
-                // 悬浮窗权限
-                PermissionItem(
-                        title = stringResource(R.string.permission_guide_overlay_title),
-                        description = stringResource(R.string.permission_guide_overlay_desc),
-                        isGranted = hasOverlayPermission,
-                        onClick = onOverlayPermissionClick
-                )
-
-                HorizontalDivider()
-
-                // 电池优化豁免
-                PermissionItem(
-                        title = stringResource(R.string.permission_guide_battery_title),
-                        description = stringResource(R.string.permission_guide_battery_desc),
-                        isGranted = hasBatteryOptimizationExemption,
-                        onClick = onBatteryOptimizationClick
-                )
-
-                HorizontalDivider()
-
-                // 位置权限
-                PermissionItem(
-                        title = stringResource(R.string.permission_guide_location_title),
-                        description = stringResource(R.string.permission_guide_location_desc),
-                        isGranted = hasLocationPermission,
-                        onClick = onLocationPermissionClick
-                )
-
-                HorizontalDivider()
-
-                // 麦克风权限
-                PermissionItem(
-                        title = stringResource(R.string.permission_guide_microphone_title),
-                        description = stringResource(R.string.permission_guide_microphone_desc),
-                        isGranted = hasMicrophonePermission,
-                        onClick = onMicrophonePermissionClick
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 刷新按钮
-        OutlinedButton(
-                onClick = {
-                    refreshRotation += 360f
-                    onRefresh()
-                },
+        Button(
+                onClick = onComplete,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription =
-                            stringResource(R.string.permission_guide_check_permissions),
-                    modifier = Modifier.size(16.dp).graphicsLayer { rotationZ = rotationAngle }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.permission_guide_check_permissions))
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 权限状态提示
-        val allGranted =
-                hasStoragePermission &&
-                        hasOverlayPermission &&
-                        hasBatteryOptimizationExemption &&
-                        hasLocationPermission &&
-                        hasMicrophonePermission
-
-        AnimatedVisibility(visible = allGranted, enter = fadeIn(), exit = fadeOut()) {
-            Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier =
-                            Modifier.fillMaxWidth()
-                                    .padding(8.dp)
-                                    .background(
-                                            color =
-                                                    MaterialTheme.colorScheme.primary.copy(
-                                                            alpha = 0.1f
-                                                    ),
-                                            shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(12.dp)
-            ) {
-                Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                        text = stringResource(R.string.permission_guide_all_granted),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PermissionItem(
-        title: String,
-        description: String,
-        isGranted: Boolean,
-        onClick: () -> Unit
-) {
-    Row(
-            modifier =
-                    Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
             Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = stringResource(R.string.permission_guide_get_started),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
             )
-
-            Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-        }
-
-        Box(
-                modifier =
-                        Modifier.size(24.dp)
-                                .background(
-                                        color =
-                                                if (isGranted)
-                                                        MaterialTheme.colorScheme.primary.copy(
-                                                                alpha = 0.1f
-                                                        )
-                                                else
-                                                        MaterialTheme.colorScheme.error.copy(
-                                                                alpha = 0.1f
-                                                        ),
-                                        shape = CircleShape
-                                )
-                                .border(
-                                        width = 1.dp,
-                                        color =
-                                                if (isGranted) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.error,
-                                        shape = CircleShape
-                                ),
-                contentAlignment = Alignment.Center
-        ) {
-            if (isGranted) {
-                Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = stringResource(R.string.permission_guide_granted),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                )
-            } else {
-                Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.permission_guide_not_granted),
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(16.dp)
-                )
-            }
         }
     }
 }

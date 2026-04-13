@@ -734,7 +734,8 @@
     <string name="permission_guide_welcome_desc">Antes de usar la aplicación, necesitamos configurar algunos permisos básicos y seleccionar tu nivel de permisos preferido.</string>
     <string name="permission_guide_welcome_hint">Este proceso toma solo unos minutos y ayudará a la aplicación a servirte mejor.</string>
     <string name="permission_guide_welcome_start">Haga clic en el botón en la esquina inferior derecha para comenzar</string>
-    
+    <string name="permission_guide_get_started">Comenzar</string>
+
     <string name="permission_guide_basic_title">Permisos Básicos</string>
     <string name="permission_guide_basic_desc">Por favor conceda los siguientes permisos básicos para asegurar el funcionamiento correcto de la aplicación</string>
     <string name="permission_guide_storage_title">Permiso de Almacenamiento</string>
