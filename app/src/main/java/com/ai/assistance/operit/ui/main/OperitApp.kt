@@ -202,7 +202,7 @@ fun OperitApp(
             R.string.nav_group_tools,
             listOf(
                 NavItem.Toolbox,
-                NavItem.ShizukuCommands,
+                NavItem.Permissions,
                 NavItem.Workflow,
             )
         ),

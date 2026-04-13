@@ -3394,6 +3394,7 @@
 <string name="shell_executor_view_results">Shell Executor View Results</string>
 <string name="sherpa_ncnn_best">Sherpa Ncnn Best</string>
 <string name="shizuku_commands">Shizuku Commands</string>
+<string name="permissions">权限</string>
 <string name="shizuku_demo_install_notify">Shizuku Demo Install Notify</string>
 <string name="shizuku_demo_update_notify">Shizuku Demo Update Notify</string>
 <string name="shizuku_install_install">Shizuku Install Install</string>

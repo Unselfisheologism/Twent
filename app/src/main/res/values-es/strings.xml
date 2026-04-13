@@ -26,6 +26,7 @@
 
     <!-- 用于NavItem类的标识符 -->
     <string name="shizuku_commands">Concesión de permisos</string>
+    <string name="permissions">Permisos</string>
     <string name="tool_permissions">Configuración de permisos de herramientas</string>
     <string name="about">Acerca de</string>
     <string name="terminal">Terminal</string>

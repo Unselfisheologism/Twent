@@ -519,6 +519,7 @@
 
     <!-- NavItem class identifiers -->
     <string name="shizuku_commands">Permissions</string>
+    <string name="permissions">Permissions</string>
     <string name="tool_permissions">Tool Permission Settings</string>
     <string name="about">About</string>
     <string name="terminal">Terminal</string>

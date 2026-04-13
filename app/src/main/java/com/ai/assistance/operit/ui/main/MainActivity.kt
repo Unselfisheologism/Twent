@@ -753,7 +753,7 @@ class MainActivity : ComponentActivity() {
                                 // 如果刚刚完成 onboarding，导航到权限页面；否则导航到 AI Chat
                                 val initialNavItem = if (justCompletedOnboarding) {
                                     justCompletedOnboarding = false // 重置状态
-                                    NavItem.ShizukuCommands
+                                    NavItem.Permissions
                                 } else {
                                     NavItem.AiChat
                                 }

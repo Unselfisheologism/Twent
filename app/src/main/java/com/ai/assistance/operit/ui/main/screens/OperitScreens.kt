@@ -448,7 +448,7 @@ sealed class Screen(
     }
 
 
-    data object ShizukuCommands : Screen(navItem = NavItem.ShizukuCommands) {
+    data object Permissions : Screen(navItem = NavItem.Permissions) {
         @Composable
         override fun Content(
                 navController: NavController,
@@ -706,8 +706,8 @@ sealed class Screen(
                     profileId = profileId,
                     onComplete = onGoBack,
                     navigateToPermissions = {
-                        navigateTo(ShizukuCommands)
-                        updateNavItem(NavItem.ShizukuCommands)
+                        navigateTo(Permissions)
+                        updateNavItem(NavItem.Permissions)
                     }
             )
         }
@@ -1491,7 +1491,7 @@ object OperitRouter {
             NavItem.MemoryBase -> Screen.MemoryBase
             NavItem.Packages -> Screen.Packages
             NavItem.Toolbox -> Screen.Toolbox
-            NavItem.ShizukuCommands -> Screen.ShizukuCommands
+            NavItem.Permissions -> Screen.Permissions
             NavItem.Settings -> Screen.Settings
             NavItem.Help -> Screen.Help
             NavItem.About -> Screen.About
