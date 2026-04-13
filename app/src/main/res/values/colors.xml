@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 🔥 NEW PALETTE: Orange, Cyan, Steel Blue - Inspired by App Logo 🔥 -->
+    <!-- 🔥 NEW PALETTE: Blue-dominant with Orange Accents 🔥 -->
 
-    <!-- Primary Orange Palette (from logo face) -->
-    <color name="orange_primary">#FFFF6B35</color>
-    <color name="orange_secondary">#FFFF8555</color>
-    <color name="orange_accent">#FFFFA07A</color>
-    <color name="orange_light">#FFFFC4AD</color>
-    <color name="orange_dark">#FFE85D26</color>
-    <color name="orange_deeper">#FFD34B17</color>
+    <!-- Primary Steel Blue Palette (dominant - from logo armor) -->
+    <color name="orange_primary">#FF4A7C9B</color>
+    <color name="orange_secondary">#FF3D6A85</color>
+    <color name="orange_accent">#FF5A8FB0</color>
+    <color name="orange_light">#FF6BA3C4</color>
+    <color name="orange_dark">#FF2D5A7B</color>
+    <color name="orange_deeper">#FF1E4A66</color>
 
-    <!-- Cyan/Electric Blue Palette (from logo eyes) -->
+    <!-- Cyan/Electric Blue Palette (secondary - from logo eyes) -->
     <color name="cyan_primary">#FF7FE8E8</color>
     <color name="cyan_secondary">#FF5DD9D9</color>
     <color name="cyan_accent">#FF3ACACA</color>
@@ -18,13 +18,13 @@
     <color name="cyan_dark">#FF2DB5B5</color>
     <color name="cyan_glow">#FF8EF5F5</color>
 
-    <!-- Steel Blue Palette (from logo armor/mechanical parts) -->
-    <color name="steel_primary">#FF4A7C9B</color>
-    <color name="steel_secondary">#FF3D6A85</color>
-    <color name="steel_accent">#FF5A8FB0</color>
-    <color name="steel_light">#FF6BA3C4</color>
-    <color name="steel_dark">#FF2D5A7B</color>
-    <color name="steel_deeper">#FF1E4A66</color>
+    <!-- Accent Orange Palette (accent only - from logo face) -->
+    <color name="steel_primary">#FFFF6B35</color>
+    <color name="steel_secondary">#FFFF8555</color>
+    <color name="steel_accent">#FFFFA07A</color>
+    <color name="steel_light">#FFFFC4AD</color>
+    <color name="steel_dark">#FFE85D26</color>
+    <color name="steel_deeper">#FFD34B17</color>
 
     <!-- Dark Background Palette (modern dark navy) -->
     <color name="grey_900">#FF0D1117</color>
@@ -37,12 +37,12 @@
     <color name="grey_200">#FF8B949E</color>
     <color name="grey_100">#FFC9D1D9</color>
 
-    <!-- Standard Android colors (updated to new palette) -->
+    <!-- Standard Android colors (updated to blue-dominant palette) -->
     <color name="purple_200">#FF7FE8E8</color>
-    <color name="purple_500">#FFFF6B35</color>
-    <color name="purple_700">#FFE85D26</color>
+    <color name="purple_500">#FF4A7C9B</color>
+    <color name="purple_700">#FF2D5A7B</color>
     <color name="teal_200">#FF5DD9D9</color>
-    <color name="teal_700">#FF4A7C9B</color>
+    <color name="teal_700">#FF3D6A85</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
@@ -50,16 +50,16 @@
     <color name="wave_color">#FF7FE8E8</color>
     <color name="background_color">#FF1A1F2E</color>
     <color name="dark_background">#FF1A1F2E</color>
-    <color name="button_blue">#FFFF6B35</color>
+    <color name="button_blue">#FF4A7C9B</color>
     <color name="text_gray">#FF8B949E</color>
-    <color name="gradient_start">#FFFF6B35</color>
+    <color name="gradient_start">#FF4A7C9B</color>
     <color name="gradient_end">#FF7FE8E8</color>
     <color name="input_box_background">#FF21263D</color>
     <color name="panel_background">#FF161B22</color>
 
     <!-- Memory management colors -->
     <color name="background">#FF1A1F2E</color>
-    <color name="primary">#FFFF6B35</color>
+    <color name="primary">#FF4A7C9B</color>
     <color name="accent">#FF7FE8E8</color>
     <color name="surface">#FF161B22</color>
     <color name="text_primary">#FFC9D1D9</color>
@@ -68,7 +68,7 @@
 
     <!-- Delta symbol state colors -->
     <color name="delta_idle">#FFC9D1D9</color>
-    <color name="delta_listening">#FFFF6B35</color>
+    <color name="delta_listening">#FF4A7C9B</color>
     <color name="delta_processing">#FF7FE8E8</color>
     <color name="delta_speaking">#FF5DD9D9</color>
     <color name="delta_error">#FFFF4444</color>

@@ -2,18 +2,18 @@ package com.ai.assistance.operit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 🔥 NEW PALETTE: Orange, Cyan, Steel Blue - Inspired by App Logo 🔥
+// 🔥 NEW PALETTE: Blue-dominant with Orange Accents 🔥
 // Modern, Bold, High-Contrast Design
 
-// Primary Orange Palette (from logo face)
-val OrangePrimary = Color(0xFFFF6B35)
-val OrangeSecondary = Color(0xFFFF8555)
-val OrangeAccent = Color(0xFFFFA07A)
-val OrangeLight = Color(0xFFFFC4AD)
-val OrangeDark = Color(0xFFE85D26)
-val OrangeDeeper = Color(0xFFD34B17)
+// Primary Steel Blue Palette (dominant)
+val OrangePrimary = Color(0xFF4A7C9B)
+val OrangeSecondary = Color(0xFF3D6A85)
+val OrangeAccent = Color(0xFF5A8FB0)
+val OrangeLight = Color(0xFF6BA3C4)
+val OrangeDark = Color(0xFF2D5A7B)
+val OrangeDeeper = Color(0xFF1E4A66)
 
-// Cyan/Electric Blue Palette (from glowing eyes)
+// Cyan/Electric Blue Palette (secondary)
 val CyanPrimary = Color(0xFF7FE8E8)
 val CyanSecondary = Color(0xFF5DD9D9)
 val CyanAccent = Color(0xFF3ACACA)
@@ -21,13 +21,13 @@ val CyanLight = Color(0xFFA5F0F0)
 val CyanDark = Color(0xFF2DB5B5)
 val CyanGlow = Color(0xFF8EF5F5)
 
-// Steel Blue Palette (from mechanical armor)
-val SteelPrimary = Color(0xFF4A7C9B)
-val SteelSecondary = Color(0xFF3D6A85)
-val SteelAccent = Color(0xFF5A8FB0)
-val SteelLight = Color(0xFF6BA3C4)
-val SteelDark = Color(0xFF2D5A7B)
-val SteelDeeper = Color(0xFF1E4A66)
+// Accent Orange Palette (accent only)
+val SteelPrimary = Color(0xFFFF6B35)
+val SteelSecondary = Color(0xFFFF8555)
+val SteelAccent = Color(0xFFFFA07A)
+val SteelLight = Color(0xFFFFC4AD)
+val SteelDark = Color(0xFFE85D26)
+val SteelDeeper = Color(0xFFD34B17)
 
 // Dark Background Palette (modern dark navy)
 val Grey900 = Color(0xFF0D1117)
@@ -69,9 +69,9 @@ val GoldBadge = Color(0xFFFFD700)
 val SilverBadge = Color(0xFFC0C0C0)
 val BronzeBadge = Color(0xFFCD7F32)
 
-// Gradient colors for backgrounds
-val GradientStart = Color(0xFFFF6B35)
-val GradientMid = Color(0xFFFF8555)
+// Gradient colors for backgrounds (blue to cyan)
+val GradientStart = Color(0xFF4A7C9B)
+val GradientMid = Color(0xFF5A8FB0)
 val GradientEnd = Color(0xFF7FE8E8)
 
 // Legacy support (keeping old names for compatibility)

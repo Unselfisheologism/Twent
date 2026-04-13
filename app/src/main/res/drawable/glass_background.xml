@@ -2,9 +2,9 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <!-- Orange to Cyan gradient background -->
+    <!-- Blue to Cyan gradient background -->
     <gradient
-        android:startColor="#DDFF6B35"
+        android:startColor="#DD4A7C9B"
         android:endColor="#DD7FE8E8"
         android:angle="135"
         android:type="linear" />

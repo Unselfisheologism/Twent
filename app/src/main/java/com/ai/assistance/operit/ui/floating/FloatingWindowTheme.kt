@@ -149,18 +149,18 @@ fun FloatingWindowTheme(
 }
 
 private fun getDefaultLightColorScheme() = lightColorScheme(
-    primary = Color(0xFFFF6B35), // Orange Primary
+    primary = Color(0xFF4A7C9B), // Steel Blue Primary
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFC4AD),
-    onPrimaryContainer = Color(0xFF301000),
+    primaryContainer = Color(0xFF6BA3C4),
+    onPrimaryContainer = Color(0xFF001E2E),
     secondary = Color(0xFF7FE8E8), // Cyan Primary
     onSecondary = Color(0xFF003737),
     secondaryContainer = Color(0xFFA5F0F0),
     onSecondaryContainer = Color(0xFF001F1F),
-    tertiary = Color(0xFF4A7C9B), // Steel Primary
+    tertiary = Color(0xFFFF6B35), // Orange Accent
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFF6BA3C4),
-    onTertiaryContainer = Color(0xFF001E2E),
+    tertiaryContainer = Color(0xFFFFA07A),
+    onTertiaryContainer = Color(0xFF301000),
     error = Color(0xFFFF4444),
     onError = Color.White,
     errorContainer = Color(0xFFFFDAD6),
@@ -175,18 +175,18 @@ private fun getDefaultLightColorScheme() = lightColorScheme(
 )
 
 private fun getDefaultDarkColorScheme() = darkColorScheme(
-    primary = Color(0xFFFF6B35), // Orange Primary
-    onPrimary = Color(0xFF301000),
-    primaryContainer = Color(0xFFD34B17),
-    onPrimaryContainer = Color(0xFFFFC4AD),
+    primary = Color(0xFF4A7C9B), // Steel Blue Primary
+    onPrimary = Color(0xFF001E2E),
+    primaryContainer = Color(0xFF1E4A66),
+    onPrimaryContainer = Color(0xFF6BA3C4),
     secondary = Color(0xFF7FE8E8), // Cyan Primary
     onSecondary = Color(0xFF003737),
     secondaryContainer = Color(0xFF2DB5B5),
     onSecondaryContainer = Color(0xFFA5F0F0),
-    tertiary = Color(0xFF4A7C9B), // Steel Primary
-    onTertiary = Color(0xFF001E2E),
-    tertiaryContainer = Color(0xFF2D5A7B),
-    onTertiaryContainer = Color(0xFF6BA3C4),
+    tertiary = Color(0xFFFF6B35), // Orange Accent
+    onTertiary = Color(0xFF301000),
+    tertiaryContainer = Color(0xFFD34B17),
+    onTertiaryContainer = Color(0xFFFFC4AD),
     error = Color(0xFFFF4444),
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
