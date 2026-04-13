@@ -541,7 +541,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
 
     val powerUserMode: Flow<Boolean> =
         context.userPreferencesDataStore.data.map { preferences ->
-            preferences[KEY_POWER_USER_MODE] ?: false
+            preferences[KEY_POWER_USER_MODE] ?: true
         }
 
     // 字体设置相关Flow

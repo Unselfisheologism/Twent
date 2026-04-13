@@ -59,6 +59,7 @@ fun GlobalDisplaySettingsScreen(
 
     var showSaveSuccessMessage by remember { mutableStateOf(false) }
     var userNameInput by remember { mutableStateOf(globalUserName ?: "") }
+    var showBasicModeWarning by remember { mutableStateOf(false) }
 
     // 自动化状态指示样式（使用与 FloatingChatService 相同的 SharedPreferences）
     val statusIndicatorPrefs = remember {
@@ -249,13 +250,19 @@ fun GlobalDisplaySettingsScreen(
             )
 
             DisplayToggleItem(
-                title = "Power User Mode",
-                subtitle = "Enable advanced features and developer tools",
+                title = "Power User Mode [Recommended]",
+                subtitle = "Full access to all features - Basic Mode strips many features",
                 checked = powerUserMode,
                 onCheckedChange = {
-                    scope.launch {
-                        userPreferences.savePowerUserMode(it)
-                        showSaveSuccessMessage = true
+                    if (it) {
+                        // Enabling - no warning
+                        scope.launch {
+                            userPreferences.savePowerUserMode(it)
+                            showSaveSuccessMessage = true
+                        }
+                    } else {
+                        // Disabling - show warning dialog
+                        showBasicModeWarning = true
                     }
                 },
                 backgroundColor = componentBackgroundColor
@@ -568,6 +575,72 @@ fun GlobalDisplaySettingsScreen(
             ) {
                 Text(stringResource(R.string.settings_saved))
             }
+        }
+
+        // Warning Dialog when trying to disable Power User Mode
+        if (showBasicModeWarning) {
+            AlertDialog(
+                onDismissRequest = { showBasicModeWarning = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                title = {
+                    Text(
+                        text = "⚠️ WARNING: Do NOT Switch to Basic Mode",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column {
+                        Text(
+                            text = "Basic Mode will strip away a significant number of features and severely limit your experience:",
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "❌ Hide Agent CLI tools\n❌ Remove Mini-Apps\n❌ Strip advanced developer options\n❌ Limit customization features",
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "This action is NOT recommended. Are you absolutely sure?",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                userPreferences.savePowerUserMode(false)
+                                showSaveSuccessMessage = true
+                            }
+                            showBasicModeWarning = false
+                        }
+                    ) {
+                        Text(
+                            text = "Yes, Switch Anyway",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showBasicModeWarning = false }
+                    ) {
+                        Text(
+                            text = "No, Keep Power Mode",
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            )
         }
     }
 }
