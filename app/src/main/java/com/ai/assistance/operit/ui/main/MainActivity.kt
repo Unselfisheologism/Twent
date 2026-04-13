@@ -100,6 +100,9 @@ class MainActivity : ComponentActivity() {
     // 是否显示权限引导界面
     private var showPermissionGuide by mutableStateOf(false)
 
+    // 是否刚刚完成 onboarding（用于首次启动后导航到权限页面）
+    private var justCompletedOnboarding by mutableStateOf(false)
+
     // 是否已完成权限和迁移检查
     private var initialChecksDone = false
 
@@ -733,6 +736,7 @@ class MainActivity : ComponentActivity() {
                             PermissionGuideScreen(
                                     onComplete = {
                                         showPermissionGuide = false
+                                        justCompletedOnboarding = true
                                         // 权限设置完成后，重新设置应用内容
                                         setAppContent()
                                     }
@@ -743,11 +747,19 @@ class MainActivity : ComponentActivity() {
                             // 处理待处理的分享文件
                             processPendingSharedFiles()
                             processPendingSharedLinks()
-                            
+
                             CompositionLocalProvider(LocalPluginLoadingState provides pluginLoadingState) {
                                 // 主应用界面 (始终存在于底层)
+                                // 如果刚刚完成 onboarding，导航到权限页面；否则导航到 AI Chat
+                                val initialNavItem = if (justCompletedOnboarding) {
+                                    justCompletedOnboarding = false // 重置状态
+                                    NavItem.ShizukuCommands
+                                } else {
+                                    NavItem.AiChat
+                                }
+                                
                                 OperitApp(
-                                        initialNavItem = NavItem.AiChat,
+                                        initialNavItem = initialNavItem,
                                         toolHandler = toolHandler,
                                         pendingNavigationDestination = pendingNavigationDestination
                                 )
