@@ -873,6 +873,362 @@ class ActionExecutor(private val finger: Finger) {
                     ActionResult(error = "Failed to delete mini-app: ${e.message}")
                 }
             }
+
+            // ========== Workflow Tools ==========
+            is Action.GetAllWorkflows -> {
+                executeViaAIToolHandler("get_all_workflows", emptyMap(), context)
+            }
+            is Action.GetWorkflow -> {
+                executeViaAIToolHandler("get_workflow", mapOf("workflow_id" to action.workflowId), context)
+            }
+            is Action.CreateWorkflow -> {
+                executeViaAIToolHandler("create_workflow", mapOf(
+                    "name" to action.name,
+                    "description" to action.description,
+                    "nodes" to action.nodes,
+                    "connections" to action.connections,
+                    "enabled" to action.enabled.toString()
+                ), context)
+            }
+            is Action.UpdateWorkflow -> {
+                executeViaAIToolHandler("update_workflow", mapOf(
+                    "workflow_id" to action.workflowId,
+                    "name" to action.name,
+                    "description" to action.description,
+                    "nodes" to action.nodes,
+                    "connections" to action.connections,
+                    "enabled" to action.enabled.toString()
+                ), context)
+            }
+            is Action.DeleteWorkflow -> {
+                executeViaAIToolHandler("delete_workflow", mapOf("workflow_id" to action.workflowId), context)
+            }
+            is Action.TriggerWorkflow -> {
+                executeViaAIToolHandler("trigger_workflow", mapOf("workflow_id" to action.workflowId), context)
+            }
+
+            // ========== Chat Management Tools ==========
+            is Action.StartChatService -> {
+                executeViaAIToolHandler("start_chat_service", emptyMap(), context)
+            }
+            is Action.StopChatService -> {
+                executeViaAIToolHandler("stop_chat_service", emptyMap(), context)
+            }
+            is Action.CreateNewChat -> {
+                executeViaAIToolHandler("create_new_chat", mapOf("group" to action.group), context)
+            }
+            is Action.ListChats -> {
+                executeViaAIToolHandler("list_chats", emptyMap(), context)
+            }
+            is Action.FindChat -> {
+                executeViaAIToolHandler("find_chat", mapOf("query" to action.query), context)
+            }
+            is Action.SwitchChat -> {
+                executeViaAIToolHandler("switch_chat", mapOf("chat_id" to action.chatId), context)
+            }
+            is Action.SendMessageToAI -> {
+                executeViaAIToolHandler("send_message_to_ai", mapOf("message" to action.message), context)
+            }
+            is Action.ListCharacterCards -> {
+                executeViaAIToolHandler("list_character_cards", emptyMap(), context)
+            }
+            is Action.GetChatMessages -> {
+                executeViaAIToolHandler("get_chat_messages", mapOf(
+                    "chat_id" to action.chatId,
+                    "order" to action.order,
+                    "limit" to action.limit.toString()
+                ), context)
+            }
+            is Action.AgentStatus -> {
+                executeViaAIToolHandler("agent_status", mapOf("chat_id" to action.chatId), context)
+            }
+
+            // ========== Tasker Tools ==========
+            is Action.TriggerTaskerEvent -> {
+                executeViaAIToolHandler("trigger_tasker_event", mapOf(
+                    "task_type" to action.taskType,
+                    "arg1" to action.arg1,
+                    "arg2" to action.arg2,
+                    "arg3" to action.arg3,
+                    "arg4" to action.arg4,
+                    "arg5" to action.arg5,
+                    "args_json" to action.argsJson
+                ), context)
+            }
+
+            // ========== FFmpeg Tools ==========
+            is Action.FFmpegExecute -> {
+                executeViaAIToolHandler("ffmpeg_execute", mapOf("command" to action.command), context)
+            }
+            is Action.FFmpegInfo -> {
+                executeViaAIToolHandler("ffmpeg_info", emptyMap(), context)
+            }
+            is Action.FFmpegConvert -> {
+                val params = mutableMapOf(
+                    "input_path" to action.inputPath,
+                    "output_path" to action.outputPath
+                )
+                if (action.format.isNotBlank()) params["format"] = action.format
+                if (action.resolution.isNotBlank()) params["resolution"] = action.resolution
+                if (action.bitrate.isNotBlank()) params["bitrate"] = action.bitrate
+                if (action.audioCodec.isNotBlank()) params["audio_codec"] = action.audioCodec
+                if (action.videoCodec.isNotBlank()) params["video_codec"] = action.videoCodec
+                executeViaAIToolHandler("ffmpeg_convert", params, context)
+            }
+
+            // ========== Package System ==========
+            is Action.UsePackage -> {
+                executeViaAIToolHandler("use_package", mapOf("package_name" to action.packageName), context)
+            }
+
+            // ========== Extended File Tools ==========
+            is Action.FileExists -> {
+                executeViaAIToolHandler("file_exists", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.MoveFile -> {
+                executeViaAIToolHandler("move_file", mapOf(
+                    "source" to action.source,
+                    "destination" to action.destination,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.CopyFile -> {
+                executeViaAIToolHandler("copy_file", mapOf(
+                    "source" to action.source,
+                    "destination" to action.destination,
+                    "recursive" to action.recursive.toString(),
+                    "source_environment" to action.sourceEnvironment,
+                    "dest_environment" to action.destEnvironment
+                ), context)
+            }
+            is Action.FileInfo -> {
+                executeViaAIToolHandler("file_info", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.MakeDirectory -> {
+                executeViaAIToolHandler("make_directory", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "create_parents" to action.createParents.toString()
+                ), context)
+            }
+            is Action.FindFiles -> {
+                executeViaAIToolHandler("find_files", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "pattern" to action.pattern,
+                    "max_depth" to action.maxDepth.toString(),
+                    "use_path_pattern" to action.usePathPattern.toString(),
+                    "case_insensitive" to action.caseInsensitive.toString()
+                ), context)
+            }
+            is Action.GrepCode -> {
+                executeViaAIToolHandler("grep_code", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "pattern" to action.pattern,
+                    "file_pattern" to action.filePattern,
+                    "case_insensitive" to action.caseInsensitive.toString(),
+                    "context_lines" to action.contextLines.toString(),
+                    "max_results" to action.maxResults.toString()
+                ), context)
+            }
+            is Action.GrepContext -> {
+                executeViaAIToolHandler("grep_context", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "intent" to action.intent,
+                    "file_pattern" to action.filePattern,
+                    "max_results" to action.maxResults.toString()
+                ), context)
+            }
+            is Action.DownloadFile -> {
+                val params = mutableMapOf(
+                    "url" to action.url,
+                    "destination" to action.destination,
+                    "environment" to action.environment
+                )
+                action.visitKey?.let { params["visit_key"] = it }
+                action.linkNumber?.let { params["link_number"] = it.toString() }
+                action.imageNumber?.let { params["image_number"] = it.toString() }
+                executeViaAIToolHandler("download_file", params, context)
+            }
+            is Action.ReadFilePart -> {
+                executeViaAIToolHandler("read_file_part", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "start_line" to action.startLine.toString(),
+                    "end_line" to action.endLine.toString()
+                ), context)
+            }
+            is Action.ReadFileFull -> {
+                executeViaAIToolHandler("read_file_full", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.ReadFileBinary -> {
+                executeViaAIToolHandler("read_file_binary", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.WriteFileBinary -> {
+                executeViaAIToolHandler("write_file_binary", mapOf(
+                    "path" to action.path,
+                    "base64_content" to action.base64Content,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.DeleteFile -> {
+                executeViaAIToolHandler("delete_file", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "recursive" to action.recursive.toString()
+                ), context)
+            }
+            is Action.ApplyFile -> {
+                executeViaAIToolHandler("apply_file", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "type" to action.type,
+                    "old" to action.old,
+                    "new" to action.new
+                ), context)
+            }
+            is Action.ZipFiles -> {
+                executeViaAIToolHandler("zip_files", mapOf(
+                    "source" to action.source.joinToString(","),
+                    "destination" to action.destination,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.UnzipFiles -> {
+                executeViaAIToolHandler("unzip_files", mapOf(
+                    "source" to action.source,
+                    "destination" to action.destination,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.OpenFile -> {
+                executeViaAIToolHandler("open_file", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment
+                ), context)
+            }
+            is Action.ShareFile -> {
+                executeViaAIToolHandler("share_file", mapOf(
+                    "path" to action.path,
+                    "environment" to action.environment,
+                    "title" to action.title
+                ), context)
+            }
+
+            // ========== Extended HTTP Tools ==========
+            is Action.MultipartRequest -> {
+                val params = mutableMapOf(
+                    "url" to action.url,
+                    "method" to action.method
+                )
+                action.formData?.let { params["form_data"] = it.toString() }
+                action.files?.let { params["files"] = it.toString() }
+                executeViaAIToolHandler("multipart_request", params, context)
+            }
+            is Action.ManageCookies -> {
+                val params = mutableMapOf("action" to action.action)
+                action.domain?.let { params["domain"] = it }
+                action.cookies?.let { params["cookies"] = it.toString() }
+                executeViaAIToolHandler("manage_cookies", params, context)
+            }
+
+            // ========== SSH Tools ==========
+            is Action.SSHLogin -> {
+                executeViaAIToolHandler("ssh_login", mapOf(
+                    "host" to action.host,
+                    "port" to action.port.toString(),
+                    "username" to action.username,
+                    "password" to action.password,
+                    "enable_reverse_mount" to action.enableReverseMount.toString()
+                ), context)
+            }
+            is Action.SSHExit -> {
+                executeViaAIToolHandler("ssh_exit", emptyMap(), context)
+            }
+
+            // ========== Extended System Tools ==========
+            is Action.InstallApp -> {
+                executeViaAIToolHandler("install_app", mapOf("path" to action.path), context)
+            }
+            is Action.UninstallApp -> {
+                executeViaAIToolHandler("uninstall_app", mapOf("package_name" to action.packageName), context)
+            }
+            is Action.GetNotifications -> {
+                executeViaAIToolHandler("get_notifications", mapOf(
+                    "limit" to action.limit.toString(),
+                    "include_ongoing" to action.includeOngoing.toString()
+                ), context)
+            }
+            is Action.GetDeviceLocation -> {
+                executeViaAIToolHandler("get_device_location", mapOf(
+                    "timeout" to action.timeout.toString(),
+                    "high_accuracy" to action.highAccuracy.toString(),
+                    "include_address" to action.includeAddress.toString()
+                ), context)
+            }
+
+            // ========== Extended UI Automation Tools ==========
+            is Action.ClickElement -> {
+                val params = mutableMapOf<String, String>()
+                action.index?.let { params["index"] = it.toString() }
+                action.text?.let { params["text"] = it }
+                action.contentDescription?.let { params["content_description"] = it }
+                executeViaAIToolHandler("click_element", params, context)
+            }
+            is Action.ScrollLeft -> {
+                executeViaAIToolHandler("scroll_left", mapOf("pixels" to action.pixels.toString()), context)
+            }
+            is Action.ScrollRight -> {
+                executeViaAIToolHandler("scroll_right", mapOf("pixels" to action.pixels.toString()), context)
+            }
+            is Action.GetPageInfo -> {
+                executeViaAIToolHandler("get_page_info", emptyMap(), context)
+            }
+            is Action.GetCurrentActivity -> {
+                executeViaAIToolHandler("get_current_activity", emptyMap(), context)
+            }
+        }
+    }
+
+    /**
+     * Helper function to execute a tool via AIToolHandler and convert the result to ActionResult
+     */
+    private fun executeViaAIToolHandler(toolName: String, params: Map<String, String>, context: Context): ActionResult {
+        return try {
+            val toolHandler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(context)
+            val toolParams = params.map { (key, value) ->
+                com.ai.assistance.operit.data.model.ToolParameter(name = key, value = value)
+            }
+            val aiTool = com.ai.assistance.operit.data.model.AITool(
+                name = toolName,
+                parameters = toolParams
+            )
+            val result = toolHandler.executeTool(aiTool)
+            if (result.success) {
+                ActionResult(
+                    longTermMemory = "Executed $toolName successfully.",
+                    extractedContent = result.result.toString(),
+                    includeExtractedContentOnlyOnce = true
+                )
+            } else {
+                ActionResult(error = result.error ?: "Tool execution failed: $toolName")
+            }
+        } catch (e: Exception) {
+            ActionResult(error = "Failed to execute $toolName: ${e.message}")
         }
     }
 }
