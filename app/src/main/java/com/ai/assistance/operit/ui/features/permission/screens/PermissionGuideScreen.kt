@@ -2,6 +2,7 @@ package com.ai.assistance.operit.ui.features.permission.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -171,8 +172,6 @@ fun PermissionGuideScreen(
                                                 INTRO_PAGES_COUNT
                                         )
                                 WELCOME_PAGE_INDEX -> stringResource(R.string.permission_guide_welcome)
-                                BASIC_PERMISSIONS_PAGE_INDEX ->
-                                        stringResource(R.string.permission_guide_basic_permissions)
                                 else -> ""
                             },
                     style = MaterialTheme.typography.bodyMedium,
