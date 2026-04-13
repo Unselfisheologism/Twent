@@ -40,6 +40,9 @@ import com.ai.assistance.operit.data.preferences.EnvPreferences
 import com.ai.assistance.operit.data.skill.SkillRepository
 import com.ai.assistance.operit.ui.features.packages.components.PackageTab
 import com.ai.assistance.operit.ui.twent.components.*
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
+import com.ai.assistance.operit.ui.theme.SteelPrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -249,7 +252,7 @@ fun PackageManagerScreen(
     // Snackbar
     SnackbarHost(
         hostState = snackbarHostState,
-        modifier = Modifier.align(Alignment.BottomCenter)
+        modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.Bottom)
     )
 }
 

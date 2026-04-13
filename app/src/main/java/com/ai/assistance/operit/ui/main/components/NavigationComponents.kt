@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.ui.twent.components.TwentSpacing
 import com.ai.assistance.operit.ui.theme.OrangePrimary
 import com.ai.assistance.operit.ui.theme.CyanPrimary
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 
 /**
  * Modern Navigation Drawer Header - Twent UI

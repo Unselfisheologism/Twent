@@ -35,6 +35,10 @@ import com.ai.assistance.operit.ui.main.screens.OperitRouter
 import com.ai.assistance.operit.ui.main.screens.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.ai.assistance.operit.ui.main.components.NavigationDrawerHeader
+import com.ai.assistance.operit.ui.main.components.ModernNavigationDrawerItem
+import com.ai.assistance.operit.ui.main.components.NavigationSectionHeader
+import com.ai.assistance.operit.ui.main.components.NavigationDivider
 
 /** Content for the expanded navigation drawer */
 @Composable
@@ -97,14 +101,14 @@ fun DrawerContent(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                NavigationDivider()
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 分组导航菜单
+                // Grouped navigation menu
                 navGroups.forEach { group ->
-                        NavigationDrawerItemHeader(stringResource(id = group.titleResId))
+                        NavigationSectionHeader(stringResource(id = group.titleResId))
                         group.items.forEach { item ->
-                                CompactNavigationDrawerItem(
+                                ModernNavigationDrawerItem(
                                         icon = item.icon,
                                         label = stringResource(id = item.titleResId),
                                         selected = selectedItem == item,
@@ -119,7 +123,7 @@ fun DrawerContent(
                         }
                 }
 
-                // 为了在底部留出一些空间，避免最后一个选项贴底
+                // Leave some space at the bottom to avoid the last option sticking to the bottom
                 Spacer(modifier = Modifier.height(16.dp))
         }
 }

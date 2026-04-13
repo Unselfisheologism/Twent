@@ -26,9 +26,12 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.ui.twent.components.*
+import com.ai.assistance.operit.ui.theme.OrangePrimary
+import com.ai.assistance.operit.ui.theme.CyanPrimary
 import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.clickable
 
 /**
  * Modern Redesigned Settings Screen - Twent UI
