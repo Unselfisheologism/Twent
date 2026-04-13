@@ -117,7 +117,7 @@ private constructor(
 
         private fun getComputerRootPath(): File {
             val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            return File(downloadDir, "Operit/computer")
+            return File(downloadDir, "Twent/computer")
         }
 
         private fun copyAssetsToDirectory(context: Context, assetDir: String, destDir: File) {
@@ -139,7 +139,7 @@ private constructor(
             AppLogger.d(TAG, "服务器已在端口 $port 上运行，跳过启动")
             return
         }
-        
+
         if (type == ServerType.COMPUTER) {
             val computerRoot = getComputerRootPath()
             AppLogger.d(TAG, "确保AI电脑资源已是最新，路径: ${computerRoot.absolutePath}")
@@ -667,7 +667,7 @@ private constructor(
             }
         }
     }
-    
+
     /**
      * 确保工作区目录存在
      */
@@ -679,7 +679,7 @@ private constructor(
             AppLogger.d(TAG, "创建工作区目录: $path")
         }
     }
-    
+
     /**
      * 根据文件路径获取MIME类型
      */

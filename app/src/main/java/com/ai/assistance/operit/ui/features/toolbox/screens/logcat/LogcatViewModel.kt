@@ -113,7 +113,7 @@ class LogcatViewModel(private val context: Context) : ViewModel() {
             val contentValues = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/plain")
-                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_DOWNLOADS}/operit")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_DOWNLOADS}/Twent")
             }
             val uri = context.contentResolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
             if (uri == null) {
@@ -121,7 +121,7 @@ class LogcatViewModel(private val context: Context) : ViewModel() {
             }
             context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) } ?: throw Exception(context.getString(R.string.logcat_cannot_open_output_stream))
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            return "${downloadsDir.absolutePath}/operit/$fileName"
+            return "${downloadsDir.absolutePath}/Twent/$fileName"
         } catch (e: Exception) {
             throw Exception(context.getString(R.string.logcat_mediestore_save_failed, e.message ?: ""))
         }

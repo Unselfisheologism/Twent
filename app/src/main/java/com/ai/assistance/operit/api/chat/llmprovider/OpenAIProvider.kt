@@ -251,7 +251,7 @@ open class OpenAIProvider(
 
     private fun getOutputImagesDir(): File {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        return File(downloadsDir, "Operit/output images")
+        return File(downloadsDir, "Twent/output images")
     }
 
     private fun fileExtensionForImageMime(mimeType: String): String {
@@ -1300,7 +1300,7 @@ open class OpenAIProvider(
         state: StreamingState,
         emitter: StreamEmitter
     ) {
-        if (state.toolCallState.closed[prevIndex] != true && 
+        if (state.toolCallState.closed[prevIndex] != true &&
             state.toolCallState.nameEmitted[prevIndex] == true) {
             val events = state.toolCallState.getParser(prevIndex).flush()
             emitter.handleJsonEvents(events)
@@ -1335,7 +1335,7 @@ open class OpenAIProvider(
         // 处理function字段
         val deltaFunction = deltaCall.optJSONObject("function") ?: return
         val accFunction = accumulated.getJSONObject("function")
-        
+
         // 处理工具名
         val name = deltaFunction.optString("name", "")
         if (name.isNotEmpty()) {
@@ -1354,7 +1354,7 @@ open class OpenAIProvider(
                 state.toolCallState.nameEmitted[index] = true
             }
         }
-        
+
         // 处理参数
         val args = deltaFunction.optString("arguments", "")
         if (args.isNotEmpty()) {
@@ -1572,7 +1572,7 @@ open class OpenAIProvider(
         if (finishReason == "tool_calls" && state.lastProcessedToolIndex != null) {
             val index = state.lastProcessedToolIndex!!
             // 输出最后一个工具的结束标签
-            if (state.toolCallState.closed[index] != true && 
+            if (state.toolCallState.closed[index] != true &&
                 state.toolCallState.nameEmitted[index] == true) {
                 val events = state.toolCallState.getParser(index).flush()
                 emitter.handleJsonEvents(events)
@@ -1704,7 +1704,7 @@ open class OpenAIProvider(
                 if (!line.startsWith("data:")) {
                     continue
                 }
-                
+
                 val data = line.substring(5).trim()
                 if (data == "[DONE]") {
                     flushImageBuffers(state, emitter)
@@ -1744,7 +1744,7 @@ open class OpenAIProvider(
                     logLargeString("AIService", data, "[Send message] Original data when JSON parsing failed: ")
                 }
             }
-            
+
             AppLogger.d(
                 "AIService",
                 "【发送消息】响应流处理完成，总块数: ${state.chunkCount}，输出token: ${tokenCacheManager.outputTokenCount}"

@@ -26,19 +26,19 @@ import java.util.concurrent.ConcurrentHashMap
  * 负责工作流的持久化存储和管理
  */
 class WorkflowRepository(private val context: Context) {
-    
+
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
         classDiscriminator = "__type"
     }
-    
+
     // Lazy initialization to avoid WorkManager initialization issues during app startup
     private val scheduler by lazy { WorkflowScheduler(context) }
-    
+
     companion object {
         private const val TAG = "WorkflowRepository"
-        private const val WORKFLOW_DIR = "Operit/workflow"
+        private const val WORKFLOW_DIR = "Twent/workflow"
 
         private const val SPEECH_TRIGGER_CACHE_TTL_MS = 2000L
         private val speechTriggerLastFireAtMs = ConcurrentHashMap<String, Long>()
@@ -57,7 +57,7 @@ class WorkflowRepository(private val context: Context) {
             workflowUpdateEvents.tryEmit(Unit)
         }
     }
-    
+
     /**
      * 获取工作流存储目录
      */
@@ -69,7 +69,7 @@ class WorkflowRepository(private val context: Context) {
         }
         return workflowDir
     }
-    
+
     /**
      * 获取工作流文件
      */
@@ -80,7 +80,7 @@ class WorkflowRepository(private val context: Context) {
     private fun hasScheduleTrigger(workflow: Workflow): Boolean {
         return workflow.nodes.filterIsInstance<TriggerNode>().any { it.triggerType == "schedule" }
     }
-    
+
     /**
      * 获取所有工作流
      */
@@ -98,14 +98,14 @@ class WorkflowRepository(private val context: Context) {
                     null
                 }
             }?.sortedByDescending { it.updatedAt } ?: emptyList()
-            
+
             Result.success(workflows)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to get all workflows", e)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 根据ID获取工作流
      */
@@ -115,7 +115,7 @@ class WorkflowRepository(private val context: Context) {
             if (!file.exists()) {
                 return@withContext Result.success(null)
             }
-            
+
             val content = file.readText()
             val workflow = json.decodeFromString<Workflow>(content)
             Result.success(workflow)
@@ -124,7 +124,7 @@ class WorkflowRepository(private val context: Context) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 创建工作流
      */
@@ -133,23 +133,23 @@ class WorkflowRepository(private val context: Context) {
             val file = getWorkflowFile(workflow.id)
             val content = json.encodeToString(workflow)
             file.writeText(content)
-            
+
             AppLogger.d(TAG, "Workflow created: ${workflow.id}")
-            
+
             // Schedule if enabled and has schedule trigger
             if (workflow.enabled && hasScheduleTrigger(workflow)) {
                 scheduleWorkflow(workflow.id)
             }
 
             notifyWorkflowsChanged()
-            
+
             Result.success(workflow)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to create workflow", e)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 更新工作流
      */
@@ -159,23 +159,23 @@ class WorkflowRepository(private val context: Context) {
             val file = getWorkflowFile(updatedWorkflow.id)
             val content = json.encodeToString(updatedWorkflow)
             file.writeText(content)
-            
+
             AppLogger.d(TAG, "Workflow updated: ${updatedWorkflow.id}")
-            
+
             // Reschedule workflow only when it has a schedule trigger
             if (updatedWorkflow.enabled && hasScheduleTrigger(updatedWorkflow)) {
                 rescheduleWorkflow(updatedWorkflow.id)
             }
 
             notifyWorkflowsChanged()
-            
+
             Result.success(updatedWorkflow)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update workflow", e)
             Result.failure(e)
         }
     }
-    
+
     /**
      * 删除工作流
      */
@@ -183,14 +183,14 @@ class WorkflowRepository(private val context: Context) {
         try {
             // Cancel schedule first
             unscheduleWorkflow(id)
-            
+
             val file = getWorkflowFile(id)
             val deleted = if (file.exists()) {
                 file.delete()
             } else {
                 false
             }
-            
+
             AppLogger.d(TAG, "Workflow deleted: $id, success: $deleted")
             if (deleted) {
                 notifyWorkflowsChanged()
@@ -201,7 +201,7 @@ class WorkflowRepository(private val context: Context) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 触发工作流执行
      * @param id 工作流ID
@@ -228,21 +228,21 @@ class WorkflowRepository(private val context: Context) {
             if (triggerNodeId != null) {
                 AppLogger.d(TAG, "With specific trigger node: $triggerNodeId")
             }
-            
+
             // 更新为执行中状态
             updateExecutionStatus(id, ExecutionStatus.RUNNING, System.currentTimeMillis())
-            
+
             // 创建执行器并执行工作流
             val executor = WorkflowExecutor(context)
             val result = executor.executeWorkflow(workflow, triggerNodeId, triggerExtras) { nodeId, state ->
                 // 这里可以通过 Flow 或其他机制传递状态更新到 UI
                 AppLogger.d(TAG, "Node $nodeId state: $state")
             }
-            
+
             // 更新执行统计
             val executionStatus = if (result.success) ExecutionStatus.SUCCESS else ExecutionStatus.FAILED
             updateExecutionStatistics(id, executionStatus, result.executionTime)
-            
+
             if (result.success) {
                 Result.success(context.getString(R.string.workflow_execute_success, workflow.name))
             } else {
@@ -255,7 +255,7 @@ class WorkflowRepository(private val context: Context) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 触发工作流执行（带状态回调）
      * @param id 工作流ID
@@ -284,18 +284,18 @@ class WorkflowRepository(private val context: Context) {
             if (triggerNodeId != null) {
                 AppLogger.d(TAG, "With specific trigger node: $triggerNodeId")
             }
-            
+
             // 更新为执行中状态
             updateExecutionStatus(id, ExecutionStatus.RUNNING, System.currentTimeMillis())
-            
+
             // 创建执行器并执行工作流
             val executor = WorkflowExecutor(context)
             val result = executor.executeWorkflow(workflow, triggerNodeId, triggerExtras, onNodeStateChange)
-            
+
             // 更新执行统计
             val executionStatus = if (result.success) ExecutionStatus.SUCCESS else ExecutionStatus.FAILED
             updateExecutionStatistics(id, executionStatus, result.executionTime)
-            
+
             if (result.success) {
                 Result.success(context.getString(R.string.workflow_execute_success, workflow.name))
             } else {
@@ -308,7 +308,7 @@ class WorkflowRepository(private val context: Context) {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 更新工作流执行状态（仅状态和时间）
      */
@@ -320,23 +320,23 @@ class WorkflowRepository(private val context: Context) {
         try {
             val workflowResult = getWorkflowById(id)
             val workflow = workflowResult.getOrNull() ?: return@withContext
-            
+
             val updatedWorkflow = workflow.copy(
                 lastExecutionStatus = status,
                 lastExecutionTime = executionTime
             )
-            
+
             val file = getWorkflowFile(id)
             val content = json.encodeToString(updatedWorkflow)
             file.writeText(content)
-            
+
             AppLogger.d(TAG, "Workflow execution status updated: $id -> $status")
             notifyWorkflowsChanged()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update execution status", e)
         }
     }
-    
+
     /**
      * 更新工作流执行统计信息
      */
@@ -348,7 +348,7 @@ class WorkflowRepository(private val context: Context) {
         try {
             val workflowResult = getWorkflowById(id)
             val workflow = workflowResult.getOrNull() ?: return@withContext
-            
+
             val updatedWorkflow = workflow.copy(
                 lastExecutionStatus = status,
                 lastExecutionTime = executionTime,
@@ -359,18 +359,18 @@ class WorkflowRepository(private val context: Context) {
                     workflow.successfulExecutions
                 }
             )
-            
+
             val file = getWorkflowFile(id)
             val content = json.encodeToString(updatedWorkflow)
             file.writeText(content)
-            
+
             AppLogger.d(TAG, "Workflow execution statistics updated: $id (total: ${updatedWorkflow.totalExecutions}, success: ${updatedWorkflow.successfulExecutions})")
             notifyWorkflowsChanged()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update execution statistics", e)
         }
     }
-    
+
     /**
      * Schedule a workflow
      */
@@ -378,12 +378,12 @@ class WorkflowRepository(private val context: Context) {
         return try {
             val workflowResult = kotlinx.coroutines.runBlocking { getWorkflowById(id) }
             val workflow = workflowResult.getOrNull()
-            
+
             if (workflow == null) {
                 AppLogger.w(TAG, "Workflow not found for scheduling: $id")
                 return false
             }
-            
+
             if (!workflow.enabled) {
                 AppLogger.d(TAG, "Workflow is disabled, not scheduling: $id")
                 return false
@@ -392,14 +392,14 @@ class WorkflowRepository(private val context: Context) {
             if (!hasScheduleTrigger(workflow)) {
                 return false
             }
-            
+
             scheduler.scheduleWorkflow(workflow)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to schedule workflow: $id", e)
             false
         }
     }
-    
+
     /**
      * Unschedule a workflow
      */
@@ -411,7 +411,7 @@ class WorkflowRepository(private val context: Context) {
             AppLogger.e(TAG, "Failed to unschedule workflow: $id", e)
         }
     }
-    
+
     /**
      * Reschedule a workflow (cancel + schedule)
      */
@@ -419,7 +419,7 @@ class WorkflowRepository(private val context: Context) {
         unscheduleWorkflow(id)
         return scheduleWorkflow(id)
     }
-    
+
     /**
      * Check if workflow is scheduled
      */
@@ -431,7 +431,7 @@ class WorkflowRepository(private val context: Context) {
             false
         }
     }
-    
+
     /**
      * Get next execution time for a workflow
      */
@@ -582,4 +582,3 @@ class WorkflowRepository(private val context: Context) {
         }
     }
 }
-

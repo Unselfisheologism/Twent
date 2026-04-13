@@ -104,19 +104,19 @@ fun ChatHistorySettingsScreen() {
             totalChatCount = histories.size
         }
     }
-    
+
     // 获取无绑定的工作区文件夹
     var unboundWorkspaces by remember { mutableStateOf<List<UnboundWorkspaceInfo>>(emptyList()) }
     LaunchedEffect(chatHistories) {
         scope.launch {
             try {
                 val result = mutableListOf<UnboundWorkspaceInfo>()
-                
+
                 // 获取已绑定的工作区路径集合
                 val boundWorkspacePaths = chatHistories
                     .mapNotNull { it.workspace }
                     .toSet()
-                
+
                 // 1. 检查内部存储工作区 (/data/data/files/workspace)
                 val internalWorkspaceDir = File(context.filesDir, "workspace")
                 if (internalWorkspaceDir.exists() && internalWorkspaceDir.isDirectory) {
@@ -133,10 +133,10 @@ fun ChatHistorySettingsScreen() {
                         }
                     }
                 }
-                
+
                 // 2. 检查外部存储工作区（旧位置）
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val externalWorkspaceDir = File(downloadDir, "Operit/workspace")
+                val externalWorkspaceDir = File(downloadDir, "Twent/workspace")
                 if (externalWorkspaceDir.exists() && externalWorkspaceDir.isDirectory) {
                     externalWorkspaceDir.listFiles { file -> file.isDirectory }?.forEach { dir ->
                         val fullPath = dir.absolutePath
@@ -151,7 +151,7 @@ fun ChatHistorySettingsScreen() {
                         }
                     }
                 }
-                
+
                 unboundWorkspaces = result
             } catch (e: Exception) {
                 AppLogger.e("ChatHistorySettings", "获取无绑定工作区失败", e)
@@ -162,7 +162,7 @@ fun ChatHistorySettingsScreen() {
 
     val profileIds by userPreferencesManager.profileListFlow.collectAsState(initial = listOf("default"))
     var allProfiles by remember { mutableStateOf<List<PreferenceProfile>>(emptyList()) }
-    
+
     LaunchedEffect(profileIds) {
         val profiles = profileIds.mapNotNull { profileId ->
             try {
@@ -173,7 +173,7 @@ fun ChatHistorySettingsScreen() {
         }
         allProfiles = profiles
     }
-    
+
     val activeProfileName =
         allProfiles.find { it.id == activeProfileId }?.name ?: context.getString(R.string.default_profile_name)
 
@@ -223,13 +223,13 @@ fun ChatHistorySettingsScreen() {
                         }
                         try {
                             var messageParts = mutableListOf<String>()
-                            
+
                             // 更新角色卡绑定（仅在明确指定时更新）
                             // shouldUnbindCharacterCard 为 true 表示移除绑定
                             // targetCharacterName 不为 null 表示设置新的角色卡
                             // 如果两者都为 false/null，且提供了分组，则只更新分组，不更新角色卡
                             val shouldUpdateCharacterCard = shouldUnbindCharacterCard || targetCharacterName != null
-                            
+
                             if (shouldUpdateCharacterCard) {
                                 chatHistoryManager.assignCharacterCardToChats(
                                     chatIds = selectedIds,
@@ -243,7 +243,7 @@ fun ChatHistorySettingsScreen() {
                                     }
                                 )
                             }
-                            
+
                             // 更新分组
                             if (targetGroupName != null) {
                                 chatHistoryManager.assignGroupToChats(
@@ -252,7 +252,7 @@ fun ChatHistorySettingsScreen() {
                                 )
                                 messageParts.add(context.getString(R.string.assigned_chats_to_group, selectedIds.size, targetGroupName))
                             }
-                            
+
                             val message = messageParts.joinToString("；")
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             true
@@ -267,7 +267,7 @@ fun ChatHistorySettingsScreen() {
                     }
                 )
             }
-            
+
             // 无绑定工作区管理卡片
             item {
                 UnboundWorkspaceCard(
@@ -282,9 +282,9 @@ fun ChatHistorySettingsScreen() {
                                         deletedCount++
                                     }
                                 }
-                                
+
                                 Toast.makeText(context, context.getString(R.string.deleted_unbound_workspaces, deletedCount), Toast.LENGTH_SHORT).show()
-                                
+
                                 // 刷新列表
                                 unboundWorkspaces = unboundWorkspaces.filter { it.fullPath !in selectedWorkspacePaths }
                             } catch (e: Exception) {
@@ -1022,7 +1022,7 @@ private fun UnboundWorkspaceCard(
     val context = LocalContext.current
     var selectedWorkspaces by remember { mutableStateOf<Set<String>>(emptySet()) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-    
+
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -1033,7 +1033,7 @@ private fun UnboundWorkspaceCard(
                 subtitle = context.getString(R.string.unbound_workspaces_subtitle),
                 icon = Icons.Default.FolderOff
             )
-            
+
             if (unboundWorkspaces.isEmpty()) {
                 Text(
                     text = context.getString(R.string.no_unbound_workspaces),
@@ -1067,7 +1067,7 @@ private fun UnboundWorkspaceCard(
                         }
                     }
                 }
-                
+
                 // 工作区列表
                 LazyColumn(
                     modifier = Modifier
@@ -1093,7 +1093,7 @@ private fun UnboundWorkspaceCard(
                         }
                     }
                 }
-                
+
                 // 删除按钮
                 Button(
                     onClick = { showDeleteConfirmDialog = true },
@@ -1111,14 +1111,14 @@ private fun UnboundWorkspaceCard(
             }
         }
     }
-    
+
     // 删除确认对话框
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
             title = { Text(context.getString(R.string.confirm_delete)) },
-            text = { 
-                Text(context.getString(R.string.delete_workspaces_confirmation, selectedWorkspaces.size)) 
+            text = {
+                Text(context.getString(R.string.delete_workspaces_confirmation, selectedWorkspaces.size))
             },
             confirmButton = {
                 TextButton(
@@ -1202,4 +1202,3 @@ private fun UnboundWorkspaceRow(
         )
     }
 }
-
