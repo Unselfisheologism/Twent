@@ -66,5 +66,5 @@ sealed class NavItem(val route: String, val titleResId: Int, val icon: ImageVect
         object Workflow : NavItem("workflow", R.string.nav_workflow, Icons.Default.AccountTree)
         object AgentCLIs : NavItem("agent_clis", R.string.nav_agent_clis, Icons.Default.SmartToy)
         object MiniApps : NavItem("mini_apps", R.string.nav_mini_apps, Icons.Default.Apps)
-        object PowerUserMode : NavItem("power_user_mode", R.string.nav_power_user_mode, Icons.Default.Bolt)
+        object PowerUserMode : NavItem("power_user_mode", R.string.nav_power_user_mode, Icons.Default.Build)
 }

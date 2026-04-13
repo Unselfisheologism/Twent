@@ -271,7 +271,7 @@ fun SettingsScreen(
             TwentCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     SettingsItem(
-                        icon = Icons.Outlined.Bolt,
+                        icon = Icons.Outlined.Build,
                         title = "Power User Mode",
                         subtitle = "Advanced features and developer tools",
                         onClick = navigateToPowerUserModeSettings
