@@ -55,6 +55,7 @@ fun GlobalDisplaySettingsScreen(
 
     val hasBackgroundImage by userPreferences.useBackgroundImage.collectAsState(initial = false)
     val uiAccessibilityMode by userPreferences.uiAccessibilityMode.collectAsState(initial = false)
+    val powerUserMode by userPreferences.powerUserMode.collectAsState(initial = false)
 
     var showSaveSuccessMessage by remember { mutableStateOf(false) }
     var userNameInput by remember { mutableStateOf(globalUserName ?: "") }
@@ -241,6 +242,19 @@ fun GlobalDisplaySettingsScreen(
                 onCheckedChange = {
                     scope.launch {
                         userPreferences.saveUiAccessibilityMode(it)
+                        showSaveSuccessMessage = true
+                    }
+                },
+                backgroundColor = componentBackgroundColor
+            )
+
+            DisplayToggleItem(
+                title = "Power User Mode",
+                subtitle = "Enable advanced features and developer tools",
+                checked = powerUserMode,
+                onCheckedChange = {
+                    scope.launch {
+                        userPreferences.savePowerUserMode(it)
                         showSaveSuccessMessage = true
                     }
                 },

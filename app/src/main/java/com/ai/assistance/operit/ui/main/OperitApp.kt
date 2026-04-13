@@ -190,17 +190,19 @@ fun OperitApp(
     }
 
     // Navigation items grouped by category
+    // Filter items based on power user mode (Basic vs Power User)
     val navGroups = listOf(
         NavGroup(
             R.string.nav_group_ai_features,
-            listOf(
+            listOfNotNull(
                 NavItem.AiChat,
                 NavItem.AssistantConfig,
                 NavItem.Packages,
                 NavItem.MemoryBase,
                 NavItem.TokenConfig,
-                NavItem.AgentCLIs,
-                NavItem.MiniApps
+                // Only show these items in Power User Mode
+                if (isPowerUserMode) NavItem.AgentCLIs else null,
+                if (isPowerUserMode) NavItem.MiniApps else null
             )
         ),
         NavGroup(
@@ -241,6 +243,10 @@ fun OperitApp(
     // Get FPS counter display setting
     val displayPreferencesManager = remember { DisplayPreferencesManager.getInstance(context) }
     val showFpsCounter = displayPreferencesManager.showFpsCounter.collectAsState(initial = false).value
+
+    // Power user mode state
+    val userPreferencesManager = remember { UserPreferencesManager.getInstance(context) }
+    val isPowerUserMode by userPreferencesManager.powerUserMode.collectAsState(initial = false)
 
     // Create an instance of MCPRepository
     val mcpRepository = remember { MCPRepository(context) }

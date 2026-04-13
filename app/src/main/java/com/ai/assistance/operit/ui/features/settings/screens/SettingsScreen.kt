@@ -59,7 +59,8 @@ fun SettingsScreen(
     navigateToContextSummarySettings: () -> Unit,
     navigateToLayoutAdjustmentSettings: () -> Unit,
     navigateToAssistantThemeSettings: () -> Unit,
-    navigateToAgentPersonalitySettings: () -> Unit
+    navigateToAgentPersonalitySettings: () -> Unit,
+    navigateToPowerUserModeSettings: () -> Unit
 ) {
     val context = LocalContext.current
     val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
@@ -269,6 +270,16 @@ fun SettingsScreen(
 
             TwentCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.Bolt,
+                        title = "Power User Mode",
+                        subtitle = "Advanced features and developer tools",
+                        onClick = navigateToPowerUserModeSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
                     SettingsItem(
                         icon = Icons.Outlined.Language,
                         title = "Language",

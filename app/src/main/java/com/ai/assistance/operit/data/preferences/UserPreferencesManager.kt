@@ -91,7 +91,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
 
         // 工具栏透明度设置
         private val TOOLBAR_TRANSPARENT = booleanPreferencesKey("toolbar_transparent")
-        
+
         // AppBar 自定义颜色设置
         private val USE_CUSTOM_APP_BAR_COLOR = booleanPreferencesKey("use_custom_app_bar_color")
         private val CUSTOM_APP_BAR_COLOR = intPreferencesKey("custom_app_bar_color")
@@ -144,7 +144,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         // 背景媒体类型常量
         const val MEDIA_TYPE_IMAGE = "image"
         const val MEDIA_TYPE_VIDEO = "video"
-        
+
         // 默认语言
         const val DEFAULT_LANGUAGE = AUTO_LANGUAGE_CODE
 
@@ -164,6 +164,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         private val KEY_SHOW_INPUT_PROCESSING_STATUS = booleanPreferencesKey("show_input_processing_status")
         private val KEY_UI_ACCESSIBILITY_MODE = booleanPreferencesKey("ui_accessibility_mode")
         private val KEY_BETA_PLAN_ENABLED = booleanPreferencesKey("beta_plan_enabled")
+        private val KEY_POWER_USER_MODE = booleanPreferencesKey("power_user_mode")
 
         private val KEY_LAST_AUTO_PATCH_PREPARED_VERSION = stringPreferencesKey("last_auto_patch_prepared_version")
 
@@ -186,7 +187,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
         // 字体类型常量
         const val FONT_TYPE_SYSTEM = "system"
         const val FONT_TYPE_FILE = "file"
-        
+
         // 系统字体名称常量
         const val SYSTEM_FONT_DEFAULT = "default"
         const val SYSTEM_FONT_SERIF = "serif"
@@ -238,18 +239,18 @@ class UserPreferencesManager private constructor(private val context: Context) {
     private val ASSISTANT_CUSTOM_SECONDARY_COLOR = intPreferencesKey("assistant_custom_secondary_color")
 
     // 获取应用语言设置
-    val appLanguage: Flow<String> = 
+    val appLanguage: Flow<String> =
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[APP_LANGUAGE] ?: DEFAULT_LANGUAGE
             }
-    
+
     // 保存应用语言设置
     suspend fun saveAppLanguage(languageCode: String) {
         context.userPreferencesDataStore.edit { preferences ->
             preferences[APP_LANGUAGE] = languageCode
         }
     }
-    
+
     // 同步获取当前语言设置
     fun getCurrentLanguage(): String {
         return runBlocking {
@@ -269,6 +270,12 @@ class UserPreferencesManager private constructor(private val context: Context) {
         }
     }
 
+    suspend fun savePowerUserMode(enabled: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[KEY_POWER_USER_MODE] = enabled
+        }
+    }
+
     fun isUiAccessibilityModeEnabled(): Boolean {
         return runBlocking {
             uiAccessibilityMode.first()
@@ -278,6 +285,12 @@ class UserPreferencesManager private constructor(private val context: Context) {
     fun isBetaPlanEnabled(): Boolean {
         return runBlocking {
             betaPlanEnabled.first()
+        }
+    }
+
+    fun isPowerUserModeEnabled(): Boolean {
+        return runBlocking {
+            powerUserMode.first()
         }
     }
 
@@ -381,12 +394,12 @@ class UserPreferencesManager private constructor(private val context: Context) {
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[TOOLBAR_TRANSPARENT] ?: false
             }
-    
+
     val useCustomAppBarColor: Flow<Boolean> =
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[USE_CUSTOM_APP_BAR_COLOR] ?: false
             }
-    
+
     val customAppBarColor: Flow<Int?> =
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[CUSTOM_APP_BAR_COLOR]
@@ -396,7 +409,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[USE_CUSTOM_STATUS_BAR_COLOR] ?: false
             }
-    
+
     val customStatusBarColor: Flow<Int?> =
             context.userPreferencesDataStore.data.map { preferences ->
                 preferences[CUSTOM_STATUS_BAR_COLOR]
@@ -524,6 +537,11 @@ class UserPreferencesManager private constructor(private val context: Context) {
     val betaPlanEnabled: Flow<Boolean> =
         context.userPreferencesDataStore.data.map { preferences ->
             preferences[KEY_BETA_PLAN_ENABLED] ?: false
+        }
+
+    val powerUserMode: Flow<Boolean> =
+        context.userPreferencesDataStore.data.map { preferences ->
+            preferences[KEY_POWER_USER_MODE] ?: false
         }
 
     // 字体设置相关Flow
@@ -778,7 +796,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
             preferences[key]
         }
     }
-    
+
     suspend fun saveAiAvatarForCharacterCard(characterCardId: String, avatarUri: String?) {
         context.userPreferencesDataStore.edit { preferences ->
             val prefix = getCharacterCardThemePrefix(characterCardId)
@@ -798,7 +816,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
             preferences[key]
         }
     }
-    
+
     suspend fun saveCustomChatTitleForCharacterCard(characterCardId: String, title: String?) {
         context.userPreferencesDataStore.edit { preferences ->
             val prefix = getCharacterCardThemePrefix(characterCardId)
@@ -1268,7 +1286,7 @@ class UserPreferencesManager private constructor(private val context: Context) {
     suspend fun copyCurrentThemeToCharacterCard(characterCardId: String) {
         context.userPreferencesDataStore.edit { preferences ->
             val prefix = getCharacterCardThemePrefix(characterCardId)
-            
+
 
             getAllStringThemeKeys().forEach { key ->
                 preferences[key]?.let { value ->

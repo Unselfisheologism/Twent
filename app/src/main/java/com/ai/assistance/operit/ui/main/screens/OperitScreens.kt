@@ -62,6 +62,7 @@ import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesSett
 import com.ai.assistance.operit.ui.features.settings.screens.CustomHeadersSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.MnnModelDownloadScreen
 import com.ai.assistance.operit.ui.features.settings.screens.TokenUsageStatisticsScreen
+import com.ai.assistance.operit.ui.features.settings.screens.PowerUserModeSettingsScreen
 import com.ai.assistance.operit.ui.features.token.TokenConfigWebViewScreen
 import com.ai.assistance.operit.ui.features.toolbox.screens.AppPermissionsToolScreen
 import com.ai.assistance.operit.ui.features.toolbox.screens.FileManagerToolScreen
@@ -496,7 +497,8 @@ sealed class Screen(
                     navigateToContextSummarySettings = { navigateTo(ContextSummarySettings) },
                     navigateToLayoutAdjustmentSettings = { navigateTo(LayoutAdjustmentSettings) },
                     navigateToAssistantThemeSettings = { navigateTo(AssistantThemeSettings) },
-                    navigateToAgentPersonalitySettings = { navigateTo(AgentPersonalitySettings) }
+                    navigateToAgentPersonalitySettings = { navigateTo(AgentPersonalitySettings) },
+                    navigateToPowerUserModeSettings = { navigateTo(PowerUserModeSettings) }
             )
         }
     }
@@ -774,7 +776,7 @@ sealed class Screen(
             )
         }
     }
-    
+
     // 添加自定义请求头设置屏幕
     data object CustomHeadersSettings :
         Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_custom_headers_settings) {
@@ -792,7 +794,7 @@ sealed class Screen(
             CustomHeadersSettingsScreen(onBackPressed = onGoBack)
         }
     }
-    
+
     // MNN模型下载屏幕
     data object MnnModelDownload :
         Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_mnn_model_download) {
@@ -810,7 +812,7 @@ sealed class Screen(
             MnnModelDownloadScreen(onBackPressed = onGoBack)
         }
     }
-    
+
     // 新增：人设卡生成页面
     data object PersonaCardGeneration :
         Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_persona_card_generation) {
@@ -854,7 +856,7 @@ sealed class Screen(
             )
         }
     }
-    
+
     // 自定义表情管理页面
     data object CustomEmojiManagement :
         Screen(parentScreen = WaifuModeSettings, navItem = NavItem.Settings, titleRes = R.string.manage_custom_emoji) {
@@ -874,7 +876,7 @@ sealed class Screen(
             )
         }
     }
-    
+
     data object TagMarket :
         Screen(parentScreen = ModelPromptsSettings, navItem = NavItem.Settings, titleRes = R.string.screen_title_tag_market) {
         @Composable
@@ -913,7 +915,7 @@ sealed class Screen(
                         )
                         }
                     }
-                    
+
                     data object FunctionalConfig :
             Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_functional_config) {
         @Composable
@@ -1050,6 +1052,23 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             ChatBackupSettingsScreen()
+        }
+    }
+
+    data object PowerUserModeSettings :
+            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.nav_power_user_mode) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            PowerUserModeSettingsScreen(onBackPressed = onGoBack)
         }
     }
 
@@ -1200,7 +1219,7 @@ sealed class Screen(
             )
         }
     }
-    
+
     // AI Agent Commands - run non-chat commands like doctor, setup, mcp
     data class AgentCommands(val agentId: String) :
             Screen(parentScreen = AgentSessions, navItem = NavItem.Toolbox) {

@@ -20,6 +20,7 @@
     <string name="nav_terminal">Terminal</string>
     <string name="nav_toolbox">Toolbox</string>
     <string name="nav_item_agreement">User Agreement</string>
+    <string name="nav_power_user_mode">Power User Mode</string>
 
     <!-- Chat Module -->
     <string name="chat_fullscreen_input">Fullscreen Input</string>
