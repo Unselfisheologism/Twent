@@ -41,12 +41,12 @@ fun AgentSessionsScreen(
     val viewModel: AgentViewModel = viewModel(
         factory = AgentViewModel.Factory(context.applicationContext)
     )
-    
+
     val sessionsState by viewModel.sessionsState.collectAsState()
-    
+
     // Tab state: 0 = Sessions, 1 = Agent Market
     var selectedTab by remember { mutableIntStateOf(0) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,7 +79,7 @@ fun AgentSessionsScreen(
                     icon = { Icon(Icons.Default.Store, contentDescription = null) }
                 )
             }
-            
+
             // Content based on tab
             when (selectedTab) {
                 0 -> SessionsTab(
@@ -102,7 +102,9 @@ fun AgentSessionsScreen(
                             onNavigateToTerminal(command)
                         }
                     },
-                    onCommands = { agentId -> onNavigateToCommands(agentId) }
+                    onCommands = { agentId -> onNavigateToCommands(agentId) },
+                    onAddCustomAgent = { /* Dialog will be shown */ },
+                    onRefreshAcp = { viewModel.refreshAcpRegistry() }
                 )
             }
         }
@@ -135,7 +137,7 @@ private fun SessionsTab(
                 )
             }
         }
-        
+
         if (sessions.isEmpty()) {
             // Empty state
             Column(
@@ -183,7 +185,7 @@ private fun SessionsTab(
                 }
             }
         }
-        
+
         // Loading indicator
         if (isLoading) {
             Box(
@@ -204,10 +206,51 @@ private fun AgentMarketTab(
     error: String?,
     onInstall: (String) -> Unit,
     onLaunchTerminal: (String, String) -> Unit,
-    onCommands: (String) -> Unit
+    onCommands: (String) -> Unit,
+    onAddCustomAgent: () -> Unit = {},
+    onRefreshAcp: () -> Unit = {}
 ) {
+    var showCustomAgentDialog by remember { mutableStateOf(false) }
+    var customAgentName by remember { mutableStateOf("") }
+    var customAgentDescription by remember { mutableStateOf("") }
+    var customAgentInstallCommand by remember { mutableStateOf("") }
+    var customAgentStartCommand by remember { mutableStateOf("") }
+    var customAgentDeps by remember { mutableStateOf("") }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // Loading indicator for checking installations
+        // Header with action buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Refresh ACP registry button
+            IconButton(
+                onClick = onRefreshAcp,
+                enabled = !isLoading
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Refresh ACP Registry",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Add custom agent button
+            IconButton(
+                onClick = { showCustomAgentDialog = true }
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Add Custom Agent",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Loading indicator for ACP registry
         if (isCheckingInstallations) {
             Row(
                 modifier = Modifier
@@ -224,7 +267,7 @@ private fun AgentMarketTab(
                 )
             }
         }
-        
+
         // Error message
         error?.let { errorMsg ->
             Card(
@@ -242,7 +285,7 @@ private fun AgentMarketTab(
                 )
             }
         }
-        
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -253,19 +296,131 @@ private fun AgentMarketTab(
                     agentWithStatus = agentWithStatus,
                     isLoading = isLoading,
                     onInstall = { onInstall(agentWithStatus.definition.id) },
-                    onLaunchTerminal = { 
-                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name) 
+                    onLaunchTerminal = {
+                        onLaunchTerminal(agentWithStatus.definition.id, agentWithStatus.definition.name)
                     },
                     onCommands = { onCommands(agentWithStatus.definition.id) }
                 )
             }
         }
-        
+
         // Loading indicator for operations
         if (isLoading && !isCheckingInstallations) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
     }
+
+    // Custom Agent Dialog
+    if (showCustomAgentDialog) {
+        CustomAgentDialog(
+            agentName = customAgentName,
+            onNameChange = { customAgentName = it },
+            agentDescription = customAgentDescription,
+            onDescriptionChange = { customAgentDescription = it },
+            installCommand = customAgentInstallCommand,
+            onInstallCommandChange = { customAgentInstallCommand = it },
+            startCommand = customAgentStartCommand,
+            onStartCommandChange = { customAgentStartCommand = it },
+            deps = customAgentDeps,
+            onDepsChange = { customAgentDeps = it },
+            onDismiss = { showCustomAgentDialog = false },
+            onInstallViaTerminal = { name, description, installCmd, startCmd, depsList ->
+                // Launch terminal with the install command
+                onLaunchTerminal(installCmd, name)
+                showCustomAgentDialog = false
+                // Reset fields
+                customAgentName = ""
+                customAgentDescription = ""
+                customAgentInstallCommand = ""
+                customAgentStartCommand = ""
+                customAgentDeps = ""
+            }
+        )
+    }
+}
+
+@Composable
+private fun CustomAgentDialog(
+    agentName: String,
+    onNameChange: (String) -> Unit,
+    agentDescription: String,
+    onDescriptionChange: (String) -> Unit,
+    installCommand: String,
+    onInstallCommandChange: (String) -> Unit,
+    startCommand: String,
+    onStartCommandChange: (String) -> Unit,
+    deps: String,
+    onDepsChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onInstallViaTerminal: (String, String, String, String, List<String>) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Custom Agent CLI") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = agentName,
+                    onValueChange = onNameChange,
+                    label = { Text("Agent Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = agentDescription,
+                    onValueChange = onDescriptionChange,
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = installCommand,
+                    onValueChange = onInstallCommandChange,
+                    label = { Text("Install Command") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("e.g., npm i -g my-agent") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = startCommand,
+                    onValueChange = onStartCommandChange,
+                    label = { Text("Start Command") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("e.g., my-agent") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = deps,
+                    onValueChange = onDepsChange,
+                    label = { Text("Dependencies (comma-separated)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("e.g., node, npm") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (agentName.isNotBlank() && installCommand.isNotBlank() && startCommand.isNotBlank()) {
+                        val depsList = deps.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                        onInstallViaTerminal(agentName, agentDescription, installCommand, startCommand, depsList)
+                    }
+                },
+                enabled = agentName.isNotBlank() &&
+                          installCommand.isNotBlank() &&
+                          startCommand.isNotBlank()
+            ) {
+                Icon(Icons.Default.Terminal, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Install via Terminal")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -278,7 +433,7 @@ private fun AgentMarketCard(
 ) {
     val agent = agentWithStatus.definition
     val status = agentWithStatus.installStatus
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -299,16 +454,40 @@ private fun AgentMarketCard(
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 // Agent info
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = agent.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = agent.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // ACP badge
+                        if (agent.isFromAcp) {
+                            AssistChip(
+                                onClick = { },
+                                label = { Text("ACP", style = MaterialTheme.typography.labelSmall) },
+                                enabled = false,
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                        }
+
+                        // Custom badge
+                        if (agent.isCustom) {
+                            AssistChip(
+                                onClick = { },
+                                label = { Text("Custom", style = MaterialTheme.typography.labelSmall) },
+                                enabled = false,
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                        }
+                    }
+
                     Text(
                         text = agent.description,
                         style = MaterialTheme.typography.bodySmall,
@@ -316,14 +495,36 @@ private fun AgentMarketCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
+                    // Version from ACP
+                    agent.acpVersion?.let { version ->
+                        Text(
+                            text = "Version: $version",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+
                     // Required deps
-                    Text(
-                        text = "Requires: ${agent.requiredDeps.joinToString(", ")}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                    
+                    if (agent.requiredDeps.isNotEmpty()) {
+                        Text(
+                            text = "Requires: ${agent.requiredDeps.joinToString(", ")}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+
+                    // Tags from ACP
+                    agent.acpTags?.let { tags ->
+                        if (tags.isNotEmpty()) {
+                            Text(
+                                text = tags.joinToString(", "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
                     // Commands count
                     if (agent.commands.isNotEmpty()) {
                         Text(
@@ -334,9 +535,9 @@ private fun AgentMarketCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Status and action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -402,7 +603,7 @@ private fun AgentMarketCard(
                         }
                     }
                 }
-                
+
                 // Action buttons
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Commands button (always visible if commands exist)
@@ -416,7 +617,7 @@ private fun AgentMarketCard(
                             Text("Commands")
                         }
                     }
-                    
+
                     // Install/Start button
                     when (status) {
                         AgentInstallStatus.NOT_INSTALLED, AgentInstallStatus.FAILED -> {
@@ -450,7 +651,7 @@ private fun AgentMarketCard(
                     }
                 }
             }
-            
+
             // Install command shown for reference
             if (status == AgentInstallStatus.NOT_INSTALLED || status == AgentInstallStatus.FAILED) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -488,9 +689,9 @@ private fun AgentSessionCard(
                 modifier = Modifier.size(40.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             // Session info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -504,7 +705,7 @@ private fun AgentSessionCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             // Status indicator
             Box(
                 modifier = Modifier
@@ -512,9 +713,9 @@ private fun AgentSessionCard(
                     .clip(RoundedCornerShape(6.dp))
                     .background(Color.Green)
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // Close button
             IconButton(onClick = onClose) {
                 Icon(

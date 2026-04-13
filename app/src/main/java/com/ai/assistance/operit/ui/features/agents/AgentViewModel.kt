@@ -80,17 +80,28 @@ class AgentViewModel(
     // Command execution state
     private val _commandOutput = MutableStateFlow<String?>(null)
     val commandOutput: StateFlow<String?> = _commandOutput.asStateFlow()
-    
+
     private val _isRunningCommand = MutableStateFlow(false)
     val isRunningCommand: StateFlow<Boolean> = _isRunningCommand.asStateFlow()
+
+    // Custom agent installation state
+    private val _isInstallingCustomAgent = MutableStateFlow(false)
+    val isInstallingCustomAgent: StateFlow<Boolean> = _isInstallingCustomAgent.asStateFlow()
+
+    private val _customAgentInstallCommand = MutableStateFlow<String?>(null)
+    val customAgentInstallCommand: StateFlow<String?> = _customAgentInstallCommand.asStateFlow()
+
+    // ACP registry loading state
+    private val _isAcpRegistryLoading = MutableStateFlow(false)
+    val isAcpRegistryLoading: StateFlow<Boolean> = _isAcpRegistryLoading.asStateFlow()
 
     init {
         // Load sessions on init
         refreshSessions()
-        
+
         // Load agents with status
         loadAgentsWithStatus()
-        
+
         // Observe active sessions from repository
         viewModelScope.launch {
             repository.activeSessions.collect { sessions ->
@@ -99,16 +110,22 @@ class AgentViewModel(
                 )
             }
         }
-        
+
         // Observe installation states
         viewModelScope.launch {
             repository.installationStates.collect { _ ->
                 updateAgentsWithStatus()
             }
         }
-        
+
         // Check all installations in background
         checkAllInstallations()
+
+        // Load ACP registry in background
+        loadAcpRegistry()
+
+        // Detect installed non-ACP agents
+        detectInstalledNonAcpAgents()
     }
 
     /**
@@ -120,14 +137,14 @@ class AgentViewModel(
         }
         _sessionsState.value = _sessionsState.value.copy(agents = agentsWithStatus)
     }
-    
+
     private fun updateAgentsWithStatus() {
         val agentsWithStatus = repository.getAgentsWithStatus().map { (agent, status) ->
             AgentWithStatus(agent, status)
         }
         _sessionsState.value = _sessionsState.value.copy(agents = agentsWithStatus)
     }
-    
+
     /**
      * Check all agent installations in background
      */
@@ -138,6 +155,120 @@ class AgentViewModel(
             updateAgentsWithStatus()
             _sessionsState.value = _sessionsState.value.copy(isCheckingInstallations = false)
         }
+    }
+
+    /**
+     * Load ACP registry and merge agents with local registry.
+     */
+    private fun loadAcpRegistry() {
+        viewModelScope.launch {
+            _isAcpRegistryLoading.value = true
+
+            val result = repository.fetchAcpAgents()
+            result.fold(
+                onSuccess = { agentsWithStatus ->
+                    // Merge ACP agents with existing agents in UI state
+                    val currentAgents = _sessionsState.value.agents.toMutableList()
+                    val existingIds = currentAgents.map { it.definition.id }.toSet()
+
+                    // Add new ACP agents that aren't already in the list
+                    for ((agent, status) in agentsWithStatus) {
+                        if (agent.id !in existingIds) {
+                            currentAgents.add(AgentWithStatus(agent, status))
+                        }
+                    }
+
+                    _sessionsState.value = _sessionsState.value.copy(
+                        agents = currentAgents.sortedBy { it.definition.name }
+                    )
+                },
+                onFailure = { error ->
+                    // Log error but don't show to user - ACP is supplementary
+                    android.util.Log.w("AgentViewModel", "Failed to load ACP registry: ${error.message}")
+                }
+            )
+
+            _isAcpRegistryLoading.value = false
+        }
+    }
+
+    /**
+     * Refresh ACP registry manually triggered by user.
+     */
+    fun refreshAcpRegistry() {
+        loadAcpRegistry()
+    }
+
+    /**
+     * Detect installed non-ACP agents and add them to the list.
+     */
+    private fun detectInstalledNonAcpAgents() {
+        viewModelScope.launch {
+            val detectedAgents = repository.detectInstalledNonAcpAgents()
+            if (detectedAgents.isNotEmpty()) {
+                val currentAgents = _sessionsState.value.agents.toMutableList()
+                val existingIds = currentAgents.map { it.definition.id }.toSet()
+
+                for (agent in detectedAgents) {
+                    if (agent.id !in existingIds) {
+                        currentAgents.add(
+                            AgentWithStatus(
+                                agent,
+                                AgentInstallStatus.INSTALLED
+                            )
+                        )
+                    }
+                }
+
+                _sessionsState.value = _sessionsState.value.copy(
+                    agents = currentAgents.sortedBy { it.definition.name }
+                )
+            }
+        }
+    }
+
+    /**
+     * Start custom agent installation by providing a command.
+     * This will navigate to terminal where user can run the install command.
+     */
+    fun startCustomAgentInstallation(installCommand: String) {
+        _isInstallingCustomAgent.value = true
+        _customAgentInstallCommand.value = installCommand
+    }
+
+    /**
+     * Complete custom agent installation.
+     */
+    fun completeCustomAgentInstallation() {
+        _isInstallingCustomAgent.value = false
+        _customAgentInstallCommand.value = null
+    }
+
+    /**
+     * Add a custom agent to the registry after successful installation.
+     */
+    fun addCustomAgent(name: String, description: String, installCommand: String, startCommand: String, deps: List<String>) {
+        val id = name.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), "")
+        val agent = AgentDefinition(
+            id = id,
+            name = name,
+            description = description,
+            icon = "ic_agent_custom",
+            installCommand = installCommand,
+            installCheckCommand = "which ${startCommand.split(" ").first()}",
+            startCommand = startCommand,
+            requiredDeps = deps,
+            commands = listOf(
+                AgentCommand("Version", "--version", "Show version", CommandCategory.SYSTEM),
+                AgentCommand("Help", "--help", "Show help", CommandCategory.HELP),
+                AgentCommand("Exit", "exit", "Exit", CommandCategory.SYSTEM)
+            ),
+            isCustom = true
+        )
+
+        AgentRegistry.addCustomAgent(agent)
+        // The repository will handle marking this as installed
+        loadAgentsWithStatus()
     }
 
     /**
@@ -162,9 +293,9 @@ class AgentViewModel(
     fun installAgent(agentId: String) {
         viewModelScope.launch {
             _sessionsState.value = _sessionsState.value.copy(isLoading = true, error = null)
-            
+
             val result = repository.installAgent(agentId) { _ -> }
-            
+
             result.fold(
                 onSuccess = {
                     _sessionsState.value = _sessionsState.value.copy(isLoading = false)
@@ -191,14 +322,27 @@ class AgentViewModel(
 
     /**
      * Launch native terminal with the agent CLI command.
-     * Only works if the agent is installed.
+     * Works with both local registry agents and ACP-sourced agents.
+     * For custom agents, uses the provided install command directly.
      */
     fun launchNativeTerminal(
-        agentId: String, 
-        agentName: String, 
+        agentId: String,
+        agentName: String,
         onNavigateToTerminal: (String) -> Unit
     ) {
-        val agent = AgentRegistry.getById(agentId)
+        // Try to find agent in local registry first
+        var agent = AgentRegistry.getById(agentId)
+
+        // If not found in local registry, it might be an ACP agent or custom
+        if (agent == null) {
+            // For custom agent installations, we navigate with the install command
+            if (agentId.startsWith("custom-")) {
+                // This is a custom agent installation - user will provide commands manually
+                onNavigateToTerminal("")
+                return
+            }
+        }
+
         if (agent == null) {
             _sessionsState.value = _sessionsState.value.copy(
                 error = "Unknown agent: $agentId"
@@ -219,7 +363,7 @@ class AgentViewModel(
         viewModelScope.launch {
             val title = "$agentName - Session ${System.currentTimeMillis() % 1000}"
             repository.startAgentSession(agentId, title)
-            
+
             // Navigate to terminal with the agent's start command
             onNavigateToTerminal(agent.startCommand)
         }
@@ -241,7 +385,7 @@ class AgentViewModel(
             ),
             isInputEnabled = true
         )
-        
+
         // Start collecting output
         startOutputCollection(sessionId)
     }
@@ -251,16 +395,16 @@ class AgentViewModel(
      */
     fun sendChatMessage(content: String) {
         if (content.isBlank() || _chatState.value.sessionId.isEmpty()) return
-        
+
         val sessionId = _chatState.value.sessionId
-        
+
         // Add user message to chat
         val userMessage = ChatMessage(content = content, isFromUser = true)
         _chatState.value = _chatState.value.copy(
             messages = _chatState.value.messages + userMessage,
             isInputEnabled = false
         )
-        
+
         // Send to agent
         viewModelScope.launch {
             // Remove leading "/" if it's a slash command
@@ -269,7 +413,7 @@ class AgentViewModel(
             } else {
                 content
             }
-            
+
             repository.sendToAgent(sessionId, inputToSend)
             _chatState.value = _chatState.value.copy(isInputEnabled = true)
         }
@@ -282,9 +426,9 @@ class AgentViewModel(
         viewModelScope.launch {
             _isRunningCommand.value = true
             _commandOutput.value = null
-            
+
             val result = repository.runCommand(agentId, command)
-            
+
             result.fold(
                 onSuccess = { output ->
                     _commandOutput.value = output
@@ -293,11 +437,11 @@ class AgentViewModel(
                     _commandOutput.value = "Error: ${error.message}"
                 }
             )
-            
+
             _isRunningCommand.value = false
         }
     }
-    
+
     /**
      * Get commands for an agent
      */
@@ -305,31 +449,31 @@ class AgentViewModel(
         val agent = AgentRegistry.getById(agentId) ?: return emptyList()
         return agent.commands
     }
-    
+
     /**
      * Run a slash command directly from button click
      */
     fun runSlashCommand(command: AgentCommand) {
         val sessionId = _chatState.value.sessionId
         if (sessionId.isEmpty()) return
-        
+
         // Add the command as a user message
         val cmdMessage = ChatMessage(
             content = "/${command.command}",
             isFromUser = true
         )
-        
+
         viewModelScope.launch {
             _chatState.value = _chatState.value.copy(
                 messages = _chatState.value.messages + cmdMessage,
                 isInputEnabled = false
             )
-            
+
             repository.sendToAgent(sessionId, command.command)
             _chatState.value = _chatState.value.copy(isInputEnabled = true)
         }
     }
-    
+
     fun clearCommandOutput() {
         _commandOutput.value = null
     }
@@ -343,7 +487,7 @@ class AgentViewModel(
             repository.getAgentOutputFlow(sessionId).collect { event ->
                 if (event.outputChunk.isNotBlank() && event.sessionId == sessionId) {
                     val currentMessages = _chatState.value.messages.toMutableList()
-                    
+
                     // Check if the last message is from agent (append) or new (add)
                     if (currentMessages.isNotEmpty() && !currentMessages.last().isFromUser) {
                         // Append to existing agent message
@@ -359,7 +503,7 @@ class AgentViewModel(
                             )
                         )
                     }
-                    
+
                     _chatState.value = _chatState.value.copy(messages = currentMessages)
                 }
             }
@@ -372,12 +516,12 @@ class AgentViewModel(
     fun closeSession(sessionId: String) {
         viewModelScope.launch {
             repository.closeAgentSession(sessionId)
-            
+
             if (_chatState.value.sessionId == sessionId) {
                 outputCollectorJob?.cancel()
                 _chatState.value = AgentChatUiState()
             }
-            
+
             refreshSessions()
         }
     }

@@ -8,14 +8,18 @@ data class AgentDefinition(
     val id: String,
     val name: String,
     val description: String,
-    val icon: String, // drawable resource name
+    val icon: String, // drawable resource name or URL
     val installCommand: String,        // Command to install the agent
     val installCheckCommand: String,  // Command to check if installed
     val startCommand: String,          // Command to start the agent (REPL mode)
     val requiredDeps: List<String> = emptyList(),  // Required dependencies
     val installUrl: String? = null,    // Optional URL for curl-based installs
     val commands: List<AgentCommand> = emptyList(), // Pre-defined non-chat commands
-    val isCustom: Boolean = false       // Is this a custom agent added by user
+    val isCustom: Boolean = false,       // Is this a custom agent added by user
+    val isFromAcp: Boolean = false,      // Is this agent from ACP registry
+    val acpVersion: String? = null,      // Version from ACP registry
+    val acpRepository: String? = null,   // GitHub/repository URL from ACP
+    val acpTags: List<String>? = null    // Tags from ACP registry
 )
 
 /**
@@ -200,23 +204,23 @@ object AgentRegistry {
             )
         )
     )
-    
+
     // Custom agents (can be added at runtime)
     private val customAgents = mutableListOf<AgentDefinition>()
-    
+
     // Get all agents (built-in + custom)
     val agents: List<AgentDefinition>
         get() = builtInAgents + customAgents
-    
+
     fun getById(id: String): AgentDefinition? = agents.find { it.id == id }
-    
+
     fun addCustomAgent(agent: AgentDefinition) {
         customAgents.add(agent)
     }
-    
+
     fun removeCustomAgent(id: String) {
         customAgents.removeAll { it.id == id }
     }
-    
+
     fun getCustomAgents(): List<AgentDefinition> = customAgents.toList()
 }
