@@ -1195,11 +1195,20 @@ class ActionExecutor(private val finger: Finger) {
             is Action.ScrollRight -> {
                 executeViaAIToolHandler("scroll_right", mapOf("pixels" to action.pixels.toString()), context)
             }
+            is Action.ScrollUp -> {
+                executeViaAIToolHandler("scroll_up", mapOf("amount" to action.amount.toString()), context)
+            }
+            is Action.ScrollDown -> {
+                executeViaAIToolHandler("scroll_down", mapOf("amount" to action.amount.toString()), context)
+            }
             is Action.GetPageInfo -> {
                 executeViaAIToolHandler("get_page_info", emptyMap(), context)
             }
             is Action.GetCurrentActivity -> {
                 executeViaAIToolHandler("get_current_activity", emptyMap(), context)
+            }
+            else -> {
+                ActionResult(error = "Action not implemented: ${action::class.simpleName}")
             }
         }
     }

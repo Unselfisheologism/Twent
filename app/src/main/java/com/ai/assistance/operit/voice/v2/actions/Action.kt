@@ -12,7 +12,7 @@ import kotlin.reflect.KClass
 // Data class to hold parameter metadata without reflection
 data class ParamSpec(val name: String, val type: KClass<*>, val description: String)
 
-/** 
+/**
  * A sealed class representing all possible type-safe commands the agent can execute.
  * It is annotated to use the custom, data-driven ActionSerializer.
  */
@@ -302,8 +302,6 @@ sealed class Action {
     ) : Action()
     data class ScrollLeft(val pixels: Int = 500) : Action()
     data class ScrollRight(val pixels: Int = 500) : Action()
-    data class ScrollUp(val pixels: Int = 500) : Action()
-    data class ScrollDown(val pixels: Int = 500) : Action()
     data object GetPageInfo : Action()
     data object GetCurrentActivity : Action()
 
