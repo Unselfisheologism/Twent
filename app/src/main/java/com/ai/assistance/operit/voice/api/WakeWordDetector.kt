@@ -14,7 +14,7 @@ class WakeWordDetector(
 ) {
     private var sttManager: STTManager? = null
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private val wakeWord = "Operit"
+    private val wakeWord = "Twent"
     private var isListening = false
     private val handler = Handler(Looper.getMainLooper())
     private val restartDelayMs = 250L

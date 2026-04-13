@@ -133,7 +133,7 @@ class LogcatViewModel(private val context: Context) : ViewModel() {
             if (downloadsDir == null || !downloadsDir.exists() && !downloadsDir.mkdirs()) {
                 throw Exception(context.getString(R.string.logcat_cannot_create_download_dir))
             }
-            val operitDir = File(downloadsDir, "operit")
+            val operitDir = File(downloadsDir, "twent")
             if (!operitDir.exists() && !operitDir.mkdirs()) {
                 throw Exception(context.getString(R.string.logcat_cannot_create_operit_dir))
             }

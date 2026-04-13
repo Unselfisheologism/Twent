@@ -68,10 +68,10 @@ class MessageProcessingDelegate(
 
     // 角色卡管理器
     private val characterCardManager = CharacterCardManager.getInstance(context)
-    
+
     // 模型配置管理器
     private val modelConfigManager = ModelConfigManager(context)
-    
+
     // 功能配置管理器，用于获取正确的模型配置ID
     private val functionalConfigManager = FunctionalConfigManager(context)
 
@@ -253,7 +253,7 @@ class MessageProcessingDelegate(
 
         val originalMessageText = rawMessageText.trim()
         var messageText = originalMessageText
-        
+
         if (messageTextOverride == null) {
             _userMessage.value = TextFieldValue("")
         }
@@ -459,7 +459,7 @@ class MessageProcessingDelegate(
                 val sharedCharStream =
                     responseStream.share(
                         scope = coroutineScope,
-                        replay = Int.MAX_VALUE, 
+                        replay = Int.MAX_VALUE,
                         onComplete = {
                             deferred.complete(Unit)
                             AppLogger.d(
@@ -477,7 +477,7 @@ class MessageProcessingDelegate(
                 val currentRoleName = try {
                     characterCardManager.getCharacterCardFlow(effectiveRoleCardId).first().name
                 } catch (e: Exception) {
-                    "Operit" // 默认角色名
+                    "Twent" // 默认角色名
                 }
 
                 // 获取当前使用的provider和model信息
@@ -489,7 +489,7 @@ class MessageProcessingDelegate(
                 }
 
                 aiMessage = ChatMessage(
-                    sender = "ai", 
+                    sender = "ai",
                     contentStream = sharedCharStream,
                     timestamp = System.currentTimeMillis()+50,
                     roleName = currentRoleName,
@@ -504,7 +504,7 @@ class MessageProcessingDelegate(
                 // 检查是否启用waifu模式来决定是否显示流式过程
                 val waifuPreferences = WaifuPreferences.getInstance(context)
                 isWaifuModeEnabled = waifuPreferences.enableWaifuModeFlow.first()
-                
+
                 // 只有在非waifu模式下才添加初始的AI消息
                 if (!isWaifuModeEnabled) {
                     withContext(Dispatchers.Main) {
@@ -513,7 +513,7 @@ class MessageProcessingDelegate(
                         }
                     }
                 }
-                
+
                 // 启动一个独立的协程来收集流内容并持续更新数据库
                 chatRuntime.streamCollectionJob =
                     coroutineScope.launch(Dispatchers.IO) {
@@ -569,7 +569,7 @@ class MessageProcessingDelegate(
                             val updatedMessage = aiMessage.copy(content = content)
                             // 防止后续读取不到
                             aiMessage.content = content
-                            
+
                             // 只有在非waifu模式下才显示流式更新
                             if (!isWaifuModeEnabled) {
                                 if (chatId != null) {
@@ -666,7 +666,7 @@ class MessageProcessingDelegate(
                     val currentRoleName = try {
                         characterCardManager.getCharacterCardFlow(roleCardId).first().name
                     } catch (e: Exception) {
-                        "Operit" // 默认角色名
+                        "Twent" // 默认角色名
                     }
 
                     // 获取当前使用的provider和model信息（在finally块内重新获取）
@@ -680,7 +680,7 @@ class MessageProcessingDelegate(
 
                     // 删除原始的空消息（因为在waifu模式下我们没有显示流式过程）
                     // 不需要显示空的AI消息
-                    
+
                     // 启动一个协程来创建独立的句子消息
                     coroutineScope.launch(Dispatchers.IO) {
                         AppLogger.d(

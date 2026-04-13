@@ -107,7 +107,7 @@ class GithubReleaseUtil(private val context: Context) {
                 conn.connectTimeout = timeoutMs
                 conn.readTimeout = timeoutMs
                 conn.requestMethod = method
-                conn.setRequestProperty("User-Agent", "Operit")
+                conn.setRequestProperty("User-Agent", "Twent")
                 if (method == "GET") {
                     conn.setRequestProperty("Range", "bytes=0-0")
                 }
@@ -170,4 +170,4 @@ class GithubReleaseUtil(private val context: Context) {
             null
         }
     }
-} 
+}

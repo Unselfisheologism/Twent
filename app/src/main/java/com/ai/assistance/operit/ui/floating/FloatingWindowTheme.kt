@@ -140,7 +140,7 @@ fun FloatingWindowTheme(
 
     // 创建调整大小后的默认Typography
     val defaultTypography = typography ?: getDefaultTypography()
-    
+
     MaterialTheme(
         colorScheme = finalColorScheme,
         typography = defaultTypography,
@@ -149,55 +149,55 @@ fun FloatingWindowTheme(
 }
 
 private fun getDefaultLightColorScheme() = lightColorScheme(
-    primary = Color(0xFF6650a4),
+    primary = Color(0xFFFF6B35), // Orange Primary
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005E),
-    secondary = Color(0xFF625b71),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE8DEF8),
-    onSecondaryContainer = Color(0xFF1E192B),
-    tertiary = Color(0xFF7D5260),
+    primaryContainer = Color(0xFFFFC4AD),
+    onPrimaryContainer = Color(0xFF301000),
+    secondary = Color(0xFF7FE8E8), // Cyan Primary
+    onSecondary = Color(0xFF003737),
+    secondaryContainer = Color(0xFFA5F0F0),
+    onSecondaryContainer = Color(0xFF001F1F),
+    tertiary = Color(0xFF4A7C9B), // Steel Primary
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF370B1E),
-    error = Color(0xFFB3261E),
+    tertiaryContainer = Color(0xFF6BA3C4),
+    onTertiaryContainer = Color(0xFF001E2E),
+    error = Color(0xFFFF4444),
     onError = Color.White,
-    errorContainer = Color(0xFFF9DEDC),
-    onErrorContainer = Color(0xFF410E0B),
-    background = Color(0xFFFFFBFE),
-    onBackground = Color(0xFF1C1B1F),
-    surface = Color(0xFFFFFBFE),
-    onSurface = Color(0xFF1C1B1F),
-    surfaceVariant = Color(0xFFE7E0EC),
-    onSurfaceVariant = Color(0xFF49454F),
-    outline = Color(0xFF79747E)
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    background = Color(0xFFFAFBFC),
+    onBackground = Color(0xFF0D1117),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF0D1117),
+    surfaceVariant = Color(0xFFE1E4E8),
+    onSurfaceVariant = Color(0xFF484F58),
+    outline = Color(0xFF6E7681)
 )
 
 private fun getDefaultDarkColorScheme() = darkColorScheme(
-    primary = Color(0xFF6650a4),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF4F378B),
-    onPrimaryContainer = Color(0xFFEADDFF),
-    secondary = Color(0xFFCCC2DC),
-    onSecondary = Color(0xFF332D41),
-    secondaryContainer = Color(0xFF4A4458),
-    onSecondaryContainer = Color(0xFFE8DEF8),
-    tertiary = Color(0xFFEFB8C8),
-    onTertiary = Color(0xFF492532),
-    tertiaryContainer = Color(0xFF633B48),
-    onTertiaryContainer = Color(0xFFFFD8E4),
-    error = Color(0xFFF2B8B5),
-    onError = Color(0xFF601410),
-    errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF9DEDC),
-    background = Color(0xFF1C1B1F),
-    onBackground = Color(0xFFE6E1E5),
-    surface = Color(0xFF1C1B1F),
-    onSurface = Color(0xFFE6E1E5),
-    surfaceVariant = Color(0xFF49454F),
-    onSurfaceVariant = Color(0xFFCAC4D0),
-    outline = Color(0xFF938F99)
+    primary = Color(0xFFFF6B35), // Orange Primary
+    onPrimary = Color(0xFF301000),
+    primaryContainer = Color(0xFFD34B17),
+    onPrimaryContainer = Color(0xFFFFC4AD),
+    secondary = Color(0xFF7FE8E8), // Cyan Primary
+    onSecondary = Color(0xFF003737),
+    secondaryContainer = Color(0xFF2DB5B5),
+    onSecondaryContainer = Color(0xFFA5F0F0),
+    tertiary = Color(0xFF4A7C9B), // Steel Primary
+    onTertiary = Color(0xFF001E2E),
+    tertiaryContainer = Color(0xFF2D5A7B),
+    onTertiaryContainer = Color(0xFF6BA3C4),
+    error = Color(0xFFFF4444),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    background = Color(0xFF1A1F2E),
+    onBackground = Color(0xFFC9D1D9),
+    surface = Color(0xFF161B22),
+    onSurface = Color(0xFFC9D1D9),
+    surfaceVariant = Color(0xFF30363D),
+    onSurfaceVariant = Color(0xFF8B949E),
+    outline = Color(0xFF6E7681)
 )
 
 private fun getDefaultTypography() = Typography(

@@ -2,71 +2,83 @@ package com.ai.assistance.operit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 🔥 Blue & Vermillion Orange Palette - Bold & Professional 🔥
+// 🔥 NEW PALETTE: Orange, Cyan, Steel Blue - Inspired by App Logo 🔥
+// Modern, Bold, High-Contrast Design
 
-// Primary brand colors
-val BluePrimary = Color(0xFF1E88E5)
-val BlueSecondary = Color(0xFF42A5F5)
-val BlueAccent = Color(0xFF64B5F6)
-val BlueLight = Color(0xFF90CAF9)
-val BlueDark = Color(0xFF1565C0)
+// Primary Orange Palette (from logo face)
+val OrangePrimary = Color(0xFFFF6B35)
+val OrangeSecondary = Color(0xFFFF8555)
+val OrangeAccent = Color(0xFFFFA07A)
+val OrangeLight = Color(0xFFFFC4AD)
+val OrangeDark = Color(0xFFE85D26)
+val OrangeDeeper = Color(0xFFD34B17)
 
-val VermillionPrimary = Color(0xFFFF5722)
-val VermillionSecondary = Color(0xFFFF7043)
-val VermillionAccent = Color(0xFFFF8A65)
-val VermillionLight = Color(0xFFFFAB91)
-val VermillionDark = Color(0xFFE64A19)
+// Cyan/Electric Blue Palette (from glowing eyes)
+val CyanPrimary = Color(0xFF7FE8E8)
+val CyanSecondary = Color(0xFF5DD9D9)
+val CyanAccent = Color(0xFF3ACACA)
+val CyanLight = Color(0xFFA5F0F0)
+val CyanDark = Color(0xFF2DB5B5)
+val CyanGlow = Color(0xFF8EF5F5)
 
-// Grey scale palette
-val Grey900 = Color(0xFF212121)
-val Grey800 = Color(0xFF303030)
-val Grey700 = Color(0xFF424242)
-val Grey600 = Color(0xFF616161)
-val Grey500 = Color(0xFF9E9E9E)
-val Grey400 = Color(0xFFBDBDBD)
-val Grey300 = Color(0xFFE0E0E0)
-val Grey200 = Color(0xFFEEEEEE)
-val Grey100 = Color(0xFFF5F5F5)
+// Steel Blue Palette (from mechanical armor)
+val SteelPrimary = Color(0xFF4A7C9B)
+val SteelSecondary = Color(0xFF3D6A85)
+val SteelAccent = Color(0xFF5A8FB0)
+val SteelLight = Color(0xFF6BA3C4)
+val SteelDark = Color(0xFF2D5A7B)
+val SteelDeeper = Color(0xFF1E4A66)
+
+// Dark Background Palette (modern dark navy)
+val Grey900 = Color(0xFF0D1117)
+val Grey800 = Color(0xFF161B22)
+val Grey700 = Color(0xFF1A1F2E)
+val Grey600 = Color(0xFF21263D)
+val Grey500 = Color(0xFF30363D)
+val Grey400 = Color(0xFF484F58)
+val Grey300 = Color(0xFF6E7681)
+val Grey200 = Color(0xFF8B949E)
+val Grey100 = Color(0xFFC9D1D9)
 
 // Dark mode base
-val DarkBg = Color(0xFF1A1A1A)
-val DarkSurface = Color(0xFF242424)
-val DarkSurfaceHigh = Color(0xFF2C2C2C)
-val DarkSurfaceHighest = Color(0xFF333333)
+val DarkBg = Color(0xFF1A1F2E)
+val DarkSurface = Color(0xFF161B22)
+val DarkSurfaceHigh = Color(0xFF21263D)
+val DarkSurfaceHighest = Color(0xFF30363D)
 
 // AMOLED Extra Dark mode
 val AmoledBg = Color(0xFF000000)
-val AmoledSurface = Color(0xFF0D0D0D)
-val AmoledSurfaceHigh = Color(0xFF1A1A1A)
-val AmoledSurfaceHighest = Color(0xFF262626)
+val AmoledSurface = Color(0xFF0D1117)
+val AmoledSurfaceHigh = Color(0xFF161B22)
+val AmoledSurfaceHighest = Color(0xFF21263D)
 
 // Light mode
-val LightBg = Color(0xFFF5F5F5)
+val LightBg = Color(0xFFFAFBFC)
 val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceHigh = Color(0xFFEEEEEE)
-val LightSurfaceHighest = Color(0xFFE0E0E0)
+val LightSurfaceHigh = Color(0xFFF6F8FA)
+val LightSurfaceHighest = Color(0xFFE1E4E8)
 
 // Accent & utility colors
-val OnDarkBg = Color(0xFFF5F5F5)
-val OnLightBg = Color(0xFF212121)
-val SuccessGreen = Color(0xFF66BB6A)
-val WarningOrange = Color(0xFFFF5722)
-val ErrorRed = Color(0xFFEF5350)
-val StreakFire = Color(0xFFFF7043)
+val OnDarkBg = Color(0xFFC9D1D9)
+val OnLightBg = Color(0xFF0D1117)
+val SuccessGreen = Color(0xFF58D68D)
+val WarningOrange = Color(0xFFFF6B35)
+val ErrorRed = Color(0xFFFF4444)
+val StreakFire = Color(0xFFFF8555)
 val GoldBadge = Color(0xFFFFD700)
 val SilverBadge = Color(0xFFC0C0C0)
 val BronzeBadge = Color(0xFFCD7F32)
 
 // Gradient colors for backgrounds
-val GradientStart = Color(0xFF1E88E5)
-val GradientMid = Color(0xFF42A5F5)
-val GradientEnd = Color(0xFFFF5722)
+val GradientStart = Color(0xFFFF6B35)
+val GradientMid = Color(0xFFFF8555)
+val GradientEnd = Color(0xFF7FE8E8)
 
 // Legacy support (keeping old names for compatibility)
-val Purple80 = BluePrimary
-val PurpleGrey80 = BlueSecondary
-val Pink80 = VermillionPrimary
+val Purple80 = OrangePrimary
+val PurpleGrey80 = CyanPrimary
+val Pink80 = OrangeSecondary
 
-val Purple40 = BluePrimary
-val PurpleGrey40 = BlueSecondary
-val Pink40 = VermillionPrimary
+val Purple40 = OrangePrimary
+val PurpleGrey40 = CyanPrimary
+val Pink40 = OrangeSecondary

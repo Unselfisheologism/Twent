@@ -20,41 +20,41 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
+
     <!-- 麦克风前台服务权限 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    
+
     <!-- 持续高性能模式 -->
     <uses-permission android:name="android.permission.SUSTAINED_PERFORMANCE_MODE" />
-    
+
     <!-- 闹钟权限 -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-    
+
     <!-- 电话和短信权限 -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    
+
     <!-- 位置权限 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    
+
     <!-- 添加后台运行和高耗电权限 -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         tools:ignore="ForegroundServicePermission" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" 
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
     <!-- 在<uses-permission>部分添加语音识别所需权限 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    
+
     <!-- Voice Interaction Service permissions -->
     <uses-permission android:name="android.permission.BIND_VOICE_INTERACTION" />
-    
+
     <!-- Workflow scheduling permissions -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -80,16 +80,16 @@
         tools:replace="android:theme">
 
         <!-- OpenCL 库权限声明 (Android 10+ 命名空间隔离解决方案) -->
-        <uses-native-library 
+        <uses-native-library
             android:name="libOpenCL.so"
             android:required="false" />
-        
+
         <!-- Vulkan 库权限声明 -->
-        <uses-native-library 
+        <uses-native-library
             android:name="libvulkan.so"
             android:required="false" />
 
-        <activity 
+        <activity
             android:name="live.pw.renderX.LatexView"
             tools:node="remove" />
 
@@ -97,12 +97,12 @@
         <meta-data
             android:name="android.max_aspect"
             android:value="2.4" />
-        
+
         <!-- Support high refresh rate displays -->
         <meta-data
-            android:name="android.allow_high_refresh_rate" 
+            android:name="android.allow_high_refresh_rate"
             android:value="true" />
-        
+
         <!-- FileProvider for APK installation -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -113,7 +113,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-        
+
         <!-- Workspace Documents Provider for SAF -->
         <provider
             android:name=".provider.WorkspaceDocumentsProvider"
@@ -136,7 +136,7 @@
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
         </provider>
-        
+
         <!-- 禁用 WorkManager 的自动初始化，由 Application 手动管理 -->
         <provider
             android:name="androidx.startup.InitializationProvider"
@@ -148,7 +148,7 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
-        
+
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
@@ -208,7 +208,7 @@
             android:label="@string/title_activity_crash_report"
             android:process=":crash"
             android:theme="@style/Theme.Operit" />
-        
+
         <activity
             android:name=".integrations.tasker.ActivityConfigAIAgentAction"
             android:exported="true"
@@ -224,7 +224,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
             android:exported="false" />
-        
+
         <!-- Floating Chat Service -->
         <service
             android:name=".services.FloatingChatService"
@@ -254,7 +254,7 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync|microphone" />
-        
+
         <!-- 添加广播接收器配置 -->
         <receiver
             android:name=".core.tools.javascript.ScriptExecutionReceiver"
@@ -279,13 +279,13 @@
                 <action android:name="com.ai.assistance.operit.action.INSTALL_PATCH_APK" />
             </intent-filter>
         </receiver>
-        
+
         <service
             android:name=".services.UIDebuggerService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
-        
+
 
 
         <!-- Receive Shower Binder handoff broadcast from the Shower server (Shizuku-style) -->
@@ -296,18 +296,18 @@
                 <action android:name="com.ai.assistance.operit.action.SHOWER_BINDER_READY" />
             </intent-filter>
         </receiver>
-        
+
         <!-- Workflow Tasker Plugin Activity -->
         <activity
             android:name=".integrations.tasker.WorkflowTaskerActivityConfig"
             android:exported="true"
-            android:label="Operit Workflow"
+            android:label="Twent Workflow"
             android:icon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
             </intent-filter>
         </activity>
-        
+
         <!-- Workflow Tasker Receiver -->
         <receiver
             android:name=".integrations.tasker.WorkflowTaskerReceiver"
@@ -318,7 +318,7 @@
                 <action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
             </intent-filter>
         </receiver>
-        
+
         <!-- Boot Completed Receiver for rescheduling workflows -->
         <receiver
             android:name=".integrations.tasker.WorkflowBootReceiver"
@@ -328,7 +328,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        
+
         <!-- Automation Accessibility Service -->
         <service
             android:name=".services.automation.OperitAutomationService"
@@ -342,18 +342,18 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-        
+
         <!-- Legacy accessibility service alias for backward compatibility -->
         <service
             android:name=".services.OperitAccessibilityService"
             android:exported="false" />
-        
+
         <!-- Automation Foreground Service -->
         <service
             android:name=".services.automation.AutomationForegroundService"
             android:foregroundServiceType="specialUse"
             android:exported="false"         />
-        
+
         <!-- Assist Entry Activity - makes app appear as digital assistant option (same as blurr) -->
         <activity
             android:name=".voice.AssistEntryActivity"
@@ -367,20 +367,20 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        
+
         <!-- Agent v2 Service -->
         <service
             android:name=".voice.v2.AgentService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
-        
+
         <!-- Enhanced Wake Word Service -->
         <service
             android:name=".voice.services.EnhancedWakeWordService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone" />
-        
+
         <!-- Conversational Agent Service -->
         <service
             android:name=".voice.ConversationalAgentService"
@@ -400,7 +400,7 @@
             android:name=".voice.services.FloatingOperitButtonService"
             android:enabled="true"
             android:exported="false" />
-        
+
     </application>
 
 </manifest>

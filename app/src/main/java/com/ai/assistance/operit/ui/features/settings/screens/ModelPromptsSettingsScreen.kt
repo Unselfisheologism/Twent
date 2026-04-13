@@ -1712,7 +1712,7 @@ fun CharacterCardItem(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -1733,7 +1733,7 @@ fun CharacterCardItem(
                             }
                         )
                     }
-                    
+
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.edit)) },
                         onClick = {
@@ -1748,7 +1748,7 @@ fun CharacterCardItem(
                             )
                         }
                     )
-                    
+
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.duplicate)) },
                         onClick = {
@@ -1778,7 +1778,7 @@ fun CharacterCardItem(
                             )
                         }
                     )
-                    
+
                     if (characterCard.isDefault) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.reset)) },
@@ -1795,7 +1795,7 @@ fun CharacterCardItem(
                             }
                         )
                     }
-                    
+
                     if (!characterCard.isDefault) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.delete)) },
@@ -2158,7 +2158,7 @@ private suspend fun saveBitmapToGallery(context: Context, bitmap: Bitmap, fileNa
                 return@withContext false
             } else {
                 val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                val targetDir = File(imagesDir, "Operit").apply { if (!exists()) mkdirs() }
+                val targetDir = File(imagesDir, "Twent").apply { if (!exists()) mkdirs() }
                 val imageFile = File(targetDir, fileName)
                 FileOutputStream(imageFile).use { outputStream ->
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)

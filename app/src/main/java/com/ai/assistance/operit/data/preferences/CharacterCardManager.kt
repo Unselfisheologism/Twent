@@ -40,31 +40,31 @@ private val Context.characterCardDataStore by preferencesDataStore(
  * 角色卡管理器
  */
 class CharacterCardManager private constructor(private val context: Context) {
-    
+
     private val dataStore = context.characterCardDataStore
     private val tagManager = PromptTagManager.getInstance(context)
     // 添加UserPreferencesManager引用用于主题管理
     private val userPreferencesManager = UserPreferencesManager.getInstance(context)
     // 添加WaifuPreferences引用用于Waifu模式配置管理
     private val waifuPreferences = WaifuPreferences.getInstance(context)
-    
+
     companion object {
         private val CHARACTER_CARD_LIST = stringSetPreferencesKey("character_card_list")
         private val ACTIVE_CHARACTER_CARD_ID = stringPreferencesKey("active_character_card_id")
-        
+
         // 系统标签的固定ID
         const val SYSTEM_CHAT_TAG_ID = "system_chat_tag"
         const val SYSTEM_VOICE_TAG_ID = "system_voice_tag"
         const val SYSTEM_DESKTOP_PET_TAG_ID = "system_desktop_pet_tag"
-        
+
         // 默认角色卡ID
         const val DEFAULT_CHARACTER_CARD_ID = "default_character"
 
-        const val DEFAULT_CHARACTER_NAME = "Operit"
-        
+        const val DEFAULT_CHARACTER_NAME = "Twent"
+
         @Volatile
         private var INSTANCE: CharacterCardManager? = null
-        
+
         /**
          * 获取全局单例实例
          */
@@ -74,28 +74,28 @@ class CharacterCardManager private constructor(private val context: Context) {
             }
         }
     }
-    
+
     // 角色卡列表流
     val characterCardListFlow: Flow<List<String>> = dataStore.data.map { preferences ->
         preferences[CHARACTER_CARD_LIST]?.toList() ?: listOf(DEFAULT_CHARACTER_CARD_ID)
     }
-    
+
     // 活跃角色卡ID流
     val activeCharacterCardIdFlow: Flow<String> = dataStore.data.map { preferences ->
         preferences[ACTIVE_CHARACTER_CARD_ID] ?: DEFAULT_CHARACTER_CARD_ID
     }
-    
+
     // 获取角色卡流
     fun getCharacterCardFlow(id: String): Flow<CharacterCard> = dataStore.data.map { preferences ->
         getCharacterCardFromPreferences(preferences, id)
     }
-    
+
     // 获取活跃角色卡流
     val activeCharacterCardFlow: Flow<CharacterCard> = dataStore.data.map { preferences ->
         val activeId = preferences[ACTIVE_CHARACTER_CARD_ID] ?: DEFAULT_CHARACTER_CARD_ID
         getCharacterCardFromPreferences(preferences, activeId)
     }
-    
+
     // 从Preferences中获取角色卡
     private fun getCharacterCardFromPreferences(preferences: Preferences, id: String): CharacterCard {
         val nameKey = stringPreferencesKey("character_card_${id}_name")
@@ -109,7 +109,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         val isDefaultKey = booleanPreferencesKey("character_card_${id}_is_default")
         val createdAtKey = longPreferencesKey("character_card_${id}_created_at")
         val updatedAtKey = longPreferencesKey("character_card_${id}_updated_at")
-        
+
         return CharacterCard(
             id = id,
             name = preferences[nameKey] ?: context.getString(R.string.default_character_card),
@@ -125,7 +125,7 @@ class CharacterCardManager private constructor(private val context: Context) {
             updatedAt = preferences[updatedAtKey] ?: System.currentTimeMillis()
         )
     }
-    
+
     // 获取角色卡快照
     suspend fun getCharacterCard(id: String): CharacterCard {
         val preferences = dataStore.data.first()
@@ -169,7 +169,7 @@ class CharacterCardManager private constructor(private val context: Context) {
                 currentList.add(id)
                 preferences[CHARACTER_CARD_LIST] = currentList
             }
-            
+
             // 设置角色卡数据
             preferences[stringPreferencesKey("character_card_${id}_name")] = newCard.name
             preferences[stringPreferencesKey("character_card_${id}_description")] = newCard.description
@@ -182,7 +182,7 @@ class CharacterCardManager private constructor(private val context: Context) {
             preferences[booleanPreferencesKey("character_card_${id}_is_default")] = newCard.isDefault
             preferences[longPreferencesKey("character_card_${id}_created_at")] = newCard.createdAt
             preferences[longPreferencesKey("character_card_${id}_updated_at")] = newCard.updatedAt
-            
+
             // 如果是第一个角色卡或设为默认，设为活跃
             if (newCard.isDefault || preferences[ACTIVE_CHARACTER_CARD_ID] == null) {
                 preferences[ACTIVE_CHARACTER_CARD_ID] = id
@@ -193,10 +193,10 @@ class CharacterCardManager private constructor(private val context: Context) {
         if (!newCard.isDefault) {
             createDefaultThemeForCharacterCard(id)
         }
-        
+
         return id
     }
-    
+
     // 更新角色卡
     suspend fun updateCharacterCard(card: CharacterCard) {
         dataStore.edit { preferences ->
@@ -208,22 +208,22 @@ class CharacterCardManager private constructor(private val context: Context) {
             preferences[stringSetPreferencesKey("character_card_${card.id}_attached_tag_ids")] = card.attachedTagIds.toSet()
             preferences[stringPreferencesKey("character_card_${card.id}_advanced_custom_prompt")] = card.advancedCustomPrompt
             preferences[stringPreferencesKey("character_card_${card.id}_marks")] = card.marks
-            
+
             // 更新修改时间
             preferences[longPreferencesKey("character_card_${card.id}_updated_at")] = System.currentTimeMillis()
         }
     }
-    
+
     // 删除角色卡
     suspend fun deleteCharacterCard(id: String) {
         if (id == DEFAULT_CHARACTER_CARD_ID) return
-        
+
         dataStore.edit { preferences ->
             // 从列表中移除
             val currentList = preferences[CHARACTER_CARD_LIST]?.toMutableSet() ?: mutableSetOf(DEFAULT_CHARACTER_CARD_ID)
             currentList.remove(id)
             preferences[CHARACTER_CARD_LIST] = currentList
-            
+
             // 清除角色卡数据
             val keysToRemove = listOf(
                 "character_card_${id}_name",
@@ -238,7 +238,7 @@ class CharacterCardManager private constructor(private val context: Context) {
                 "character_card_${id}_created_at",
                 "character_card_${id}_updated_at"
             )
-            
+
             keysToRemove.forEach { key ->
                 when {
                     key.endsWith("_attached_tag_ids") -> preferences.remove(stringSetPreferencesKey(key))
@@ -247,7 +247,7 @@ class CharacterCardManager private constructor(private val context: Context) {
                     else -> preferences.remove(stringPreferencesKey(key))
                 }
             }
-            
+
             // 如果这是活跃角色卡，切换到默认
             if (preferences[ACTIVE_CHARACTER_CARD_ID] == id) {
                 preferences[ACTIVE_CHARACTER_CARD_ID] = DEFAULT_CHARACTER_CARD_ID
@@ -258,21 +258,21 @@ class CharacterCardManager private constructor(private val context: Context) {
         userPreferencesManager.deleteCharacterCardTheme(id)
         // 删除角色卡对应的Waifu模式配置
         waifuPreferences.deleteCharacterCardWaifuSettings(id)
-        
+
     }
-    
+
     // 设置活跃角色卡
     suspend fun setActiveCharacterCard(id: String) {
         dataStore.edit { preferences ->
             preferences[ACTIVE_CHARACTER_CARD_ID] = id
         }
-        
+
         // 切换到对应角色卡的主题
         switchToCharacterCardTheme(id)
         // 切换到对应角色卡的Waifu模式配置
         switchToCharacterCardWaifuSettings(id)
     }
-    
+
     // 组合提示词（角色设定 + 其他内容 + 标签 + 高级自定义）
     suspend fun combinePrompts(
         characterCardId: String,
@@ -288,48 +288,48 @@ class CharacterCardManager private constructor(private val context: Context) {
                 null
             }
         }
-        
+
         val combinedPrompt = buildString {
             if (characterCard.characterSetting.isNotBlank()) {
                 append(characterCard.characterSetting)
                 append("\n\n")
             }
-            
+
             if (characterCard.otherContent.isNotBlank()) {
                 append(characterCard.otherContent)
                 append("\n\n")
             }
-            
+
             attachedTags.forEach { tag ->
                 if (tag.promptContent.isNotBlank()) {
                     append(tag.promptContent)
                     append("\n\n")
                 }
             }
-            
+
             if (characterCard.advancedCustomPrompt.isNotBlank()) {
                 append(characterCard.advancedCustomPrompt)
                 append("\n\n")
             }
         }
-        
+
         return combinedPrompt.trim()
     }
-    
+
     // 初始化默认角色卡和系统标签
     suspend fun initializeIfNeeded() {
         var isInitialized = false
         dataStore.edit { preferences ->
             val cardListKey = CHARACTER_CARD_LIST
             val currentList = preferences[cardListKey]?.toMutableSet()
-            
+
             if (currentList == null || currentList.isEmpty()) {
                 isInitialized = true
                 // 首次安装，创建默认角色卡
                 val defaultCardId = DEFAULT_CHARACTER_CARD_ID
                 preferences[cardListKey] = setOf(defaultCardId)
                 preferences[ACTIVE_CHARACTER_CARD_ID] = defaultCardId
-                
+
                 // 设置默认角色卡数据
                 setupDefaultCharacterCard(preferences, defaultCardId)
             }
@@ -342,7 +342,7 @@ class CharacterCardManager private constructor(private val context: Context) {
             userPreferencesManager.copyCurrentThemeToCharacterCard(DEFAULT_CHARACTER_CARD_ID)
             userPreferencesManager.saveAiAvatarForCharacterCard(DEFAULT_CHARACTER_CARD_ID, "file:///android_asset/operit.png")
         }
-        
+
         // 确保系统标签存在
         tagManager.initializeSystemTags()
     }
@@ -355,7 +355,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         // 同时也重置头像和主题
         userPreferencesManager.saveAiAvatarForCharacterCard(DEFAULT_CHARACTER_CARD_ID, "file:///android_asset/operit.png")
     }
-    
+
     private fun setupDefaultCharacterCard(preferences: MutablePreferences, id: String) {
         val nameKey = stringPreferencesKey("character_card_${id}_name")
         val descriptionKey = stringPreferencesKey("character_card_${id}_description")
@@ -381,7 +381,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         preferences[createdAtKey] = System.currentTimeMillis()
         preferences[updatedAtKey] = System.currentTimeMillis()
     }
-    
+
     // 获取所有角色卡
     suspend fun getAllCharacterCards(): List<CharacterCard> {
         val cardIds = characterCardListFlow.first()
@@ -519,13 +519,13 @@ class CharacterCardManager private constructor(private val context: Context) {
             }
         }
     }
-    
+
     // 根据角色名查找角色卡
     suspend fun findCharacterCardByName(name: String): CharacterCard? {
         val allCards = getAllCharacterCards()
         return allCards.find { it.name == name }
     }
-    
+
     /**
      * 从酒馆角色卡JSON字符串创建角色卡
      */
@@ -533,7 +533,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         return try {
             val gson = Gson()
             val tavernCard = gson.fromJson(jsonString, TavernCharacterCard::class.java)
-            
+
             if (tavernCard.data.name.isBlank()) {
                 return Result.failure(Exception(context.getString(R.string.charactercard_name_empty)))
             }
@@ -597,7 +597,7 @@ class CharacterCardManager private constructor(private val context: Context) {
             Result.failure(Exception(context.getString(R.string.charactercard_parse_failed, e.message ?: "")))
         }
     }
-    
+
     /**
      * 从PNG图片文件中提取酒馆角色卡数据
      */
@@ -659,34 +659,34 @@ class CharacterCardManager private constructor(private val context: Context) {
             Result.failure(Exception(context.getString(R.string.charactercard_export_failed, e.message ?: "")))
         }
     }
-    
+
     /**
      * 从PNG图片的tEXt块中提取JSON数据
      */
     private fun extractJsonFromPng(inputStream: InputStream): String {
         val bytes = inputStream.readBytes()
-        
+
         // PNG文件头检查
         if (bytes.size < 8 || !isPngHeader(bytes)) {
             throw Exception(context.getString(R.string.charactercard_invalid_png))
         }
-        
+
         var offset = 8 // 跳过PNG头
-        
+
         while (offset < bytes.size - 12) { // 确保有足够的字节读取块头
             // 读取块长度
             val chunkLength = readUInt32BigEndian(bytes, offset)
             offset += 4
-            
+
             // 读取块类型
             val chunkType = String(bytes.sliceArray(offset until offset + 4), Charsets.ISO_8859_1)
             offset += 4
-            
+
             // 如果是tEXt块
             if (chunkType == "tEXt") {
                 val chunkData = bytes.sliceArray(offset until offset + chunkLength.toInt())
                 val textData = String(chunkData, Charsets.ISO_8859_1)
-                
+
                 // 查找关键字"chara"
                 val nullIndex = textData.indexOf('\u0000')
                 if (nullIndex > 0) {
@@ -697,14 +697,14 @@ class CharacterCardManager private constructor(private val context: Context) {
                     }
                 }
             }
-            
+
             // 跳到下一个块 (数据长度 + 4字节CRC)
             offset += chunkLength.toInt() + 4
         }
-        
+
         throw Exception(context.getString(R.string.charactercard_no_data_in_png))
     }
-    
+
     /**
      * 检查PNG文件头
      */
@@ -714,7 +714,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         )
         return bytes.size >= 8 && bytes.sliceArray(0..7).contentEquals(pngSignature)
     }
-    
+
     /**
      * 从字节数组中读取大端序的32位无符号整数
      */
@@ -724,7 +724,7 @@ class CharacterCardManager private constructor(private val context: Context) {
                ((bytes[offset + 2].toInt() and 0xFF) shl 8) or
                (bytes[offset + 3].toInt() and 0xFF)).toLong()
     }
-    
+
     /**
      * 解码Base64数据为JSON字符串
      */
@@ -736,13 +736,13 @@ class CharacterCardManager private constructor(private val context: Context) {
             throw Exception(context.getString(R.string.charactercard_base64_decode_failed, e.message ?: ""))
         }
     }
-    
+
     /**
      * 将酒馆角色卡转换为本地角色卡格式
      */
     private suspend fun convertTavernCardToCharacterCard(tavernCard: TavernCharacterCard): CharacterCard {
         val data = tavernCard.data
-        
+
         // 组合角色设定
         val characterSetting = buildString {
             if (data.description.isNotBlank()) {
@@ -830,7 +830,7 @@ class CharacterCardManager private constructor(private val context: Context) {
                 append("\n")
             }
         }.trim()
-        
+
         return CharacterCard(
             id = "", // 将在createCharacterCard中生成
             name = data.name,
@@ -910,7 +910,7 @@ class CharacterCardManager private constructor(private val context: Context) {
         try {
             // 始终调用切换方法，即使角色卡没有配置也会清空当前配置，避免保留上一个角色卡的设置
             waifuPreferences.switchToCharacterCardWaifuSettings(characterCardId)
-            
+
             if (waifuPreferences.hasCharacterCardWaifuSettings(characterCardId)) {
                 AppLogger.d("CharacterCardManager", "已切换到角色卡 $characterCardId 的Waifu模式配置")
             } else {
@@ -933,4 +933,4 @@ class CharacterCardManager private constructor(private val context: Context) {
             AppLogger.e("CharacterCardManager", "为活跃角色卡保存Waifu配置失败", e)
         }
     }
-} 
+}

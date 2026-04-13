@@ -31,7 +31,7 @@ import java.util.zip.ZipOutputStream
 
 /**
  * Import/Export Manager for chats, workflows, skills, and MCP servers
- * 
+ *
  * This manager provides comprehensive import/export functionality for:
  * - Chats: Export to JSON/Markdown, Import from JSON/Markdown
  * - Workflows: Export to JSON, Import from JSON
@@ -42,7 +42,7 @@ class ImportExportManager(private val context: Context) {
 
     companion object {
         private const val TAG = "ImportExportManager"
-        private const val EXPORT_DIR_NAME = "Operit"
+        private const val EXPORT_DIR_NAME = "Twent"
         private const val CHATS_DIR = "chats"
         private const val WORKFLOWS_DIR = "workflows"
         private const val SKILLS_DIR = "skills"
@@ -99,7 +99,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportAllChats(): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Starting export of all chats")
-            
+
             // Use the existing export function from ChatHistoryManager
             val exportPath = chatHistoryManager.exportChatHistoriesToDownloads()
             if (exportPath == null) {
@@ -121,7 +121,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportChat(chatId: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Exporting chat: $chatId")
-            
+
             // Get chat from database directly
             val database = com.ai.assistance.operit.data.db.AppDatabase.getDatabase(context)
             val chatEntity = database.chatDao().getChatById(chatId)
@@ -153,10 +153,10 @@ class ImportExportManager(private val context: Context) {
     suspend fun importChats(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Importing chats from: $uri")
-            
+
             // Use the existing import function from ChatHistoryManager with Operit format
             val importResult = chatHistoryManager.importChatHistoriesFromUri(uri, com.ai.assistance.operit.data.converter.ChatFormat.OPERIT)
-            
+
             AppLogger.d(TAG, "Imported ${importResult.new} chats")
             Result.success(importResult.new)
         } catch (e: Exception) {
@@ -173,7 +173,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportAllWorkflows(): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Starting export of all workflows")
-            
+
             val workflowsResult = workflowRepository.getAllWorkflows()
             val workflows = workflowsResult.getOrNull()
             if (workflows.isNullOrEmpty()) {
@@ -208,7 +208,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportWorkflow(workflowId: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Exporting workflow: $workflowId")
-            
+
             val workflow = workflowRepository.getWorkflowById(workflowId).getOrNull()
                 ?: return@withContext Result.failure(Exception("Workflow not found: $workflowId"))
 
@@ -237,7 +237,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun importWorkflows(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Importing workflows from: $uri")
-            
+
             var importedCount = 0
 
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -277,7 +277,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportAllSkills(): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Starting export of all skills")
-            
+
             val skillsDir = File(skillRepository.getSkillsDirectoryPath())
             if (!skillsDir.exists() || skillsDir.listFiles()?.isEmpty() != false) {
                 return@withContext Result.failure(Exception("No skills to export"))
@@ -308,10 +308,10 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportSkill(skillName: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Exporting skill: $skillName")
-            
+
             val skillsDir = File(skillRepository.getSkillsDirectoryPath())
             val skillDir = File(skillsDir, skillName)
-            
+
             if (!skillDir.exists() || !skillDir.isDirectory) {
                 return@withContext Result.failure(Exception("Skill not found: $skillName"))
             }
@@ -337,7 +337,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun importSkills(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Importing skills from: $uri")
-            
+
             var importedCount = 0
 
             // Copy ZIP to temp file first
@@ -373,7 +373,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportAllMCPServers(): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Starting export of all MCP servers")
-            
+
             val mcpConfig = mcpLocalServer.mcpConfig.value
             if (mcpConfig.mcpServers.isEmpty()) {
                 return@withContext Result.failure(Exception("No MCP servers to export"))
@@ -424,7 +424,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportMCPServer(serverId: String): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Exporting MCP server: $serverId")
-            
+
             val mcpConfig = mcpLocalServer.mcpConfig.value
             val serverConfig = mcpConfig.mcpServers[serverId]
                 ?: return@withContext Result.failure(Exception("MCP server not found: $serverId"))
@@ -463,7 +463,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun importMCPServers(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Importing MCP servers from: $uri")
-            
+
             var importedCount = 0
             val currentConfig = mcpLocalServer.mcpConfig.value
 
@@ -483,7 +483,7 @@ class ImportExportManager(private val context: Context) {
                             try {
                                 val content = zis.bufferedReader().readText()
                                 val importedConfig = gson.fromJson(content, MCPLocalServer.MCPConfig::class.java)
-                                
+
                                 // Merge servers and persist them
                                 importedConfig.mcpServers.forEach { (serverId, serverConfig) ->
                                     if (!currentConfig.mcpServers.containsKey(serverId)) {
@@ -508,7 +508,7 @@ class ImportExportManager(private val context: Context) {
                                 val serverId = entry.name.substringAfter("servers/").substringBefore(".json")
                                 val content = zis.bufferedReader().readText()
                                 val serverConfig = gson.fromJson(content, MCPLocalServer.MCPConfig.ServerConfig::class.java)
-                                
+
                                 if (!currentConfig.mcpServers.containsKey(serverId)) {
                                     // Persist the imported server
                                     mcpLocalServer.addOrUpdateMCPServer(
@@ -546,7 +546,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun importMCPServerFromJson(uri: Uri, serverId: String): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Importing MCP server from JSON: $serverId")
-            
+
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val content = inputStream.bufferedReader().readText()
                 val serverConfig = gson.fromJson(content, MCPLocalServer.MCPConfig.ServerConfig::class.java)
@@ -575,7 +575,7 @@ class ImportExportManager(private val context: Context) {
     suspend fun exportAllData(): Result<File> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Starting export of all data")
-            
+
             val exportDir = getExportDirectory()
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val zipFile = File(exportDir, "operit_backup_$timestamp.zip")
@@ -585,7 +585,7 @@ class ImportExportManager(private val context: Context) {
                 val manifest = mapOf(
                     "version" to "1.0",
                     "exportDate" to timestamp,
-                    "app" to "Operit"
+                    "app" to "Twent"
                 )
                 val manifestJson = gson.toJson(manifest)
                 val manifestEntry = ZipEntry("manifest.json")

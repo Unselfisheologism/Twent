@@ -283,7 +283,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent) // 重要：更新当前Intent
         AppLogger.d(TAG, "onNewIntent: Received intent with action: ${intent?.action}")
         val isGitHubOAuthCallback = intent?.data?.let { uri ->
-            uri.scheme == "operit" && uri.host == "github-oauth-callback"
+            uri.scheme == "twent" && uri.host == "github-oauth-callback"
         } == true
         handleIntent(intent)
 
@@ -315,7 +315,7 @@ class MainActivity : ComponentActivity() {
         }
 
         val uri = intent?.data
-        if (uri != null && uri.scheme == "operit" && uri.host == "github-oauth-callback") {
+        if (uri != null && uri.scheme == "twent" && uri.host == "github-oauth-callback") {
             val code = uri.getQueryParameter("code")
             if (code != null) {
                 AppLogger.d(TAG, "GitHub OAuth code received from onCreate: $code")
@@ -326,7 +326,7 @@ class MainActivity : ComponentActivity() {
             }
             return
         }
-        
+
         // Handle opened and shared files
         when (intent?.action) {
             Intent.ACTION_VIEW -> {
@@ -481,12 +481,12 @@ class MainActivity : ComponentActivity() {
             AppLogger.d(TAG, "No pending shared files to process")
             return
         }
-        
+
         AppLogger.d(TAG, "Processing ${uris.size} pending shared file(s)")
         uris.forEachIndexed { index, uri ->
             AppLogger.d(TAG, "  [$index] URI: $uri")
         }
-        
+
         lifecycleScope.launch {
             try {
                 // Pass the URIs to the chat screen via SharedFileHandler
@@ -564,7 +564,7 @@ class MainActivity : ComponentActivity() {
                 showOrientationChangeDialog = false
                 return
             }
-            
+
             // 如果不是“转回去”，或者弹窗还未显示，则显示弹窗
             showOrientationChangeDialog = true
         }
@@ -757,7 +757,7 @@ class MainActivity : ComponentActivity() {
                                 } else {
                                     NavItem.AiChat
                                 }
-                                
+
                                 OperitApp(
                                         initialNavItem = initialNavItem,
                                         toolHandler = toolHandler,

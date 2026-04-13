@@ -58,6 +58,6 @@ data class WebhookPayload(
     val eventType: String,
     val timestamp: Long = System.currentTimeMillis(),
     val data: Map<String, String> = emptyMap(),
-    val source: String = "operit",
+    val source: String = "twent",
     val version: String = "1.0"
 )

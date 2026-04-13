@@ -29,7 +29,7 @@ class WakeWordManager(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             val serviceIntent = Intent(context, EnhancedWakeWordService::class.java)
             ContextCompat.startForegroundService(context, serviceIntent)
-            Toast.makeText(context, context.getString(R.string.wake_word_enabled, "Operit"), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.wake_word_enabled, "Twent"), Toast.LENGTH_SHORT).show()
         } else {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }

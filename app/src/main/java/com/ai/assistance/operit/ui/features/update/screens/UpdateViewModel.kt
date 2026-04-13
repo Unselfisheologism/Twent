@@ -18,33 +18,33 @@ import java.util.Locale
  * 负责从GitHub API获取releases信息
  */
 class UpdateViewModel(private val context: Context) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow<UpdateUiState>(UpdateUiState.Loading)
     val uiState: StateFlow<UpdateUiState> = _uiState.asStateFlow()
-    
+
     private val apiService = GitHubApiService(context)
-    
+
     companion object {
         private const val REPO_OWNER = "AAswordman"
-        private const val REPO_NAME = "Operit"
+        private const val REPO_NAME = "Twent"
     }
-    
+
     init {
         loadUpdates()
     }
-    
+
     /**
      * 加载更新历史
      */
     fun loadUpdates() {
         viewModelScope.launch {
             _uiState.value = UpdateUiState.Loading
-            
+
             apiService.getRepositoryReleases(REPO_OWNER, REPO_NAME, page = 1, perPage = 20)
                 .onSuccess { releases ->
                     val updates = releases
                         .filter { !it.draft && !it.prerelease } // 过滤掉草稿和预发布
-                        .mapIndexed { index, release -> 
+                        .mapIndexed { index, release ->
                             parseReleaseToUpdateInfo(release, isLatest = index == 0)
                         }
                     _uiState.value = UpdateUiState.Success(updates)
@@ -54,7 +54,7 @@ class UpdateViewModel(private val context: Context) : ViewModel() {
                 }
         }
     }
-    
+
     /**
      * 将GitHub Release转换为UpdateInfo
      */
@@ -68,16 +68,16 @@ class UpdateViewModel(private val context: Context) : ViewModel() {
         } catch (e: Exception) {
             release.published_at.substring(0, 10)
         }
-        
+
         // 解析release body
         val body = release.body ?: ""
-        
+
         // 提取标题（使用release name或第一行）
         val title = release.name?.takeIf { it.isNotBlank() } ?: context.getString(R.string.update_version_title)
-        
+
         // 获取下载链接
         val downloadUrl = release.html_url
-        
+
         return UpdateInfo(
             version = release.tag_name,
             date = date,
@@ -100,4 +100,3 @@ sealed class UpdateUiState {
     data class Success(val updates: List<UpdateInfo>) : UpdateUiState()
     data class Error(val message: String) : UpdateUiState()
 }
-
