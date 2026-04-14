@@ -52,30 +52,6 @@ import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.flow.flowOf
 
-@Composable
-fun useFloatingWindowLauncher(
-    actualViewModel: ChatViewModel,
-    permissionLauncher: ActivityResultLauncher<String>
-): () -> Unit {
-    val context = LocalContext.current
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    return {
-        val isCurrentlyFloating = actualViewModel.isFloatingMode.value
-        actualViewModel.onFloatingButtonClick(
-            FloatingMode.WINDOW,
-            permissionLauncher,
-            colorScheme,
-            typography
-        )
-        // 如果当前不是悬浮模式，说明是要启动悬浮窗，则最小化应用
-        if (!isCurrentlyFloating) {
-            (context as? android.app.Activity)?.moveTaskToBack(true)
-        }
-    }
-}
-
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun ChatScreenHeader(
@@ -118,8 +94,6 @@ fun ChatScreenHeader(
         }
 
 
-    val launchFloatingWindow = useFloatingWindowLauncher(actualViewModel, permissionLauncher)
-
     Box(
             modifier =
                     modifier
@@ -140,10 +114,7 @@ fun ChatScreenHeader(
                     showChatHistorySelector = showChatHistorySelector,
                     onToggleChatHistorySelector = { actualViewModel.toggleChatHistorySelector() },
                     modifier = Modifier,
-                    isFloatingMode = actualViewModel.isFloatingMode.value,
-                    onLaunchFloatingWindow = launchFloatingWindow,
                     historyIconColor = chatHeaderHistoryIconColor,
-                    pipIconColor = chatHeaderPipIconColor,
                     runningTaskCount = activeStreamingChatIds.size,
                     activeCharacterName = activeCharacterCard?.name ?: "",
                     activeCharacterAvatarUri = activeCharacterAvatarUri,
@@ -221,7 +192,7 @@ fun ChatScreenHeader(
                         onClick = {},
                         enabled = false
                     )
-                    
+
                     DropdownMenuItem(
                             text = { Text(stringResource(R.string.input_tokens, inputTokenCount)) },
                             onClick = {},
@@ -250,7 +221,7 @@ fun ChatScreenHeader(
                             onClick = {},
                             enabled = false
                     )
-                    
+
                 }
             }
         }

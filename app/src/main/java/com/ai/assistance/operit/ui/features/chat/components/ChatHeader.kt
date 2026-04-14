@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -31,10 +30,7 @@ fun ChatHeader(
         showChatHistorySelector: Boolean,
         onToggleChatHistorySelector: () -> Unit,
         modifier: Modifier = Modifier,
-        onLaunchFloatingWindow: () -> Unit = {},
-        isFloatingMode: Boolean = false,
         historyIconColor: Int? = null,
-        pipIconColor: Int? = null,
         runningTaskCount: Int = 0,
         activeCharacterName: String,
         activeCharacterAvatarUri: String?,
@@ -108,38 +104,6 @@ fun ChatHeader(
                                                 modifier = Modifier.size(20.dp)
                                         )
                                 }
-                        }
-                }
-
-                Box(
-                        modifier =
-                                Modifier.size(32.dp)
-                                        .background(
-                                                color =
-                                                        if (isFloatingMode)
-                                                                MaterialTheme.colorScheme.primary
-                                                                        .copy(alpha = 0.15f)
-                                                        else Color.Transparent,
-                                                shape = CircleShape
-                                        )
-                ) {
-                        IconButton(
-                                onClick = onLaunchFloatingWindow,
-                                modifier = Modifier.matchParentSize()
-                        ) {
-                                Icon(
-                                        imageVector = Icons.Default.PictureInPicture,
-                                        contentDescription =
-                                                if (isFloatingMode) stringResource(R.string.close_floating_window) else stringResource(R.string.open_floating_window),
-                                        tint =
-                                                pipIconColor?.let { Color(it) }
-                                                        ?: if (isFloatingMode)
-                                                                MaterialTheme.colorScheme.primary
-                                                        else
-                                                                MaterialTheme.colorScheme.onSurface
-                                                                        .copy(alpha = 0.7f),
-                                        modifier = Modifier.size(20.dp)
-                                )
                         }
                 }
 
