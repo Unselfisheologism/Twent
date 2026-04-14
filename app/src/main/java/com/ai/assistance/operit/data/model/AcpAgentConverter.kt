@@ -148,6 +148,11 @@ object AcpAgentConverter {
      * Generate a sensible install command based on available metadata.
      */
     private fun generateInstallCommand(entry: AcpAgentEntry): String {
+        // Special case for Qwen Code - uses scoped package name
+        if (entry.id == "qwen-code") {
+            return "npm install -g @qwen-code/qwen-code@latest"
+        }
+
         // Try to infer from repository URL or tags
         val repo = entry.repository?.lowercase() ?: ""
         val tags = entry.tags?.map { it.lowercase() } ?: emptyList()

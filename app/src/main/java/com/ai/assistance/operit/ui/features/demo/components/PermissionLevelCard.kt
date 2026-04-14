@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -54,6 +55,13 @@ fun PermissionLevelCard(
         onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
+    var showAccessibilityHelp by remember { mutableStateOf(false) }
+
+    // Show accessibility help dialog
+    AccessibilityHelpDialog(
+        show = showAccessibilityHelp,
+        onDismiss = { showAccessibilityHelp = false }
+    )
 
     // Refresh rotation animation
     var refreshRotation by remember { mutableStateOf(0f) }
@@ -320,22 +328,39 @@ private fun AccessibilityPermissionSection(
                         )
                     }
 
-                    val statusText =
-                            if (hasAccessibilityServiceEnabled) {
-                                stringResource(R.string.status_granted)
-                            } else {
-                                stringResource(R.string.status_not_granted)
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val statusText =
+                                if (hasAccessibilityServiceEnabled) {
+                                    stringResource(R.string.status_granted)
+                                } else {
+                                    stringResource(R.string.status_not_granted)
+                                }
 
-                    Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (hasAccessibilityServiceEnabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.error
+                        Text(
+                                text = statusText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (hasAccessibilityServiceEnabled) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                }
+                        )
+
+                        // Help icon for accessibility issues
+                        if (!hasAccessibilityServiceEnabled) {
+                            IconButton(
+                                onClick = { showAccessibilityHelp = true },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = stringResource(R.string.accessibility_help_dialog_title),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
-                    )
+                        }
+                    }
                 }
             }
         }
