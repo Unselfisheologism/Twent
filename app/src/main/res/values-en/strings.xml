@@ -1435,6 +1435,24 @@
     <string name="accessibility_wizard_open_settings">Open Accessibility Settings</string>
     <string name="accessibility_wizard_success_message">Accessibility service is properly configured and ready to use!</string>
 
+    <!-- Accessibility Help Dialog -->
+    <string name="accessibility_help_dialog_title">Why Can\'t I Enable the Service?</string>
+    <string name="accessibility_help_explanation">When you install this app outside of Google Play Store (via direct APK download or ADB), Android applies a security restriction called \"Restricted Settings\". This prevents the accessibility service toggle from working normally.</string>
+    <string name="accessibility_help_steps_title">How to Enable the Service (Step-by-Step)</string>
+    <string name="accessibility_help_step1_title">Open Your Phone\'s Settings App</string>
+    <string name="accessibility_help_step1_description">Go to your device\'s main Settings application</string>
+    <string name="accessibility_help_step2_title">Navigate to Apps</string>
+    <string name="accessibility_help_step2_description">Tap on \"Apps\" or \"Apps &amp; notifications\", then find and tap on this app in the list (you may need to use the search function)</string>
+    <string name="accessibility_help_step3_title">Open Advanced App Info Menu</string>
+    <string name="accessibility_help_step3_description">Tap the three-dot menu icon (⋮) in the top-right corner of the App Info screen</string>
+    <string name="accessibility_help_step4_title">Allow Restricted Settings</string>
+    <string name="accessibility_help_step4_description">Tap \"Allow restricted settings\" from the menu. You may need to authenticate with your fingerprint, face unlock, or device PIN</string>
+    <string name="accessibility_help_step5_title">Enable the Accessibility Service</string>
+    <string name="accessibility_help_step5_description">Now go back to Accessibility Settings and tap on this app - the toggle should now be enabled. Turn it ON</string>
+    <string name="accessibility_help_important_note_title">Important Note:</string>
+    <string name="accessibility_help_important_note_description">This is an Android security feature, not an app bug. You only need to do this once. If you install the app from Google Play Store in the future, this step will not be required.</string>
+    <string name="accessibility_help_done_button">I Understand</string>
+
     <!-- Debugger Mode -->
     <string name="debugger_accessibility_fallback_title">Accessibility Acceleration (High Risk)</string>
     <string name="debugger_accessibility_fallback_description">Debugger mode performs UI operations via Shell by default. Enabling the accessibility service can significantly accelerate UI automation, but it also substantially increases the risk of being detected and banned by some applications. It is not recommended unless you require maximum operational speed.</string>

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.ui.features.demo.components.AccessibilityHelpDialog
 
 /**
  * 无障碍服务设置向导卡片
@@ -32,6 +34,13 @@ fun AccessibilityWizardCard(
     onToggleWizard: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit
 ) {
+    var showHelpDialog by remember { mutableStateOf(false) }
+
+    // Show help dialog
+    AccessibilityHelpDialog(
+        show = showHelpDialog,
+        onDismiss = { showHelpDialog = false }
+    )
 
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -167,16 +176,38 @@ fun AccessibilityWizardCard(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            Button(
-                                onClick = onOpenAccessibilitySettings,
+                            // Info button to show help dialog
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(vertical = 12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    stringResource(R.string.accessibility_wizard_open_settings),
-                                    fontSize = 14.sp
-                                )
+                                // Help button
+                                OutlinedIconButton(
+                                    onClick = { showHelpDialog = true },
+                                    modifier = Modifier.size(48.dp),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = stringResource(R.string.accessibility_help_dialog_title),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                // Open settings button
+                                Button(
+                                    onClick = onOpenAccessibilitySettings,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(vertical = 12.dp)
+                                ) {
+                                    Text(
+                                        stringResource(R.string.accessibility_wizard_open_settings),
+                                        fontSize = 14.sp
+                                    )
+                                }
                             }
                         }
                     }
