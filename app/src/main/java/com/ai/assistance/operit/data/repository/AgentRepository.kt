@@ -249,7 +249,22 @@ class AgentRepository(private val context: Context) {
      * Check if an agent is installed by running its install check command.
      */
     suspend fun checkInstallation(agentId: String): Boolean = withContext(Dispatchers.IO) {
-        val agent = AgentRegistry.getById(agentId) ?: return@withContext false
+        // Try built-in agents first
+        var agent = AgentRegistry.getById(agentId)
+
+        // Try ACP agents
+        if (agent == null) {
+            agent = acpAgentsCache?.find { it.id == agentId }
+        }
+
+        // Try detected agents
+        if (agent == null) {
+            agent = detectedAgentsCache?.find { it.id == agentId }
+        }
+
+        if (agent == null) {
+            return@withContext false
+        }
 
         try {
             // Run the check command directly using shell
@@ -336,11 +351,25 @@ class AgentRepository(private val context: Context) {
      * Check all agents' installation status.
      */
     suspend fun checkAllInstallations() = withContext(Dispatchers.IO) {
+        // Check built-in agents
         for (agent in AgentRegistry.agents) {
             val isInstalled = checkInstallation(agent.id)
             if (isInstalled) {
                 installedAgentsCache[agent.id] = true
             }
+        }
+
+        // Check ACP agents
+        acpAgentsCache?.forEach { agent ->
+            val isInstalled = checkInstallationSilent(agent.id, agent.installCheckCommand)
+            if (isInstalled) {
+                installedAgentsCache[agent.id] = true
+            }
+        }
+
+        // Check detected agents (already marked as installed)
+        detectedAgentsCache?.forEach { agent ->
+            installedAgentsCache[agent.id] = true
         }
     }
 
@@ -442,6 +471,11 @@ class AgentRepository(private val context: Context) {
         // If not found, try to find in cached ACP agents
         if (agent == null) {
             agent = acpAgentsCache?.find { it.id == agentId }
+        }
+
+        // If not found, try to find in detected agents
+        if (agent == null) {
+            agent = detectedAgentsCache?.find { it.id == agentId }
         }
 
         if (agent == null) {

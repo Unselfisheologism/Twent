@@ -53,11 +53,12 @@ object AcpAgentConverter {
 
     /**
      * Extract binary name from install command (e.g., "npm i -g foo" -> "foo")
+     * Handles package-to-binary name mismatches for known packages.
      */
     private fun extractBinaryFromInstallCommand(installCommand: String?): String? {
         if (installCommand == null) return null
 
-        return when {
+        val packageName = when {
             installCommand.startsWith("npm i -g ") || installCommand.startsWith("npm install -g ") -> {
                 installCommand.substringAfterLast("/").substringAfterLast(" ").trim()
             }
@@ -72,7 +73,76 @@ object AcpAgentConverter {
             }
             else -> null
         }
+
+        // Map known package names to their actual binary names
+        return packageName?.let { PACKAGE_TO_BINARY_MAP[it] ?: it }
     }
+
+    /**
+     * Maps package names to their actual binary names.
+     * Many packages have different package vs binary names.
+     */
+    private val PACKAGE_TO_BINARY_MAP = mapOf(
+        // Qwen Code
+        "qwen-code" to "qwen",
+        // Claude Code
+        "claude-code" to "claude",
+        "@anthropic-ai/claude-code" to "claude",
+        // OpenAI Codex
+        "@openai/codex" to "codex",
+        // GitHub Copilot
+        "@github/copilot-cli" to "github-copilot",
+        // Cursor
+        "cursor" to "cursor",
+        // Gemini CLI
+        "gemini-cli" to "gemini",
+        "@anthropic/gemini-cli" to "gemini",
+        // Goose
+        "goose" to "goose",
+        "@block/goose" to "goose",
+        // Junie
+        "junie" to "junie",
+        "@jetbrains/junie" to "junie",
+        // Kilo Code
+        "kilocode" to "kilocode",
+        "@kilocode/kilocode" to "kilocode",
+        // Kimi CLI
+        "kimi-cli" to "kimi",
+        "@moonshot/kimi-cli" to "kimi",
+        // Aider (pip package = binary name)
+        "aider-chat" to "aider",
+        // OpenCode (go package)
+        "opencode" to "opencode",
+        // Factory Droid
+        "factory-droid" to "factory",
+        // Nova
+        "nova" to "nova",
+        // Qoder
+        "qoder" to "qoder",
+        // Stakpak
+        "stakpak" to "stakpak",
+        // DeepAgents
+        "deepagents" to "deepagents",
+        // Fast Agent
+        "fast-agent" to "fast-agent",
+        // Cline
+        "cline" to "cline",
+        "@cline/cline" to "cline",
+        // Mistral Vibe
+        "mistral-vibe" to "mistral-vibe",
+        // Pi ACP
+        "pi-acp" to "pi",
+        // Autohand Code
+        "autohand-code" to "autohand",
+        // Corust Agent
+        "corust-agent" to "corust",
+        // Crow CLI
+        "crow-cli" to "crow",
+        // Minion Code
+        "minion-code" to "minion",
+        // Amp ACP
+        "amp-acp" to "amp"
+    )
 
     /**
      * Generate a sensible install command based on available metadata.

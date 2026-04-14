@@ -342,25 +342,16 @@ class AgentViewModel(
         agentName: String,
         onNavigateToTerminal: (String) -> Unit
     ) {
-        // Try to find agent in local registry first
-        var agent = AgentRegistry.getById(agentId)
+        // Try all sources: local registry, ACP, detected
+        val agent = repository.getAllAgentsWithStatus().find { it.first.id == agentId }?.first
 
-        // If not found in local registry, check ACP cached agents
+        // If not found at all
         if (agent == null) {
-            agent = repository.getCachedAcpAgents().find { it.first.id == agentId }?.first
-        }
-
-        // If not found in local registry, it might be an ACP agent or custom
-        if (agent == null) {
-            // For custom agent installations, we navigate with the install command
+            // Check if it's a custom agent
             if (agentId.startsWith("custom-")) {
-                // This is a custom agent installation - user will provide commands manually
                 onNavigateToTerminal("")
                 return
             }
-        }
-
-        if (agent == null) {
             _sessionsState.value = _sessionsState.value.copy(
                 error = "Unknown agent: $agentId"
             )
@@ -368,7 +359,7 @@ class AgentViewModel(
         }
 
         // Check if agent is installed
-        val agentWithStatus = repository.getAgentWithStatus(agentId)
+        val agentWithStatus = repository.getAllAgentsWithStatus().find { it.first.id == agentId }
         val isInstalled = agentWithStatus?.second == AgentInstallStatus.INSTALLED
 
         // Navigate to terminal with the appropriate command
@@ -384,6 +375,8 @@ class AgentViewModel(
         viewModelScope.launch {
             _sessionsState.value = _sessionsState.value.copy(isCheckingInstallations = true)
             repository.checkAllInstallations()
+            // Detect any newly installed agents too
+            repository.detectInstalledNonAcpAgents()
             updateAgentsWithStatus()
             _sessionsState.value = _sessionsState.value.copy(isCheckingInstallations = false)
         }
@@ -393,8 +386,8 @@ class AgentViewModel(
      * Start an agent session (requires agent to be installed).
      */
     fun startAgentSession(agentId: String, onNavigateToTerminal: (String) -> Unit) {
-        val agent = AgentRegistry.getById(agentId)
-            ?: repository.getCachedAcpAgents().find { it.first.id == agentId }?.first
+        // Try all sources: local registry, ACP, detected
+        val agent = repository.getAllAgentsWithStatus().find { it.first.id == agentId }?.first
 
         if (agent == null) {
             _sessionsState.value = _sessionsState.value.copy(
@@ -404,7 +397,7 @@ class AgentViewModel(
         }
 
         // Check if agent is installed
-        val agentWithStatus = repository.getAgentWithStatus(agentId)
+        val agentWithStatus = repository.getAllAgentsWithStatus().find { it.first.id == agentId }
         if (agentWithStatus?.second != AgentInstallStatus.INSTALLED) {
             _sessionsState.value = _sessionsState.value.copy(
                 error = "${agent.name} is not installed. Please install it first."
