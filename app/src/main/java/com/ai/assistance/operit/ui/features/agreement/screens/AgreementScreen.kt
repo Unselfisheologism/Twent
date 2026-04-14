@@ -24,18 +24,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun AgreementScreen(onAgreementAccepted: () -> Unit) {
     val scrollState = rememberScrollState()
-    var isButtonEnabled by remember { mutableStateOf(false) }
-    var remainingSeconds by remember { mutableStateOf(5) }
     val alpha = remember { Animatable(0f) }
 
-    // Timer to enable the button after 5 seconds
+    // Fade-in animation
     LaunchedEffect(Unit) {
         alpha.animateTo(1f, animationSpec = tween(durationMillis = 500))
-        repeat(5) {
-            delay(1000)
-            remainingSeconds--
-        }
-        isButtonEnabled = true
     }
 
     Box(
@@ -81,7 +74,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Terms of Service",
+                text = "User Agreement & Privacy Policy",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
@@ -90,7 +83,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Please review and accept to continue",
+                text = "Everything is free — now and always",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -117,9 +110,9 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     // Section 1: Overview
                     AgreementSection(
                         icon = Icons.Default.Info,
-                        title = "Overview",
+                        title = "Free & Open",
                         content = """
-                            Welcome to our AI-powered voice assistant application. By using this app, you agree to these terms. We're committed to providing you with a powerful, privacy-focused automation tool that helps streamline your digital life.
+                            Operit is a free AI-powered voice assistant application. All features are available to you at no cost, both now and in the future. We believe in providing powerful automation tools accessible to everyone without paywalls or subscription fees.
                         """.trimIndent()
                     )
 
@@ -127,18 +120,34 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section 2: Privacy
+                    // Section 2: How We Sustain
+                    AgreementSection(
+                        icon = Icons.Default.MonetizationOn,
+                        title = "How We Stay Free",
+                        content = """
+                            Operit is supported by AI-powered advertisements served through Kohala Labs (koa hlabs.com). These ads are designed to be relevant and non-intrusive. By using the app, you consent to the display of these advertisements.
+
+                            We do not sell the app, charge for any features, or require payments from users. If you acquired this app through a paid channel, you were not charged by us.
+                        """.trimIndent()
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Section 3: Privacy
                     AgreementSection(
                         icon = Icons.Default.Security,
                         title = "Your Privacy Matters",
                         content = """
-                            We prioritize your privacy and data security. All voice processing and automation tasks are designed to work primarily on your device. We collect minimal data necessary to provide our services, and we never sell your personal information to third parties.
+                            We prioritize your privacy and data security. All voice processing and automation tasks are designed to work primarily on your device. We collect minimal data necessary to provide our services and serve advertisements.
 
                             Key Privacy Points:
                             • Voice data is processed locally when possible
                             • Cloud processing only occurs when necessary for AI features
                             • You can delete your data at any time
                             • We use industry-standard encryption for all transmissions
+                            • Ad data is not linked to your personal identity
                         """.trimIndent()
                     )
 
@@ -146,7 +155,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section 3: Permissions
+                    // Section 4: Permissions
                     AgreementSection(
                         icon = Icons.Default.SettingsAccessibility,
                         title = "Required Permissions",
@@ -157,6 +166,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                             • Microphone: Allows voice command recognition
                             • Display Over Other Apps: Required for the floating assistant widget
                             • Notifications: Enables smart notification management
+                            • Storage: Required for file management features
 
                             You can revoke these permissions at any time through your device settings, though some features may be limited.
                         """.trimIndent()
@@ -166,12 +176,12 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section 4: Usage
+                    // Section 5: Usage
                     AgreementSection(
                         icon = Icons.Default.Lightbulb,
                         title = "Acceptable Use",
                         content = """
-                            Our app is designed to enhance your productivity through automation and voice assistance. You agree to use the app responsibly and not for any unlawful purposes. The AI features are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
+                            Operit is designed to enhance your productivity through automation and voice assistance. You agree to use the app responsibly and not for any unlawful purposes. The AI features are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
                         """.trimIndent()
                     )
 
@@ -179,7 +189,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section 5: Updates
+                    // Section 6: Updates
                     AgreementSection(
                         icon = Icons.Default.Update,
                         title = "Updates & Changes",
@@ -192,7 +202,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section 6: Contact
+                    // Section 7: Contact
                     AgreementSection(
                         icon = Icons.Default.Mail,
                         title = "Contact Us",
@@ -223,7 +233,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "This is a simplified version of our terms. Full legal terms are available upon request.",
+                                text = "Operit is distributed as a free APK. There is no paid version or tier. All features are unlocked by default.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
@@ -234,19 +244,15 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Accept button with countdown
+            // Accept button - always enabled
             Button(
                 onClick = onAgreementAccepted,
-                enabled = isButtonEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isButtonEnabled) OrangePrimary
-                                    else OrangePrimary.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = OrangePrimary.copy(alpha = 0.5f),
-                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                    containerColor = OrangePrimary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(16.dp),
                 elevation = ButtonDefaults.buttonElevation(
@@ -254,17 +260,8 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     pressedElevation = 8.dp
                 )
             ) {
-                if (!isButtonEnabled) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
                 Text(
-                    text = if (isButtonEnabled) "Accept & Continue"
-                           else "Please wait ($remainingSeconds s)",
+                    text = "Accept & Continue",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )

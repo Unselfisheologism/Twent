@@ -103,28 +103,14 @@ fun ShizukuDemoScreen(
                 },
                 onStoragePermissionClick = {
                     try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                            context.startActivity(intent)
-                        } else {
-                            val intent =
-                                    Intent(
-                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                            Uri.parse("package:" + context.packageName)
-                                    )
-                            context.startActivity(intent)
-                        }
+                        val intent =
+                                Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.parse("package:" + context.packageName)
+                                )
+                        context.startActivity(intent)
                     } catch (e: Exception) {
-                        try {
-                            val intent =
-                                    Intent(
-                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                            Uri.parse("package:" + context.packageName)
-                                    )
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, context.getString(R.string.cannot_open_permission_settings), Toast.LENGTH_SHORT).show()
-                        }
+                        Toast.makeText(context, context.getString(R.string.cannot_open_permission_settings), Toast.LENGTH_SHORT).show()
                     }
                 },
                 onOverlayPermissionClick = {
