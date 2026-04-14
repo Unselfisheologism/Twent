@@ -345,6 +345,11 @@ class AgentViewModel(
         // Try to find agent in local registry first
         var agent = AgentRegistry.getById(agentId)
 
+        // If not found in local registry, check ACP cached agents
+        if (agent == null) {
+            agent = repository.getCachedAcpAgents().find { it.first.id == agentId }?.first
+        }
+
         // If not found in local registry, it might be an ACP agent or custom
         if (agent == null) {
             // For custom agent installations, we navigate with the install command
@@ -364,6 +369,42 @@ class AgentViewModel(
 
         // Check if agent is installed
         val agentWithStatus = repository.getAgentWithStatus(agentId)
+        val isInstalled = agentWithStatus?.second == AgentInstallStatus.INSTALLED
+
+        // Navigate to terminal with the appropriate command
+        val command = if (isInstalled) agent.startCommand else agent.installCommand
+        onNavigateToTerminal(command)
+    }
+
+    /**
+     * Re-check installation status for all agents.
+     * Call this when user returns from terminal.
+     */
+    fun refreshInstallationStatus() {
+        viewModelScope.launch {
+            _sessionsState.value = _sessionsState.value.copy(isCheckingInstallations = true)
+            repository.checkAllInstallations()
+            updateAgentsWithStatus()
+            _sessionsState.value = _sessionsState.value.copy(isCheckingInstallations = false)
+        }
+    }
+
+    /**
+     * Start an agent session (requires agent to be installed).
+     */
+    fun startAgentSession(agentId: String, onNavigateToTerminal: (String) -> Unit) {
+        val agent = AgentRegistry.getById(agentId)
+            ?: repository.getCachedAcpAgents().find { it.first.id == agentId }?.first
+
+        if (agent == null) {
+            _sessionsState.value = _sessionsState.value.copy(
+                error = "Unknown agent: $agentId"
+            )
+            return
+        }
+
+        // Check if agent is installed
+        val agentWithStatus = repository.getAgentWithStatus(agentId)
         if (agentWithStatus?.second != AgentInstallStatus.INSTALLED) {
             _sessionsState.value = _sessionsState.value.copy(
                 error = "${agent.name} is not installed. Please install it first."
@@ -371,12 +412,10 @@ class AgentViewModel(
             return
         }
 
-        // Create a session for tracking purposes
+        // Create a session and navigate to terminal
         viewModelScope.launch {
-            val title = "$agentName - Session ${System.currentTimeMillis() % 1000}"
+            val title = "${agent.name} - Session ${System.currentTimeMillis() % 1000}"
             repository.startAgentSession(agentId, title)
-
-            // Navigate to terminal with the agent's start command
             onNavigateToTerminal(agent.startCommand)
         }
     }

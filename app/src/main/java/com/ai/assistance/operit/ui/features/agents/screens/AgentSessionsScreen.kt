@@ -84,12 +84,19 @@ fun AgentSessionsScreen(
             when (selectedTab) {
                 0 -> SessionsTab(
                     sessions = sessionsState.sessions,
+                    agents = sessionsState.agents,
                     isLoading = sessionsState.isLoading,
+                    isCheckingInstallations = sessionsState.isCheckingInstallations,
                     error = sessionsState.error,
                     onSessionClose = { sessionId ->
                         viewModel.closeSession(sessionId)
                     },
-                    onStartNew = { selectedTab = 1 }
+                    onStartAgent = { agentId ->
+                        viewModel.startAgentSession(agentId) { command ->
+                            onNavigateToTerminal(command)
+                        }
+                    },
+                    onRefreshStatus = { viewModel.refreshInstallationStatus() }
                 )
                 1 -> AgentMarketTab(
                     agents = sessionsState.agents,
@@ -119,12 +126,33 @@ fun AgentSessionsScreen(
 @Composable
 private fun SessionsTab(
     sessions: List<AgentSession>,
+    agents: List<AgentWithStatus>,
     isLoading: Boolean,
+    isCheckingInstallations: Boolean,
     error: String?,
     onSessionClose: (String) -> Unit,
-    onStartNew: () -> Unit
+    onStartAgent: (String) -> Unit,
+    onRefreshStatus: () -> Unit = {}
 ) {
+    // Get installed agents
+    val installedAgents = agents.filter { it.installStatus == AgentInstallStatus.INSTALLED }
+
     Column(modifier = Modifier.fillMaxSize()) {
+        // Refresh status button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onRefreshStatus) {
+                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Refresh Status")
+            }
+        }
+
         // Error message
         error?.let { errorMsg ->
             Card(
@@ -143,8 +171,65 @@ private fun SessionsTab(
             }
         }
 
-        if (sessions.isEmpty()) {
-            // Empty state
+        // Show active sessions if any
+        if (sessions.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(sessions) { session ->
+                    AgentSessionCard(
+                        session = session,
+                        onClose = { onSessionClose(session.id) }
+                    )
+                }
+            }
+        } else if (installedAgents.isNotEmpty()) {
+            // No sessions but there are installed agents
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Top
+            ) {
+                Text(
+                    "No Active Sessions",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                Text(
+                    "Start an agent to begin",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                if (isCheckingInstallations) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Checking installation status...", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(installedAgents) { agentWithStatus ->
+                        InstalledAgentCard(
+                            agentWithStatus = agentWithStatus,
+                            isLoading = isLoading,
+                            onStartAgent = { onStartAgent(agentWithStatus.definition.id) }
+                        )
+                    }
+                }
+            }
+        } else {
+            // Empty state - no sessions and no installed agents
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -160,44 +245,71 @@ private fun SessionsTab(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "No Active Agent Sessions",
+                    "No Agent CLIs Installed",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Start an AI agent to help you with coding tasks",
+                    "Install an Agent CLI from the Agent Market to get started",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = onStartNew) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Start Agent")
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(sessions) { session ->
-                    AgentSessionCard(
-                        session = session,
-                        onClose = { onSessionClose(session.id) }
-                    )
-                }
             }
         }
+    }
+}
 
-        // Loading indicator
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+@Composable
+private fun InstalledAgentCard(
+    agentWithStatus: AgentWithStatus,
+    isLoading: Boolean,
+    onStartAgent: () -> Unit
+) {
+    val agent = agentWithStatus.definition
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Agent icon
+            Icon(
+                Icons.Default.Terminal,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = Color(0xFF4CAF50)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Agent info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = agent.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = agent.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Start button
+            Button(onClick = onStartAgent, enabled = !isLoading) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Start")
             }
         }
     }
