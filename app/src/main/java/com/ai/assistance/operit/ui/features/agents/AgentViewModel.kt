@@ -9,6 +9,7 @@ import com.ai.assistance.operit.data.model.AgentDefinition
 import com.ai.assistance.operit.data.model.AgentInstallStatus
 import com.ai.assistance.operit.data.model.AgentRegistry
 import com.ai.assistance.operit.data.model.AgentSession
+import com.ai.assistance.operit.data.model.CommandCategory
 import com.ai.assistance.operit.data.repository.AgentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

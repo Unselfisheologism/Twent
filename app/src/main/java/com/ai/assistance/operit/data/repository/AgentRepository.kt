@@ -2,7 +2,6 @@ package com.ai.assistance.operit.data.repository
 
 import android.content.Context
 import com.ai.assistance.operit.data.model.AcpAgentConverter
-import com.ai.assistance.operit.data.model.AcpRegistryService
 import com.ai.assistance.operit.data.model.AgentCommand
 import com.ai.assistance.operit.data.model.AgentDefinition
 import com.ai.assistance.operit.data.model.AgentInstallStatus
