@@ -127,7 +127,9 @@ fun PermissionLevelCard(
                     onBatteryOptimizationClick = onBatteryOptimizationClick,
                     onLocationPermissionClick = onLocationPermissionClick,
                     onAccessibilityClick = onAccessibilityClick,
-                    onOperitTerminalClick = onOperitTerminalClick
+                    onOperitTerminalClick = onOperitTerminalClick,
+                    showAccessibilityHelp = showAccessibilityHelp,
+                    onShowAccessibilityHelpChange = { showAccessibilityHelp = it }
             )
 
             // Refresh button
@@ -221,7 +223,9 @@ private fun AccessibilityPermissionSection(
         onBatteryOptimizationClick: () -> Unit,
         onLocationPermissionClick: () -> Unit,
         onAccessibilityClick: () -> Unit,
-        onOperitTerminalClick: () -> Unit
+        onOperitTerminalClick: () -> Unit,
+        showAccessibilityHelp: Boolean,
+        onShowAccessibilityHelpChange: (Boolean) -> Unit
 ) {
     Column {
         Text(
@@ -349,7 +353,7 @@ private fun AccessibilityPermissionSection(
                         // Help icon for accessibility issues
                         if (!hasAccessibilityServiceEnabled) {
                             IconButton(
-                                onClick = { showAccessibilityHelp = true },
+                                onClick = { onShowAccessibilityHelpChange(true) },
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(
