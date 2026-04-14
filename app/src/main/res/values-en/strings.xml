@@ -1,4 +1,4 @@
- <resources>
+﻿ <resources>
     <string name="app_name">Twent AI</string>
     <string name="accessibility_service_description">Used to obtain the UI hierarchy, providing faster interface analysis capabilities for AI assistants, and does not collect or store any personal information.</string>
 
@@ -9,22 +9,22 @@
     <string name="model">Model</string>
 
     <!-- Navigation -->
-    <string name="nav_ai_chat">AI Chat</string>
+    <string name="nav_ai_chat">Agent Chat</string>
     <string name="nav_mini_apps">Mini-Apps</string>
     <string name="nav_adb_commands">Permissions</string>
-    <string name="nav_settings">Settings</string>
+    <string name="nav_settings">System Settings</string>
     <string name="nav_tool_permissions">Tool Permissions</string>
-    <string name="nav_about">About</string>
+    <string name="nav_about">System Info</string>
     <string name="nav_packages">Packages</string>
     <string name="nav_assistant_config">Assistant Config</string>
     <string name="nav_terminal">Terminal</string>
-    <string name="nav_toolbox">Toolbox</string>
+    <string name="nav_toolbox">Toolset</string>
     <string name="nav_item_agreement">User Agreement</string>
     <string name="nav_power_user_mode">Power User Mode</string>
 
     <!-- Chat Module -->
     <string name="chat_fullscreen_input">Fullscreen Input</string>
-    <string name="chat_history_settings">Chat History Settings</string>
+    <string name="chat_history_settings">Chat Session Settings</string>
     <string name="chat_display_mode">Display Mode</string>
     <string name="chat_model_count">%d models</string>
     <string name="chat_starting_export">Starting export...</string>
@@ -106,11 +106,11 @@
     <string name="chathistory_external_storage">External storage</string>
 
     <string name="nav_workflow">Workflow</string>
-    <string name="nav_group_ai_features">AI Features</string>
-    <string name="nav_group_tools">Tools</string>
-    <string name="nav_group_system">System</string>
+    <string name="nav_group_ai_features">Agent Features</string>
+    <string name="nav_group_tools">Agentic Tools</string>
+    <string name="nav_group_system">OS Control</string>
     <string name="menu">Menu</string>
-    <string name="token_config">Get API Key</string>
+    <string name="token_config">API Gateway</string>
     <string name="desktop_pet_start">Start Desktop Pet</string>
 
     <!-- Workflow related -->
@@ -413,7 +413,7 @@
     <string name="tool_category">Tool Category</string>
 
     <!-- Assistant Config Screen -->
-    <string name="assistant_config_title">Assistant Config</string>
+    <string name="assistant_config_title">Agent Config</string>
     <string name="import_model">Import Model</string>
     <string name="scan_user_models">Scan User Models</string>
     <string name="operation_success">Operation Successful</string>
@@ -851,7 +851,7 @@
     <string name="settings_global_display_subtitle">Manage message display, FPS counter, notifications and other global display options</string>
     <string name="settings_data_backup">Data Backup and Recovery</string>
     <string name="settings_data_backup_desc">Import, export, or delete chat history and problem library data for easy backup and recovery of important information</string>
-    <string name="settings_chat_history_management">Chat History Management</string>
+    <string name="settings_chat_history_management">Chat Session Management</string>
     <string name="settings_chat_history_management_subtitle">View stats and batch organize your conversations</string>
     <string name="settings_manage_backup">Manage Backup</string>
 
@@ -1716,7 +1716,7 @@
     <string name="action_retry">Retry</string>
     <string name="common_collapse">Collapse</string>
     <string name="common_expand_more">Expand More</string>
-    <string name="nav_memory_base">Memory Base</string>
+    <string name="nav_memory_base">Knowledge Base</string>
 
     <!-- Manual Memory Update -->
     <string name="manual_memory_update">Manual Memory Update</string>
@@ -1752,8 +1752,8 @@
     <string name="tool_test_center">Tool Test Center</string>
     <string name="tool_test_center_desc">Test the availability and functionality of AI tools</string>
     <string name="tool_file_manager">File Manager</string>
-    <string name="tool_file_manager_desc">Browse and manage device files with various operations support</string>
-    <string name="tool_tts">Text-to-Speech</string>
+    <string name="tool_file_manager_desc">Browse and manage device files with full operations support</string>
+    <string name="tool_tts">Text-To-Speech</string>
     <string name="tool_tts_desc">Convert text to speech with adjustable speed and pitch</string>
     <string name="tts_title">Text-to-Speech Demo</string>
     <string name="tts_input_text">Input Text</string>
@@ -1796,8 +1796,8 @@
     <string name="tool_user_agreement_desc">View the application\'s user agreement and privacy policy</string>
     <string name="tool_default_assistant_guide">Default Assistant Setup</string>
     <string name="tool_default_assistant_guide_desc">Set Twent voice floating as system default assistant</string>
-    <string name="tool_terminal">Command Terminal</string>
-    <string name="tool_terminal_desc">Powerful command-line terminal for executing system commands</string>
+    <string name="tool_terminal">Linux Terminal</string>
+    <string name="tool_terminal_desc">Full-featured bash shell for executing system commands</string>
     <string name="tool_terminal_auto_config">Terminal Auto Configuration</string>
     <string name="tool_terminal_auto_config_desc">Automatically install and configure Python, PIP and other development tools</string>
     <string name="tool_terminal_auto_config_under_construction">Terminal auto configuration feature is being refactored...</string>
@@ -1807,8 +1807,8 @@
     <string name="ui_debugger_description">Tap the button in the bottom right corner to launch the floating window for UI debugging</string>
     <string name="ui_debugger_launch_floating">Launch Floating Window</string>
     <string name="ui_debugger_start_float">Start Float</string>
-    <string name="tool_ffmpeg_toolbox">FFmpeg Toolbox</string>
-    <string name="tool_ffmpeg_toolbox_desc">Powerful audio/video processing tool supporting conversion, cropping, merging and more</string>
+    <string name="tool_ffmpeg_toolbox">FFmpeg Media Engine</string>
+    <string name="tool_ffmpeg_toolbox_desc">Professional audio/video processing engine supporting conversion, cropping, merging and more</string>
     <string name="tool_stream_markdown_demo">Streaming Markdown Demo</string>
     <string name="tool_stream_markdown_demo_desc">High-performance streaming Markdown rendering demo with real-time character flow effects</string>
     <string name="tool_shell_executor">Command Executor</string>
@@ -1842,9 +1842,9 @@
     <string name="shell_executor_execute_failed">Command execution failed: %s</string>
     <string name="tool_log_viewer">Log Viewer</string>
     <string name="tool_log_viewer_desc">Real-time capture and view system and application logs with filtering and search support</string>
-    <string name="tool_sql_viewer">SQL Viewer</string>
-    <string name="tool_sql_viewer_desc">Browse built-in tables and run SQL commands</string>
-    <string name="screen_title_sql_viewer">SQL Viewer</string>
+    <string name="tool_sql_viewer">SQL Data Viewer</string>
+    <string name="tool_sql_viewer_desc">Browse built-in data tables and execute SQL queries</string>
+    <string name="screen_title_sql_viewer">SQL Data Viewer</string>
     <string name="sql_viewer_title">SQL Viewer</string>
     <string name="sql_viewer_input_label">SQL Input</string>
     <string name="sql_viewer_run">Run</string>
@@ -2861,7 +2861,7 @@
     <string name="thinking_type_guidance">guidance</string>
     <string name="thinking_quality">Thinking quality</string>
     <string name="thinking_quality_desc">Only effective in thinking mode</string>
-    <string name="model_config">Model Configuration</string>
+    <string name="model_config">Model Settings</string>
     <string name="model_config_desc">Select a configured model here, or click Manage Configuration below to create or modify models</string>
     <string name="prompt">Prompt</string>
     <string name="prompt_desc">Select a configured prompt here, or click Manage Configuration below to create or modify prompts</string>
@@ -3149,7 +3149,7 @@
     <string name="settings_data_permissions">Data and Permissions</string>
     <string name="settings_tool_permissions_subtitle">Tool permissions and security settings</string>
     <string name="settings_data_backup_subtitle">Chat history backup management</string>
-    <string name="settings_token_usage_stats">Token Usage Statistics</string>
+    <string name="settings_token_usage_stats">AI API Usage</string>
     <string name="settings_function_label">Function</string>
     <string name="settings_model_label">Model</string>
     <string name="settings_no_token_records">No token usage records for functional modules yet.</string>
@@ -3474,6 +3474,7 @@
     <string name="provider_lmstudio">LM Studio</string>
     <string name="provider_ppinfra">PPInfra Cloud</string>
     <string name="provider_kilo_gateway">Kilo AI Gateway</string>
+    <string name="provider_nvidia_nims_gateway">NVIDIA NIMS Gateway</string>
     <string name="provider_openai_generic">OpenAI (Generic)</string>
     <string name="provider_other">Other Providers</string>
     <string name="provider_doubao">Doubao</string>
@@ -3562,13 +3563,13 @@
     <string name="value_type_object">Object(JSON)</string>
     <string name="other_parameters">Other Parameters</string>
 
-    <string name="settings_title">Settings</string>
+    <string name="settings_title">System Settings</string>
     <string name="api_settings_title">API Settings</string>
 
     <!-- Persona Card Generation and Waifu Mode Settings -->
     <string name="persona_card_generation">Persona Card Generation</string>
     <string name="persona_card_generation_desc">Enter AI conversation to generate personalized character cards</string>
-    <string name="waifu_mode_settings">Waifu Mode Settings</string>
+    <string name="waifu_mode_settings">Companion Mode Settings</string>
     <string name="waifu_mode_settings_desc">Configure AI response sentence-by-sentence sending mode</string>
 
     <!-- Tavern Character Card Import -->
@@ -3581,22 +3582,22 @@
     <string name="tavern_card_parse_error">Error parsing tavern card: %1$s</string>
 
     <!-- Screen Titles -->
-    <string name="screen_title_memory_base">Memory Base</string>
+    <string name="screen_title_memory_base">Knowledge Base</string>
     <string name="screen_title_tool_permissions">Tool Permissions</string>
     <string name="screen_title_user_preferences_guide">User Preferences Guide</string>
     <string name="screen_title_user_preferences_settings">User Preferences Settings</string>
-    <string name="screen_title_model_config">Model &amp; Parameters Configuration</string>
+    <string name="screen_title_model_config">Model Settings</string>
     <string name="screen_title_speech_services_settings">Speech Services Settings</string>
     <string name="screen_title_custom_headers_settings">Custom Headers</string>
     <string name="screen_title_persona_card_generation">Persona Card Generation</string>
-    <string name="screen_title_waifu_mode_settings">Waifu Mode Settings</string>
+    <string name="screen_title_waifu_mode_settings">Companion Mode Settings</string>
     <string name="screen_title_tag_market">Tag Market</string>
     <string name="screen_title_model_prompts_settings">Model Prompts Settings</string>
     <string name="screen_title_functional_config">Functional Model Configuration</string>
     <string name="screen_title_theme_settings">Theme Settings</string>
     <string name="screen_title_global_display_settings">Global Display Settings</string>
     <string name="screen_title_layout_adjustment">Layout Adjustment</string>
-    <string name="screen_title_chat_history_settings">Chat History Management</string>
+    <string name="screen_title_chat_history_settings">Chat Session Management</string>
     <string name="screen_title_chat_backup_settings">Data Backup &amp; Restore</string>
     <string name="screen_title_language_settings">Language Settings</string>
     <string name="screen_title_file_manager">File Manager</string>
@@ -3605,11 +3606,11 @@
     <string name="screen_title_app_permissions">App Permissions Manager</string>
     <string name="screen_title_ui_debugger">UI Debugger</string>
     <string name="screen_title_shell_executor">Shell Executor</string>
-    <string name="screen_title_logcat">Log Viewer</string>
+    <string name="screen_title_logcat">System Logcat</string>
     <string name="screen_title_ffmpeg_toolbox">FFmpeg Toolbox</string>
     <string name="screen_title_markdown_demo">Streaming Markdown Demo</string>
     <string name="screen_title_tool_tester">Tool Testing Center</string>
-    <string name="screen_title_text_to_speech">Text to Speech</string>
+    <string name="screen_title_text_to_speech">Text-To-Speech</string>
     <string name="screen_title_speech_to_text">Speech Recognition</string>
     <string name="screen_title_process_limit_remover">Phantom Process Limit Remover</string>
     <string name="screen_title_default_assistant_guide">Default Assistant Setup</string>
@@ -3675,9 +3676,9 @@
     <string name="close">Close</string>
 
     <!-- Waifu Mode Settings Screen -->
-    <string name="waifu_mode">Waifu Mode</string>
+    <string name="waifu_mode">Companion Mode</string>
     <string name="waifu_mode_description">When enabled, AI responses will be split by punctuation and sent sentence by sentence for a more natural conversation experience.</string>
-    <string name="enable_waifu_mode">Enable Waifu Mode</string>
+    <string name="enable_waifu_mode">Enable Companion Mode</string>
     <string name="waifu_mode_toggle_desc">AI responses will be split and sent by sentences</string>
     <string name="typing_speed_settings">Typing Speed Settings</string>
     <string name="typing_speed_desc">Control the delay time per character to simulate real typing rhythm</string>
@@ -4631,7 +4632,7 @@
     <string name="backup_memory_library_subtitle">Cross-profile backup and recovery</string>
     <string name="backup_memory_current_count">Currently %1$d memor(y/ies) and %2$d link(s).</string>
 
-    <string name="backup_model_config">Model Configurations</string>
+    <string name="backup_model_config">Model Settingss</string>
     <string name="backup_model_config_subtitle">Backup and restore all model settings, including API keys and parameters</string>
     <string name="backup_model_config_current_count">Currently %1$d model configuration(s).</string>
 

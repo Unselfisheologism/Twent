@@ -84,7 +84,7 @@ fun SettingsScreen(
         ) {
             // Header
             TwentHeading(
-                text = "Settings",
+                text = "System Settings",
                 fontSize = 40.dp
             )
             Spacer(modifier = Modifier.height(TwentSpacing.lg))
@@ -181,8 +181,8 @@ fun SettingsScreen(
                     )
                     SettingsItem(
                         icon = Icons.Outlined.Brush,
-                        title = "Assistant Theme",
-                        subtitle = "Customize assistant appearance",
+                        title = "Agent Theme",
+                        subtitle = "Customize agent appearance",
                         onClick = navigateToAssistantThemeSettings
                     )
                 }
@@ -198,8 +198,8 @@ fun SettingsScreen(
                 Column {
                     SettingsItem(
                         icon = Icons.Outlined.Memory,
-                        title = "Model Configuration",
-                        subtitle = "API and model settings",
+                        title = "Model Settings",
+                        subtitle = "API and model configuration",
                         onClick = navigateToModelConfig
                     )
                     HorizontalDivider(
@@ -235,7 +235,7 @@ fun SettingsScreen(
                 Column {
                     SettingsItem(
                         icon = Icons.Outlined.History,
-                        title = "Chat History",
+                        title = "Chat Sessions",
                         subtitle = "Manage conversation history",
                         onClick = navigateToChatHistorySettings
                     )
@@ -255,7 +255,7 @@ fun SettingsScreen(
                     )
                     SettingsItem(
                         icon = Icons.Outlined.VpnKey,
-                        title = "Token Usage",
+                        title = "AI API Usage",
                         subtitle = "View API token statistics",
                         onClick = navigateToTokenUsageStatistics
                     )

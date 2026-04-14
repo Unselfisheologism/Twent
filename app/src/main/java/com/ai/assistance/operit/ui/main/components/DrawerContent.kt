@@ -4,29 +4,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.common.NavItem
@@ -35,160 +21,134 @@ import com.ai.assistance.operit.ui.main.screens.OperitRouter
 import com.ai.assistance.operit.ui.main.screens.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.ai.assistance.operit.ui.main.components.NavigationDrawerHeader
-import com.ai.assistance.operit.ui.main.components.ModernNavigationDrawerItem
-import com.ai.assistance.operit.ui.main.components.NavigationSectionHeader
-import com.ai.assistance.operit.ui.main.components.NavigationDivider
 
-/** Content for the expanded navigation drawer */
+/**
+ * Content for the expanded navigation drawer
+ * Numbered, clean design inspired by reference images
+ */
 @Composable
 fun DrawerContent(
-        navGroups: List<NavGroup>,
-        currentScreen: Screen,
-        selectedItem: NavItem,
-        isNetworkAvailable: Boolean,
-        networkType: String,
-        scope: CoroutineScope,
-        drawerState: androidx.compose.material3.DrawerState,
-        onScreenSelected: (Screen, NavItem) -> Unit
+    navGroups: List<NavGroup>,
+    currentScreen: Screen,
+    selectedItem: NavItem,
+    isNetworkAvailable: Boolean,
+    networkType: String,
+    scope: CoroutineScope,
+    drawerState: androidx.compose.material3.DrawerState,
+    onScreenSelected: (Screen, NavItem) -> Unit
 ) {
-        // 添加滚动功能的Column
-        Column(
-                modifier =
-                        Modifier.fillMaxHeight()
-                                .verticalScroll(rememberScrollState())
-                                .padding(
-                                        end = 8.dp,
-                                        // Ensure bottom items aren’t obscured by system nav bar
-                                        bottom = WindowInsets.navigationBars
-                                                .asPaddingValues()
-                                                .calculateBottomPadding()
-                                )
-        ) {
-                // 抽屉标题
-                Spacer(modifier = Modifier.height(54.dp))
-                Text(
-                        text = stringResource(id = R.string.app_name),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                bottom = WindowInsets.navigationBars
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+            )
+    ) {
+        // Header with logo and close button
+        NavigationDrawerHeader(
+            onCloseClick = {
+                scope.launch { drawerState.close() }
+            }
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Grouped navigation menu with numbers
+        var itemNumber = 0
+        navGroups.forEach { group ->
+            NavigationSectionHeader(stringResource(id = group.titleResId))
+            
+            group.items.forEach { item ->
+                ModernNavigationDrawerItem(
+                    icon = item.icon,
+                    label = stringResource(id = item.titleResId),
+                    selected = selectedItem == item,
+                    number = itemNumber,
+                    onClick = {
+                        onScreenSelected(
+                            OperitRouter.getScreenForNavItem(item),
+                            item
+                        )
+                        scope.launch { drawerState.close() }
+                    }
                 )
-
-                // 网络状态显示
-                Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                ) {
-                        Icon(
-                                imageVector =
-                                        if (isNetworkAvailable) Icons.Default.Wifi
-                                        else Icons.Default.WifiOff,
-                                contentDescription = stringResource(id = R.string.network_status_label),
-                                tint =
-                                        if (isNetworkAvailable) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                                text = networkType,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color =
-                                        if (isNetworkAvailable) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.error
-                        )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                itemNumber++
+            }
+            
+            // Add divider between groups (not after last group)
+            if (group != navGroups.last()) {
                 NavigationDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Grouped navigation menu
-                navGroups.forEach { group ->
-                        NavigationSectionHeader(stringResource(id = group.titleResId))
-                        group.items.forEach { item ->
-                                ModernNavigationDrawerItem(
-                                        icon = item.icon,
-                                        label = stringResource(id = item.titleResId),
-                                        selected = selectedItem == item,
-                                        onClick = {
-                                                onScreenSelected(
-                                                        OperitRouter.getScreenForNavItem(item),
-                                                        item
-                                                )
-                                                scope.launch { drawerState.close() }
-                                        }
-                                )
-                        }
-                }
-
-                // Leave some space at the bottom to avoid the last option sticking to the bottom
-                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Footer with settings
+        NavigationDrawerFooter(
+            onSettingsClick = {
+                onScreenSelected(
+                    OperitRouter.getScreenForNavItem(NavItem.Settings),
+                    NavItem.Settings
+                )
+                scope.launch { drawerState.close() }
+            }
+        )
+    }
 }
 
-/** Content for the collapsed navigation drawer (for tablet mode) */
+/**
+ * Content for the collapsed navigation drawer (for tablet mode)
+ * Shows only icons in a compact layout
+ */
 @Composable
 fun CollapsedDrawerContent(
-        navItems: List<NavItem>,
-        selectedItem: NavItem,
-        isNetworkAvailable: Boolean,
-        onScreenSelected: (Screen, NavItem) -> Unit
+    navItems: List<NavItem>,
+    selectedItem: NavItem,
+    isNetworkAvailable: Boolean,
+    onScreenSelected: (Screen, NavItem) -> Unit
 ) {
-        // 折叠状态下只显示图标
-        Column(
-                modifier =
-                        Modifier.fillMaxHeight()
-                                .verticalScroll(rememberScrollState()) // 添加滚动支持
-                                .padding(vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-                // 抽屉标题 - 仅图标
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // 网络状态图标 - 与其他图标保持一致
-                IconButton(onClick = { /* 点击图标操作可选 */}) {
-                        Icon(
-                                imageVector =
-                                        if (isNetworkAvailable) Icons.Default.Wifi
-                                        else Icons.Default.WifiOff,
-                                contentDescription = stringResource(id = R.string.network_status_label),
-                                tint =
-                                        if (isNetworkAvailable) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(24.dp) // 与其他图标大小一致
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 16.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+    ) {
+        // Spacer for top
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Navigation items - icon only
+        navItems.forEach { item ->
+            val isSelected = selectedItem == item
+            
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .size(48.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    .background(
+                        if (isSelected) com.ai.assistance.operit.ui.theme.OrangePrimary.copy(alpha = 0.15f)
+                        else androidx.compose.ui.graphics.Color.Transparent
+                    )
+                    .clickable {
+                        onScreenSelected(
+                            OperitRouter.getScreenForNavItem(item),
+                            item
                         )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(modifier = Modifier.fillMaxWidth(0.6f))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 图标列表 - 只显示图标按钮
-                for (item in navItems) {
-                        IconButton(
-                                onClick = {
-                                        onScreenSelected(
-                                                OperitRouter.getScreenForNavItem(item),
-                                                item
-                                        )
-                                },
-                                modifier = Modifier.padding(vertical = 8.dp)
-                        ) {
-                                Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = stringResource(id = item.titleResId),
-                                        tint =
-                                                if (selectedItem == item)
-                                                        MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(24.dp)
-                                )
-                        }
-                }
-
-                // 底部留白，避免最后一项靠底
-                Spacer(modifier = Modifier.height(16.dp))
+                    },
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = item.icon,
+                    contentDescription = stringResource(id = item.titleResId),
+                    tint = if (isSelected) com.ai.assistance.operit.ui.theme.OrangePrimary
+                           else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
+    }
 }

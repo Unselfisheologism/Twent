@@ -118,6 +118,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.LLAMA_CPP -> ""
             ApiProviderType.PPINFRA -> "gpt-4o-mini"
             ApiProviderType.KILO_GATEWAY -> "kilo-auto/free"
+            ApiProviderType.NVIDIA_NIMS_GATEWAY -> "meta/llama-3.1-405b-instruct"
             ApiProviderType.OTHER -> ""
         }
     }
@@ -348,6 +349,7 @@ fun ModelApiSettingsSection(
             ApiProviderType.LLAMA_CPP -> "" // llama.cpp本地推理不需要endpoint
             ApiProviderType.PPINFRA -> "https://api.ppinfra.com/openai/v1/chat/completions"
             ApiProviderType.KILO_GATEWAY -> "https://api.kilo.ai/api/gateway/chat/completions"
+            ApiProviderType.NVIDIA_NIMS_GATEWAY -> "https://integrate.api.nvidia.com/v1/chat/completions"
             ApiProviderType.OPENAI_GENERIC -> ""
             ApiProviderType.OTHER -> ""
         }
@@ -1117,6 +1119,7 @@ private fun getProviderDisplayName(provider: ApiProviderType, context: android.c
         ApiProviderType.LLAMA_CPP -> context.getString(R.string.provider_llama_cpp)
         ApiProviderType.PPINFRA -> context.getString(R.string.provider_ppinfra)
         ApiProviderType.KILO_GATEWAY -> context.getString(R.string.provider_kilo_gateway)
+        ApiProviderType.NVIDIA_NIMS_GATEWAY -> context.getString(R.string.provider_nvidia_nims_gateway)
         ApiProviderType.OTHER -> context.getString(R.string.provider_other)
     }
 }
@@ -1707,6 +1710,7 @@ private fun getProviderColor(provider: ApiProviderType): androidx.compose.ui.gra
         ApiProviderType.LLAMA_CPP -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f)
         ApiProviderType.PPINFRA -> MaterialTheme.colorScheme.primaryContainer
         ApiProviderType.KILO_GATEWAY -> MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+        ApiProviderType.NVIDIA_NIMS_GATEWAY -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
         ApiProviderType.OTHER -> MaterialTheme.colorScheme.surfaceVariant
     }
 }

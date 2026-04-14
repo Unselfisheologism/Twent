@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.services.automation
+﻿package com.ai.assistance.operit.services.automation
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -207,7 +207,7 @@ class AutomationForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Operit Automation")
+            .setContentTitle("Twent AI Agent")
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)

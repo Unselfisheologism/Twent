@@ -1,23 +1,23 @@
 ﻿<resources>
-    <string name="app_name">Operit</string>
+    <string name="app_name">Twent</string>
     <string name="title_activity_crash_report">Application Error</string>
     <string name="input_the_task">Input the Task</string>
     <string name="perform_task">Perform Task</string>
     <string name="content_filtering">Content Filtering</string>
     <string name="write_things_you_want_to_avoid">Write Things you want to avoid</string>
-    <string name="accessibility_service_label">Operit Accessibility Service</string>
-    <string name="accessibility_service_description">Operit AI Assistant uses accessibility services to provide voice-controlled device automation. This allows hands-free operation of your phone through AI-powered commands, making technology more accessible. The service reads screen content and performs actions only when actively requested by you.</string>
+    <string name="accessibility_service_label">Twent Accessibility Service</string>
+    <string name="accessibility_service_description">Twent AI Assistant uses accessibility services to provide voice-controlled device automation. This allows hands-free operation of your phone through AI-powered commands, making technology more accessible. The service reads screen content and performs actions only when actively requested by you.</string>
     <string name="view_source_code_on_github">⭐ See the code on Github</string>
-    <string name="hello_sir">Hey, Operit Here</string>
+    <string name="hello_sir">Hey, Twent Here</string>
     <string name="assistant_at_nyour_command">Assistant at\nYour Command</string>
     <string name="grant_accessibility_permission">Grant Accessibility Permission</string>
     <string name="permission_not_granted">Permission: Not Granted</string>
     <string name="service_status_stopped">Service Status: Stopped</string>
     <string name="wake_word_help_link"><u>Wake word not initializing? Open me!</u></string>
     <string name="notifications_permission_title">Notifications</string>
-    <string name="notifications_permission_desc">Allow Operit to send you notifications for important updates or messages.</string>
+    <string name="notifications_permission_desc">Allow Twent to send you notifications for important updates or messages.</string>
     <string name="default_assistant_role_title">Set as Default Assistant</string>
-    <string name="default_assistant_role_desc">This lets you activate Operit by holding the home button or using a voice command, even when the app is closed.</string>
+    <string name="default_assistant_role_desc">This lets you activate Twent by holding the home button or using a voice command, even when the app is closed.</string>
     <string name="grant_permission_button">Grant Permission</string>
     <string name="finish_onboarding_button">Finish Onboarding</string>
     <string name="vision_mode">Vision Mode:</string>
@@ -27,12 +27,12 @@
     <string name="screenshot_mode_description">Uses actual screenshots (more accurate, higher resource usage)</string>
     <string name="voice_input">Voice Command</string>
     <string name="hold_to_speak">Hold to Speak Command</string>
-    <string name="shortcut_wake_up_short">Wake up Operit</string>
-    <string name="shortcut_wake_up_long">Start a new conversation with Operit</string>
+    <string name="shortcut_wake_up_short">Wake up Twent</string>
+    <string name="shortcut_wake_up_long">Start a new conversation with Twent</string>
     <string name="listening">Listening…</string>
     <string name="speech_error">Speech recognition error</string>
     <string name="no_speech_detected">No speech detected</string>
-    <string name="input_box_hint">+ Ask Operit</string>
+    <string name="input_box_hint">+ Ask Twent</string>
     <string name="speech_permission_required">Microphone permission required for voice input</string>
     <string name="processing_voice_command">Processing voice command…</string>
     <string name="performing_task">I will perform the task: %s</string>
@@ -41,25 +41,25 @@
     <string name="dialogue_cancelled">Dialogue cancelled</string>
     <string name="submit_answer">Submit Answer</string>
     <string name="accessibility_permission_details">
-    "<b>🤖 Why Operit Needs Accessibility Services:</b>\n"
-    "Operit is an AI assistant that helps you control your phone through voice commands. To do this, it requires accessibility permissions to understand and interact with your device.\n\n"
+    "<b>🤖 Why Twent Needs Accessibility Services:</b>\n"
+    "Twent is an AI assistant that helps you control your phone through voice commands. To do this, it requires accessibility permissions to understand and interact with your device.\n\n"
     "<b>📱 What This Permission Allows:</b>\n"
-    "<b>• Read Screen Content:</b> Operit can see and analyze what\'s currently displayed on your screen to understand the context and provide relevant assistance.\n\n"
+    "<b>• Read Screen Content:</b> Twent can see and analyze what\'s currently displayed on your screen to understand the context and provide relevant assistance.\n\n"
     "<b>• Perform Actions:</b> Execute touch gestures, taps, swipes, and navigation (Back, Home, Recent Apps) on your behalf based on your voice commands.\n\n"
     "<b>• App Interaction:</b> Open apps, fill forms, scroll through content, and navigate between different screens as requested.\n\n"
     "<b>🔒 Privacy &amp; Data Protection:</b>\n"
     "• All processing happens on Gemini API\n"
     "• No personal data is collected or but it is sent to Google Gemini\n"
-    "• Screen content is only accessed when you actively use Operit, otherwise Operit doesnt access screen content\n"
-    "• We implement safeguards to protect sensitive information, but Operit can still make mistake\n\n"
+    "• Screen content is only accessed when you actively use Twent, otherwise Twent doesnt access screen content\n"
+    "• We implement safeguards to protect sensitive information, but Twent can still make mistake\n\n"
     "<b>♿ Accessibility Benefits:</b>\n"
     "This service enables hands-free device control, making smartphones more accessible for users with disabilities, visual impairments, or mobility limitations.\n\n"
-    "<b>By proceeding, you understand and consent to Operit using accessibility services for AI-powered device automation.</b>"
+    "<b>By proceeding, you understand and consent to Twent using accessibility services for AI-powered device automation.</b>"
     </string>
     <string name="app_list_permission_title">App Management</string>
-    <string name="app_list_permission_desc">Allows Operit to see the apps you have installed. With this, Operit can open applications for you directly and instantly (e.g., "Open YouTube"), instead of relying on slower methods of searching the screen. This makes the process much faster and more reliable.</string>
+    <string name="app_list_permission_desc">Allows Twent to see the apps you have installed. With this, Twent can open applications for you directly and instantly (e.g., "Open YouTube"), instead of relying on slower methods of searching the screen. This makes the process much faster and more reliable.</string>
 <!--    <string name="accessibility_consent_title">Permission Confirmation</string>-->
-<!--    <string name="accessibility_consent_message">To enable hands-free control, Operit requires Accessibility permission. This allows the app to:\n\n• <b>Read the content on your screen</b> to understand context.\n\n• <b>Perform actions for you</b> like tapping, scrolling, and navigating.\n\nOperit is designed to assist, especially visually impaired users, by enabling full voice control of the device.\n\nDo you want to proceed to Settings to enable this?</string>-->
+<!--    <string name="accessibility_consent_message">To enable hands-free control, Twent requires Accessibility permission. This allows the app to:\n\n• <b>Read the content on your screen</b> to understand context.\n\n• <b>Perform actions for you</b> like tapping, scrolling, and navigating.\n\nTwent is designed to assist, especially visually impaired users, by enabling full voice control of the device.\n\nDo you want to proceed to Settings to enable this?</string>-->
 <!--    <string name="accept">Accept</string>-->
 <!--    <string name="decline">Decline</string>-->
     <string name="cancel">Cancel</string>
@@ -68,7 +68,7 @@
     <string name="enable_wake_word">Enable Wake Word</string>
     <string name="wake_word_engine">Wake Word Engine</string>
     <string name="stt_engine">STT Engine</string>
-    <string name="porcupine_engine">If there is too much demand, our wake word service might be down, in that case we will add button at the bottom left and you can use it to activate Operit</string>
+    <string name="porcupine_engine">If there is too much demand, our wake word service might be down, in that case we will add button at the bottom left and you can use it to activate Twent</string>
     <string name="select_wake_word_engine">Select Wake Word Engine</string>
     <string name="wake_word_enabled">Wake Word enabled with %s</string>
     <string name="wake_word_disabled">Disable Wake Word</string>
@@ -94,27 +94,27 @@
     <string name="why_permissions_needed"><u>Why are these permissions needed?</u></string>
     <string name="permissions_explained_title">Permissions Explained</string>
     <string name="accessibility_permission_title">Accessibility Service</string>
-    <string name="accessibility_permission_desc">🤖 Enable Operit AI to control your phone through voice commands. This permission allows reading screen content and performing actions for hands-free device automation and improved accessibility.</string>
+    <string name="accessibility_permission_desc">🤖 Enable Twent AI to control your phone through voice commands. This permission allows reading screen content and performing actions for hands-free device automation and improved accessibility.</string>
     <string name="microphone_permission_title">Microphone</string>
-    <string name="microphone_permission_desc">The microphone is required for the voice command and wake-word features. It allows you to give instructions to Operit by speaking.</string>
+    <string name="microphone_permission_desc">The microphone is required for the voice command and wake-word features. It allows you to give instructions to Twent by speaking.</string>
     <string name="overlay_permission_title">Display Over Other Apps</string>
-    <string name="overlay_permission_desc">This permission is used to show visual feedback, such as the questions that Operit have, captions and the voice wave animations, on top of other apps while Operit is working.</string>
+    <string name="overlay_permission_desc">This permission is used to show visual feedback, such as the questions that Twent have, captions and the voice wave animations, on top of other apps while Twent is working.</string>
     <string name="default_assistant_permission_title">Default Assistant</string>
     <string name="grant_default_assistant_permission_button">Set as Default Assistant</string>
-    <string name="at_the_end_of_a_conversation_Operit_s_ai_powered_by_google_s_gemini_model_analyzes_the_dialogue_to_identify_lasting_facts_it_s_trained_to_ignore_fleeting_or_unimportant_details_for_example_if_you_say_remind_me_to_call_my_brother_ankit_tomorrow_the_ai_might_create_a_memory_like_the_user_s_brother_is_named_ankit">At the end of a conversation, Operit\'s AI (powered by Google\'s Gemini model) analyzes the dialogue to identify lasting facts. It\'s trained to ignore fleeting or unimportant details. For example, if you say, || remind me to call my brother Ankit tomorrow ||,the AI might create a memory like: || The user\'s brother is named Anita. ||</string>
-    <string name="once_a_memory_is_created_e_g_the_user_lives_in_ghaziabad_it_is_stored_in_a_secure_private_database_directly_on_your_phone_this_database_is_part_of_the_Operit_app_s_internal_storage_and_is_not_accessible_by_other_apps">Once a memory is created (e.g., The user lives in Ghaziabad.), it is stored in a secure, private database directly on your phone. This database is part of the Operit app\'s internal storage and is not accessible by other apps.</string>
-    <string name="accessibility_permission_full_desc">🤖 Operit is an AI assistant that needs accessibility services to control your phone through voice commands.\n\nThis permission allows Operit to:\n\n• Read screen content to understand context\n• Perform touches, swipes, and navigation\n• Automate tasks across all apps\n\n🔒 Your privacy is Google Privacy Rule for Gemini API - Your app calls Gemini API to understand his next action.</string>
+    <string name="at_the_end_of_a_conversation_Operit_s_ai_powered_by_google_s_gemini_model_analyzes_the_dialogue_to_identify_lasting_facts_it_s_trained_to_ignore_fleeting_or_unimportant_details_for_example_if_you_say_remind_me_to_call_my_brother_ankit_tomorrow_the_ai_might_create_a_memory_like_the_user_s_brother_is_named_ankit">At the end of a conversation, Twent\'s AI (powered by Google\'s Gemini model) analyzes the dialogue to identify lasting facts. It\'s trained to ignore fleeting or unimportant details. For example, if you say, || remind me to call my brother Ankit tomorrow ||,the AI might create a memory like: || The user\'s brother is named Anita. ||</string>
+    <string name="once_a_memory_is_created_e_g_the_user_lives_in_ghaziabad_it_is_stored_in_a_secure_private_database_directly_on_your_phone_this_database_is_part_of_the_Operit_app_s_internal_storage_and_is_not_accessible_by_other_apps">Once a memory is created (e.g., The user lives in Ghaziabad.), it is stored in a secure, private database directly on your phone. This database is part of the Twent app\'s internal storage and is not accessible by other apps.</string>
+    <string name="accessibility_permission_full_desc">🤖 Twent is an AI assistant that needs accessibility services to control your phone through voice commands.\n\nThis permission allows Twent to:\n\n• Read screen content to understand context\n• Perform touches, swipes, and navigation\n• Automate tasks across all apps\n\n🔒 Your privacy is Google Privacy Rule for Gemini API - Your app calls Gemini API to understand his next action.</string>
 
     <string name="accessibility_consent_title">🤖 Accessibility Services Required</string>
-    <string name="accessibility_consent_message">Operit requires accessibility services to function as your AI assistant.\n\nThis enables voice-controlled automation of your device for hands-free operation and improved accessibility.\n\n🔒 All data processing occurs locally on your device for maximum privacy.</string>
+    <string name="accessibility_consent_message">Twent requires accessibility services to function as your AI assistant.\n\nThis enables voice-controlled automation of your device for hands-free operation and improved accessibility.\n\n🔒 All data processing occurs locally on your device for maximum privacy.</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
 
 
     <!-- Battery optimization help -->
-    <string name="Operit_not_working"><u>Operit not working on your phone?</u></string>
+    <string name="Operit_not_working"><u>Twent not working on your phone?</u></string>
     <string name="battery_optimization_title">Battery Optimization Issues</string>
-    <string name="battery_optimization_message">If Operit is not working properly, this might be due to intense battery optimization by your device manufacturer.\n\nManufacturers like Samsung, Huawei, OnePlus, Xiaomi, and others often add aggressive battery optimizations that can break Operit\'s functionality.\n\nTo fix this, you need to disable battery optimizations specifically for Operit in your device settings.</string>
+    <string name="battery_optimization_message">If Twent is not working properly, this might be due to intense battery optimization by your device manufacturer.\n\nManufacturers like Samsung, Huawei, OnePlus, Xiaomi, and others often add aggressive battery optimizations that can break Twent\'s functionality.\n\nTo fix this, you need to disable battery optimizations specifically for Twent in your device settings.</string>
     <string name="learn_how">Learn How</string>
     <string name="get_your_free_picovoice_api_key_you_can_paste_it_here">Get your free Picovoice API Key, you can paste it here.</string>
 
@@ -507,8 +507,8 @@
 <string name="backup_format_json_desc">Backup Format Json Desc</string>
 <string name="backup_format_markdown">Backup Format Markdown</string>
 <string name="backup_format_markdown_desc">Backup Format Markdown Desc</string>
-<string name="backup_format_operit">Backup Format Operit</string>
-<string name="backup_format_operit_desc">Backup Format Operit Desc</string>
+<string name="backup_format_operit">Backup Format Twent</string>
+<string name="backup_format_operit_desc">Backup Format Twent Desc</string>
 <string name="backup_format_txt">Backup Format Txt</string>
 <string name="backup_format_txt_desc">Backup Format Txt Desc</string>
 <string name="backup_format_unknown">Backup Format Unknown</string>
@@ -1888,7 +1888,7 @@
 <string name="locked">Locked</string>
 <string name="logcat_cannot_create_download_dir">Logcat Cannot Create Download Dir</string>
 <string name="logcat_cannot_create_file">Logcat Cannot Create File</string>
-<string name="logcat_cannot_create_operit_dir">Logcat Cannot Create Operit Dir</string>
+<string name="logcat_cannot_create_operit_dir">Logcat Cannot Create Twent Dir</string>
 <string name="logcat_cannot_open_output_stream">Logcat Cannot Open Output Stream</string>
 <string name="logcat_clear_all">Logcat Clear All</string>
 <string name="logcat_date">Logcat Date</string>
@@ -2558,7 +2558,7 @@
 <string name="opening_statement">Opening Statement</string>
 <string name="operation_failed">Operation Failed</string>
 <string name="operation_success">Operation Success</string>
-<string name="operit_terminal">Operit Terminal</string>
+<string name="operit_terminal">Twent Terminal</string>
 <string name="other_content">Other Content</string>
 <string name="other_content_preview">Other Content Preview</string>
 <string name="other_network">Other Network</string>
@@ -2978,7 +2978,8 @@
 <string name="provider_gemini_generic">Provider Gemini Generic</string>
 <string name="provider_google">Provider Google</string>
 <string name="provider_infiniai">Provider Infiniai</string>
-<string name="provider_kilo_gateway">Provider Kilo Gateway</string>
+    <string name="provider_kilo_gateway">Provider Kilo Gateway</string>
+    <string name="provider_nvidia_nims_gateway">NVIDIA NIMS Gateway</string>
 <string name="provider_llama_cpp">Provider Llama Cpp</string>
 <string name="provider_lmstudio">Provider Lmstudio</string>
 <string name="provider_mistral">Provider Mistral</string>
@@ -3225,7 +3226,7 @@
 <string name="service_keep_background">Service Keep Background</string>
 <string name="service_metadata">Service Metadata</string>
 <string name="service_notify_when_complete">Service Notify When Complete</string>
-<string name="service_operit_running">Service Operit Running</string>
+<string name="service_operit_running">Service Twent Running</string>
 <string name="service_running_wake_listening">Service Running Wake Listening</string>
 <string name="service_running_wake_pause">Service Running Wake Pause</string>
 <string name="service_stop">Service Stop</string>

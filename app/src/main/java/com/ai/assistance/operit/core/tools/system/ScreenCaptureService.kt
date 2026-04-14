@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.core.tools.system
+﻿package com.ai.assistance.operit.core.tools.system
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -101,7 +101,7 @@ class ScreenCaptureService : Service() {
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Screen Capture Active")
-            .setContentText("Operit is capturing screen content")
+            .setContentText("Twent AI is capturing screen content")
             .setSmallIcon(R.drawable.ic_launcher_foreground) // Ensure this resource exists, fallback if not
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()

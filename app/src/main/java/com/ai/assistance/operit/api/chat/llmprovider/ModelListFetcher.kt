@@ -96,6 +96,10 @@ object ModelListFetcher {
                         // 构造Kilo Gateway的models端点: https://api.kilo.ai/api/gateway/models
                         "$baseUrl/api/gateway/models"
                     }
+                    ApiProviderType.NVIDIA_NIMS_GATEWAY -> {
+                        // NVIDIA NIMS Gateway 使用标准 OpenAI 兼容 /v1/models 端点
+                        "${extractBaseUrl(apiEndpoint)}/v1/models"
+                    }
                     // 其他API提供商可能需要特殊处理
                     else -> "${extractBaseUrl(apiEndpoint)}/v1/models" // 默认尝试OpenAI兼容格式
                 }
@@ -274,7 +278,8 @@ object ModelListFetcher {
                                     ApiProviderType.ALIPAY_BAILING,
                                     ApiProviderType.LMSTUDIO,
                                     ApiProviderType.PPINFRA,
-                                    ApiProviderType.KILO_GATEWAY -> parseOpenAIModelResponse(context, responseBody)
+                                    ApiProviderType.KILO_GATEWAY,
+                                    ApiProviderType.NVIDIA_NIMS_GATEWAY -> parseOpenAIModelResponse(context, responseBody)
                                     ApiProviderType.ANTHROPIC,
                                     ApiProviderType.ANTHROPIC_GENERIC -> parseAnthropicModelResponse(context, responseBody)
                                     ApiProviderType.GOOGLE,

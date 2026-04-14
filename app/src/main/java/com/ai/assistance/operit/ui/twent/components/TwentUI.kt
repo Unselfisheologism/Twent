@@ -358,6 +358,7 @@ fun TwentSectionTitle(
  * Modern spacing system (8dp grid)
  */
 object TwentSpacing {
+    val xxs = 2.dp
     val xs = 4.dp
     val sm = 8.dp
     val md = 16.dp

@@ -5,10 +5,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,90 +21,105 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.ui.twent.components.TwentSpacing
 import com.ai.assistance.operit.ui.theme.OrangePrimary
 import com.ai.assistance.operit.ui.theme.CyanPrimary
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 
 /**
- * Modern Navigation Drawer Header - Twent UI
+ * Twent AI Navigation Components
+ * Clean, numbered navigation inspired by reference designs
+ */
+
+/**
+ * Modern Navigation Drawer Header - Clean and minimal
  */
 @Composable
 fun NavigationDrawerHeader(
-    appName: String = "Twent",
-    appVersion: String = "AI Assistant"
+    appName: String = "Twent AI",
+    appSubtitle: String = "Agentic OS",
+    onCloseClick: () -> Unit = {}
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(TwentSpacing.lg)
+            .padding(
+                top = TwentSpacing.xl + 16.dp, // Status bar padding
+                start = TwentSpacing.lg,
+                end = TwentSpacing.lg,
+                bottom = TwentSpacing.md
+            )
     ) {
+        // Top row: Logo + Close button
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo/Icon
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(OrangePrimary, CyanPrimary)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+            // Logo and brand
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
             ) {
-                Text(
-                    text = "T",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                )
+                // Logo icon
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(OrangePrimary, CyanPrimary)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "T",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                // Brand text
+                Column {
+                    Text(
+                        text = appName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = appSubtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.width(TwentSpacing.md))
-
-            // App Info
-            Column {
-                Text(
-                    text = appName,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = appVersion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            
+            // Close button
+            IconButton(
+                onClick = onCloseClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close menu",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
     }
-
-    // Subtle divider
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        OrangePrimary.copy(alpha = 0.3f),
-                        Color.Transparent
-                    )
-                )
-            )
-    )
 }
 
 /**
- * Modern Navigation Drawer Item - Twent UI
+ * Modern Navigation Drawer Item - Numbered, clean design
  */
 @Composable
 fun ModernNavigationDrawerItem(
@@ -110,22 +127,24 @@ fun ModernNavigationDrawerItem(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    number: Int? = null,
+    description: String? = null
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = tween(150),
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = tween(100),
         label = "nav_scale"
     )
 
     Surface(
         modifier = modifier
             .scale(scale)
-            .clip(RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+            .clip(RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
         color = if (selected)
-            OrangePrimary.copy(alpha = 0.15f)
+            OrangePrimary.copy(alpha = 0.12f)
         else
             Color.Transparent,
         onClick = {
@@ -136,45 +155,78 @@ fun ModernNavigationDrawerItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TwentSpacing.md, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = TwentSpacing.md, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
         ) {
-            // Icon container
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (selected)
-                            OrangePrimary
-                        else
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
+            // Number badge or icon
+            if (number != null) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (selected) OrangePrimary
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "%02d".format(number),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selected) Color.White
+                               else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                // Icon container
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (selected) OrangePrimary.copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = if (selected) OrangePrimary 
+                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(TwentSpacing.md))
-
-            // Label
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected)
-                    OrangePrimary
-                else
-                    MaterialTheme.colorScheme.onSurface,
+            // Label and description
+            Column(
                 modifier = Modifier.weight(1f)
-            )
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    color = if (selected) OrangePrimary
+                           else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                if (description != null) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
 
-            // Selection indicator
+            // Selection indicator or arrow
             if (selected) {
                 Box(
                     modifier = Modifier
@@ -182,51 +234,43 @@ fun ModernNavigationDrawerItem(
                         .clip(CircleShape)
                         .background(OrangePrimary)
                 )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
 }
 
 /**
- * Navigation Section Header
+ * Navigation Section Header - Clean, uppercase
  */
 @Composable
 fun NavigationSectionHeader(
     title: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = OrangePrimary,
+        letterSpacing = 1.sp,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TwentSpacing.lg, vertical = TwentSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(16.dp)
-                .clip(RoundedCornerShape(1.5.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(OrangePrimary, CyanPrimary)
-                    )
-                )
-        )
-
-        Spacer(modifier = Modifier.width(TwentSpacing.sm))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 1.sp
-        )
-    }
+            .padding(
+                horizontal = TwentSpacing.lg,
+                vertical = TwentSpacing.md
+            )
+    )
 }
 
 /**
- * Navigation Divider with gradient
+ * Navigation Divider - Subtle gradient line
  */
 @Composable
 fun NavigationDivider(
@@ -241,7 +285,7 @@ fun NavigationDivider(
                 Brush.horizontalGradient(
                     colors = listOf(
                         Color.Transparent,
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                         Color.Transparent
                     )
                 )
@@ -250,48 +294,61 @@ fun NavigationDivider(
 }
 
 /**
- * Navigation Drawer Footer
+ * Navigation Drawer Footer - Version and settings
  */
 @Composable
 fun NavigationDrawerFooter(
-    version: String = "v1.0.0"
+    version: String = "v1.0.0",
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
+    Column(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(TwentSpacing.lg)
+            .padding(
+                start = TwentSpacing.lg,
+                end = TwentSpacing.lg,
+                bottom = TwentSpacing.xl + 16.dp // Bottom system bar padding
+            )
     ) {
+        // Divider
+        NavigationDivider()
+        
+        Spacer(modifier = Modifier.height(TwentSpacing.lg))
+        
+        // Settings and version row
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(CyanPrimary.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
+            // Version info
+            Text(
+                text = "Twent AI $version",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
+            
+            // Settings button
+            TextButton(
+                onClick = onSettingsClick,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                ),
+                contentPadding = PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = 8.dp
+                )
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Info,
-                    contentDescription = "Info",
-                    tint = CyanPrimary,
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.width(TwentSpacing.sm))
-
-            Column {
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Twent AI Assistant",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = version,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    text = "System Settings",
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         }

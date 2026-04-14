@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.core.config
+﻿package com.ai.assistance.operit.core.config
 
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
 import com.ai.assistance.operit.data.preferences.ApiPreferences

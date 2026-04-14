@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.core.config
+﻿package com.ai.assistance.operit.core.config
 
 /**
  * Comprehensive system prompt that provides AI agents with a clear picture 

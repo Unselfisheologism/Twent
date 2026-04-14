@@ -74,7 +74,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "User Agreement & Privacy Policy",
+                text = "Twent AI — Agentic OS Agreement",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
@@ -83,7 +83,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Everything is free — now and always",
+                text = "Your entire agentic operating system — free, now and always",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -110,9 +110,9 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                     // Section 1: Overview
                     AgreementSection(
                         icon = Icons.Default.Info,
-                        title = "Free & Open",
+                        title = "Free & Open Agentic OS",
                         content = """
-                            Operit is a free AI-powered voice assistant application. All features are available to you at no cost, both now and in the future. We believe in providing powerful automation tools accessible to everyone without paywalls or subscription fees.
+                            Twent AI is a free, open agentic operating system. All features and capabilities are available to you at no cost — now and forever. We believe powerful agentic infrastructure should be accessible to everyone.
                         """.trimIndent()
                     )
 
@@ -125,7 +125,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                         icon = Icons.Default.MonetizationOn,
                         title = "How We Stay Free",
                         content = """
-                            Operit is supported by AI-powered advertisements served through Kohala Labs (koa hlabs.com). These ads are designed to be relevant and non-intrusive. By using the app, you consent to the display of these advertisements.
+                            Twent AI is supported by AI-powered advertisements served through our partners. These ads are designed to be relevant and non-intrusive. By using the app, you consent to the display of these advertisements.
 
                             We do not sell the app, charge for any features, or require payments from users. If you acquired this app through a paid channel, you were not charged by us.
                         """.trimIndent()
@@ -181,7 +181,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                         icon = Icons.Default.Lightbulb,
                         title = "Acceptable Use",
                         content = """
-                            Operit is designed to enhance your productivity through automation and voice assistance. You agree to use the app responsibly and not for any unlawful purposes. The AI features are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
+                            Twent AI is designed to enhance your productivity through autonomous agent capabilities. You agree to use the agentic OS responsibly and not for any unlawful purposes. The AI agent systems are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
                         """.trimIndent()
                     )
 
@@ -233,7 +233,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Operit is distributed as a free APK. There is no paid version or tier. All features are unlocked by default.",
+                                text = "Twent AI is distributed as a free APK. There is no paid version or tier. All agentic OS features are unlocked by default.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )

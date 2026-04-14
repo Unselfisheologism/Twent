@@ -75,10 +75,10 @@ fun ToolboxScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TwentHeading(
-                    text = "Toolbox",
-                    fontSize = 40.dp
-                )
+            TwentHeading(
+                text = "Toolset",
+                fontSize = 40.dp
+            )
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -251,7 +251,7 @@ private fun getTools(
             onClick = onFileManagerSelected
         ),
         Tool(
-            name = "Terminal",
+            name = "Linux Terminal",
             shortDescription = "Command line",
             icon = Icons.Outlined.Terminal,
             accentColor = CyanPrimary,
@@ -272,7 +272,7 @@ private fun getTools(
             onClick = onUIDebuggerSelected
         ),
         Tool(
-            name = "FFmpeg",
+            name = "FFmpeg Media Engine",
             shortDescription = "Media tools",
             icon = Icons.Outlined.Movie,
             accentColor = CyanSecondary,
@@ -286,14 +286,14 @@ private fun getTools(
             onClick = onShellExecutorSelected
         ),
         Tool(
-            name = "Logcat",
+            name = "System Logcat",
             shortDescription = "System logs",
             icon = Icons.Outlined.ListAlt,
             accentColor = OrangePrimary,
             onClick = onLogcatSelected
         ),
         Tool(
-            name = "Text to Speech",
+            name = "Text-To-Speech",
             shortDescription = "Voice output",
             icon = Icons.Outlined.RecordVoiceOver,
             accentColor = CyanPrimary,
@@ -342,7 +342,7 @@ private fun getTools(
             onClick = onHtmlPackagerSelected
         ),
         Tool(
-            name = "SQL Viewer",
+            name = "SQL Data Viewer",
             shortDescription = "Database",
             icon = Icons.Outlined.Storage,
             accentColor = SteelPrimary,
