@@ -54,6 +54,9 @@ class AgentRepository(private val context: Context) {
     // Cache of ACP agents (fetched from registry)
     private var acpAgentsCache: List<AgentDefinition>? = null
 
+    // Cache of detected non-ACP agents
+    private var detectedAgentsCache: List<AgentDefinition>? = null
+
     // Flag to track if ACP registry has been loaded
     private var acpRegistryLoaded = false
 
@@ -85,6 +88,37 @@ class AgentRepository(private val context: Context) {
                 else AgentInstallStatus.NOT_INSTALLED
             Pair(agent, status)
         }
+    }
+
+    /**
+     * Get ALL agents (built-in + ACP + detected) with their installation status.
+     */
+    fun getAllAgentsWithStatus(): List<Pair<AgentDefinition, AgentInstallStatus>> {
+        val agentsMap = mutableMapOf<String, Pair<AgentDefinition, AgentInstallStatus>>()
+
+        // Add built-in agents
+        for ((agent, status) in getAgentsWithStatus()) {
+            agentsMap[agent.id] = Pair(agent, status)
+        }
+
+        // Add ACP agents
+        for ((agent, status) in getCachedAcpAgents()) {
+            if (agent.id !in agentsMap) {
+                agentsMap[agent.id] = Pair(agent, status)
+            }
+        }
+
+        // Add detected agents
+        detectedAgentsCache?.let { detectedAgents ->
+            for (agent in detectedAgents) {
+                if (agent.id !in agentsMap) {
+                    val status = if (installedAgentsCache[agent.id] == true) AgentInstallStatus.INSTALLED else AgentInstallStatus.NOT_INSTALLED
+                    agentsMap[agent.id] = Pair(agent, status)
+                }
+            }
+        }
+
+        return agentsMap.values.toList()
     }
 
     /**
@@ -191,6 +225,9 @@ class AgentRepository(private val context: Context) {
                 }
             }
         }
+
+        // Cache detected agents
+        detectedAgentsCache = detectedAgents
 
         detectedAgents
     }

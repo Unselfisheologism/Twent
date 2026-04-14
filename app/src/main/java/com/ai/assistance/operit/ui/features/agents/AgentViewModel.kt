@@ -131,19 +131,46 @@ class AgentViewModel(
 
     /**
      * Load agents with their installation status
+     * Merges built-in agents with ACP agents
      */
     private fun loadAgentsWithStatus() {
-        val agentsWithStatus = repository.getAgentsWithStatus().map { (agent, status) ->
+        val mergedAgents = repository.getAllAgentsWithStatus().map { (agent, status) ->
             AgentWithStatus(agent, status)
         }
-        _sessionsState.value = _sessionsState.value.copy(agents = agentsWithStatus)
+        _sessionsState.value = _sessionsState.value.copy(agents = mergedAgents)
     }
 
+    /**
+     * Update agents with status, preserving ACP agents
+     */
     private fun updateAgentsWithStatus() {
-        val agentsWithStatus = repository.getAgentsWithStatus().map { (agent, status) ->
+        val mergedAgents = repository.getAllAgentsWithStatus().map { (agent, status) ->
             AgentWithStatus(agent, status)
         }
-        _sessionsState.value = _sessionsState.value.copy(agents = agentsWithStatus)
+        _sessionsState.value = _sessionsState.value.copy(agents = mergedAgents)
+    }
+
+    /**
+     * Merge built-in agents with cached ACP agents
+     * Note: This is now handled by repository.getAllAgentsWithStatus()
+     */
+    @Suppress("UNUSED_FUNCTION")
+    private fun mergeAgentsWithAcp(builtInAgents: List<Pair<com.ai.assistance.operit.data.model.AgentDefinition, AgentInstallStatus>>): List<AgentWithStatus> {
+        val agentsMap = mutableMapOf<String, AgentWithStatus>()
+
+        // Add built-in agents
+        for ((agent, status) in builtInAgents) {
+            agentsMap[agent.id] = AgentWithStatus(agent, status)
+        }
+
+        // Add ACP agents (don't overwrite built-in agents with same ID)
+        for ((agent, status) in repository.getCachedAcpAgents()) {
+            if (agent.id !in agentsMap) {
+                agentsMap[agent.id] = AgentWithStatus(agent, status)
+            }
+        }
+
+        return agentsMap.values.toList().sortedBy { it.definition.name }
     }
 
     /**
@@ -168,19 +195,13 @@ class AgentViewModel(
             val result = repository.fetchAcpAgents()
             result.fold(
                 onSuccess = { agentsWithStatus ->
-                    // Merge ACP agents with existing agents in UI state
-                    val currentAgents = _sessionsState.value.agents.toMutableList()
-                    val existingIds = currentAgents.map { it.definition.id }.toSet()
-
-                    // Add new ACP agents that aren't already in the list
-                    for ((agent, status) in agentsWithStatus) {
-                        if (agent.id !in existingIds) {
-                            currentAgents.add(AgentWithStatus(agent, status))
-                        }
+                    // ACP agents are now cached in the repository
+                    // Update the UI with all agents
+                    val allAgents = repository.getAllAgentsWithStatus().map { (agent, status) ->
+                        AgentWithStatus(agent, status)
                     }
-
                     _sessionsState.value = _sessionsState.value.copy(
-                        agents = currentAgents.sortedBy { it.definition.name }
+                        agents = allAgents
                     )
                 },
                 onFailure = { error ->
@@ -207,22 +228,12 @@ class AgentViewModel(
         viewModelScope.launch {
             val detectedAgents = repository.detectInstalledNonAcpAgents()
             if (detectedAgents.isNotEmpty()) {
-                val currentAgents = _sessionsState.value.agents.toMutableList()
-                val existingIds = currentAgents.map { it.definition.id }.toSet()
-
-                for (agent in detectedAgents) {
-                    if (agent.id !in existingIds) {
-                        currentAgents.add(
-                            AgentWithStatus(
-                                agent,
-                                AgentInstallStatus.INSTALLED
-                            )
-                        )
-                    }
+                // Update with all agents (detected agents are now cached)
+                val allAgents = repository.getAllAgentsWithStatus().map { (agent, status) ->
+                    AgentWithStatus(agent, status)
                 }
-
                 _sessionsState.value = _sessionsState.value.copy(
-                    agents = currentAgents.sortedBy { it.definition.name }
+                    agents = allAgents
                 )
             }
         }

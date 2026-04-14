@@ -96,7 +96,12 @@ fun AgentSessionsScreen(
                     isCheckingInstallations = sessionsState.isCheckingInstallations,
                     isLoading = sessionsState.isLoading,
                     error = sessionsState.error,
-                    onInstall = { agentId -> viewModel.installAgent(agentId) },
+                    onInstall = { agentId ->
+                        // Navigate to terminal with install command instead of background installation
+                        sessionsState.agents.find { it.definition.id == agentId }?.definition?.let { agent ->
+                            onNavigateToTerminal(agent.installCommand)
+                        }
+                    },
                     onLaunchTerminal = { agentId, agentName ->
                         viewModel.launchNativeTerminal(agentId, agentName) { command ->
                             onNavigateToTerminal(command)
