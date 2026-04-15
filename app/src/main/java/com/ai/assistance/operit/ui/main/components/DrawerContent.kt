@@ -1,17 +1,27 @@
 package com.ai.assistance.operit.ui.main.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
@@ -19,6 +29,7 @@ import com.ai.assistance.operit.ui.common.NavItem
 import com.ai.assistance.operit.ui.main.NavGroup
 import com.ai.assistance.operit.ui.main.screens.OperitRouter
 import com.ai.assistance.operit.ui.main.screens.Screen
+import com.ai.assistance.operit.ui.theme.OrangePrimary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -115,7 +126,7 @@ fun CollapsedDrawerContent(
             .fillMaxHeight()
             .verticalScroll(rememberScrollState())
             .padding(vertical = 16.dp),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Spacer for top
         Spacer(modifier = Modifier.height(8.dp))
@@ -124,14 +135,14 @@ fun CollapsedDrawerContent(
         navItems.forEach { item ->
             val isSelected = selectedItem == item
             
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier
                     .padding(vertical = 4.dp)
                     .size(48.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(14.dp))
                     .background(
-                        if (isSelected) com.ai.assistance.operit.ui.theme.OrangePrimary.copy(alpha = 0.15f)
-                        else androidx.compose.ui.graphics.Color.Transparent
+                        if (isSelected) OrangePrimary.copy(alpha = 0.15f)
+                        else Color.Transparent
                     )
                     .clickable {
                         onScreenSelected(
@@ -139,13 +150,13 @@ fun CollapsedDrawerContent(
                             item
                         )
                     },
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
-                androidx.compose.material3.Icon(
+                Icon(
                     imageVector = item.icon,
                     contentDescription = stringResource(id = item.titleResId),
-                    tint = if (isSelected) com.ai.assistance.operit.ui.theme.OrangePrimary
-                           else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    tint = if (isSelected) OrangePrimary
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     modifier = Modifier.size(22.dp)
                 )
             }
