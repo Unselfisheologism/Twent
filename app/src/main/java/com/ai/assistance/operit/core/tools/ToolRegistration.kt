@@ -1699,6 +1699,367 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // ==================== COMPOSIO INTEGRATION TOOLS ====================
+    // These tools give the AI agent direct access to Composio external integrations
+    // (GitHub, Slack, Notion, etc.) without needing to go through workflows.
+
+    val composioService = com.ai.assistance.operit.data.integration.ComposioApiService.getInstance(context)
+    val manageConnections = com.ai.assistance.operit.domain.usecase.ManageConnections.getInstance(context)
+
+    // List available Composio toolkits
+    handler.registerTool(
+            name = "composio_list_toolkits",
+            dangerCheck = { false },
+            descriptionGenerator = { _ -> s(R.string.toolreg_composio_list_toolkits_desc) },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val category = tool.parameters.find { it.name == "category" }?.value
+                        val search = tool.parameters.find { it.name == "search" }?.value
+                        val limit = tool.parameters.find { it.name == "limit" }?.value?.toIntOrNull() ?: 20
+
+                        val result = runBlocking(Dispatchers.IO) {
+                            composioService.listToolkits(category = category, search = search, limit = limit)
+                        }
+
+                        result.fold(
+                                onSuccess = { toolkits ->
+                                    if (toolkits.isEmpty()) {
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData("No toolkits found. The Composio API may not be returning data correctly.")
+                                        )
+                                    } else {
+                                        val output = toolkits.joinToString("\n") { toolkit ->
+                                            "- ${toolkit.name}: ${toolkit.displayName} (${toolkit.description})"
+                                        }
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData("Available Composio toolkits:\n$output")
+                                        )
+                                    }
+                                },
+                                onFailure = { e ->
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = false,
+                                            result = StringResultData(""),
+                                            error = "Failed to list toolkits: ${e.message}"
+                                    )
+                                }
+                        )
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error listing Composio toolkits: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // Execute a Composio tool
+    handler.registerTool(
+            name = "composio_execute_tool",
+            dangerCheck = { true }, // External API calls are potentially dangerous
+            descriptionGenerator = { tool ->
+                val toolName = tool.parameters.find { it.name == "tool_name" }?.value ?: "unknown"
+                s(R.string.toolreg_composio_execute_tool_desc, toolName)
+            },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val toolName = tool.parameters.find { it.name == "tool_name" }?.value
+                        val parametersJson = tool.parameters.find { it.name == "parameters" }?.value ?: "{}"
+                        val accountId = tool.parameters.find { it.name == "account_id" }?.value
+
+                        if (toolName.isNullOrBlank()) {
+                            ToolResult(
+                                    toolName = tool.name,
+                                    success = false,
+                                    result = StringResultData(""),
+                                    error = "Missing required parameter: tool_name"
+                            )
+                        } else {
+                            // Parse parameters JSON
+                            val parameters = try {
+                                val jsonElement = kotlinx.serialization.json.Json.parseToJsonElement(parametersJson)
+                                if (jsonElement is kotlinx.serialization.json.JsonObject) {
+                                    jsonElement.entries.associate { (key, value) ->
+                                        key to (when (value) {
+                                            is kotlinx.serialization.json.JsonPrimitive -> {
+                                                when {
+                                                    value.isString -> value.content
+                                                    value.booleanOrNull != null -> value.boolean
+                                                    value.longOrNull != null -> value.long
+                                                    value.doubleOrNull != null -> value.double
+                                                    else -> value.content
+                                                }
+                                            }
+                                            else -> value.toString()
+                                        })
+                                    }
+                                } else {
+                                    emptyMap()
+                                }
+                            } catch (e: Exception) {
+                                emptyMap<String, Any>()
+                            }
+
+                            val result = runBlocking(Dispatchers.IO) {
+                                composioService.executeTool(toolName, parameters, accountId)
+                            }
+
+                            result.fold(
+                                    onSuccess = { response ->
+                                        if (response.success) {
+                                            ToolResult(
+                                                    toolName = tool.name,
+                                                    success = true,
+                                                    result = StringResultData("Tool '$toolName' executed successfully:\n${response.result}")
+                                            )
+                                        } else {
+                                            ToolResult(
+                                                    toolName = tool.name,
+                                                    success = false,
+                                                    result = StringResultData(""),
+                                                    error = "Tool execution failed: ${response.error ?: "Unknown error"}"
+                                            )
+                                        }
+                                    },
+                                    onFailure = { e ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = false,
+                                                result = StringResultData(""),
+                                                error = "Failed to execute tool '$toolName': ${e.message}"
+                                        )
+                                    }
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error executing Composio tool: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // List connected OAuth accounts
+    handler.registerTool(
+            name = "composio_list_connections",
+            dangerCheck = { false },
+            descriptionGenerator = { _ -> s(R.string.toolreg_composio_list_connections_desc) },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val result = runBlocking(Dispatchers.IO) {
+                            manageConnections.getAllConnections()
+                        }
+
+                        result.fold(
+                                onSuccess = { connections ->
+                                    if (connections.isEmpty()) {
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData("No connected accounts found. Use 'composio_connect' to connect an account.")
+                                        )
+                                    } else {
+                                        val output = connections.joinToString("\n") { conn ->
+                                            "- ${conn.toolkit}: ${conn.accountName} (ID: ${conn.id}, Status: ${conn.status})"
+                                        }
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData("Connected accounts:\n$output")
+                                        )
+                                    }
+                                },
+                                onFailure = { e ->
+                                    ToolResult(
+                                            toolName = tool.name,
+                                            success = false,
+                                            result = StringResultData(""),
+                                            error = "Failed to list connections: ${e.message}"
+                                    )
+                                }
+                        )
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error listing connections: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // Initiate OAuth connection for a toolkit
+    handler.registerTool(
+            name = "composio_connect",
+            dangerCheck = { true }, // OAuth flow requires user interaction
+            descriptionGenerator = { tool ->
+                val toolkit = tool.parameters.find { it.name == "toolkit" }?.value ?: "unknown"
+                s(R.string.toolreg_composio_connect_desc, toolkit)
+            },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val toolkit = tool.parameters.find { it.name == "toolkit" }?.value
+                        val redirectUri = tool.parameters.find { it.name == "redirect_uri" }?.value ?: ""
+
+                        if (toolkit.isNullOrBlank()) {
+                            ToolResult(
+                                    toolName = tool.name,
+                                    success = false,
+                                    result = StringResultData(""),
+                                    error = "Missing required parameter: toolkit"
+                            )
+                        } else {
+                            val result = runBlocking(Dispatchers.IO) {
+                                manageConnections.initiateOAuthFlow(toolkit, redirectUri)
+                            }
+
+                            result.fold(
+                                    onSuccess = { oauthResult ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData("OAuth flow initiated for '$toolkit'.\nAuth URL: ${oauthResult.authUrl}\nAccount ID: ${oauthResult.accountId}\n\nPlease open the URL in a browser to complete the connection, then use 'composio_disconnect' with the account ID to manage it.")
+                                        )
+                                    },
+                                    onFailure = { e ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = false,
+                                                result = StringResultData(""),
+                                                error = "Failed to initiate OAuth for '$toolkit': ${e.message}"
+                                        )
+                                    }
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error initiating connection: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // Disconnect an OAuth account
+    handler.registerTool(
+            name = "composio_disconnect",
+            dangerCheck = { true }, // Disconnecting is a destructive action
+            descriptionGenerator = { tool ->
+                val accountId = tool.parameters.find { it.name == "account_id" }?.value ?: "unknown"
+                s(R.string.toolreg_composio_disconnect_desc, accountId)
+            },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val accountId = tool.parameters.find { it.name == "account_id" }?.value
+
+                        if (accountId.isNullOrBlank()) {
+                            ToolResult(
+                                    toolName = tool.name,
+                                    success = false,
+                                    result = StringResultData(""),
+                                    error = "Missing required parameter: account_id"
+                            )
+                        } else {
+                            val result = runBlocking(Dispatchers.IO) {
+                                manageConnections.disconnectConnection(accountId)
+                            }
+
+                            result.fold(
+                                    onSuccess = { success ->
+                                        if (success) {
+                                            ToolResult(
+                                                    toolName = tool.name,
+                                                    success = true,
+                                                    result = StringResultData("Account '$accountId' disconnected successfully.")
+                                            )
+                                        } else {
+                                            ToolResult(
+                                                    toolName = tool.name,
+                                                    success = false,
+                                                    result = StringResultData(""),
+                                                    error = "Failed to disconnect account '$accountId'."
+                                            )
+                                        }
+                                    },
+                                    onFailure = { e ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = false,
+                                                result = StringResultData(""),
+                                                error = "Failed to disconnect account '$accountId': ${e.message}"
+                                        )
+                                    }
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error disconnecting account: ${e.message}"
+                    )
+                }
+            }
+    )
+
     // Register package creator tools (create packages, MCP servers, and skills)
     PackageCreatorTools.registerCreatorTools(handler, context)
 }

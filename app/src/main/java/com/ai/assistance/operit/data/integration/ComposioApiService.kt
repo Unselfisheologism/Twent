@@ -39,22 +39,21 @@ class ComposioApiService(private val context: Context) {
     companion object {
         private const val TAG = "ComposioApiService"
         
-        // API Base URL - configurable for testing
-        // In production, use: https://api.composio.dev
-        const val DEFAULT_BASE_URL = "https://api.composio.dev"
+        // API Base URL - Composio v3.1 API
+        const val DEFAULT_BASE_URL = "https://backend.composio.dev/api/v3.1"
         
-        // Endpoints
-        const val ENDPOINT_TOOLKITS = "/v1/toolkits"
-        const val ENDPOINT_TOOL_EXECUTE = "/v1/tools/%s/execute"
-        const val ENDPOINT_CONNECTIONS = "/v1/connections"
-        const val ENDPOINT_OAUTH_URL = "/v1/connections/oauth-url"
-        const val ENDPOINT_OAUTH_EXCHANGE = "/v1/connections/oauth/exchange"
+        // Endpoints (v3.1)
+        const val ENDPOINT_TOOLKITS = "/toolkits"
+        const val ENDPOINT_TOOLS = "/tools"
+        const val ENDPOINT_TOOL_EXECUTE = "/tools/execute/%s"
+        const val ENDPOINT_CONNECTED_ACCOUNTS = "/connected_accounts"
+        const val ENDPOINT_CONNECTED_ACCOUNTS_LINK = "/connected_accounts/link"
         
         // Default headers
         const val HEADER_API_KEY = "x-api-key"
         const val HEADER_CONTENT_TYPE = "Content-Type"
         const val HEADER_USER_AGENT = "User-Agent"
-        const val USER_AGENT = "Operit-Android/1.0"
+        const val USER_AGENT = "Twent-Android/1.0"
         
         @Volatile
         private var INSTANCE: ComposioApiService? = null
@@ -494,7 +493,7 @@ class ComposioApiService(private val context: Context) {
                 return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
             }
             
-            val urlBuilder = buildUrl(ENDPOINT_CONNECTIONS).toHttpUrlOrNull()?.newBuilder()
+            val urlBuilder = buildUrl(ENDPOINT_CONNECTED_ACCOUNTS).toHttpUrlOrNull()?.newBuilder()
             toolkit?.let { urlBuilder?.addQueryParameter("toolkit", it) }
             
             val url = urlBuilder?.build()?.toString()
@@ -531,7 +530,7 @@ class ComposioApiService(private val context: Context) {
                 return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
             }
             
-            val url = buildUrl("$ENDPOINT_CONNECTIONS/$connectionId")
+            val url = buildUrl("$ENDPOINT_CONNECTED_ACCOUNTS/$connectionId")
             val request = createAuthenticatedRequest(url, method = "DELETE")
             val response = client.newCall(request).execute()
             

@@ -4042,6 +4042,12 @@
 <string name="toolreg_unnamed">Toolreg Unnamed</string>
 <string name="toolreg_unzip_files_desc">Toolreg Unzip Files Desc</string>
 <string name="toolreg_update_memory_desc">Toolreg Update Memory Desc</string>
+<string name="toolreg_composio_list_toolkits_desc">List available Composio toolkits (integrations). Optional: filter by category or search term.</string>
+<string name="toolreg_composio_execute_tool_desc">Execute a Composio tool: {0}</string>
+<string name="toolreg_composio_list_connections_desc">List all connected OAuth accounts for Composio integrations.</string>
+<string name="toolreg_composio_connect_desc">Initiate OAuth connection for toolkit: {0}</string>
+<string name="toolreg_composio_disconnect_desc">Disconnect Composio account: {0}</string>
+<string name="toolreg_composio_not_configured">Composio API key not configured. Set COMPOSIO_API_KEY in local.properties.</string>
 <string name="toolreg_update_user_preferences_desc">Toolreg Update User Preferences Desc</string>
 <string name="toolreg_update_workflow_desc">Toolreg Update Workflow Desc</string>
 <string name="toolreg_update_workflow_with_name_desc">Toolreg Update Workflow With Name Desc</string>

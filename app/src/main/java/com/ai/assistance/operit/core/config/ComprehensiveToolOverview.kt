@@ -184,7 +184,53 @@ Example - Type text:
 • trigger_workflow - Execute a workflow
 
 ═══════════════════════════════════════════════════════════════════════
-### 11. CHAT & CONVERSATION TOOLS
+### 11. COMPOSIO INTEGRATION TOOLS (EXTERNAL SERVICES)
+═══════════════════════════════════════════════════════════════════════
+
+Connect to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) via Composio. These tools allow direct integration with external apps without creating workflows.
+
+• composio_list_toolkits - List available integrations/toolkits. Optional: category, search, limit
+• composio_execute_tool - Execute a Composio tool (e.g., create GitHub issue, send Slack message)
+• composio_list_connections - List all connected OAuth accounts
+• composio_connect - Initiate OAuth connection for a toolkit (opens browser for auth)
+• composio_disconnect - Disconnect an OAuth account
+
+PREREQUISITE: COMPOSIO_API_KEY must be set in local.properties. Get your key from https://app.composio.dev
+
+Example - List available integrations:
+```
+{
+  "name": "composio_list_toolkits",
+  "parameters": [
+    {"name": "search", "value": "github"}
+  ]
+}
+```
+
+Example - Execute a GitHub tool:
+```
+{
+  "name": "composio_execute_tool",
+  "parameters": [
+    {"name": "tool_name", "value": "GITHUB_CREATE_ISSUE"},
+    {"name": "parameters", "value": "{\"repo\":\"owner/repo\",\"title\":\"Bug report\",\"body\":\"Description here\"}"},
+    {"name": "account_id", "value": "your-connected-account-id"}
+  ]
+}
+```
+
+Example - Connect a GitHub account:
+```
+{
+  "name": "composio_connect",
+  "parameters": [
+    {"name": "toolkit", "value": "github"}
+  ]
+}
+```
+
+═══════════════════════════════════════════════════════════════════════
+### 12. CHAT & CONVERSATION TOOLS
 ════════════════════════════════════════════════════════════════════════
 
 • start_chat_service - Start floating chat interface
@@ -199,13 +245,13 @@ Example - Type text:
 • agent_status - Check chat processing status
 
 ═══════════════════════════════════════════════════════════════════════
-### 12. TASKER INTEGRATION
+### 13. TASKER INTEGRATION
 ═══════════════════════════════════════════════════════════════════════
 
 • trigger_tasker_event - Trigger Tasker events for automation
 
 ═══════════════════════════════════════════════════════════════════════
-### 13. MEDIA PROCESSING
+### 14. MEDIA PROCESSING
 ════════════════════════════════════════════════════════════════════════
 
 • ffmpeg_execute - Execute FFmpeg commands
@@ -213,7 +259,7 @@ Example - Type text:
 • ffmpeg_convert - Convert video/audio formats
 
 ═══════════════════════════════════════════════════════════════════════
-### 14. PACKAGE SYSTEM (EXTENSIBILITY)
+### 15. PACKAGE SYSTEM (EXTENSIBILITY)
 ════════════════════════════════════════════════════════════════════════
 
 Additional functionality is available through packages:
@@ -222,7 +268,43 @@ Additional functionality is available through packages:
 • Packages can provide specialized capabilities (MCP servers, skills, etc.)
 
 ════════════════════════════════════════════════════════════════════════
-### 15. MINI-APP CREATION & MANAGEMENT
+### 16. FILE GENERATION (SPREADSHEETS, PRESENTATIONS, WEBPAGES, DOCUMENTS)
+════════════════════════════════════════════════════════════════════════
+
+You can generate professional files directly using your shell and file tools. The Ubuntu environment (environment="linux") has Python 3 available. You can install additional libraries with `pip install` or `apt install python3-pip && pip install <package>`.
+
+Supported file types and how to generate them:
+
+**Spreadsheets (.csv, .xlsx):**
+- CSV: Write directly using `write_file` — no dependencies needed
+- XLSX: `pip install openpyxl` then use Python to generate .xlsx with formatting, formulas, charts
+- Example: `write_file(path="/sdcard/Download/report.csv", content="Name,Score\nAlice,95\nBob,87")`
+
+**Presentations (.pptx):**
+- `pip install python-pptx` then use Python to generate slides with text, images, charts, layouts
+- Supports templates, transitions, speaker notes
+
+**Webpages (.html):**
+- Write HTML/CSS/JS directly using `write_file` — no dependencies needed
+- Can also generate with templating (Jinja2) for dynamic content
+
+**Documents (.docx, .pdf):**
+- DOCX: `pip install python-docx` then generate formatted documents
+- PDF: `pip install reportlab` or `pip install fpdf2`
+
+**Spreadsheets (advanced):**
+- `pip install pandas` for data manipulation + export to multiple formats
+
+Workflow:
+1. Use `execute_shell` or `execute_in_terminal_session` to install dependencies
+2. Write a Python script using `write_file` or `execute_shell` with heredoc
+3. Execute the script with `execute_shell(command="python3 /path/to/script.py")`
+4. The generated file is saved to the specified path (use /sdcard/Download/ for user-accessible files)
+
+You can combine multiple file types in a single task (e.g., generate a spreadsheet AND a presentation from the same data).
+
+═══════════════════════════════════════════════════════════════════════
+### 17. MINI-APP CREATION & MANAGEMENT
 ════════════════════════════════════════════════════════════════════════
 
 You can create interactive mini-apps (HTML/CSS/JS applications) that run inside the Operit app:
@@ -266,6 +348,12 @@ SEARCHING MEMORY:
 GETTING HELP:
   • For any tool, you can infer the parameters from this overview
   • Parameters marked as "optional" can be omitted
+
+GENERATING FILES:
+  • Spreadsheets: write_file(path="/sdcard/Download/data.csv", content="...") or pip install openpyxl && python3 script.py
+  • Presentations: pip install python-pptx && python3 script.py
+  • Webpages: write_file(path="/sdcard/Download/page.html", content="<html>...")
+  • Documents: pip install python-docx && python3 script.py
 
 ════════════════════════════════════════════════════════════════════════
 """.trimIndent()

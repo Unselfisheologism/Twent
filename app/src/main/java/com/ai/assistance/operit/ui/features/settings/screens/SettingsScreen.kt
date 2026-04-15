@@ -76,57 +76,6 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(TwentSpacing.lg))
 
-            // Your Profile Card - replaces GitHub Account
-            TwentCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(OrangePrimary, CyanPrimary)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Your Profile",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Customize your agent personality",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                    TwentButton(
-                        onClick = navigateToAgentPersonalitySettings,
-                        text = "Configure",
-                        modifier = Modifier.width(100.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(TwentSpacing.xl))
-
             // SECTION 1: Quick Setup - MOVED TO TOP (different from original)
             TwentSectionTitle("Quick Setup")
             Spacer(modifier = Modifier.height(TwentSpacing.md))

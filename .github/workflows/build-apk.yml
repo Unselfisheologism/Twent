@@ -52,6 +52,8 @@ jobs:
           echo "RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> local.properties
           echo "RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> local.properties
           echo "RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> local.properties
+          # Add API keys from secrets
+          echo "COMPOSIO_API_KEY=${{ secrets.COMPOSIO_API_KEY }}" >> local.properties
 
       # Clean and compile the release apk
       - name: Clean and Generate Release APK
