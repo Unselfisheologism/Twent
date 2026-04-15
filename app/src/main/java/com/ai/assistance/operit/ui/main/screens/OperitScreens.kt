@@ -1390,6 +1390,22 @@ sealed class Screen(
         }
     }
 
+    data object Integrations : Screen(navItem = NavItem.Integrations) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            com.ai.assistance.operit.ui.features.integrations.IntegrationsScreen()
+        }
+    }
+
     // 获取屏幕标题
     @Composable
     fun getTitle(): String = titleRes?.let { stringResource(it) } ?: ""
@@ -1423,6 +1439,7 @@ object OperitRouter {
             NavItem.Workflow -> Screen.Workflow
             NavItem.AgentCLIs -> Screen.AgentCLIs
             NavItem.MiniApps -> Screen.MiniApps
+            NavItem.Integrations -> Screen.Integrations
             else -> Screen.AiChat
         }
     }

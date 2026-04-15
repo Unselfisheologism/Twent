@@ -21,6 +21,7 @@ sealed class NavItem(val route: String, val titleResId: Int, val icon: ImageVect
     object Terminal : NavItem("terminal", R.string.terminal, Icons.Outlined.Code)
     object MiniApps : NavItem("mini_apps", R.string.nav_mini_apps, Icons.Outlined.Widgets)
     object Mcp : NavItem("mcp", R.string.mcp, Icons.Outlined.Hub)
+    object Integrations : NavItem("integrations", R.string.nav_integrations, Icons.Outlined.Extension)
     
     // Config pages
     object TokenConfig : NavItem("token_config", R.string.token_config, Icons.Outlined.Key)

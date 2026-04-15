@@ -384,12 +384,59 @@ class ComposioApiService(private val context: Context) {
     // ==================== T-010: OAuth Connection Flow ====================
     
     /**
-     * Get OAuth authorization URL for a specific integration
+     * Create an auth link for a user to connect their account
+     * Uses Composio's "Connect Links" - hosted pages where users authorize access
      * 
-     * @param toolkit The toolkit name (e.g., "github", "slack")
-     * @param redirectUri The OAuth callback URI
-     * @return Result containing OAuth URL and connection ID
+     * POST /connected_accounts/link
+     * 
+     * @param authConfigId The auth config ID for the toolkit
+     * @param userId The user ID to create the connection for
+     * @param callbackUrl Optional URL to redirect after auth
+     * @return Result containing the redirect URL (Connect Link)
      */
+    suspend fun createAuthLink(
+        authConfigId: String,
+        userId: String,
+        callbackUrl: String? = null
+    ): Result<AuthLinkResponse> = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
+            }
+            
+            val url = buildUrl(ENDPOINT_CONNECTED_ACCOUNTS_LINK)
+            
+            val bodyMap = mutableMapOf<String, JsonElement>(
+                "auth_config_id" to JsonPrimitive(authConfigId),
+                "user_id" to JsonPrimitive(userId)
+            )
+            callbackUrl?.let { bodyMap["callback_url"] = JsonPrimitive(it) }
+            
+            val jsonBody = JsonObject(bodyMap).toString()
+            
+            val request = createAuthenticatedRequest(
+                url = url,
+                method = "POST",
+                body = jsonBody.toRequestBody("application/json".toMediaType())
+            )
+            
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+            
+            if (response.isSuccessful && responseBody != null) {
+                AppLogger.d(TAG, "Auth link response: $responseBody")
+                val result = parseAuthLinkResponse(responseBody)
+                Result.success(result)
+            } else {
+                val errorMsg = "HTTP ${response.code}: ${response.message}. Response: $responseBody"
+                AppLogger.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to create auth link", e)
+            Result.failure(e)
+        }
+    }
     suspend fun getOAuthUrl(
         toolkit: String,
         redirectUri: String
@@ -552,12 +599,29 @@ class ComposioApiService(private val context: Context) {
     private fun parseToolkitsResponse(responseBody: String): List<ToolkitDefinition> {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
-            val toolkitsArray = jsonElement.jsonObject["toolkits"] ?: jsonElement
-
-            // Parse each toolkit
-            val toolkits = mutableListOf<ToolkitDefinition>()
-            // Simplified parsing - in production, use proper serializable classes
-            toolkits
+            val itemsArray = jsonElement.jsonObject["items"] 
+            
+            if (itemsArray is kotlinx.serialization.json.JsonArray) {
+                itemsArray.mapNotNull { element ->
+                    try {
+                        val obj = element.jsonObject
+                        ToolkitDefinition(
+                            id = obj["id"]?.toString()?.replace("\"", "") ?: UUID.randomUUID().toString(),
+                            name = obj["slug"]?.toString()?.replace("\"", "") ?: "",
+                            displayName = obj["name"]?.toString()?.replace("\"", "") ?: "",
+                            description = obj["description"]?.toString()?.replace("\"", "") ?: "",
+                            icon = obj["logo"]?.toString()?.replace("\"", "") ?: "",
+                            version = "1.0",
+                            tools = emptyList()
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "Failed to parse toolkit item", e)
+                        null
+                    }
+                }
+            } else {
+                emptyList()
+            }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse toolkits response", e)
             emptyList()
@@ -657,6 +721,28 @@ class ComposioApiService(private val context: Context) {
         }
     }
     
+    /**
+     * Parse auth link response from Composio Connect Links API
+     */
+    private fun parseAuthLinkResponse(responseBody: String): AuthLinkResponse {
+        return try {
+            val jsonElement = json.parseToJsonElement(responseBody)
+            val obj = jsonElement.jsonObject
+            
+            AuthLinkResponse(
+                redirectUrl = obj["redirect_url"]?.toString()?.replace("\"", "") ?: "",
+                connectionId = obj["id"]?.toString()?.replace("\"", "") ?: "",
+                linkToken = obj["link_token"]?.toString()?.replace("\"", "")
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to parse auth link response", e)
+            AuthLinkResponse(
+                redirectUrl = "",
+                connectionId = ""
+            )
+        }
+    }
+    
     private fun parseOAuthExchangeResponse(responseBody: String): OAuthExchangeResponse {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
@@ -684,19 +770,32 @@ class ComposioApiService(private val context: Context) {
     private fun parseConnectionsResponse(responseBody: String): List<ConnectionInfo> {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
-            val connectionsArray = jsonElement.jsonObject["connections"]
+            val itemsArray = jsonElement.jsonObject["items"]
             
-            if (connectionsArray is kotlinx.serialization.json.JsonArray) {
-                connectionsArray.mapNotNull { element ->
+            if (itemsArray is kotlinx.serialization.json.JsonArray) {
+                itemsArray.mapNotNull { element ->
                     try {
                         val obj = element.jsonObject
                         ConnectionInfo(
                             id = obj["id"]?.toString()?.replace("\"", "") ?: "",
-                            toolkit = obj["toolkit"]?.toString()?.replace("\"", "") ?: "",
-                            accountName = obj["account_name"]?.toString()?.replace("\"", "") ?: "",
-                            status = obj["status"]?.toString()?.replace("\"", "") ?: "active",
-                            connectedAt = obj["connected_at"]?.toString()?.toLongOrNull() ?: 0L
+                            toolkit = obj["toolkit"]?.jsonObject?.get("slug")?.toString()?.replace("\"", "") ?: "",
+                            accountName = obj["name"]?.toString()?.replace("\"", "") ?: "",
+                            status = obj["status"]?.toString()?.replace("\"", "") ?: "ACTIVE",
+                            connectedAt = 0L
                         )
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "Failed to parse connection item", e)
+                        null
+                    }
+                }
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to parse connections response", e)
+            emptyList()
+        }
+    }
                     } catch (e: Exception) {
                         null
                     }
@@ -734,6 +833,17 @@ data class OAuthUrlResponse(
     val url: String,
     val authUrl: String = url,
     val connectionId: String
+)
+
+/**
+ * Auth link response for Composio Connect Links
+ * Returns the URL where users authorize access to their accounts
+ */
+@Serializable
+data class AuthLinkResponse(
+    val redirectUrl: String,
+    val connectionId: String,
+    val linkToken: String? = null
 )
 
 /**

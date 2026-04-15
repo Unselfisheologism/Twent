@@ -219,6 +219,7 @@ fun OperitApp(
             listOfNotNull(
                 NavItem.AssistantConfig,
                 NavItem.TokenConfig,
+                NavItem.Integrations,
                 NavItem.Permissions,
                 NavItem.Settings,
                 NavItem.Help,
