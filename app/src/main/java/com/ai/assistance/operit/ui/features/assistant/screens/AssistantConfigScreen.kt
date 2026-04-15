@@ -1,266 +1,614 @@
-﻿package com.ai.assistance.operit.ui.features.assistant.screens
+package com.ai.assistance.operit.ui.features.assistant.screens
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.ai.assistance.operit.ui.components.CustomScaffold
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ai.assistance.operit.ui.twent.components.*
-import com.ai.assistance.operit.ui.twent.components.TwentSpacing
-import com.ai.assistance.operit.ui.theme.*
+// viewModel import removed - no longer needed
+import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.preferences.WakeWordPreferences
+import com.ai.assistance.operit.api.speech.PersonalWakeEnrollment
+// AvatarConfigSection removed
+// AvatarPreviewSection removed
+import com.ai.assistance.operit.ui.features.assistant.components.CompactSwitchRow
+import com.ai.assistance.operit.ui.features.assistant.components.VoiceAutoAttachGrid
+// AssistantConfigViewModel removed - avatar functionality removed
+import kotlinx.coroutines.launch
 
-/**
- * COMPLETELY SIMPLIFIED Assistant Config Screen
- * No broken ViewModel dependencies
- */
+/** Agent Configuration Screen - Wake word, voice, and permission settings */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssistantConfigScreen() {
     val context = LocalContext.current
     
-    // Simple state without ViewModel
-    var agentName by remember { mutableStateOf("Twent AI") }
-    var wakeWordEnabled by remember { mutableStateOf(false) }
-    var autoReadMessages by remember { mutableStateOf(false) }
-    
-    // REDESIGNED LAYOUT - Different from original
-    TwentScreenPadding {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Header - Different size and style
-            Text(
-                text = "Agent Config",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                letterSpacing = (-0.5).sp
-            )
-            
-            Spacer(modifier = Modifier.height(TwentSpacing.xxl))
+    // Local state for scroll position and error handling (no ViewModel needed)
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var operationSuccess by remember { mutableStateOf(false) }
 
-            // SECTION 1: Basic Settings
-            TwentCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(TwentSpacing.xl)
-                ) {
-                    // Section header - Different style
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(OrangePrimary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = null,
-                                tint = OrangePrimary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Basic Settings",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Configure your agent",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(TwentSpacing.xl))
-                    
-                    // Agent name
-                    OutlinedTextField(
-                        value = agentName,
-                        onValueChange = { agentName = it },
-                        label = { Text("Agent Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(TwentSpacing.lg))
-                    
-                    // Wake word toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Wake Word",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Enable voice activation",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                        
-                        Switch(
-                            checked = wakeWordEnabled,
-                            onCheckedChange = { wakeWordEnabled = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = OrangePrimary,
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(TwentSpacing.lg))
-                    
-                    // Auto-read toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Auto-Read Messages",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Automatically read messages aloud",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                        
-                        Switch(
-                            checked = autoReadMessages,
-                            onCheckedChange = { autoReadMessages = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = OrangePrimary,
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        )
-                    }
+    val wakePrefs = remember { WakeWordPreferences(context.applicationContext) }
+    val wakeListeningEnabled by wakePrefs.alwaysListeningEnabledFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_ALWAYS_LISTENING_ENABLED)
+    val wakePhrase by wakePrefs.wakePhraseFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_WAKE_PHRASE)
+    val wakePhraseRegexEnabled by wakePrefs.wakePhraseRegexEnabledFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_WAKE_PHRASE_REGEX_ENABLED)
+    val wakeRecognitionMode by wakePrefs.wakeRecognitionModeFlow.collectAsState(initial = WakeWordPreferences.WakeRecognitionMode.STT)
+    val personalWakeTemplates by wakePrefs.personalWakeTemplatesFlow.collectAsState(initial = emptyList())
+    val inactivityTimeoutSeconds by wakePrefs.voiceCallInactivityTimeoutSecondsFlow.collectAsState(
+        initial = WakeWordPreferences.DEFAULT_VOICE_CALL_INACTIVITY_TIMEOUT_SECONDS
+    )
+    val wakeGreetingEnabled by wakePrefs.wakeGreetingEnabledFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_WAKE_GREETING_ENABLED)
+    val wakeGreetingText by wakePrefs.wakeGreetingTextFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_WAKE_GREETING_TEXT)
+    val wakeCreateNewChatOnWakeEnabled by wakePrefs.wakeCreateNewChatOnWakeEnabledFlow.collectAsState(
+        initial = WakeWordPreferences.DEFAULT_WAKE_CREATE_NEW_CHAT_ON_WAKE_ENABLED
+    )
+    val autoNewChatGroup by wakePrefs.autoNewChatGroupFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_AUTO_NEW_CHAT_GROUP)
+    val voiceAutoAttachEnabled by wakePrefs.voiceAutoAttachEnabledFlow.collectAsState(initial = WakeWordPreferences.DEFAULT_VOICE_AUTO_ATTACH_ENABLED)
+    val voiceAutoAttachItems by wakePrefs.voiceAutoAttachItemsFlow.collectAsState(initial = WakeWordPreferences.getDefaultVoiceAutoAttachItems(context))
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(wakePrefs) {
+        wakePrefs.migrateVoiceAutoAttachItemsIfNeeded()
+    }
+
+    val requestMicPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                coroutineScope.launch {
+                    wakePrefs.saveAlwaysListeningEnabled(true)
                 }
+            } else {
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(R.string.microphone_permission_denied_toast),
+                    android.widget.Toast.LENGTH_SHORT
+                )
+                    .show()
             }
+        }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.xl))
+    var wakePhraseInput by remember { mutableStateOf("") }
+    var inactivityTimeoutInput by remember { mutableStateOf("") }
+    var wakeGreetingTextInput by remember { mutableStateOf("") }
+    var autoNewChatGroupInput by remember { mutableStateOf("") }
 
-            // SECTION 2: Voice Settings
-            TwentCard(
-                modifier = Modifier.fillMaxWidth()
+    var voiceWakeupExpanded by rememberSaveable { mutableStateOf(true) }
+
+    var personalWakeConfigDialogVisible by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(wakePhrase) {
+        if (wakePhraseInput.isBlank()) {
+            wakePhraseInput = wakePhrase
+        }
+    }
+
+    LaunchedEffect(inactivityTimeoutSeconds) {
+        if (inactivityTimeoutInput.isBlank()) {
+            inactivityTimeoutInput = inactivityTimeoutSeconds.toString()
+        }
+    }
+
+    LaunchedEffect(wakeGreetingText) {
+        if (wakeGreetingTextInput.isBlank()) {
+            wakeGreetingTextInput = wakeGreetingText
+        }
+    }
+
+    LaunchedEffect(autoNewChatGroup) {
+        if (autoNewChatGroupInput.isBlank()) {
+            autoNewChatGroupInput = autoNewChatGroup
+        }
+    }
+
+    // Scroll state
+    val scrollState = rememberScrollState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 在 Composable 函数中获取字符串资源，以便在 LaunchedEffect 中使用
+    val operationSuccessString = context.getString(R.string.operation_success)
+    val errorOccurredString = context.getString(R.string.error_occurred_simple)
+
+    // 显示操作结果的 SnackBar
+    LaunchedEffect(operationSuccess, errorMessage) {
+        if (operationSuccess) {
+            snackbarHostState.showSnackbar(operationSuccessString)
+            operationSuccess = false
+        } else if (errorMessage != null) {
+            snackbarHostState.showSnackbar(errorMessage ?: errorOccurredString)
+            errorMessage = null
+        }
+    }
+
+    CustomScaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 主要内容
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp)
+                        .verticalScroll(scrollState)
             ) {
+                // Avatar preview section removed
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Voice Wake-up Section
                 Column(
-                    modifier = Modifier.padding(TwentSpacing.xl)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 0.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Different header style
                     Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { voiceWakeupExpanded = !voiceWakeupExpanded }
+                            .padding(start = 2.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(CyanPrimary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Mic,
-                                contentDescription = null,
-                                tint = CyanPrimary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Voice Settings",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Configure voice interactions",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.voice_wakeup_section_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = if (voiceWakeupExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            contentDescription =
+                                if (voiceWakeupExpanded) stringResource(R.string.collapse)
+                                else stringResource(R.string.expand),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    
-                    Spacer(modifier = Modifier.height(TwentSpacing.xl))
-                    
-                    // Voice selection placeholder
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.RecordVoiceOver,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    if (voiceWakeupExpanded) Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                RoundedCornerShape(12.dp)
                             )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Voice",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface
+                            .padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Wake Mode
+                        Text(
+                            text = stringResource(R.string.voice_wakeup_mode_label),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        var modeExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
+                            expanded = modeExpanded,
+                            onExpandedChange = { modeExpanded = it }
+                        ) {
+                            val modeLabel =
+                                when (wakeRecognitionMode) {
+                                    WakeWordPreferences.WakeRecognitionMode.STT -> stringResource(R.string.voice_wakeup_mode_stt)
+                                    WakeWordPreferences.WakeRecognitionMode.PERSONAL_TEMPLATE -> stringResource(R.string.voice_wakeup_mode_personal)
+                                }
+                            OutlinedTextField(
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                value = modeLabel,
+                                onValueChange = {},
+                                readOnly = true,
+                                singleLine = true,
+                                label = { Text(text = stringResource(R.string.voice_wakeup_mode_label)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeExpanded) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = modeExpanded,
+                                onDismissRequest = { modeExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(text = stringResource(R.string.voice_wakeup_mode_stt)) },
+                                    onClick = {
+                                        modeExpanded = false
+                                        coroutineScope.launch {
+                                            wakePrefs.saveWakeRecognitionMode(WakeWordPreferences.WakeRecognitionMode.STT)
+                                        }
+                                    }
                                 )
-                                Text(
-                                    text = "Default voice",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                DropdownMenuItem(
+                                    text = { Text(text = stringResource(R.string.voice_wakeup_mode_personal)) },
+                                    onClick = {
+                                        modeExpanded = false
+                                        coroutineScope.launch {
+                                            wakePrefs.saveWakeRecognitionMode(WakeWordPreferences.WakeRecognitionMode.PERSONAL_TEMPLATE)
+                                        }
+                                    }
                                 )
                             }
-                            Icon(
-                                imageVector = Icons.Outlined.ChevronRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        }
+
+                        if (wakeRecognitionMode == WakeWordPreferences.WakeRecognitionMode.PERSONAL_TEMPLATE) {
+                            if (personalWakeTemplates.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.voice_wakeup_personal_no_templates),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            FilledTonalButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { personalWakeConfigDialogVisible = true },
+                            ) {
+                                Text(text = stringResource(R.string.voice_wakeup_personal_configure))
+                            }
+
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = personalWakeTemplates.isNotEmpty(),
+                                onClick = {
+                                    coroutineScope.launch {
+                                        wakePrefs.savePersonalWakeTemplates(emptyList())
+                                    }
+                                },
+                            ) {
+                                Text(text = stringResource(R.string.voice_wakeup_personal_clear))
+                            }
+                        }
+
+                        // Always Listening
+                        CompactSwitchRow(
+                            title = stringResource(R.string.voice_wakeup_always_listen_title),
+                            description = stringResource(R.string.voice_wakeup_always_listen_desc),
+                            checked = wakeListeningEnabled,
+                            onCheckedChange = { enabled ->
+                                if (enabled) {
+                                    val granted =
+                                        ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.RECORD_AUDIO
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    if (granted) {
+                                        coroutineScope.launch {
+                                            wakePrefs.saveAlwaysListeningEnabled(true)
+                                        }
+                                    } else {
+                                        requestMicPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                } else {
+                                    coroutineScope.launch {
+                                        wakePrefs.saveAlwaysListeningEnabled(false)
+                                    }
+                                }
+                            }
+                        )
+
+                        if (wakeRecognitionMode == WakeWordPreferences.WakeRecognitionMode.STT) {
+                            // Wake Phrase Input
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = wakePhraseInput,
+                                onValueChange = { newValue ->
+                                    wakePhraseInput = newValue
+                                    coroutineScope.launch {
+                                        wakePrefs.saveWakePhrase(newValue.ifBlank { WakeWordPreferences.DEFAULT_WAKE_PHRASE })
+                                    }
+                                },
+                                singleLine = true,
+                                label = { Text(stringResource(R.string.voice_wakeup_phrase_label)) },
+                                supportingText = { Text(stringResource(R.string.voice_wakeup_phrase_supporting)) },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                )
+                            )
+
+                            // Regex Toggle
+                            CompactSwitchRow(
+                                title = stringResource(R.string.voice_wakeup_regex_title),
+                                description = stringResource(R.string.voice_wakeup_regex_desc),
+                                checked = wakePhraseRegexEnabled,
+                                onCheckedChange = { enabled ->
+                                    coroutineScope.launch {
+                                        wakePrefs.saveWakePhraseRegexEnabled(enabled)
+                                    }
+                                }
+                            )
+                        }
+
+                        // Timeout Input
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = inactivityTimeoutInput,
+                            onValueChange = { newValue ->
+                                val filtered = newValue.filter { it.isDigit() }
+                                inactivityTimeoutInput = filtered
+                                val parsed = filtered.toIntOrNull()
+                                if (parsed != null) {
+                                    val clamped = parsed.coerceIn(1, 600)
+                                    coroutineScope.launch {
+                                        wakePrefs.saveVoiceCallInactivityTimeoutSeconds(clamped)
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            label = { Text(stringResource(R.string.voice_wakeup_inactivity_timeout_label)) },
+                            supportingText = { Text(stringResource(R.string.voice_wakeup_inactivity_timeout_supporting)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            )
+                        )
+
+                        // Greeting Toggle
+                        CompactSwitchRow(
+                            title = stringResource(R.string.voice_wakeup_greeting_title),
+                            description = stringResource(R.string.voice_wakeup_greeting_desc),
+                            checked = wakeGreetingEnabled,
+                            onCheckedChange = { enabled ->
+                                coroutineScope.launch {
+                                    wakePrefs.saveWakeGreetingEnabled(enabled)
+                                }
+                            }
+                        )
+
+                        // Greeting Text Input
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = wakeGreetingTextInput,
+                            onValueChange = { newValue ->
+                                wakeGreetingTextInput = newValue
+                                coroutineScope.launch {
+                                    wakePrefs.saveWakeGreetingText(newValue.ifBlank { WakeWordPreferences.DEFAULT_WAKE_GREETING_TEXT })
+                                }
+                            },
+                            singleLine = true,
+                            enabled = wakeGreetingEnabled,
+                            label = { Text(stringResource(R.string.voice_wakeup_greeting_text_label)) },
+                            supportingText = { Text(stringResource(R.string.voice_wakeup_greeting_text_supporting)) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            )
+                        )
+
+                        CompactSwitchRow(
+                            title = stringResource(R.string.voice_wakeup_create_new_chat_title),
+                            description = stringResource(R.string.voice_wakeup_create_new_chat_desc),
+                            checked = wakeCreateNewChatOnWakeEnabled,
+                            onCheckedChange = { enabled ->
+                                coroutineScope.launch {
+                                    wakePrefs.saveWakeCreateNewChatOnWakeEnabled(enabled)
+                                }
+                            }
+                        )
+
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = autoNewChatGroupInput,
+                            onValueChange = { newValue ->
+                                autoNewChatGroupInput = newValue
+                                coroutineScope.launch {
+                                    wakePrefs.saveAutoNewChatGroup(
+                                        newValue.ifBlank { WakeWordPreferences.DEFAULT_AUTO_NEW_CHAT_GROUP }
+                                    )
+                                }
+                            },
+                            singleLine = true,
+                            label = { Text(stringResource(R.string.voice_wakeup_auto_new_chat_group_label)) },
+                            supportingText = {
+                                Text(
+                                    stringResource(
+                                        R.string.voice_wakeup_auto_new_chat_group_supporting,
+                                        WakeWordPreferences.DEFAULT_AUTO_NEW_CHAT_GROUP
+                                    )
+                                )
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            )
+                        )
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 0.dp))
+
+                        Text(
+                            text = stringResource(R.string.voice_keyword_attachments_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        CompactSwitchRow(
+                            title = stringResource(R.string.voice_keyword_attachments_enabled_title),
+                            description = stringResource(R.string.voice_keyword_attachments_enabled_desc),
+                            checked = voiceAutoAttachEnabled,
+                            onCheckedChange = { enabled ->
+                                coroutineScope.launch {
+                                    wakePrefs.saveVoiceAutoAttachEnabled(enabled)
+                                }
+                            }
+                        )
+
+                        if (voiceAutoAttachEnabled) {
+                            VoiceAutoAttachGrid(
+                                items = voiceAutoAttachItems,
+                                onItemsChange = { newItems ->
+                                    coroutineScope.launch {
+                                        wakePrefs.saveVoiceAutoAttachItems(newItems)
+                                    }
+                                }
                             )
                         }
                     }
                 }
+
+                // 底部空间
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.xxl))
+            if (personalWakeConfigDialogVisible) {
+                val scope = rememberCoroutineScope()
+                var step1 by remember { mutableStateOf<FloatArray?>(null) }
+                var step2 by remember { mutableStateOf<FloatArray?>(null) }
+                var step3 by remember { mutableStateOf<FloatArray?>(null) }
+                var recordingStep by remember { mutableStateOf(0) }
+
+                AlertDialog(
+                    onDismissRequest = {
+                        if (recordingStep == 0) personalWakeConfigDialogVisible = false
+                    },
+                    title = { Text(text = stringResource(R.string.voice_wakeup_personal_config_dialog_title)) },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = stringResource(R.string.voice_wakeup_personal_config_dialog_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            @Composable
+                            fun stepRow(index: Int, value: FloatArray?, onRecord: () -> Unit) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.voice_wakeup_personal_config_step, index),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    val busy = recordingStep == index
+                                    val label =
+                                        when {
+                                            busy -> stringResource(R.string.voice_wakeup_personal_config_recording)
+                                            value != null -> stringResource(R.string.voice_wakeup_personal_config_record_done)
+                                            else -> stringResource(R.string.voice_wakeup_personal_config_record)
+                                        }
+                                    FilledTonalButton(
+                                        onClick = onRecord,
+                                        enabled = recordingStep == 0,
+                                    ) {
+                                        Text(text = label)
+                                    }
+                                }
+                            }
+
+                            stepRow(1, step1) {
+                                recordingStep = 1
+                                scope.launch {
+                                    val feat = PersonalWakeEnrollment.recordOneTemplate(context)
+                                    if (feat != null) step1 = feat
+                                    recordingStep = 0
+                                }
+                            }
+                            stepRow(2, step2) {
+                                recordingStep = 2
+                                scope.launch {
+                                    val feat = PersonalWakeEnrollment.recordOneTemplate(context)
+                                    if (feat != null) step2 = feat
+                                    recordingStep = 0
+                                }
+                            }
+                            stepRow(3, step3) {
+                                recordingStep = 3
+                                scope.launch {
+                                    val feat = PersonalWakeEnrollment.recordOneTemplate(context)
+                                    if (feat != null) step3 = feat
+                                    recordingStep = 0
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        val canSave = step1 != null && step2 != null && step3 != null && recordingStep == 0
+                        TextButton(
+                            enabled = canSave,
+                            onClick = {
+                                if (!canSave) return@TextButton
+                                coroutineScope.launch {
+                                    val templates =
+                                        listOf(step1!!, step2!!, step3!!).map { f ->
+                                            WakeWordPreferences.PersonalWakeTemplate(features = f.toList())
+                                        }
+                                    wakePrefs.savePersonalWakeTemplates(templates)
+                                }
+                                personalWakeConfigDialogVisible = false
+                            }
+                        ) {
+                            Text(text = stringResource(R.string.voice_wakeup_personal_config_save))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            enabled = recordingStep == 0,
+                            onClick = { personalWakeConfigDialogVisible = false }
+                        ) {
+                            Text(text = stringResource(R.string.voice_wakeup_personal_config_cancel))
+                        }
+                    }
+                )
+            }
+
+            // 加载指示器覆盖层
+            if (isLoading) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                MaterialTheme.colorScheme.surface
+                                    .copy(alpha = 0.7f)
+                            ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.processing),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
         }
     }
 }
+

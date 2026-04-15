@@ -63,7 +63,7 @@ class OutputProcessor(
         // 始终更新 ANSI 解析器（用于 Canvas 渲染），包括初始化阶段
         // 这样用户可以看到初始化过程中的所有输出，包括错误信息
         session.ansiParser.parse(chunk)
-        
+
         // 如果在全屏模式下，跳过行解析逻辑（全屏应用自己管理屏幕）
         if (session.isFullscreen) {
             // 不需要再次解析，ansiParser 已经更新
@@ -105,7 +105,7 @@ class OutputProcessor(
                 processLine(sessionId, line, sessionManager)
             } else {
                 // No full line-terminator found in the buffer.
-                
+
                 // 首先检查是否是进度行（优先级最高，避免被误判为提示符）
                 if (AnsiUtils.isProgressLine(bufferContent)) {
                     Log.d(TAG, "Detected progress line in buffer: '$bufferContent'")
@@ -115,23 +115,23 @@ class OutputProcessor(
                     session.rawBuffer.clear()
                     continue // Re-check buffer in case more data came in
                 }
-                
+
                 // 然后检查是否是提示符
                 val cleanContent = AnsiUtils.stripAnsi(bufferContent)
-                
+
                 // 检查是否是普通 shell 提示符
                 val isShellPrompt = isPrompt(cleanContent)
-                
+
                 // 使用 PTY 模式检测是否在等待输入
                 val isWaitingInput = isInteractivePrompt(cleanContent, sessionId, sessionManager)
-                
+
                 if (isShellPrompt || isWaitingInput) {
                     Log.d(TAG, "Processing remaining buffer as interactive/shell prompt: '$bufferContent'")
                     // Since this is not a newline-terminated line, the justHandledCarriageReturn
                     // state from a previous CR is not relevant here. We reset it to ensure
                     // the prompt is processed correctly by handleReadyState.
                     state.justHandledCarriageReturn = false
-                    
+
                     // 如果是交互式提示符（非普通 shell 提示符），进入交互模式
                     if (isWaitingInput && !isShellPrompt) {
                         handleInteractivePrompt(sessionId, cleanContent, sessionManager)
@@ -159,7 +159,7 @@ class OutputProcessor(
             processLine(sessionId, line, sessionManager)
             return
         }
-        
+
         // 检查是否是命令提示符（优先级最高）
         // 即使是 CR line，如果是提示符也应该作为命令完成处理
         if (isPrompt(cleanLine.trim())) {
@@ -168,7 +168,7 @@ class OutputProcessor(
             sessionStates[sessionId]?.justHandledCarriageReturn = false
             return
         }
-        
+
         // 只有在清理后的内容非空时才处理为进度更新
         // 空内容（如 ANSI 控制序列）不应影响下一行的处理
         if (cleanLine.isNotEmpty()) {
@@ -262,7 +262,7 @@ class OutputProcessor(
             sessionManager.updateSession(sessionId) { session ->
                 session.copy(initState = SessionInitState.READY)
             }
-            
+
             // 发送欢迎语到 Canvas
             sendWelcomeMessage(sessionId, sessionManager)
         } else {
@@ -339,13 +339,13 @@ class OutputProcessor(
             sessionManager.updateSession(sessionId) { session ->
                 session.copy(currentDirectory = "$path $")
             }
-            
+
             // 发出目录变化事件
             onDirectoryChangeEvent(SessionDirectoryEvent(
                 sessionId = sessionId,
                 currentDirectory = "$path $"
             ))
-            
+
             Log.d(TAG, "Matched CWD prompt. Path: $path")
 
             val outputBeforePrompt = line.substring(0, match.range.first)
@@ -369,13 +369,13 @@ class OutputProcessor(
                 sessionManager.updateSession(sessionId) { session ->
                     session.copy(currentDirectory = "${cleanPrompt} $")
                 }
-                
+
                 // 发出目录变化事件
                 onDirectoryChangeEvent(SessionDirectoryEvent(
                     sessionId = sessionId,
                     currentDirectory = "${cleanPrompt} $"
                 ))
-                
+
                 Log.d(TAG, "Matched fallback prompt: $cleanPrompt")
                 true
             } else {
@@ -407,25 +407,25 @@ class OutputProcessor(
     fun isInteractivePrompt(line: String, sessionId: String, sessionManager: SessionManager): Boolean {
         val session = sessionManager.getSession(sessionId) ?: return false
         val pty = session.pty ?: return false
-        
+
         // 只在有命令执行时才检测（避免误判普通 shell 提示符）
         if (session.currentExecutingCommand?.isExecuting != true) {
             return false
         }
-        
+
         try {
             val ptyMode = pty.getPtyMode()
             val isWaiting = ptyMode.isWaitingForInput()
-            
+
             if (!isWaiting) {
                 return false
             }
-            
+
             // 无论 canonical 还是 non-canonical mode，都完全依赖 PTY 状态判断
             // 不使用任何文本模式匹配或关键词判断
             val mode = if (ptyMode.isCanonicalMode) "canonical" else "non-canonical"
             Log.d(TAG, "Detected interactive prompt ($mode mode, available=${ptyMode.availableBytes}): $line")
-            
+
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Error checking PTY mode", e)
@@ -442,7 +442,7 @@ class OutputProcessor(
     ) {
         Log.d(TAG, "Detected interactive prompt: $cleanLine")
         val session = sessionManager.getSession(sessionId) ?: return
-        
+
         sessionManager.updateSession(sessionId) { session ->
             session.copy(
                 isWaitingForInteractiveInput = true,
@@ -493,7 +493,7 @@ class OutputProcessor(
             // 实时更新当前输出块
             currentItem.setOutput(builder.toString())
             session.currentOutputLineCount++
-            
+
             // 发出命令执行过程事件
             onCommandExecutionEvent(CommandExecutionEvent(
                 commandId = currentItem.id,
@@ -570,7 +570,7 @@ class OutputProcessor(
             lastExecutingItem.setExecuting(false)
 
             Log.i(TAG, "Finishing command ${lastExecutingItem.id} for session $sessionId")
-            
+
             // 发出命令完成事件
             onCommandExecutionEvent(CommandExecutionEvent(
                 commandId = lastExecutingItem.id,
@@ -582,7 +582,7 @@ class OutputProcessor(
             // Clear the reference since command is no longer executing
             session.currentExecutingCommand = null
             session.currentCommandOutput.clear()
-            
+
             // 通知命令已完成，可以处理下一个队列命令
             onCommandCompleted(sessionId)
         }
@@ -605,11 +605,11 @@ class OutputProcessor(
 
         if (enterIndex != -1) {
             Log.d(TAG, "Entering fullscreen mode for session $sessionId")
-            
+
             sessionManager.updateSession(sessionId) { session ->
                 session.copy(isFullscreen = true)
             }
-            
+
             // 清空缓冲区，ansiParser 已经包含所有内容
             buffer.clear()
             return true
@@ -644,25 +644,25 @@ class OutputProcessor(
      */
     private fun sendWelcomeMessage(sessionId: String, sessionManager: SessionManager) {
         val session = sessionManager.getSession(sessionId) ?: return
-        
+
         // Build welcome message with ANSI control sequences
         // \u001B[2J - clear screen
         // \u001B[H - move cursor to top-left
         val welcomeMessage = "\u001B[2J\u001B[H" +
-            " _____                        _   \r\n" +
-            "|_   _|                      | |  \r\n" +
-            "  | |_      _____ _ __   ___| |_ \r\n" +
-            "  | \\ \\ /\\ / / _ \\ '_ \\ / _ \\ __|\r\n" +
-            "  | |\\ V  V /  __/ | | |  __/ |_ \r\n" +
-            "  \\_/ \\_/\\_/ \\___|_| |_|\\___|\\__|\r\n" +
+"             _______                 _   \r\n" +
+"            |__   __|               | |  \r\n" +
+"               | |_      _____ _ __ | |_ \r\n" +
+"               | \ \ /\ / / _ \ '_ \| __|\r\n" +
+"               | |\ V  V /  __/ | | | |_ \r\n" +
+"               |_| \_/\_/ \___|_| |_|\__|\r\n" +
             "\r\n" +
             "  >> Your portable Ubuntu environment on Android <<\r\n" +
             "\r\n"
-        
+
         // 直接发送到 ANSI 解析器（Canvas 渲染）
         // 清屏操作会清除之前初始化过程中的所有输出
         session.ansiParser.parse(welcomeMessage)
-        
+
         Log.d(TAG, "Screen cleared and welcome message sent to Canvas for session $sessionId")
     }
 
