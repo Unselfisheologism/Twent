@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.ui.features.assistant.screens
+﻿package com.ai.assistance.operit.ui.features.assistant.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.ui.twent.components.*
+import com.ai.assistance.operit.ui.twent.components.TwentSpacing
 import com.ai.assistance.operit.ui.theme.*
 
 /**

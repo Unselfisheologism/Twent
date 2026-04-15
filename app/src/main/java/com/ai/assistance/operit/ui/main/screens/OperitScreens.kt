@@ -1,4 +1,4 @@
-package com.ai.assistance.operit.ui.main.screens
+﻿package com.ai.assistance.operit.ui.main.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -165,7 +165,7 @@ sealed class Screen(
                         navigateTo(Settings)
                         updateNavItem(NavItem.Settings)
                     },
-                    onNavigateToUserPreferences = { navigateTo(UserPreferencesSettings) },
+                    onNavigateToUserPreferences = { navigateTo(Settings) },
                     onNavigateToModelConfig = { navigateTo(ModelConfig) },
                     onNavigateToModelPrompts = { navigateTo(ModelPromptsSettings) },
                     onLoading = onLoading,
@@ -475,7 +475,7 @@ sealed class Screen(
         ) {
             SettingsScreen(
                     navigateToToolPermissions = { navigateTo(ToolPermission) },
-                    onNavigateToUserPreferences = { navigateTo(UserPreferencesSettings) },
+                    onNavigateToUserPreferences = { navigateTo(Settings) },
                     navigateToModelConfig = { navigateTo(ModelConfig) },
                     navigateToThemeSettings = { navigateTo(ThemeSettings) },
                     navigateToGlobalDisplaySettings = { navigateTo(GlobalDisplaySettings) },
@@ -732,7 +732,7 @@ sealed class Screen(
         ) {
             com.ai.assistance.operit.ui.features.settings.screens.PersonaCardGenerationScreen(
                 onNavigateToSettings = { navigateTo(Settings) },
-                onNavigateToUserPreferences = { navigateTo(UserPreferencesSettings) },
+                onNavigateToUserPreferences = { navigateTo(Settings) },
                 onNavigateToModelConfig = { navigateTo(ModelConfig) },
                 onNavigateToModelPrompts = { navigateTo(ModelPromptsSettings) }
             )

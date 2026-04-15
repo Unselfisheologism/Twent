@@ -2415,6 +2415,8 @@
 <string name="nav_power_user_mode">Nav Power User Mode</string>
 <string name="nav_memory_base">Nav Memory Base</string>
 <string name="nav_packages">Nav Packages</string>
+<string name="nav_toolbox">Toolset</string>
+<string name="important_tip">Important Note: In the old editor download page, the Windows and Mac download links are reversed. Please make sure to select the correct link.</string>
 <string name="nav_settings">Nav Settings</string>
 <string name="nav_workflow">Nav Workflow</string>
 <string name="need_configure_nodejs_pip">Need Configure Nodejs Pip</string>
