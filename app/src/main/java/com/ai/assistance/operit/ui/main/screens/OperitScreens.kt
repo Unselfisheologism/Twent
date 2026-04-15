@@ -642,7 +642,7 @@ sealed class Screen(
         }
     }
 
-            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_model_config) {
+    data object ModelConfig : Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_model_config) {
         @Composable
         override fun Content(
                 navController: NavController,

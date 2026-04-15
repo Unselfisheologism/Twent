@@ -547,9 +547,6 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                                         // 在光标位置插入附件引用
                                         actualViewModel.insertAttachmentReference(attachment)
                                     },
-                                    },
-                                    },
-                                    },
                                     onTakePhoto = { uri ->
                                         // 处理拍摄的照片
                                         actualViewModel.handleTakenPhoto(uri)
