@@ -128,7 +128,7 @@ fun HowToImportSection() {
                         shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                            text = stringResource(R.string.dragonbones_important_tip),
+                            text = stringResource(R.string.important_tip),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(all = 8.dp)

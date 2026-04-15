@@ -68,7 +68,6 @@ fun ToolboxScreen(
     onTextToSpeechSelected: () -> Unit,
     onSpeechToTextSelected: () -> Unit,
     onToolTesterSelected: () -> Unit,
-    onAgreementSelected: () -> Unit,
     onDefaultAssistantGuideSelected: () -> Unit,
     onProcessLimitRemoverSelected: () -> Unit,
     onHtmlPackagerSelected: () -> Unit,

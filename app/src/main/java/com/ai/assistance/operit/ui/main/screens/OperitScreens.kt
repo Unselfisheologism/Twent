@@ -57,7 +57,6 @@ import com.ai.assistance.operit.ui.features.settings.screens.AssistantThemeSetti
 import com.ai.assistance.operit.ui.features.settings.screens.AgentPersonalitySettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ToolPermissionSettingsScreen
 // UserPreferencesGuide and UserPreferencesSettings removed - over-engineered personalization
-import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.CustomHeadersSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.MnnModelDownloadScreen
 import com.ai.assistance.operit.ui.features.settings.screens.TokenUsageStatisticsScreen
@@ -1419,7 +1418,6 @@ object OperitRouter {
             NavItem.Help -> Screen.Help
             NavItem.About -> Screen.About
             NavItem.TokenConfig -> Screen.TokenConfig
-            NavItem.UserPreferencesGuide -> Screen.UserPreferencesGuide()
             NavItem.AssistantConfig -> Screen.AssistantConfig
             NavItem.UpdateHistory -> Screen.UpdateHistory
             NavItem.Workflow -> Screen.Workflow

@@ -365,6 +365,7 @@ object TwentSpacing {
     val lg = 24.dp
     val xl = 32.dp
     val xxl = 48.dp
+    val xxxl = 64.dp
 }
 
 /**
