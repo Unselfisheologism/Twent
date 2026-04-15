@@ -184,7 +184,7 @@ android {
 
 dependencies {
     implementation("com.github.jelmerk:hnswlib-core:1.2.1")
-    implementation(project(":dragonbones"))
+    // DragonBones module removed - no longer needed
     implementation(project(":terminal"))
     implementation(project(":mnn"))
     implementation(project(":llama"))

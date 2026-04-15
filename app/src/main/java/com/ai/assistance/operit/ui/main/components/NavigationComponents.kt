@@ -30,11 +30,11 @@ import com.ai.assistance.operit.ui.theme.CyanPrimary
 
 /**
  * Twent AI Navigation Components
- * Clean, numbered navigation inspired by reference designs
+ * Based on reference images: Full-screen overlay, numbered items, red accent
  */
 
 /**
- * Modern Navigation Drawer Header - Clean and minimal
+ * Modern Navigation Drawer Header - Matches reference images
  */
 @Composable
 fun NavigationDrawerHeader(
@@ -46,27 +46,27 @@ fun NavigationDrawerHeader(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = TwentSpacing.xl + 16.dp, // Status bar padding
+                top = TwentSpacing.xxl + 16.dp, // Status bar padding
                 start = TwentSpacing.lg,
                 end = TwentSpacing.lg,
-                bottom = TwentSpacing.md
+                bottom = TwentSpacing.lg
             )
     ) {
-        // Top row: Logo + Close button
+        // Top row: Logo + Close button (from reference)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo and brand
+            // Logo and brand (from reference)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
             ) {
-                // Logo icon
+                // Logo icon - 48dp from reference
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.linearGradient(
@@ -83,7 +83,7 @@ fun NavigationDrawerHeader(
                     )
                 }
                 
-                // Brand text
+                // Brand text - 16sp, bold from reference
                 Column {
                     Text(
                         text = appName,
@@ -99,27 +99,37 @@ fun NavigationDrawerHeader(
                 }
             }
             
-            // Close button
+            // Close button - 8dp rounded rectangle from reference
             IconButton(
                 onClick = onCloseClick,
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clip(RoundedCornerShape(8.dp)) // 8dp from reference
+                    .background(Color.Black) // Black from reference
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close menu",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
         }
+        
+        // "Menu" label - 12sp, uppercase, red from reference
+        Text(
+            text = "MENU",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = OrangePrimary, // Red accent from reference
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(top = TwentSpacing.xxl)
+        )
     }
 }
 
 /**
- * Modern Navigation Drawer Item - Numbered, clean design
+ * Modern Navigation Drawer Item - Numbered, matches reference images
  */
 @Composable
 fun ModernNavigationDrawerItem(
@@ -138,96 +148,70 @@ fun ModernNavigationDrawerItem(
         label = "nav_scale"
     )
 
-    Surface(
+    // Full-width item with bottom border (from reference)
+    Column(
         modifier = modifier
             .scale(scale)
-            .clip(RoundedCornerShape(14.dp)),
-        shape = RoundedCornerShape(14.dp),
-        color = if (selected)
-            OrangePrimary.copy(alpha = 0.12f)
-        else
-            Color.Transparent,
-        onClick = {
-            isPressed = true
-            onClick()
-        }
+            .fillMaxWidth()
+            .clickable {
+                isPressed = true
+                onClick()
+            }
+            .padding(
+                horizontal = TwentSpacing.lg, // 24dp from reference
+                vertical = TwentSpacing.md // 16dp from reference
+            )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TwentSpacing.md, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
         ) {
-            // Number badge or icon
+            // Number badge - 12sp from reference
             if (number != null) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (selected) OrangePrimary
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "%02d".format(number),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (selected) Color.White
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                // Icon container
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            if (selected) OrangePrimary.copy(alpha = 0.15f)
-                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (selected) OrangePrimary 
-                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            // Label and description
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
                 Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (selected) OrangePrimary
-                           else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    text = "%02d".format(number),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Normal, // 400 weight from reference
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.width(24.dp)
                 )
-                
-                if (description != null) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
 
-            // Selection indicator or arrow
+            // Label - 20sp, bold for active from reference
+            Text(
+                text = label,
+                style = if (selected) {
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 24.sp, // 24sp for active from reference
+                        fontWeight = FontWeight.Bold // 700 weight from reference
+                    )
+                } else {
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 20.sp, // 20sp for inactive from reference
+                        fontWeight = FontWeight.Normal // 400 weight from reference
+                    )
+                },
+                color = if (selected) OrangePrimary // Red accent from reference
+                       else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Description - only for inactive items
+            if (description != null && !selected) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Badge or arrow
             if (selected) {
+                // Active indicator - 8dp dot from reference
                 Box(
                     modifier = Modifier
                         .size(8.dp)
@@ -235,6 +219,7 @@ fun ModernNavigationDrawerItem(
                         .background(OrangePrimary)
                 )
             } else {
+                // Arrow or badge
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
@@ -243,11 +228,17 @@ fun ModernNavigationDrawerItem(
                 )
             }
         }
+        
+        // Bottom border - 1px #D0D0D0 from reference
+        HorizontalDivider(
+            modifier = Modifier.padding(top = TwentSpacing.md),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
     }
 }
 
 /**
- * Navigation Section Header - Clean, uppercase
+ * Navigation Section Header - Uppercase, 12sp from reference
  */
 @Composable
 fun NavigationSectionHeader(
@@ -257,8 +248,8 @@ fun NavigationSectionHeader(
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = OrangePrimary,
+        fontWeight = FontWeight.SemiBold, // 600 weight from reference
+        color = OrangePrimary, // Red accent from reference
         letterSpacing = 1.sp,
         modifier = modifier
             .fillMaxWidth()
@@ -270,7 +261,7 @@ fun NavigationSectionHeader(
 }
 
 /**
- * Navigation Divider - Subtle gradient line
+ * Navigation Divider - 1px from reference
  */
 @Composable
 fun NavigationDivider(
@@ -279,7 +270,7 @@ fun NavigationDivider(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(1.dp)
+            .height(1.dp) // 1px from reference
             .padding(horizontal = TwentSpacing.lg)
             .background(
                 Brush.horizontalGradient(
@@ -308,7 +299,7 @@ fun NavigationDrawerFooter(
             .padding(
                 start = TwentSpacing.lg,
                 end = TwentSpacing.lg,
-                bottom = TwentSpacing.xl + 16.dp // Bottom system bar padding
+                bottom = TwentSpacing.xxl + 16.dp // Bottom system bar padding
             )
     ) {
         // Divider
@@ -322,14 +313,14 @@ fun NavigationDrawerFooter(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Version info
+            // Version info - 12sp from reference
             Text(
                 text = "Twent AI $version",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
             )
             
-            // Settings button
+            // Settings button - 14sp, white text from reference
             TextButton(
                 onClick = onSettingsClick,
                 colors = ButtonDefaults.textButtonColors(

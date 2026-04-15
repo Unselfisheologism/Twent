@@ -104,28 +104,22 @@
     <string name="at_the_end_of_a_conversation_Operit_s_ai_powered_by_google_s_gemini_model_analyzes_the_dialogue_to_identify_lasting_facts_it_s_trained_to_ignore_fleeting_or_unimportant_details_for_example_if_you_say_remind_me_to_call_my_brother_ankit_tomorrow_the_ai_might_create_a_memory_like_the_user_s_brother_is_named_ankit">At the end of a conversation, Twent\'s AI (powered by Google\'s Gemini model) analyzes the dialogue to identify lasting facts. It\'s trained to ignore fleeting or unimportant details. For example, if you say, || remind me to call my brother Ankit tomorrow ||,the AI might create a memory like: || The user\'s brother is named Anita. ||</string>
     <string name="once_a_memory_is_created_e_g_the_user_lives_in_ghaziabad_it_is_stored_in_a_secure_private_database_directly_on_your_phone_this_database_is_part_of_the_Operit_app_s_internal_storage_and_is_not_accessible_by_other_apps">Once a memory is created (e.g., The user lives in Ghaziabad.), it is stored in a secure, private database directly on your phone. This database is part of the Twent app\'s internal storage and is not accessible by other apps.</string>
     <string name="accessibility_permission_full_desc">🤖 Twent is an AI assistant that needs accessibility services to control your phone through voice commands.\n\nThis permission allows Twent to:\n\n• Read screen content to understand context\n• Perform touches, swipes, and navigation\n• Automate tasks across all apps\n\n🔒 Your privacy is Google Privacy Rule for Gemini API - Your app calls Gemini API to understand his next action.</string>
-
     <string name="accessibility_consent_title">🤖 Accessibility Services Required</string>
     <string name="accessibility_consent_message">Twent requires accessibility services to function as your AI assistant.\n\nThis enables voice-controlled automation of your device for hands-free operation and improved accessibility.\n\n🔒 All data processing occurs locally on your device for maximum privacy.</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
-
-
     <!-- Battery optimization help -->
     <string name="Operit_not_working"><u>Twent not working on your phone?</u></string>
     <string name="battery_optimization_title">Battery Optimization Issues</string>
     <string name="battery_optimization_message">If Twent is not working properly, this might be due to intense battery optimization by your device manufacturer.\n\nManufacturers like Samsung, Huawei, OnePlus, Xiaomi, and others often add aggressive battery optimizations that can break Twent\'s functionality.\n\nTo fix this, you need to disable battery optimizations specifically for Twent in your device settings.</string>
     <string name="learn_how">Learn How</string>
     <string name="get_your_free_picovoice_api_key_you_can_paste_it_here">Get your free Picovoice API Key, you can paste it here.</string>
-
     <string name="microphone_permission_not_granted">Microphone permission not granted</string>
     <string name="accessibility_permission_needed_for_task">Hey, accessibility permission is needed to execute any task. I know you might have doubt giving this permission to me, but my code is open source, so can always check it out if you have doubts.</string>
     <string name="get_your_free_accesskey_from_the_picovoice_console"><u>Get your free AccessKey from the Picovoice Console</u></string>
     <string name="triggers_not_working_for_you"><u>Triggers not working for you?</u>u></string>
     <string name="sign_out">Sign Out</string>
     <string name="view_task_logs">View Past tasks Logs</string>
-
-
     <!-- Auto-generated missing string resources -->
 <string name="a11y_service_not_enabled">A11Y Service Not Enabled</string>
 <string name="a11y_ui_listener_started">A11Y Ui Listener Started</string>
@@ -149,7 +143,6 @@
 <string name="accessibility_wizard_step2">启用服务</string>
 <string name="accessibility_wizard_success_message">无障碍服务已正确配置并可以使用！</string>
 <string name="accessibility_wizard_title">无障碍服务设置</string>
-
 <!-- 无障碍帮助对话框 -->
 <string name="accessibility_help_dialog_title">为什么我无法启用服务？</string>
 <string name="accessibility_help_explanation">当您通过非Google Play Store渠道安装此应用（如直接下载APK或通过ADB安装）时，Android会应用一项名为\"受限设置\"的安全限制。这会导致无障碍服务开关无法正常工作。</string>
@@ -764,7 +757,6 @@
 <string name="chat_history_overview">Chat History Overview</string>
 <string name="chat_history_parent_not_exist">Chat History Parent Not Exist</string>
 <string name="chat_history_parse_backup_failed">Chat History Parse Backup Failed</string>
-
     <!-- Overlay Voice Chat Sources -->
     <string name="overlay_voice_sessions">Voice Sessions</string>
     <string name="overlay_task_executions">Task Executions</string>
@@ -1223,7 +1215,6 @@
 <string name="download_test_image_desc">Download Test Image Desc</string>
 <string name="downloading_progress">Downloading Progress</string>
 <string name="drag_item">Drag Item</string>
-<string name="dragonbones_important_tip">Dragonbones Important Tip</string>
 <string name="duplicate">Duplicate</string>
 <string name="duplicate_successful">Duplicate Successful</string>
 <string name="edit">Edit</string>
@@ -4806,22 +4797,15 @@
 <string name="yes">Yes</string>
 <string name="zip_files_test">Zip Files Test</string>
 <string name="zip_files_test_desc">Zip Files Test Desc</string>
-
-
     <!-- Auto-generated missing string resources -->
-
     <!-- Auto-generated missing string resources -->
-
     <!-- Tool Registration -->
     <string name="toolreg_list_character_cards_desc">List all character cards</string>
-
     <!-- Toast Messages -->
     <string name="toast_apk_extract_failed">Failed to extract APK</string>
-
     <!-- Shizuku Demo -->
     <string name="shizuku_demo_shizuku_permission_granted">Shizuku permission granted</string>
     <string name="shizuku_demo_shizuku_permission_denied">Shizuku permission denied</string>
-
     <!-- Root Wizard -->
     <string name="root_wizard_completed">Root wizard completed</string>
     <string name="root_wizard_success_message">Device is rooted successfully</string>
@@ -4834,22 +4818,17 @@
     <string name="root_wizard_device_not_rooted">Device is not rooted</string>
     <string name="root_wizard_risk_notice">Root risk notice</string>
     <string name="root_wizard_risk_details">Root risk details</string>
-
     <!-- Shizuku Wizard -->
     <string name="shizuku_wizard_permission_notice">Shizuku permission notice</string>
     <string name="shizuku_wizard_permission_notice_details">Shizuku permission details</string>
     <string name="shizuku_wizard_current_version">Current Shizuku version</string>
     <string name="shizuku_wizard_latest_version">Latest Shizuku version</string>
-
     <!-- Permission Guide -->
     <string name="permission_guide_storage_setting_failed">Storage permission setting failed</string>
     <string name="permission_guide_overlay_setting_failed">Overlay permission setting failed</string>
     <string name="permission_guide_battery_hint">Battery optimization may affect app functionality</string>
     <string name="permission_guide_battery_setting_failed">Battery optimization setting failed</string>
-
     <!-- Theme Settings -->
     <string name="theme_loop_enabled">Video loop enabled</string>
     <string name="theme_loop_disabled">Video loop disabled</string>
-
-
 </resources>

@@ -42,7 +42,7 @@ import com.ai.assistance.operit.data.preferences.androidPermissionPreferences
 import com.ai.assistance.operit.data.updates.UpdateManager
 import com.ai.assistance.operit.data.updates.UpdateStatus
 import com.ai.assistance.operit.ui.common.NavItem
-import com.ai.assistance.operit.ui.features.agreement.screens.AgreementScreen
+import com.ai.assistance.operit.ui.features.onboarding.OnboardingScreen
 import com.ai.assistance.operit.ui.features.migration.screens.MigrationScreen
 import com.ai.assistance.operit.ui.features.permission.screens.PermissionGuideScreen
 import com.ai.assistance.operit.ui.features.startup.screens.PluginLoadingScreenWithState
@@ -702,20 +702,19 @@ class MainActivity : ComponentActivity() {
                         // 在这里可以放置一个加载指示器，或者一个空白屏幕
                         // 为了简单起见，我们暂时留空，因为检查过程很快
                     } else {
-                        // 检查是否需要显示用户协议
+                        // Check if needs to show onboarding (first launch)
                         if (!agreementPreferences.isAgreementAccepted()) {
-                            AgreementScreen(
-                                    onAgreementAccepted = {
-                                        agreementPreferences.setAgreementAccepted(true)
-                                        // 协议接受后，检查权限级别设置
-                                        lifecycleScope.launch {
-                                            // 确保使用非阻塞方式更新UI
-                                            delay(300) // 短暂延迟确保UI状态更新
-                                            checkPermissionLevelSet()
-                                            // 重新设置应用内容
-                                            setAppContent()
-                                        }
+                            OnboardingScreen(
+                                onContinue = {
+                                    // Mark onboarding as complete
+                                    agreementPreferences.setAgreementAccepted(true)
+                                    // After onboarding, check permission level
+                                    lifecycleScope.launch {
+                                        delay(300)
+                                        checkPermissionLevelSet()
+                                        setAppContent()
                                     }
+                                }
                             )
                         }
                         // 检查是否需要显示数据迁移界面
@@ -899,7 +898,7 @@ class MainActivity : ComponentActivity() {
         return refreshRate
     }
 
-    /** 清理临时文件目录 删除Download/Operit/cleanOnExit目录中的所有文件 */
+    /** 清理临时文件目录 删除Download/Twent/cleanOnExit目录中的所有文件 */
     private fun cleanTemporaryFiles() {
         lifecycleScope.launch {
             try {

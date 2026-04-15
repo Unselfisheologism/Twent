@@ -654,7 +654,7 @@ private fun TokenUsageModelCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "¥${String.format("%.2f", cost)}",
+                        text = "$${String.format("%.2f", cost)}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

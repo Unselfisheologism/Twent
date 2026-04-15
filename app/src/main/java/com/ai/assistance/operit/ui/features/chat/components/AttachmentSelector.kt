@@ -73,10 +73,6 @@ fun AttachmentSelectorPanel(
         visible: Boolean,
         onAttachImage: (String) -> Unit,
         onAttachFile: (String) -> Unit,
-        onAttachScreenContent: () -> Unit,
-        onAttachNotifications: () -> Unit = {},
-        onAttachLocation: () -> Unit = {},
-        onAttachMemory: () -> Unit = {},
         onTakePhoto: (Uri) -> Unit,
         userQuery: String = "",
         onDismiss: () -> Unit
@@ -193,14 +189,6 @@ fun AttachmentSelectorPanel(
                                         }
                                 ),
                                 AttachmentPanelItem(
-                                        icon = Icons.Default.Memory,
-                                        label = context.getString(R.string.attachment_memory),
-                                        onClick = {
-                                            onAttachMemory()
-                                            onDismiss()
-                                        }
-                                ),
-                                AttachmentPanelItem(
                                         icon = Icons.Default.AudioFile,
                                         label = context.getString(R.string.attachment_audio),
                                         onClick = { imagePickerLauncher.launch("audio/*") }
@@ -209,42 +197,18 @@ fun AttachmentSelectorPanel(
                                         icon = Icons.Default.Description,
                                         label = context.getString(R.string.attachment_file),
                                         onClick = { filePickerLauncher.launch("*/*") }
-                                ),
-                                AttachmentPanelItem(
-                                        icon = Icons.Default.ScreenshotMonitor,
-                                        label = context.getString(R.string.attachment_screen_content),
-                                        onClick = {
-                                            onAttachScreenContent()
-                                            onDismiss()
-                                        }
-                                ),
-                                AttachmentPanelItem(
-                                        icon = Icons.Default.Notifications,
-                                        label = context.getString(R.string.attachment_notifications),
-                                        onClick = {
-                                            onAttachNotifications()
-                                            onDismiss()
-                                        }
-                                ),
-                                AttachmentPanelItem(
-                                        icon = Icons.Default.LocationOn,
-                                        label = context.getString(R.string.attachment_location),
-                                        onClick = {
-                                            onAttachLocation()
-                                            onDismiss()
-                                        }
                                 )
                         )
 
-                val pages = panelItems.chunked(8).ifEmpty { listOf(emptyList()) }
+                val pages = panelItems.chunked(4).ifEmpty { listOf(emptyList()) }
                 val pagerState = rememberPagerState(pageCount = { pages.size })
 
                 HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) { pageIndex ->
                     val pageItems = pages[pageIndex]
-                    val paddedItems = pageItems + List(8 - pageItems.size) { null }
+                    val paddedItems = pageItems + List(4 - pageItems.size) { null }
 
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        // 第一行选项
+                        // Single row of 4 options
                         Row(
                                 modifier =
                                         Modifier.fillMaxWidth().padding(horizontal = 16.dp)
@@ -252,30 +216,7 @@ fun AttachmentSelectorPanel(
                                 horizontalArrangement = Arrangement.SpaceEvenly,
                                 verticalAlignment = Alignment.CenterVertically
                         ) {
-                            paddedItems.take(4).forEach { item ->
-                                if (item == null) {
-                                    AttachmentOptionPlaceholder()
-                                } else {
-                                    AttachmentOption(
-                                            icon = item.icon,
-                                            label = item.label,
-                                            onClick = item.onClick
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // 第二行选项
-                        Row(
-                                modifier =
-                                        Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                                                .heightIn(min = 96.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            paddedItems.drop(4).take(4).forEach { item ->
+                            paddedItems.forEach { item ->
                                 if (item == null) {
                                     AttachmentOptionPlaceholder()
                                 } else {

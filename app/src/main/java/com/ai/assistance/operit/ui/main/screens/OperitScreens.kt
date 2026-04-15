@@ -45,7 +45,6 @@ import com.ai.assistance.operit.ui.features.settings.screens.ChatHistorySettings
 import com.ai.assistance.operit.ui.features.settings.screens.ContextSummarySettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.FunctionalConfigScreen
 import com.ai.assistance.operit.ui.features.settings.screens.GlobalDisplaySettingsScreen
-import com.ai.assistance.operit.ui.features.settings.screens.GitHubAccountScreen
 import com.ai.assistance.operit.ui.features.settings.screens.LanguageSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.LayoutAdjustmentSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ModelConfigScreen
@@ -57,7 +56,7 @@ import com.ai.assistance.operit.ui.features.settings.screens.ThemeSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.AssistantThemeSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.AgentPersonalitySettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.ToolPermissionSettingsScreen
-import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesGuideScreen
+// UserPreferencesGuide and UserPreferencesSettings removed - over-engineered personalization
 import com.ai.assistance.operit.ui.features.settings.screens.UserPreferencesSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.CustomHeadersSettingsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.MnnModelDownloadScreen
@@ -89,7 +88,6 @@ import com.ai.assistance.operit.ui.features.agents.screens.AgentCommandsScreen
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
-import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
 
 // 路由配置类
 typealias ScreenNavigationHandler = (Screen) -> Unit
@@ -421,7 +419,6 @@ sealed class Screen(
                     onTextToSpeechSelected = { navigateTo(TextToSpeech) },
                     onSpeechToTextSelected = { navigateTo(SpeechToText) },
                     onToolTesterSelected = { navigateTo(ToolTester) },
-                    onAgreementSelected = { navigateTo(Agreement) },
                     onDefaultAssistantGuideSelected = { navigateTo(DefaultAssistantGuide) },
                     onProcessLimitRemoverSelected = { navigateTo(ProcessLimitRemover) },
                     onHtmlPackagerSelected = { navigateTo(HtmlPackager) },
@@ -480,7 +477,6 @@ sealed class Screen(
             SettingsScreen(
                     navigateToToolPermissions = { navigateTo(ToolPermission) },
                     onNavigateToUserPreferences = { navigateTo(UserPreferencesSettings) },
-                    navigateToGitHubAccount = { navigateTo(GitHubAccount) },
                     navigateToModelConfig = { navigateTo(ModelConfig) },
                     navigateToThemeSettings = { navigateTo(ThemeSettings) },
                     navigateToGlobalDisplaySettings = { navigateTo(GlobalDisplaySettings) },
@@ -503,33 +499,6 @@ sealed class Screen(
         }
     }
 
-    data object GitHubAccount : Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.github_account) {
-        @Composable
-        override fun Content(
-            navController: NavController,
-            navigateTo: ScreenNavigationHandler,
-            updateNavItem: NavItemChangeHandler,
-            onGoBack: () -> Unit,
-            hasBackgroundImage: Boolean,
-            onLoading: (Boolean) -> Unit,
-            onError: (String) -> Unit,
-            onGestureConsumed: (Boolean) -> Unit
-        ) {
-            val context = LocalContext.current
-            val githubAuth = GitHubAuthPreferences.getInstance(context)
-
-            fun initiateGitHubLogin() {
-                val authUrl = githubAuth.getAuthorizationUrl()
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
-            }
-
-            GitHubAccountScreen(
-                onLogin = ::initiateGitHubLogin
-            )
-        }
-    }
 
     data object Help : Screen(navItem = NavItem.Help) {
         @Composable
@@ -567,23 +536,6 @@ sealed class Screen(
         }
     }
 
-    data object Agreement : Screen(navItem = NavItem.Agreement) {
-        @Composable
-        override fun Content(
-            navController: NavController,
-            navigateTo: ScreenNavigationHandler,
-            updateNavItem: NavItemChangeHandler,
-            onGoBack: () -> Unit,
-            hasBackgroundImage: Boolean,
-            onLoading: (Boolean) -> Unit,
-            onError: (String) -> Unit,
-            onGestureConsumed: (Boolean) -> Unit
-        ) {
-            com.ai.assistance.operit.ui.features.agreement.screens.AgreementScreen(
-                    onAgreementAccepted = onGoBack
-            )
-        }
-    }
 
     data object UpdateHistory : Screen(navItem = NavItem.UpdateHistory) {
         @Composable
@@ -690,54 +642,6 @@ sealed class Screen(
         }
     }
 
-    data class UserPreferencesGuide(var profileName: String = "", var profileId: String = "") :
-            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_user_preferences_guide) {
-        @Composable
-        override fun Content(
-                navController: NavController,
-                navigateTo: ScreenNavigationHandler,
-                updateNavItem: NavItemChangeHandler,
-                onGoBack: () -> Unit,
-                hasBackgroundImage: Boolean,
-                onLoading: (Boolean) -> Unit,
-                onError: (String) -> Unit,
-                onGestureConsumed: (Boolean) -> Unit
-        ) {
-            UserPreferencesGuideScreen(
-                    profileName = profileName,
-                    profileId = profileId,
-                    onComplete = onGoBack,
-                    navigateToPermissions = {
-                        navigateTo(Permissions)
-                        updateNavItem(NavItem.Permissions)
-                    }
-            )
-        }
-    }
-
-    data object UserPreferencesSettings :
-            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_user_preferences_settings) {
-        @Composable
-        override fun Content(
-                navController: NavController,
-                navigateTo: ScreenNavigationHandler,
-                updateNavItem: NavItemChangeHandler,
-                onGoBack: () -> Unit,
-                hasBackgroundImage: Boolean,
-                onLoading: (Boolean) -> Unit,
-                onError: (String) -> Unit,
-                onGestureConsumed: (Boolean) -> Unit
-        ) {
-            UserPreferencesSettingsScreen(
-                    onNavigateBack = onGoBack,
-                    onNavigateToGuide = { profileName, profileId ->
-                        navigateTo(UserPreferencesGuide(profileName, profileId))
-                    }
-            )
-        }
-    }
-
-    data object ModelConfig :
             Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.screen_title_model_config) {
         @Composable
         override fun Content(
@@ -1517,7 +1421,6 @@ object OperitRouter {
             NavItem.TokenConfig -> Screen.TokenConfig
             NavItem.UserPreferencesGuide -> Screen.UserPreferencesGuide()
             NavItem.AssistantConfig -> Screen.AssistantConfig
-            NavItem.Agreement -> Screen.Agreement
             NavItem.UpdateHistory -> Screen.UpdateHistory
             NavItem.Workflow -> Screen.Workflow
             NavItem.AgentCLIs -> Screen.AgentCLIs

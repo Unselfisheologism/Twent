@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.ui.twent.components.*
 import com.ai.assistance.operit.ui.theme.OrangePrimary
@@ -34,14 +33,13 @@ import android.net.Uri
 import androidx.compose.foundation.clickable
 
 /**
- * Modern Redesigned Settings Screen - Twent UI
- * Card-based layout with modern aesthetics
+ * COMPLETELY REORGANIZED Settings Screen - Scattered differently from original
+ * Features are moved to unexpected locations
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateToUserPreferences: () -> Unit,
-    navigateToGitHubAccount: () -> Unit,
     navigateToToolPermissions: () -> Unit,
     navigateToModelConfig: () -> Unit,
     navigateToThemeSettings: () -> Unit,
@@ -63,18 +61,7 @@ fun SettingsScreen(
     navigateToPowerUserModeSettings: () -> Unit
 ) {
     val context = LocalContext.current
-    val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
     val scope = rememberCoroutineScope()
-
-    val isGitHubLoggedIn = githubAuth.isLoggedInFlow.collectAsState(initial = false).value
-    val gitHubUser = githubAuth.userInfoFlow.collectAsState(initial = null).value
-
-    fun initiateGitHubLogin() {
-        val authUrl = githubAuth.getAuthorizationUrl()
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-    }
 
     TwentScreenPadding {
         Column(
@@ -89,10 +76,9 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(TwentSpacing.lg))
 
-            // Account Card
+            // Your Profile Card - replaces GitHub Account
             TwentCard(
-                modifier = Modifier.fillMaxWidth(),
-                gradientBorder = isGitHubLoggedIn
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier.padding(20.dp),
@@ -110,8 +96,8 @@ fun SettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isGitHubLoggedIn) Icons.Default.Person else Icons.Outlined.Person,
-                            contentDescription = "Account",
+                            imageVector = Icons.Outlined.Person,
+                            contentDescription = "Profile",
                             tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
@@ -119,42 +105,67 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isGitHubLoggedIn) "GitHub Account" else "Sign In",
+                            text = "Your Profile",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (isGitHubLoggedIn)
-                                (gitHubUser?.login ?: "Connected")
-                            else
-                                "Connect your GitHub account",
+                            text = "Customize your agent personality",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
-                    if (!isGitHubLoggedIn) {
-                        TwentButton(
-                            onClick = { initiateGitHubLogin() },
-                            text = "Sign In",
-                            modifier = Modifier.width(100.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Connected",
-                            tint = CyanPrimary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    TwentButton(
+                        onClick = navigateToAgentPersonalitySettings,
+                        text = "Configure",
+                        modifier = Modifier.width(100.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+            Spacer(modifier = Modifier.height(TwentSpacing.xl))
 
-            // Personalization Section
-            TwentSectionTitle("Personalization")
+            // SECTION 1: Quick Setup - MOVED TO TOP (different from original)
+            TwentSectionTitle("Quick Setup")
+            Spacer(modifier = Modifier.height(TwentSpacing.md))
+
+            TwentCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    SettingsItem(
+                        icon = Icons.Outlined.Brush,
+                        title = "Agent Theme",
+                        subtitle = "Customize agent appearance",
+                        onClick = navigateToAssistantThemeSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Memory,
+                        title = "Model Settings",
+                        subtitle = "API and model configuration",
+                        onClick = navigateToModelConfig
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Psychology,
+                        title = "Model Prompts",
+                        subtitle = "System prompts and instructions",
+                        onClick = navigateToModelPrompts
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TwentSpacing.xl))
+
+            // SECTION 2: Interface - SCATTERED (different from original Personalization)
+            TwentSectionTitle("Interface")
             Spacer(modifier = Modifier.height(TwentSpacing.md))
 
             TwentCard(modifier = Modifier.fillMaxWidth()) {
@@ -180,55 +191,65 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                     SettingsItem(
-                        icon = Icons.Outlined.Brush,
-                        title = "Agent Theme",
-                        subtitle = "Customize agent appearance",
-                        onClick = navigateToAssistantThemeSettings
+                        icon = Icons.Outlined.Language,
+                        title = "Language",
+                        subtitle = "App language settings",
+                        onClick = navigateToLanguageSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.AspectRatio,
+                        title = "Layout Adjustment",
+                        subtitle = "Adjust UI layout and spacing",
+                        onClick = navigateToLayoutAdjustmentSettings
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+            Spacer(modifier = Modifier.height(TwentSpacing.xl))
 
-            // AI & Models Section
-            TwentSectionTitle("AI & Models")
+            // SECTION 3: Intelligence - MOVED HERE (different from original AI & Models)
+            TwentSectionTitle("Intelligence")
             Spacer(modifier = Modifier.height(TwentSpacing.md))
 
             TwentCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     SettingsItem(
-                        icon = Icons.Outlined.Memory,
-                        title = "Model Settings",
-                        subtitle = "API and model configuration",
-                        onClick = navigateToModelConfig
+                        icon = Icons.Outlined.VpnKey,
+                        title = "AI API Usage",
+                        subtitle = "View API token statistics and costs",
+                        onClick = navigateToTokenUsageStatistics
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                     SettingsItem(
-                        icon = Icons.Outlined.Psychology,
-                        title = "Model Prompts",
-                        subtitle = "System prompts and instructions",
-                        onClick = navigateToModelPrompts
+                        icon = Icons.Outlined.Settings,
+                        title = "Functional Config",
+                        subtitle = "Advanced functionality settings",
+                        onClick = navigateToFunctionalConfig
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                     SettingsItem(
-                        icon = Icons.Outlined.PersonOutline,
-                        title = "Agent Personality",
-                        subtitle = "Customize AI behavior",
-                        onClick = navigateToAgentPersonalitySettings
+                        icon = Icons.Outlined.Summarize,
+                        title = "Context & Summary",
+                        subtitle = "Context and summary settings",
+                        onClick = navigateToContextSummarySettings
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+            Spacer(modifier = Modifier.height(TwentSpacing.xl))
 
-            // Data & Privacy Section
-            TwentSectionTitle("Data & Privacy")
+            // SECTION 4: Data - MOVED HERE (different from original Data & Privacy)
+            TwentSectionTitle("Data")
             Spacer(modifier = Modifier.height(TwentSpacing.md))
 
             TwentCard(modifier = Modifier.fillMaxWidth()) {
@@ -254,42 +275,22 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                     SettingsItem(
-                        icon = Icons.Outlined.VpnKey,
-                        title = "AI API Usage",
-                        subtitle = "View API token statistics",
-                        onClick = navigateToTokenUsageStatistics
+                        icon = Icons.Outlined.Http,
+                        title = "Custom Headers",
+                        subtitle = "HTTP request headers",
+                        onClick = navigateToCustomHeadersSettings
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(TwentSpacing.lg))
+            Spacer(modifier = Modifier.height(TwentSpacing.xl))
 
-            // Advanced Section
-            TwentSectionTitle("Advanced")
+            // SECTION 5: System - MOVED HERE (different from original Advanced)
+            TwentSectionTitle("System")
             Spacer(modifier = Modifier.height(TwentSpacing.md))
 
             TwentCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
-                    SettingsItem(
-                        icon = Icons.Outlined.Build,
-                        title = "Power User Mode",
-                        subtitle = "Advanced features and developer tools",
-                        onClick = navigateToPowerUserModeSettings
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
-                    SettingsItem(
-                        icon = Icons.Outlined.Language,
-                        title = "Language",
-                        subtitle = "App language settings",
-                        onClick = navigateToLanguageSettings
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
                     SettingsItem(
                         icon = Icons.Outlined.Mic,
                         title = "Speech Services",
@@ -311,10 +312,20 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                     SettingsItem(
-                        icon = Icons.Outlined.Settings,
-                        title = "Functional Config",
-                        subtitle = "Advanced functionality",
-                        onClick = navigateToFunctionalConfig
+                        icon = Icons.Outlined.Bolt,
+                        title = "Power User Mode",
+                        subtitle = "Advanced features and developer tools",
+                        onClick = navigateToPowerUserModeSettings
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                    SettingsItem(
+                        icon = Icons.Outlined.Face,
+                        title = "Companion Mode",
+                        subtitle = "AI response sentence-by-sentence mode",
+                        onClick = navigateToWaifuModeSettings
                     )
                 }
             }
@@ -356,21 +367,21 @@ private fun SettingsItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
         Icon(
-            imageVector = Icons.Default.KeyboardArrowRight,
-            contentDescription = "Navigate",
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
             modifier = Modifier.size(20.dp)
         )
     }

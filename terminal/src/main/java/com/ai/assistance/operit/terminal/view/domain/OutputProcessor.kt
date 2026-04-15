@@ -645,17 +645,16 @@ class OutputProcessor(
     private fun sendWelcomeMessage(sessionId: String, sessionManager: SessionManager) {
         val session = sessionManager.getSession(sessionId) ?: return
         
-        // 构建欢迎消息，包含 ANSI 控制序列
-        // \u001B[2J - 清屏（清除初始化过程中的所有输出）
-        // \u001B[H - 移动光标到左上角
-        // 使用 \r\n 确保正确换行（\r 回车到行首，\n 换到下一行）
+        // Build welcome message with ANSI control sequences
+        // \u001B[2J - clear screen
+        // \u001B[H - move cursor to top-left
         val welcomeMessage = "\u001B[2J\u001B[H" +
-            "  ___                   _ _   \r\n" +
-            " / _ \\ _ __   ___ _ __ (_) |_ \r\n" +
-            "| | | | '_ \\ / _ \\ '__ | | __|\r\n" +
-            "| |_| | |_) |  __/ |   | | |_ \r\n" +
-            " \\___/| .__/ \\___|_|   |_|\\__|\r\n" +
-            "      |_|                    \r\n" +
+            " _____                        _   \r\n" +
+            "|_   _|                      | |  \r\n" +
+            "  | |_      _____ _ __   ___| |_ \r\n" +
+            "  | \\ \\ /\\ / / _ \\ '_ \\ / _ \\ __|\r\n" +
+            "  | |\\ V  V /  __/ | | |  __/ |_ \r\n" +
+            "  \\_/ \\_/\\_/ \\___|_| |_|\\___|\\__|\r\n" +
             "\r\n" +
             "  >> Your portable Ubuntu environment on Android <<\r\n" +
             "\r\n"

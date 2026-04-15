@@ -21,19 +21,20 @@ import com.ai.assistance.operit.ui.theme.*
 
 /**
  * Twent AI Card Components
- * Clean, modern cards with rounded corners and subtle shadows
+ * Based on reference images: 24dp corner radius, subtle shadows, gradient borders
  */
 
 /**
  * Standard card with gradient border (signature Twent AI style)
+ * Based on reference images: 24dp corner radius, 4dp shadow
  */
 @Composable
 fun TwentCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     gradientBorder: Boolean = false,
-    shape: Shape = TwentComponentShapes.cardShape,
-    elevation: Dp = TwentElevation.small,
+    shape: Shape = TwentComponentShapes.cardShape, // 24dp from reference
+    elevation: Dp = TwentElevation.medium, // 4dp from reference
     content: @Composable ColumnScope.() -> Unit
 ) {
     val cardModifier = modifier
@@ -46,7 +47,7 @@ fun TwentCard(
         .then(
             if (gradientBorder) {
                 Modifier.border(
-                    width = 1.dp,
+                    width = 2.dp, // 2dp border from reference
                     brush = Brush.linearGradient(
                         colors = listOf(OrangePrimary, CyanPrimary)
                     ),
@@ -73,6 +74,7 @@ fun TwentCard(
 
 /**
  * Feature card - larger, more prominent
+ * Based on reference images: 24dp corner radius, gradient background
  */
 @Composable
 fun TwentFeatureCard(
@@ -84,12 +86,16 @@ fun TwentFeatureCard(
 ) {
     val cardModifier = modifier
         .shadow(
-            elevation = TwentElevation.medium,
-            shape = TwentComponentShapes.featureCardShape,
+            elevation = TwentElevation.medium, // 4dp from reference
+            shape = TwentComponentShapes.featureCardShape, // 24dp from reference
             spotColor = backgroundColor.copy(alpha = 0.3f)
         )
         .clip(TwentComponentShapes.featureCardShape)
-        .background(backgroundColor)
+        .background(
+            brush = Brush.linearGradient(
+                colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0.8f))
+            )
+        )
         .then(
             if (onClick != null) {
                 Modifier.clickable(onClick = onClick)
@@ -97,15 +103,17 @@ fun TwentFeatureCard(
                 Modifier
             }
         )
+        .padding(TwentSpacing.lg) // 24dp padding from reference
     
     Column(
-        modifier = cardModifier.padding(TwentSpacing.lg),
+        modifier = cardModifier,
         content = content
     )
 }
 
 /**
  * Compact info card - for stats and metrics
+ * Based on reference images: 24dp corner radius, clean design
  */
 @Composable
 fun TwentInfoCard(
@@ -122,18 +130,18 @@ fun TwentInfoCard(
         onClick = onClick
     ) {
         Column(
-            modifier = Modifier.padding(TwentSpacing.lg)
+            modifier = Modifier.padding(TwentSpacing.lg) // 24dp padding from reference
         ) {
             // Icon and title row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TwentSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(TwentSpacing.sm) // 8dp from reference
             ) {
                 if (icon != null) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(48.dp) // 48dp from reference
+                            .clip(TwentComponentShapes.iconContainerShape) // 14dp from reference
                             .background(accentColor.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -148,12 +156,15 @@ fun TwentInfoCard(
                 )
             }
             
-            Spacer(modifier = Modifier.height(TwentSpacing.md))
+            Spacer(modifier = Modifier.height(TwentSpacing.md)) // 16dp from reference
             
-            // Value
+            // Value - 24sp, bold from reference
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = androidx.compose.ui.unit.TextUnit.Unspecified,
+                    fontWeight = FontWeight.Bold // 700 weight from reference
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             
@@ -163,7 +174,7 @@ fun TwentInfoCard(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(top = TwentSpacing.xs)
+                    modifier = Modifier.padding(top = TwentSpacing.xs) // 4dp from reference
                 )
             }
         }
@@ -172,6 +183,7 @@ fun TwentInfoCard(
 
 /**
  * Grid card - for 2x2 grid layouts
+ * Based on reference images: 24dp corner radius, aspect ratio 1:1
  */
 @Composable
 fun TwentGridCard(
@@ -183,8 +195,8 @@ fun TwentGridCard(
     val cardModifier = modifier
         .aspectRatio(1f)
         .shadow(
-            elevation = TwentElevation.small,
-            shape = TwentComponentShapes.cardShape,
+            elevation = TwentElevation.small, // 2dp from reference
+            shape = TwentComponentShapes.cardShape, // 24dp from reference
             spotColor = (backgroundColor ?: OrangePrimary).copy(alpha = 0.1f)
         )
         .clip(TwentComponentShapes.cardShape)
@@ -196,7 +208,7 @@ fun TwentGridCard(
                 Modifier
             }
         )
-        .padding(TwentSpacing.lg)
+        .padding(TwentSpacing.lg) // 24dp padding from reference
     
     Column(
         modifier = cardModifier,
@@ -206,6 +218,7 @@ fun TwentGridCard(
 
 /**
  * List item card - for horizontal lists
+ * Based on reference images: 16dp padding, clean design
  */
 @Composable
 fun TwentListItemCard(
@@ -223,9 +236,9 @@ fun TwentListItemCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TwentSpacing.lg),
+                .padding(TwentSpacing.lg), // 24dp padding from reference
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md)
+            horizontalArrangement = Arrangement.spacedBy(TwentSpacing.md) // 16dp from reference
         ) {
             // Leading content
             if (leadingContent != null) {
@@ -247,7 +260,7 @@ fun TwentListItemCard(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(top = TwentSpacing.xxs)
+                        modifier = Modifier.padding(top = TwentSpacing.xxs) // 2dp from reference
                     )
                 }
             }
@@ -262,6 +275,7 @@ fun TwentListItemCard(
 
 /**
  * Section header - for grouping content
+ * Based on reference images: 12sp, uppercase, letter spacing
  */
 @Composable
 fun TwentSectionHeader(
@@ -273,17 +287,18 @@ fun TwentSectionHeader(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = TwentSpacing.lg,
-                vertical = TwentSpacing.md
+                horizontal = TwentSpacing.lg, // 24dp from reference
+                vertical = TwentSpacing.md // 16dp from reference
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold, // 600 weight from reference
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            letterSpacing = 1.sp
         )
         
         if (action != null) {

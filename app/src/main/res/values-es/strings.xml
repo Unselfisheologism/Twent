@@ -1,7 +1,6 @@
 ﻿<resources>
     <string name="app_name">Twent AI</string>
     <string name="accessibility_service_description">Se utiliza para obtener la jerarquía de la interfaz de usuario, proporcionando al asistente de IA capacidades de análisis de interfaz más rápidas. No recopilará ni almacenará ninguna información personal.</string>
-
     <!-- Navigation -->
     <string name="nav_ai_chat">Chat IA</string>
     <string name="nav_adb_commands">Concesión de permisos</string>
@@ -15,15 +14,12 @@
     <string name="nav_help">Centro de ayuda</string>
     <string name="menu">Menú</string>
     <string name="token_config">Obtener clave</string>
-
     <!-- Tool Test Names -->
     <string name="write_small_file_test">Escribir archivo pequeño</string>
     <string name="write_large_file_test">Escribir archivo grande</string>
-
     <!-- Tool Test Descriptions -->
     <string name="write_small_file_test_desc">Escribe un archivo de texto pequeño para validar la escritura básica.</string>
     <string name="write_large_file_test_desc">Escribe un archivo de texto más grande para validar la escritura por bloques.</string>
-
     <!-- 用于NavItem类的标识符 -->
     <string name="shizuku_commands">Concesión de permisos</string>
     <string name="permissions">Permisos</string>
@@ -34,17 +30,14 @@
     <string name="mcp">MCP</string>
     <string name="token_config_title">Configuración de token DeepSeek</string>
     <string name="chat_history_settings">Gestión del historial de chat</string>
-
     <!-- Attachment Panel -->
     <string name="screen_content">Contenido de pantalla</string>
     <string name="current_notifications">Notificaciones actuales</string>
     <string name="current_location">Ubicación actual</string>
-    
     <!-- Permission Request -->
     <string name="requested_operation">Operación solicitada</string>
     <string name="used_tool">Herramienta utilizada</string>
     <string name="tool_category">Categoría de herramienta</string>
-
     <!-- 聊天记录管理界面 -->
     <string name="chat_history_manager">Gestión del historial de chat</string>
     <string name="export_chat_history">Exportar historial de chat</string>
@@ -60,17 +53,14 @@
     <string name="current_chats">Actualmente hay %1$d registros de chat</string>
     <string name="backup_location">Los archivos de copia de seguridad se guardan en la carpeta "Descargas/Twent"</string>
     <string name="faq_backup">Preguntas frecuentes</string>
-
     <string name="lock_chat">Bloquear chat</string>
     <string name="unlock_chat">Desbloquear chat</string>
-
     <!-- Terminal Screen -->
     <string name="termux_not_installed">Termux no instalado</string>
     <string name="termux_not_running">Termux no se está ejecutando</string>
     <string name="termux_command">Comando Termux</string>
     <string name="execute_termux_command">Ejecutar comando</string>
     <string name="termux_result">Resultado del comando</string>
-
     <!-- Termux Installation -->
     <string name="install_termux_title">Instalar Termux</string>
     <string name="install_termux_from_store">Instalar Termux desde la tienda de aplicaciones</string>
@@ -80,7 +70,6 @@
     <string name="open_termux">Abrir Termux</string>
     <string name="termux_setup_guide">Guía de configuración de Termux</string>
     <string name="termux_wizard_title">Asistente de configuración de Termux</string>
-
     <!-- About Screen -->
     <string name="about_title">Acerca de Twent AI</string>
     <string name="about_version">Versión: %1$s</string>
@@ -89,7 +78,6 @@
     <string name="about_contact">Contáctenos: aaswordsman@foxmail.com</string>
     <string name="about_website">&lt;a href="https://github.com/AAswordman/Twent"&gt;GitHub: https://github.com/AAswordman/Twent&lt;/a&gt;</string>
     <string name="about_copyright">© 2025 - 2026 Twent. Todos los derechos reservados.</string>
-
     <!-- AI Chat Screen -->
     <string name="configure_ai">Configurar interfaz AI</string>
     <string name="api_endpoint">Dirección de la interfaz API</string>
@@ -103,7 +91,6 @@
     <string name="ai_response_placeholder">Esta es una respuesta simulada de la IA. En una aplicación real, aquí se integraría una llamada API de IA real.</string>
     <string name="network_unavailable">Conexión de red no disponible, verifique la configuración de su red</string>
     <string name="network_status">Estado de la red: %1$s</string>
-
     <!-- Floating Window -->
     <string name="floating_chat_window">Ventana flotante de chat</string>
     <string name="enable_floating_mode">Habilitar modo de ventana flotante</string>
@@ -111,7 +98,6 @@
     <string name="overlay_permission_required">Se requiere permiso de superposición</string>
     <string name="overlay_permission_denied">Permiso de superposición no otorgado, no se puede mostrar la ventana flotante</string>
     <string name="close_floating_window">Cerrar ventana flotante</string>
-
     <!-- AI Tools -->
     <string name="ai_tools_enabled">Función de herramientas AI habilitada</string>
     <string name="tools_extracting">Detectando llamada de herramienta...</string>
@@ -125,7 +111,6 @@
     <string name="tool_calculator">Calculadora</string>
     <string name="tool_web_search">Búsqueda web</string>
     <string name="enhanced_service_not_initialized">Servicio AI mejorado no inicializado, verifique la configuración</string>
-
     <!-- Settings Screen -->
     <string name="settings">Ajustes</string>
     <string name="no_settings">No hay opciones de configuración disponibles actualmente</string>
@@ -136,7 +121,6 @@
     <string name="show_thinking">Mostrar proceso de pensamiento</string>
     <string name="show_fps_counter">Mostrar contador de FPS</string>
     <string name="fps_counter_description">Mostrar FPS en tiempo real en la esquina superior derecha de la pantalla</string>
-
     <!-- Shizuku Command Screen -->
     <string name="shizuku_command_executor">Ejecutor de comandos ADB Shizuku</string>
     <string name="device_info">Información del dispositivo</string>
@@ -170,13 +154,11 @@
     <string name="grant_permission_first">Por favor, conceda primero el permiso de Shizuku</string>
     <string name="feature_unavailable">No se puede usar la función de comandos ADB</string>
     <string name="thinking_process">Proceso de pensamiento</string>
-
     <!-- 内置Shizuku -->
     <string name="install_from_store">Instalar Shizuku desde la tienda de aplicaciones</string>
     <string name="install_bundled">Instalar versión integrada (v%1$s)</string>
     <string name="installing_bundled">Instalando Shizuku integrado, por favor conceda permiso de instalación</string>
     <string name="install_failed">Error al instalar Shizuku integrado, intente instalar desde la tienda de aplicaciones</string>
-
     <!-- 用户偏好 -->
     <string name="user_preferences_guide">Configuración personalizada</string>
     <string name="user_preferences">Preferencias de usuario</string>
@@ -201,7 +183,6 @@
     <string name="preferences_guide_title">Para servirle mejor, complete la siguiente configuración</string>
     <string name="preference_lock">Bloquear preferencias de usuario</string>
     <string name="preference_lock_desc">Una vez bloqueado, no podrá modificar la información de preferencias de usuario</string>
-
     <!-- Package Manager Screen -->
     <string name="packages">Gestión de paquetes</string>
     <string name="package_manager">Gestor de paquetes</string>
@@ -228,7 +209,6 @@
     <string name="path_copied_to_clipboard">Ruta copiada al portapapeles</string>
     <string name="open_file_manager">Abrir gestor de archivos</string>
     <string name="navigate_to_external_files">Navegue a Android/data/com.ai.assistance.twent/files/packages</string>
-
     <!-- OperScript Execution -->
     <string name="run_script">Ejecutar script</string>
     <string name="edit_script">Editar script</string>
@@ -241,7 +221,6 @@
     <string name="script_execution_success">Script ejecutado con éxito</string>
     <string name="script_execution_error">Error en la ejecución del script: %1$s</string>
     <string name="missing_parameters">Faltan parámetros necesarios: %1$s</string>
-
     <!-- Problem Library Screen -->
     <string name="problem_library">Biblioteca de problemas</string>
     <string name="search_problems">Buscar problemas</string>
@@ -255,7 +234,6 @@
     <string name="problem_time">Hora de creación</string>
     <string name="save_changes">Guardar cambios</string>
     <string name="back_to_list">Volver a la lista</string>
-
     <!-- Language Settings -->
     <string name="language_settings">Configuración de idioma</string>
     <string name="language_settings_desc">Cambiar el idioma de visualización de la interfaz de la aplicación</string>
@@ -264,18 +242,15 @@
     <string name="language_info">Después de cambiar el idioma, la aplicación se reiniciará automáticamente para aplicar la nueva configuración de idioma</string>
     <string name="language_changing">Cambiando idioma...</string>
     <string name="language_changed">Idioma cambiado, reiniciando la aplicación</string>
-
     <!-- File Manager -->
     <string name="files_selected">%1$d archivos seleccionados</string>
     <string name="file_count">%1$d elementos</string>
-
     <!-- Search Dialog -->
     <string name="search_files">Buscar archivos</string>
     <string name="searching">Buscando...</string>
     <string name="case_sensitive">Distinguir mayúsculas y minúsculas</string>
     <string name="use_wildcard">Usar comodines</string>
     <string name="search">Buscar</string>
-
     <!-- File Operations -->
     <string name="new_folder">Nueva carpeta</string>
     <string name="folder_name">Nombre de la carpeta</string>
@@ -288,7 +263,6 @@
     <string name="rename">Renombrar</string>
     <string name="delete">Eliminar</string>
     <string name="loading_files">Cargando archivos...</string>
-
     <!-- ErrorDialog -->
     <string name="request_failed">Solicitud fallida</string>
     <string name="confirm">Confirmar</string>
@@ -303,13 +277,11 @@
     <string name="network_transfer_failed">Error en la transferencia de red, verifique la conexión de red</string>
     <string name="error_occurred">Ocurrió un error: %1$s</string>
     <string name="try_again_later">Solicitud fallida, inténtelo de nuevo más tarde</string>
-
     <!-- Model selector related -->
     <string name="model_selector_title">Seleccionar configuración de modelo</string>
     <string name="model_selector_toggle">Mostrar selector de modelo</string>
     <string name="model_selector_toggle_desc">Mostrar el selector de configuración de modelo en la parte superior de la interfaz de chat para cambiar rápidamente entre diferentes configuraciones</string>
     <string name="model">Modelo</string>
-
     <!-- Assistant Config Screen -->
     <string name="assistant_config_title">Configuración del asistente</string>
     <string name="import_model">Importar modelo</string>
@@ -354,7 +326,6 @@
     <string name="plugin_complete_success">Finalización completa, tasa de éxito: %1$d%%</string>
     <string name="plugin_no_plugins_to_start">No hay plugins para iniciar</string>
     <string name="plugin_copyright">© 2023 AI Assistance</string>
-
     <!-- Toast Messages -->
     <string name="pip_package_install_success">Instalación de paquete PIP exitosa</string>
     <string name="pip_package_install_failed">Error en la instalación del paquete PIP</string>
@@ -384,7 +355,6 @@
     <string name="plugin_loading_skipped">Carga de plugins omitida</string>
     <string name="press_back_again_to_exit">Presione atrás nuevamente para salir</string>
     <string name="return_code_copied">¡Código de retorno copiado!</string>
-
     <!-- UI Text -->
     <string name="permission_request">Solicitud de Permiso</string>
     <string name="ai_assistant_requests_operation">El Asistente IA solicita realizar la siguiente operación</string>
@@ -394,11 +364,9 @@
     <string name="ai_assistant">Asistente IA</string>
     <string name="send_message">Enviar Mensaje</string>
     <string name="chat_with_pet">Charlar con Mascota</string>
-    <string name="dragonbones_mode">Modo DragonBones</string>
     <string name="loading_failed">Error de carga: %1$s</string>
     <string name="loading">Cargando...</string>
     <string name="floating_service_description">Mostrar servicio de ventana flotante del asistente IA</string>
-
     <!-- Theme Options -->
     <string name="auto">Automático</string>
     <string name="light">Claro</string>
@@ -411,7 +379,6 @@
     <string name="circular">Circular</string>
     <string name="square">Cuadrado</string>
     <string name="interface_text">Texto de Interfaz</string>
-
     <!-- More common strings -->
     <string name="latest">Último</string>
     <string name="undo">Deshacer</string>
@@ -420,7 +387,6 @@
     <string name="export">Exportar</string>
     <string name="update_history">Historial de Actualizaciones</string>
     <string name="nav_memory_base">Base de Memoria</string>
-    
     <!-- MCP and Plugin Related -->
     <string name="uninstall">Desinstalar</string>
     <string name="install">Instalar</string>
@@ -429,7 +395,6 @@
     <string name="connect_remote_service">Conectar Servicio Remoto</string>
     <string name="enter_repo_info">Por favor ingrese información del repositorio</string>
     <string name="repo_link">Enlace del Repositorio</string>
-
     <!-- Speech to Text -->
     <string name="speech_recognition_demo">Demostración de Reconocimiento de Voz</string>
     <string name="microphone_permission_required">Permiso de Micrófono Requerido</string>
@@ -456,11 +421,9 @@
     <string name="stop_recognition_error">Error al detener reconocimiento: %s</string>
     <string name="speech_usage_steps">1. Seleccionar motor de voz\n2. Hacer clic en el botón de iniciar grabación\n3. Hablar claramente\n4. Hacer clic en detener grabación\n5. Esperar los resultados de transcripción</string>
     <string name="speech_engine_note">Nota: Diferentes motores de voz pueden tener diferente precisión e idiomas soportados</string>
-    
     <!-- Free Usage -->
     <string name="free_usage_title">Confirmar uso de recursos gratuitos</string>
     <string name="free_usage_interval_tip">Para evitar que el autor vaya a la bancarrota, el tiempo de espera se duplica después de cada uso～</string>
-    
     <!-- Accessibility Risk Warning -->
     <string name="accessibility_risk_warning_title">Advertencia de riesgo del servicio de accesibilidad</string>
     <string name="accessibility_risk_warning_message">Aunque habilitar el servicio de accesibilidad puede acelerar las operaciones de UI, algunas aplicaciones pueden detectar este servicio e imponer restricciones, incluyendo prohibiciones de cuenta. Habilítelo solo después de entender y aceptar los riesgos relacionados.</string>
@@ -469,17 +432,14 @@
     <string name="accessibility_risk_warning_input_error">Escriba \"Entiendo y reconozco los riesgos de prohibición de cuentas y funciones de cuenta restringidas causados por los permisos de accesibilidad, y asumo las consecuencias yo mismo\" para confirmar que entiende los riesgos</string>
     <string name="accessibility_risk_warning_confirm">Confirmar continuar</string>
     <string name="accessibility_risk_warning_cancel">Cancelar</string>
-    
     <!-- Usage Instructions -->
     <string name="usage_instructions">Instrucciones de uso</string>
-    
     <!-- Plugin Status Messages -->
     <string name="plugin_termux_not_running">El servicio de terminal no está en ejecución, no se pueden iniciar los plugins</string>
     <string name="plugin_termux_not_authorized">El servicio de terminal no está listo, por favor inícielo antes de usar plugins</string>
     <string name="plugin_nodejs_missing">pnpm no está instalado en el entorno de terminal (se requiere Node.js). Por favor instálelo antes de usar plugins</string>
     <string name="plugin_bridge_failed">Error en la inicialización del puente, no se pueden iniciar los plugins</string>
     <string name="plugin_other_error">Ocurrió un error al iniciar plugins, puede hacer clic en \"Omitir\" en la esquina superior derecha para continuar</string>
-    
     <!-- Agreement Screen -->
     <string name="agreement_subtitle">Por favor lea cuidadosamente y acepte los siguientes términos antes de usar.</string>
     <string name="agreement_human_readable_title">Acuerdo en lenguaje simple (versión no legal)</string>
@@ -499,11 +459,9 @@
     <string name="agreement_disclaimer">Si existe alguna inconsistencia o conflicto entre la versión "en lenguaje simple" y la versión "rigurosa" del acuerdo, todo se basa en la versión china "rigurosa". Nos reservamos el derecho de interpretación final de este acuerdo.</string>
     <string name="agreement_accept">He leído y acepto</string>
     <string name="agreement_wait">Por favor espere... (%1$d)</string>
-    
     <!-- Sherpa Speech Engine -->
     <string name="sherpa_k2_ncnn_init_failed">Error en la inicialización del motor de reconocimiento de voz en tiempo real</string>
     <string name="sherpa_k2_ncnn_init_success">Motor de reconocimiento de voz en tiempo real inicializado exitosamente</string>
-
     <!-- Theme Settings -->
     <string name="theme_title_mode">Modo de tema</string>
     <string name="theme_system_title">Tema del sistema</string>
@@ -583,13 +541,11 @@
     <string name="theme_background_blur">Desenfoque de fondo</string>
     <string name="theme_background_blur_desc">Añadir un efecto de desenfoque gaussiano a la imagen o video de fondo</string>
     <string name="theme_background_blur_radius">Radio de desenfoque</string>
-    
     <!-- Toolbox Categories -->
     <string name="tool_category_all">Todas las herramientas</string>
     <string name="tool_category_file_management">Gestión de archivos</string>
     <string name="tool_category_development">Herramientas de desarrollo</string>
     <string name="tool_category_system">Herramientas del sistema</string>
-    
     <!-- Tool Names -->
     <string name="tool_test_center">Centro de pruebas de herramientas</string>
     <string name="tool_test_center_desc">Probar la disponibilidad y funcionalidad de las herramientas de IA</string>
@@ -618,7 +574,6 @@
     <string name="tool_log_viewer">Visor de registros</string>
     <string name="tool_log_viewer_desc">Captura y visualización en tiempo real de registros del sistema y aplicaciones con filtrado y búsqueda</string>
     <string name="toolbox_description">Colección de herramientas convenientes y prácticas para mejorar la eficiencia del trabajo</string>
-    
     <!-- MCP Config Screen -->
     <string name="import_or_connect_mcp_service">Importar o conectar servicio MCP</string>
     <string name="select_mcp_plugin_zip">Por favor seleccione el paquete zip del plugin MCP</string>
@@ -668,12 +623,10 @@
     <string name="name">Nombre</string>
     <string name="description">Descripción</string>
     <string name="author">Autor</string>
-    
     <!-- Speech Services Settings -->
     <string name="speech_services_settings">Configuración de Servicios de Voz</string>
     <string name="speech_services_settings_desc">Configurar texto a voz y reconocimiento de voz</string>
     <string name="configure_speech_services">Configurar Servicios de Voz</string>
-    
     <!-- Settings Screen Sections -->
     <string name="settings_section_personalization">Personalización</string>
     <string name="settings_user_preferences">Preferencias de Usuario</string>
@@ -688,7 +641,6 @@
     <string name="settings_data_backup">Respaldo y Recuperación de Datos</string>
     <string name="settings_data_backup_desc">Importar, exportar o eliminar historial de chat y datos de biblioteca de problemas para facilitar respaldo y recuperación</string>
     <string name="settings_manage_backup">Gestionar Respaldo</string>
-    
     <string name="settings_section_ai_model">Configuración del Modelo IA</string>
     <string name="settings_model_parameters">Configuración de Modelo y Parámetros</string>
     <string name="settings_model_parameters_desc">Configurar ajustes de API, nombres de modelo y parámetros, con soporte para gestión de múltiples configuraciones</string>
@@ -696,7 +648,6 @@
     <string name="settings_functional_model">Configuración de Modelo Funcional</string>
     <string name="settings_functional_model_desc">Configurar modelos especializados y ajustes de API para diferentes funciones (chat, resumen, biblioteca de problemas, etc.)</string>
     <string name="settings_configure_function">Configurar Función</string>
-    
     <string name="settings_section_display">Visualización y Comportamiento</string>
     <string name="settings_keep_screen_on">Mantener Pantalla Encendida</string>
     <string name="settings_keep_screen_on_desc">Mantener pantalla encendida durante salida de IA para evitar que se apague</string>
@@ -706,12 +657,10 @@
     <string name="notification_ai_reply_content">La IA ha completado la respuesta</string>
     <string name="settings_auto_accessibility">Auto-conceder Permiso de Accesibilidad</string>
     <string name="settings_auto_accessibility_desc">Cuando esté deshabilitado, se requiere autorización manual cada vez que se abre la aplicación</string>
-    
     <string name="settings_section_permissions">Permisos y Seguridad</string>
     <string name="settings_tool_permissions">Configuración de Permisos de Herramientas</string>
     <string name="settings_tool_permissions_desc">Configurar niveles de permiso para herramientas del asistente IA, puede establecerse como auto-permitir, preguntar o denegar</string>
     <string name="settings_configure_permissions">Configurar Permisos</string>
-    
     <string name="settings_section_usage">Estadísticas de Uso</string>
     <string name="settings_token_statistics">Estadísticas de Tokens</string>
     <string name="settings_reset_analysis_count">Reiniciar Contador de Análisis de Preferencias</string>
@@ -722,7 +671,6 @@
     <string name="settings_preference_input_token">Tokens de Entrada de Análisis de Preferencias</string>
     <string name="settings_preference_output_token">Tokens de Salida de Análisis de Preferencias</string>
     <string name="settings_total">Total</string>
-    
     <!-- Permission Guide Screen -->
     <string name="permission_guide_previous">Anterior</string>
     <string name="permission_guide_next">Siguiente</string>
@@ -730,13 +678,11 @@
     <string name="permission_guide_welcome">Bienvenido</string>
     <string name="permission_guide_basic_permissions">Permisos Básicos</string>
     <string name="permission_guide_permission_level">Nivel de Permisos</string>
-    
     <string name="permission_guide_welcome_title">Bienvenido</string>
     <string name="permission_guide_welcome_desc">Antes de usar la aplicación, necesitamos configurar algunos permisos básicos y seleccionar tu nivel de permisos preferido.</string>
     <string name="permission_guide_welcome_hint">Este proceso toma solo unos minutos y ayudará a la aplicación a servirte mejor.</string>
     <string name="permission_guide_welcome_start">Haga clic en el botón en la esquina inferior derecha para comenzar</string>
     <string name="permission_guide_get_started">Comenzar</string>
-
     <string name="permission_guide_basic_title">Permisos Básicos</string>
     <string name="permission_guide_basic_desc">Por favor conceda los siguientes permisos básicos para asegurar el funcionamiento correcto de la aplicación</string>
     <string name="permission_guide_storage_title">Permiso de Almacenamiento</string>
@@ -749,12 +695,10 @@
     <string name="permission_guide_location_desc">Permitir a la aplicación acceder a información de ubicación</string>
     <string name="permission_guide_check_permissions">Verificar Estado de Permisos</string>
     <string name="permission_guide_all_granted">Todos los permisos básicos concedidos, puede continuar al siguiente paso</string>
-    
     <string name="permission_guide_warning_title">Permisos Incompletos</string>
     <string name="permission_guide_warning_message">No ha concedido todos los permisos necesarios, lo que puede resultar en funcionalidad incompleta o comportamiento anormal de la aplicación. ¿Está seguro de que desea continuar?</string>
     <string name="permission_guide_warning_continue">Continuar</string>
     <string name="permission_guide_warning_return">Volver a Permisos</string>
-    
     <string name="permission_guide_level_title">Seleccionar Nivel de Permisos</string>
     <string name="permission_guide_level_desc">Por favor seleccione su nivel de permisos preferido, que determinará el rango de funciones que la aplicación puede usar</string>
     <string name="permission_guide_standard_title">Permisos Estándar</string>
@@ -767,21 +711,17 @@
     <string name="permission_guide_root_desc">Permisos de superusuario, puede realizar cualquier operación del sistema</string>
     <string name="permission_guide_confirm">Confirmar Selección</string>
     <string name="permission_guide_change_anytime">Puede cambiar el nivel de permisos en configuración en cualquier momento</string>
-    
     <!-- Permission Guide Toast Messages -->
     <string name="permission_guide_storage_setting_failed">No se puede abrir configuración de permisos de almacenamiento, autorizar manualmente</string>
     <string name="permission_guide_overlay_setting_failed">No se puede abrir configuración de superposición, autorizar manualmente</string>
     <string name="permission_guide_battery_hint">Encuentre la aplicación en la lista y configúrela como "Sin optimizar"</string>
     <string name="permission_guide_battery_setting_failed">No se puede abrir configuración de optimización de batería, configurar manualmente</string>
-    
     <!-- Permission Status Description -->
     <string name="permission_guide_granted">Concedido</string>
     <string name="permission_guide_not_granted">No Concedido</string>
     <string name="permission_guide_selected">Seleccionado</string>
-    
     <!-- Network Related -->
     <string name="wifi">WiFi</string>
-    
     <!-- Additional Text-to-Speech and Speech Recognition -->
     <string name="text_to_speech_engine_initialized">Motor de texto a voz inicializado</string>
     <string name="text_to_speech_engine_init_failed">Error al inicializar motor de texto a voz</string>
@@ -790,7 +730,6 @@
     <string name="speech_error_init_failed">Error al inicializar motor de reconocimiento de voz</string>
     <string name="speech_error_not_initialized">Motor de reconocimiento de voz no inicializado</string>
     <string name="title_activity_crash_report">Error de Aplicación</string>
-    
     <!-- Crash Report Screen -->
     <string name="crash_report_header">La aplicación ha encontrado un error irrecuperable y necesita reiniciarse.</string>
     <string name="crash_report_restart_button">Reiniciar Aplicación</string>
@@ -800,7 +739,6 @@
     <string name="crash_report_copy_success">Copiado al portapapeles</string>
     <string name="crash_report_export_success">Reporte de error exportado a\n%1$s</string>
     <string name="crash_report_export_failed">Error al exportar: %1$s</string>
-    
     <!-- Toolbox Permission Manager -->
     <string name="toolbox_permissions_search_hint">Buscar aplicaciones</string>
     <string name="toolbox_permissions_system_apps">Aplicaciones del sistema</string>
@@ -826,7 +764,6 @@
     <string name="try_different_keywords">Pruebe con palabras clave diferentes</string>
     <string name="try_show_system_apps">Pruebe marcar "Aplicaciones del sistema" para ver más aplicaciones</string>
     <string name="no_apps_found_anywhere">No se encontraron aplicaciones</string>
-    
     <!-- Permission Groups -->
     <string name="permission_group_activity">Reconocimiento de actividad</string>
     <string name="permission_group_calendar">Calendario</string>
@@ -842,7 +779,6 @@
     <string name="permission_group_other_granted">Otros permisos concedidos</string>
     <string name="permission_group_other_denied">Otros permisos denegados</string>
     <string name="permission_group_other">Otros permisos</string>
-    
     <!-- Permission Names -->
     <string name="perm_name_camera">Cámara</string>
     <string name="perm_name_read_contacts">Leer Contactos</string>
@@ -878,7 +814,6 @@
     <string name="perm_name_read_sms">Leer SMS</string>
     <string name="perm_name_receive_wap_push">Recibir WAP Push</string>
     <string name="perm_name_receive_mms">Recibir MMS</string>
-    
     <!-- Permission Descriptions -->
     <string name="perm_desc_camera">Permitir que la aplicación tome fotos y grabe videos</string>
     <string name="perm_desc_read_contacts">Permitir que la aplicación lea sus contactos</string>
@@ -914,7 +849,6 @@
     <string name="perm_desc_read_sms">Permitir que la aplicación lea mensajes SMS</string>
     <string name="perm_desc_receive_wap_push">Permitir que la aplicación reciba mensajes WAP push</string>
     <string name="perm_desc_receive_mms">Permitir que la aplicación reciba mensajes MMS</string>
-    
     <!-- Functional Config Screen -->
     <string name="functional_model_config_title">Configuración de Modelo Funcional</string>
     <string name="functional_model_config_desc">Establecer configuraciones de modelo separadas para diferentes funciones, permitiendo que cada función use la configuración de API más adecuada.</string>
@@ -930,24 +864,20 @@
     <string name="test">Probar</string>
     <string name="expand_desc">Expandir</string>
     <string name="selected_desc">Seleccionado</string>
-    
     <!-- Function Types -->
     <string name="function_type_chat">Función de Chat</string>
     <string name="function_type_summary">Resumen de Conversación</string>
     <string name="function_type_problem_library">Gestión de Biblioteca de Problemas</string>
     <string name="function_type_file_binding">Procesamiento de Vinculación de Archivos</string>
     <string name="function_type_ui_controller">Controlador de UI</string>
-    
     <!-- Function Descriptions -->
     <string name="function_desc_chat">Función principal de chat para interacción diaria de conversación con usuarios</string>
     <string name="function_desc_summary">Generar resúmenes de conversación para rastrear información importante</string>
     <string name="function_desc_problem_library">Utilizado para análisis y gestión de biblioteca de problemas</string>
     <string name="function_desc_file_binding">Procesa la vinculación inteligente y mezcla de contenido de archivos, proporcionando capacidades de procesamiento de código más precisas. Se recomienda usar modelos rápidos y económicos como Gemini Flash, no se recomienda usar DeepSeek R1</string>
     <string name="function_desc_ui_controller">Utilizado para la exploración y operación automáticas de interfaces de UI. El modelo de controlador de UI correspondiente solo se activará cuando el usuario solicite explícitamente usar un «agente» para el control.</string>
-    
     <!-- Functional Prompt Config Screen -->
     <string name="advanced_config_notice">Para configuraciones avanzadas como modificar plantillas de prompt del sistema, vaya a la página \"Gestionar Todos los Prompts\".</string>
-
     <!-- Settings Screen Subtitles -->
     <string name="settings_user_preferences_subtitle">Preferencias personales y configuración de comportamiento</string>
     <string name="settings_language_subtitle">Cambio de idioma de la interfaz</string>
@@ -977,7 +907,6 @@
     <string name="settings_input_tokens">Entrada</string>
     <string name="settings_output_tokens">Salida</string>
     <string name="settings_cost">Costo</string>
-    
     <!-- User Preferences Guide Screen -->
     <string name="user_male">Masculino</string>
     <string name="user_female">Femenino</string>
@@ -1004,7 +933,6 @@
     <string name="communication_style_general">Estilo de comunicación claro y organizado, enfocándose en practicidad y eficiencia</string>
     <string name="preferences_intro_template">Soy %1$s, %2$s. Estoy particularmente interesado en %3$s. En comunicación, prefiero %4$s.</string>
     <string name="preferences_intro_template_no_age">Soy %1$s, %2$s. Estoy particularmente interesado en %3$s. En comunicación, prefiero %4$s.</string>
-    
     <!-- Occupation Options -->
     <string name="occupation_student">Estudiante</string>
     <string name="occupation_employee">Empleado</string>
@@ -1019,7 +947,6 @@
     <string name="occupation_freelancer">Freelancer</string>
     <string name="occupation_retired">Jubilado</string>
     <string name="occupation_other">Otro</string>
-    
     <!-- Personality Traits -->
     <string name="personality_extroverted">Extrovertido</string>
     <string name="personality_introverted">Introvertido</string>
@@ -1037,7 +964,6 @@
     <string name="personality_innovative">Innovador</string>
     <string name="personality_meticulous">Meticuloso</string>
     <string name="personality_rough">Tosco</string>
-    
     <!-- Identity Options -->
     <string name="identity_student">Estudiante</string>
     <string name="identity_teacher">Profesor</string>
@@ -1051,7 +977,6 @@
     <string name="identity_foodie">Amante de la Comida</string>
     <string name="identity_entrepreneur">Emprendedor</string>
     <string name="identity_professional">Profesional</string>
-    
     <!-- AI Style Options -->
     <string name="ai_style_professional">Profesional y Riguroso</string>
     <string name="ai_style_humorous">Animado y Humorístico</string>
@@ -1061,7 +986,6 @@
     <string name="ai_style_technical">Orientado a la Técnica</string>
     <string name="ai_style_educational">Guía Educativa</string>
     <string name="ai_style_supportive">Apoyo Emocional</string>
-    
     <!-- User Preferences Settings Screen -->
     <string name="default_profile">Perfil Predeterminado</string>
     <string name="date_format_chinese">dd/MM/yyyy</string>
@@ -1086,7 +1010,6 @@
     <string name="select_date">Seleccionar Fecha</string>
     <string name="input_field_placeholder">Por favor ingresa información de %s</string>
     <string name="not_set_field">%s no establecido</string>
-
     <string name="new_preference_profile">Nuevo Perfil de Preferencias</string>
     <string name="create_new_profile_desc">Crear un nuevo perfil de preferencias para personalizar tu experiencia con el asistente de IA</string>
     <string name="profile_name">Nombre del Perfil</string>
@@ -1098,8 +1021,6 @@
     <string name="confirm_rename">Confirmar Renombrar</string>
     <string name="confirm_delete_profile">Confirmar Eliminar Perfil</string>
     <string name="delete_profile_warning">¿Estás seguro de que quieres eliminar este perfil de preferencias? Esta operación también eliminará sus datos de base de conocimiento vinculados y no se puede recuperar.\n\nRecomendamos hacer una copia de seguridad del contenido importante de antemano.</string>
-
-    
     <!-- User Preferences Guide Screen Dialog -->
     <string name="add_custom_personality">Agregar Rasgo de Personalidad Personalizado</string>
     <string name="add_custom_identity">Agregar Identidad Personalizada</string>
@@ -1122,7 +1043,6 @@
     <string name="info_icon">Info</string>
     <string name="add_icon">Agregar</string>
     <string name="delete_icon">Eliminar</string>
-    
     <!-- Theme Settings Additional Strings -->
     <string name="theme_on_color_mode">Color del Texto del Tema</string>
     <string name="theme_on_color_auto">Automático</string>
@@ -1152,7 +1072,6 @@
     <string name="custom_chat_title_label">Título de Chat Personalizado</string>
     <string name="custom_chat_title_placeholder">ej.: Asistente de IA</string>
     <string name="save_title_desc">Guardar Título</string>
-    
     <!-- Model Configuration Screen -->
     <string name="select_model_config">Seleccionar Configuración de Modelo</string>
     <string name="connection_test_success">Conexión Exitosa</string>
@@ -1169,7 +1088,6 @@
     <string name="rename_model_config">Renombrar Configuración de Modelo</string>
     <string name="rename_model_config_desc">Modificar el nombre de la configuración de modelo</string>
     <string name="config_renamed">Configuración Renombrada</string>
-    
     <!-- ModelApiSettingsSection strings -->
     <string name="api_endpoint_placeholder">ej.: https://api.openai.com/v1/chat/completions</string>
     <string name="actual_request_url">URL de solicitud real: %s</string>
@@ -1199,7 +1117,6 @@
     <string name="models_displayed">Mostrando %d modelos</string>
     <string name="models_displayed_filtered"> (filtrados)</string>
     <string name="close">Cerrar</string>
-    
     <!-- API Provider names -->
     <string name="provider_openai">OpenAI (Serie GPT)</string>
     <string name="provider_openai_responses">OpenAI (API Responses)</string>
@@ -1254,7 +1171,6 @@
     <string name="must_be_float">Debe ser un número decimal</string>
     <string name="default_value_format">Valor predeterminado: %s</string>
     <string name="temperature_recommendation">Recomendación de Temperatura</string>
-    
     <!-- Context Menu -->
     <string name="copy_message">Copiar Mensaje</string>
     <string name="read_message">Leer Mensaje</string>
@@ -1286,7 +1202,6 @@
     <string name="share_failed">Error al compartir</string>
     <string name="image_generated">Imagen generada</string>
     <string name="load_more_history">Cargar más mensajes del historial...</string>
-    
     <!-- Layout Adjustment Settings -->
     <string name="layout_adjustment_settings_title">Configuración de Ajuste de Diseño</string>
     <string name="layout_adjustment_description">Ajustar la posición y el espaciado de los elementos de la interfaz para personalizar su experiencia</string>
@@ -1302,10 +1217,8 @@
     <string name="reset_to_default">Restablecer por Defecto</string>
     <string name="layout_reset_settings">Restablecer Configuración de Diseño</string>
     <string name="layout_reset_settings_desc">Restablecer todas las configuraciones de ajuste de diseño a valores predeterminados</string>
-    
     <!-- Screen Titles -->
     <string name="screen_title_layout_adjustment">Ajuste de Diseño</string>
-    
     <!-- Accesibilidad - Tipos de Bloques Markdown -->
     <string name="code_block">Bloque de Código</string>
     <string name="table_block">Tabla</string>
@@ -1323,7 +1236,6 @@
     <string name="status_info_block">Información de Estado</string>
     <string name="html_content_block">Contenido HTML</string>
     <string name="mood_tag_block">Etiqueta de Ánimo</string>
-
     <string name="thinking_settings">Pensamiento</string>
     <string name="thinking_settings_desc">Gestionar modo de pensamiento y guía de pensamiento</string>
     <string name="thinking_settings_active_count">%1$d activados</string>
@@ -1332,9 +1244,7 @@
     <string name="thinking_type_guidance">guidance</string>
     <string name="thinking_quality">Calidad de pensamiento</string>
     <string name="thinking_quality_desc">Solo efectivo en modo de pensamiento</string>
-    
     <string name="provider_doubao">Doubao (Modelo Volcano)</string>
-
     <string name="speech_services_stt_type_openai">OpenAI STT (Remoto)</string>
     <string name="speech_services_stt_type_deepgram">Deepgram STT (Remoto)</string>
     <string name="speech_services_openai_stt_config">Configuración de OpenAI STT</string>

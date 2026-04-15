@@ -2,8 +2,8 @@
 {
   "name": "openai_draw",
   "description": {
-    "zh": "使用 OpenAI 格式的图像生成 API (/v1/images/generations) 根据提示词画图，将图片保存到本地 /sdcard/Download/Operit/draws/ 目录，并返回 Markdown 图片提示。",
-    "en": "Generate images via an OpenAI-compatible image generation API (/v1/images/generations) from a prompt, save to /sdcard/Download/Operit/draws/, and return a Markdown image reference."
+    "zh": "使用 OpenAI 格式的图像生成 API (/v1/images/generations) 根据提示词画图，将图片保存到本地 /sdcard/Download/Twent/draws/ 目录，并返回 Markdown 图片提示。",
+    "en": "Generate images via an OpenAI-compatible image generation API (/v1/images/generations) from a prompt, save to /sdcard/Download/Twent/draws/, and return a Markdown image reference."
   },
   "env": [
     {
@@ -231,7 +231,7 @@ const openaiDraw = (function () {
         const fileUri = `file://${filePath}`;
         const markdown = `![AI生成的图片](${fileUri})`;
         const hintLines = [];
-        hintLines.push("图片已生成并保存在本地 /sdcard/Download/Operit/draws/ 目录。");
+        hintLines.push("图片已生成并保存在本地 /sdcard/Download/Twent/draws/ 目录。");
         hintLines.push(`本地路径: ${filePath}`);
         hintLines.push("");
         hintLines.push("在后续回答中，请直接输出下面这一行 Markdown 来展示这张图片：");
@@ -252,7 +252,7 @@ const openaiDraw = (function () {
             const result = await draw_image(params);
             complete({
                 success: true,
-                message: "图片生成成功，已保存到 /sdcard/Download/Operit/draws/，并返回 Markdown 图片提示。",
+                message: "图片生成成功，已保存到 /sdcard/Download/Twent/draws/，并返回 Markdown 图片提示。",
                 data: result
             });
         }

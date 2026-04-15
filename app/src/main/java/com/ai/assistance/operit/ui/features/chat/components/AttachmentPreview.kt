@@ -16,10 +16,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.ScreenshotMonitor
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,7 +76,8 @@ private fun AttachmentItem(attachment: AttachmentInfo, onRemove: () -> Unit, onI
             when {
                 attachment.fileName.startsWith("camera_") -> Icons.Default.PhotoCamera
                 attachment.mimeType.startsWith("image/") -> Icons.Default.Image
-                attachment.filePath.startsWith("screen_") -> Icons.Default.ScreenshotMonitor
+                attachment.mimeType.startsWith("audio/") -> Icons.Default.AudioFile
+                attachment.mimeType.startsWith("video/") -> Icons.Default.Videocam
                 else -> Icons.Default.Description
             }
 
@@ -91,13 +93,25 @@ private fun AttachmentItem(attachment: AttachmentInfo, onRemove: () -> Unit, onI
                             .clickable(onClick = onInsert)
     ) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Icon based on file type
-            Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-            )
+            // Show actual image preview for images
+            if (attachment.mimeType.startsWith("image/")) {
+                // TODO: Implement actual image preview using Coil
+                // For now, just show image icon
+                Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                )
+            } else {
+                // Icon based on file type
+                Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(8.dp))
 

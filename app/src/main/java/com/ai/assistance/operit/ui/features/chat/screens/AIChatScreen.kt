@@ -547,21 +547,8 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                                         // 在光标位置插入附件引用
                                         actualViewModel.insertAttachmentReference(attachment)
                                     },
-                                    onAttachScreenContent = {
-                                        // 添加屏幕内容附件
-                                        actualViewModel.captureScreenContent()
                                     },
-                                    onAttachNotifications = {
-                                        // 添加当前通知附件
-                                        actualViewModel.captureNotifications()
                                     },
-                                    onAttachLocation = {
-                                        // 添加当前位置附件
-                                        actualViewModel.captureLocation()
-                                    },
-                                    onAttachMemory = {
-                                        // 显示记忆文件夹选择对话框
-                                        showMemoryFolderDialog = true
                                     },
                                     onTakePhoto = { uri ->
                                         // 处理拍摄的照片

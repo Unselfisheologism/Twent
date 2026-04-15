@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.ai.assistance.operit.ui.floating.ui.pet.AvatarEmotionManager
+// AvatarEmotionManager removed - using simple regex for tag stripping
 import com.ai.assistance.operit.api.voice.VoiceService
 import com.ai.assistance.operit.api.voice.VoiceServiceFactory
 import com.ai.assistance.operit.data.preferences.SpeechServicesPreferences
@@ -1158,7 +1158,8 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                     timestampOfFirstDeletedMessage
                 )
 
-                val plainText = AvatarEmotionManager.stripXmlLikeTags(targetMessage.content)
+                // Strip XML-like tags from message content
+                val plainText = targetMessage.content.replace(Regex("<[^>]*>"), "").trim()
                 updateUserMessage(TextFieldValue(plainText))
 
                 uiStateDelegate.showToast(context.getString(R.string.chat_rolled_back_message_in_input))

@@ -18,7 +18,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Operit"
 include(":app")
-include(":dragonbones")
+// DragonBones module removed - no longer needed
 include(":terminal")
 include(":mnn")
 include(":llama")

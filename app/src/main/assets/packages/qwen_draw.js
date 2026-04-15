@@ -2,8 +2,8 @@
 {
   "name": "qwen_draw",
   "description": {
-    "zh": "使用阿里云百炼/DashScope 文生图接口（通义万相/通义千问图像）根据提示词画图（异步任务轮询），将图片保存到本地 /sdcard/Download/Operit/draws/ 目录，并返回 Markdown 图片提示。",
-    "en": "Generate images via Alibaba Cloud Model Studio (DashScope) text-to-image API (async task polling), save to /sdcard/Download/Operit/draws/, and return a Markdown image reference."
+    "zh": "使用阿里云百炼/DashScope 文生图接口（通义万相/通义千问图像）根据提示词画图（异步任务轮询），将图片保存到本地 /sdcard/Download/Twent/draws/ 目录，并返回 Markdown 图片提示。",
+    "en": "Generate images via Alibaba Cloud Model Studio (DashScope) text-to-image API (async task polling), save to /sdcard/Download/Twent/draws/, and return a Markdown image reference."
   },
   "env": [
     {
@@ -315,7 +315,7 @@ const qwenDraw = (function () {
         const fileUri = `file://${filePath}`;
         const markdown = `![AI生成的图片](${fileUri})`;
         const hintLines = [];
-        hintLines.push("图片已生成并保存在本地 /sdcard/Download/Operit/draws/ 目录。");
+        hintLines.push("图片已生成并保存在本地 /sdcard/Download/Twent/draws/ 目录。");
         hintLines.push(`本地路径: ${filePath}`);
         hintLines.push("");
         hintLines.push("在后续回答中，请直接输出下面这一行 Markdown 来展示这张图片：");
@@ -338,7 +338,7 @@ const qwenDraw = (function () {
             const result = await draw_image(params);
             complete({
                 success: true,
-                message: "图片生成成功，已保存到 /sdcard/Download/Operit/draws/，并返回 Markdown 图片提示。",
+                message: "图片生成成功，已保存到 /sdcard/Download/Twent/draws/，并返回 Markdown 图片提示。",
                 data: result
             });
         }

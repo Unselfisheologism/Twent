@@ -72,10 +72,6 @@ fun ChatInputSection(
     attachments: List<AttachmentInfo> = emptyList(),
     onRemoveAttachment: (String) -> Unit = {},
     onInsertAttachment: (AttachmentInfo) -> Unit = {},
-    onAttachScreenContent: () -> Unit = {},
-    onAttachNotifications: () -> Unit = {},
-    onAttachLocation: () -> Unit = {},
-    onAttachMemory: () -> Unit = {},
     onTakePhoto: (Uri) -> Unit,
     hasBackgroundImage: Boolean = false,
     chatInputTransparent: Boolean = false,
@@ -323,32 +319,14 @@ fun ChatInputSection(
             }
 
 
-            // Attachment chips row - only show if there are attachments
+            // Attachment preview - show previews above the text input
             if (attachments.isNotEmpty()) {
-                LazyRow(
-                    modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 4.dp
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(attachments) { attachment ->
-                        AttachmentChip(
-                            attachmentInfo = attachment,
-                            onRemove = {
-                                onRemoveAttachment(
-                                    attachment.filePath
-                                )
-                            },
-                            onInsert = {
-                                onInsertAttachment(attachment)
-                            }
-                        )
-                    }
-                }
+                AttachmentPreview(
+                    attachments = attachments,
+                    onRemoveAttachment = onRemoveAttachment,
+                    onInsertAttachment = onInsertAttachment,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
             }
 
 
@@ -563,10 +541,6 @@ fun ChatInputSection(
                     // 传递文件路径给外部处理函数
                     onAttachmentRequest(filePath)
                 },
-                onAttachScreenContent = onAttachScreenContent,
-                onAttachNotifications = onAttachNotifications,
-                onAttachLocation = onAttachLocation,
-                onAttachMemory = onAttachMemory,
                 onTakePhoto = onTakePhoto,
                 userQuery = userMessage.text,
                 onDismiss = { setShowAttachmentPanel(false) }
