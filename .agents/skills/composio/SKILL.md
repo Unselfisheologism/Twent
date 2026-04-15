@@ -37,7 +37,7 @@ Key commands (new top-level aliases):
 - `composio link [toolkit]` — connect a user account to an app (agents: always use `--no-wait` for non-interactive mode)
 - `composio listen` — listen for real-time trigger events
 
-Typical workflow: **search → link (if needed) → execute**
+Typical workflow: **search → link  (if needed) → execute**
 
 > Full reference: [Composio CLI Guide](rules/composio-cli.md)
 
