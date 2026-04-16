@@ -401,29 +401,36 @@ class ComposioApiService(private val context: Context) {
             }
             
             // First, try to list existing auth configs for this toolkit
-            val listUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug&is_composio_managed=true&limit=1")
-            val listRequest = createAuthenticatedRequest(listUrl)
-            val listResponse = client.newCall(listRequest).execute()
-            val listBody = listResponse.body?.string()
-            
-            if (listResponse.isSuccessful && listBody != null) {
-                val jsonElement = json.parseToJsonElement(listBody)
-                val items = jsonElement.jsonObject["items"]
-                if (items is kotlinx.serialization.json.JsonArray && items.isNotEmpty()) {
-                    val firstConfig = items[0].jsonObject
-                    val configId = firstConfig["id"]?.toString()?.replace("\"", "")
-                    if (!configId.isNullOrBlank()) {
-                        AppLogger.d(TAG, "Found existing auth config for $toolkitSlug: $configId")
-                        return@withContext Result.success(configId)
+            try {
+                val listUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug&limit=1")
+                val listRequest = createAuthenticatedRequest(listUrl)
+                val listResponse = client.newCall(listRequest).execute()
+                val listBody = listResponse.body?.string()
+                
+                if (listResponse.isSuccessful && listBody != null) {
+                    val jsonElement = json.parseToJsonElement(listBody)
+                    val items = jsonElement.jsonObject["items"]
+                    if (items is kotlinx.serialization.json.JsonArray && items.isNotEmpty()) {
+                        val firstConfig = items[0].jsonObject
+                        val configId = firstConfig["id"]?.toString()?.replace("\"", "")
+                        if (!configId.isNullOrBlank()) {
+                            AppLogger.d(TAG, "Found existing auth config for $toolkitSlug: $configId")
+                            return@withContext Result.success(configId)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "Failed to list auth configs, will try to create: ${e.message}")
             }
             
             // No existing config found, create one with managed auth
+            // The Python SDK's auth_configs.create(toolkit="github", options={type: "..."})
+            // sends the toolkit as a query parameter in the URL, with auth options in the body.
+            // The REST API does NOT expect 'toolkit' in the request body at all.
             AppLogger.d(TAG, "Creating new managed auth config for $toolkitSlug")
-            val createUrl = buildUrl("/auth_configs")
+            val createUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug")
             val bodyMap = mapOf(
-                "toolkit" to JsonPrimitive(toolkitSlug),
+                "name" to JsonPrimitive("$toolkitSlug Auth"),
                 "type" to JsonPrimitive("use_composio_managed_auth")
             )
             val jsonBody = JsonObject(bodyMap).toString()
