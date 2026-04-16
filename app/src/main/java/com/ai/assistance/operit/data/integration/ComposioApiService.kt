@@ -427,14 +427,15 @@ class ComposioApiService(private val context: Context) {
             }
             
             // No existing config found, create one with managed auth.
-            // The Python SDK sends toolkit as a URL query param and only
-            // {"type": "use_composio_managed_auth"} in the body for managed auth.
+            // The v3.1 API expects 'toolkit' as an object in the body (not a query param).
             AppLogger.d(TAG, "Creating new managed auth config for $toolkitSlug")
-            val createUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug")
-            val bodyMap = mapOf(
+            val createUrl = buildUrl("/auth_configs")
+            val jsonBody = JsonObject(mapOf(
+                "toolkit" to JsonObject(mapOf("slug" to JsonPrimitive(toolkitSlug))),
                 "type" to JsonPrimitive("use_composio_managed_auth")
-            )
-            val jsonBody = JsonObject(bodyMap).toString()
+            )).toString()
+            
+            AppLogger.d(TAG, "POST $createUrl body=$jsonBody")
             
             val createRequest = createAuthenticatedRequest(
                 url = createUrl,
@@ -447,14 +448,9 @@ class ComposioApiService(private val context: Context) {
             if (createResponse.isSuccessful && createBody != null) {
                 AppLogger.d(TAG, "Auth config create response: $createBody")
                 val jsonElement = json.parseToJsonElement(createBody)
-                val obj = jsonElement.jsonObject
                 
-                // The response may wrap the auth config in different structures.
-                // Try top-level "id" first, then nested "auth_config.id", then "nanoid".
-                val configId = obj["id"]?.toString()?.replace("\"", "")
-                    ?: obj["nanoid"]?.toString()?.replace("\"", "")
-                    ?: obj["auth_config"]?.jsonObject?.get("id")?.toString()?.replace("\"", "")
-                    ?: obj["auth_config"]?.jsonObject?.get("nanoid")?.toString()?.replace("\"", "")
+                // Recursively search for an ID field that looks like an auth config ID (ac_xxx)
+                val configId = findAuthConfigId(jsonElement)
                 
                 if (!configId.isNullOrBlank()) {
                     AppLogger.d(TAG, "Created auth config for $toolkitSlug: $configId")
@@ -740,6 +736,43 @@ class ComposioApiService(private val context: Context) {
     }
     
     // ==================== Response Parsing ====================
+    
+    /**
+     * Recursively search a JSON element for an auth config ID.
+     * Auth config IDs start with "ac_" prefix (nano ID format).
+     * Searches "id" and "nanoid" fields at any nesting level.
+     */
+    private fun findAuthConfigId(element: JsonElement): String? {
+        return when (element) {
+            is JsonObject -> {
+                // Check this object for id/nanoid fields
+                val id = element["id"]?.toString()?.replace("\"", "")
+                if (!id.isNullOrBlank() && id.startsWith("ac_")) return id
+                
+                val nanoid = element["nanoid"]?.toString()?.replace("\"", "")
+                if (!nanoid.isNullOrBlank() && nanoid.startsWith("ac_")) return nanoid
+                
+                // Also accept any id that looks like a valid config ID
+                if (!id.isNullOrBlank() && id.length > 5) return id
+                if (!nanoid.isNullOrBlank() && nanoid.length > 5) return nanoid
+                
+                // Recurse into nested objects
+                for (value in element.values) {
+                    val found = findAuthConfigId(value)
+                    if (found != null) return found
+                }
+                null
+            }
+            is kotlinx.serialization.json.JsonArray -> {
+                for (item in element) {
+                    val found = findAuthConfigId(item)
+                    if (found != null) return found
+                }
+                null
+            }
+            else -> null
+        }
+    }
     
     private fun parseToolkitsResponse(responseBody: String): List<ToolkitDefinition> {
         return try {

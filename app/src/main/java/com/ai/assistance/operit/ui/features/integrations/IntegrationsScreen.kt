@@ -292,10 +292,24 @@ private suspend fun connectToolkit(
         val userId = UserIdManager(context).getOrCreateUserId()
         AppLogger.d("IntegrationsScreen", "Connecting toolkit '$toolkitSlug' for user '$userId'")
         
-        // Single step: authorize handles auth config creation + connection initiation
-        val result = composioApi.authorizeToolkit(toolkitSlug, userId)
+        // Step 1: Get or create an auth config, then create a connect link
+        val authConfigResult = composioApi.getOrCreateAuthConfig(toolkitSlug)
+        val authConfigId = authConfigResult.getOrNull()
         
-        result.fold(
+        if (authConfigId == null) {
+            callback(false, "Failed to get auth config for $toolkitSlug: ${authConfigResult.exceptionOrNull()?.message}")
+            return
+        }
+        
+        AppLogger.d("IntegrationsScreen", "Got auth config '$authConfigId' for toolkit '$toolkitSlug'")
+        
+        // Step 2: Create a Connect Link
+        val authLinkResult = composioApi.createAuthLink(
+            authConfigId = authConfigId,
+            userId = userId
+        )
+        
+        authLinkResult.fold(
             onSuccess = { authLink ->
                 val redirectUrl = authLink.redirectUrl
                 if (redirectUrl.isNotBlank()) {
@@ -310,8 +324,8 @@ private suspend fun connectToolkit(
                 }
             },
             onFailure = { error ->
-                AppLogger.e("IntegrationsScreen", "Failed to authorize $toolkitSlug: ${error.message}")
-                callback(false, "Failed to connect $toolkitSlug: ${error.message}")
+                AppLogger.e("IntegrationsScreen", "Failed to create auth link: ${error.message}")
+                callback(false, "Failed to create auth link: ${error.message}")
             }
         )
     } catch (e: Exception) {
