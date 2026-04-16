@@ -423,14 +423,15 @@ class ComposioApiService(private val context: Context) {
                 AppLogger.w(TAG, "Failed to list auth configs, will try to create: ${e.message}")
             }
             
-            // No existing config found, create one with managed auth
-            // The Python SDK's auth_configs.create(toolkit="github", options={type: "..."})
-            // sends the toolkit as a query parameter in the URL, with auth options in the body.
-            // The REST API does NOT expect 'toolkit' in the request body at all.
+            // No existing config found, create one with managed auth.
+            // The Composio v3.1 API expects 'toolkit' as an object (not a string)
+            // in the request body, and 'auth_scheme' for the authentication method.
             AppLogger.d(TAG, "Creating new managed auth config for $toolkitSlug")
-            val createUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug")
+            val createUrl = buildUrl("/auth_configs")
             val bodyMap = mapOf(
+                "toolkit" to JsonObject(mapOf("slug" to JsonPrimitive(toolkitSlug))),
                 "name" to JsonPrimitive("$toolkitSlug Auth"),
+                "auth_scheme" to JsonPrimitive("OAUTH2"),
                 "type" to JsonPrimitive("use_composio_managed_auth")
             )
             val jsonBody = JsonObject(bodyMap).toString()
