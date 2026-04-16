@@ -27,6 +27,7 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.integration.ComposioApiService
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.voice.utilities.UserIdManager
 import kotlinx.coroutines.launch
 
 /**
@@ -273,6 +274,13 @@ private suspend fun loadIntegrations(
 
 /**
  * Connect to a toolkit via Composio
+ * 
+ * Uses the Composio "Connect Links" flow:
+ * 1. Get or create an auth config for the toolkit (uses Composio managed auth)
+ * 2. POST to /connected_accounts/link with auth_config_id and user_id
+ * 3. Response gives redirect_url (Connect Link - e.g. connect.composio.dev/link/ln_abc123)
+ * 4. User opens URL which redirects to the actual OAuth provider (GitHub, Google, etc.)
+ * 5. Composio handles the full OAuth flow automatically
  */
 private suspend fun connectToolkit(
     context: Context,
@@ -281,22 +289,50 @@ private suspend fun connectToolkit(
     callback: (Boolean, String?) -> Unit
 ) {
     try {
-        // The Composio auth flow uses "Connect Links" - hosted pages
-        // where users authorize access. The flow is:
-        // 1. POST to /connected_accounts/link with auth_config_id and user_id
-        // 2. Response gives redirect_url (Connect Link)
-        // 3. User opens URL and authorizes
-        // 4. Composio handles OAuth automatically
+        // Get a persistent user ID for this app installation
+        val userId = UserIdManager(context).getOrCreateUserId()
+        AppLogger.d("IntegrationsScreen", "Connecting toolkit '$toolkitSlug' for user '$userId'")
         
-        // For now, we'll open the Composio dashboard where users can connect
-        // In a full implementation, we'd call the API to get a Connect Link
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse("https://platform.composio.dev?next_page=/connections")
+        // Step 1: Get or create a Composio-managed auth config for this toolkit
+        val authConfigResult = composioApi.getOrCreateAuthConfig(toolkitSlug)
+        val authConfigId = authConfigResult.getOrNull()
+        
+        if (authConfigId == null) {
+            callback(false, "Failed to get auth config for $toolkitSlug: ${authConfigResult.exceptionOrNull()?.message}")
+            return
         }
-        context.startActivity(intent)
         
-        callback(true, null)
+        AppLogger.d("IntegrationsScreen", "Got auth config '$authConfigId' for toolkit '$toolkitSlug'")
+        
+        // Step 2: Create a Connect Link via the API
+        val authLinkResult = composioApi.createAuthLink(
+            authConfigId = authConfigId,
+            userId = userId
+        )
+        
+        authLinkResult.fold(
+            onSuccess = { authLink ->
+                val redirectUrl = authLink.redirectUrl
+                if (redirectUrl.isNotBlank()) {
+                    AppLogger.d("IntegrationsScreen", "Opening Connect Link: $redirectUrl")
+                    // Step 3: Open the Connect Link in the browser
+                    // This redirects to the actual OAuth provider (GitHub, Google, etc.)
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse(redirectUrl)
+                    }
+                    context.startActivity(intent)
+                    callback(true, null)
+                } else {
+                    callback(false, "Received empty redirect URL from Composio")
+                }
+            },
+            onFailure = { error ->
+                AppLogger.e("IntegrationsScreen", "Failed to create auth link: ${error.message}")
+                callback(false, "Failed to create auth link: ${error.message}")
+            }
+        )
     } catch (e: Exception) {
+        AppLogger.e("IntegrationsScreen", "Failed to connect toolkit", e)
         callback(false, "Failed to connect: ${e.message}")
     }
 }
@@ -310,9 +346,17 @@ private suspend fun disconnectToolkit(
     callback: (Boolean, String?) -> Unit
 ) {
     try {
-        // Note: This would call the API to disconnect
-        // For now, we'll just simulate success
-        callback(true, null)
+        val result = composioApi.disconnectConnection(accountId)
+        result.fold(
+            onSuccess = {
+                AppLogger.d("IntegrationsScreen", "Disconnected account: $accountId")
+                callback(true, null)
+            },
+            onFailure = { error ->
+                AppLogger.e("IntegrationsScreen", "Failed to disconnect: ${error.message}")
+                callback(false, "Failed to disconnect: ${error.message}")
+            }
+        )
     } catch (e: Exception) {
         callback(false, "Failed to disconnect: ${e.message}")
     }

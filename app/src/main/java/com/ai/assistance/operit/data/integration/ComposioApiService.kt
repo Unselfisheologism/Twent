@@ -387,6 +387,76 @@ class ComposioApiService(private val context: Context) {
     // ==================== T-010: OAuth Connection Flow ====================
     
     /**
+     * Get or create a Composio-managed auth config for a toolkit
+     * 
+     * First checks for existing auth configs, then creates one if needed.
+     * 
+     * @param toolkitSlug The toolkit slug (e.g., "github", "gmail")
+     * @return Result containing the auth config ID
+     */
+    suspend fun getOrCreateAuthConfig(toolkitSlug: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
+            }
+            
+            // First, try to list existing auth configs for this toolkit
+            val listUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug&is_composio_managed=true&limit=1")
+            val listRequest = createAuthenticatedRequest(listUrl)
+            val listResponse = client.newCall(listRequest).execute()
+            val listBody = listResponse.body?.string()
+            
+            if (listResponse.isSuccessful && listBody != null) {
+                val jsonElement = json.parseToJsonElement(listBody)
+                val items = jsonElement.jsonObject["items"]
+                if (items is kotlinx.serialization.json.JsonArray && items.isNotEmpty()) {
+                    val firstConfig = items[0].jsonObject
+                    val configId = firstConfig["id"]?.toString()?.replace("\"", "")
+                    if (!configId.isNullOrBlank()) {
+                        AppLogger.d(TAG, "Found existing auth config for $toolkitSlug: $configId")
+                        return@withContext Result.success(configId)
+                    }
+                }
+            }
+            
+            // No existing config found, create one with managed auth
+            AppLogger.d(TAG, "Creating new managed auth config for $toolkitSlug")
+            val createUrl = buildUrl("/auth_configs")
+            val bodyMap = mapOf(
+                "toolkit" to JsonPrimitive(toolkitSlug),
+                "type" to JsonPrimitive("use_composio_managed_auth")
+            )
+            val jsonBody = JsonObject(bodyMap).toString()
+            
+            val createRequest = createAuthenticatedRequest(
+                url = createUrl,
+                method = "POST",
+                body = jsonBody.toRequestBody("application/json".toMediaType())
+            )
+            val createResponse = client.newCall(createRequest).execute()
+            val createBody = createResponse.body?.string()
+            
+            if (createResponse.isSuccessful && createBody != null) {
+                val jsonElement = json.parseToJsonElement(createBody)
+                val configId = jsonElement.jsonObject["id"]?.toString()?.replace("\"", "")
+                if (!configId.isNullOrBlank()) {
+                    AppLogger.d(TAG, "Created auth config for $toolkitSlug: $configId")
+                    Result.success(configId)
+                } else {
+                    Result.failure(Exception("Failed to parse auth config ID from response"))
+                }
+            } else {
+                val errorMsg = "HTTP ${createResponse.code}: ${createResponse.message}. Response: $createBody"
+                AppLogger.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to get/create auth config for $toolkitSlug", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Create an auth link for a user to connect their account
      * Uses Composio's "Connect Links" - hosted pages where users authorize access
      * 

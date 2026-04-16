@@ -7,7 +7,7 @@
     <string name="model_selector_toggle_desc">Show model configuration selector at the top of the chat interface for easy switching between different model configurations</string>
     <string name="model">Model</string>
     <!-- Navigation -->
-    <string name="nav_ai_chat">Twent Linux Terminal</string>
+    <string name="nav_ai_chat">Agent Chat</string>
     <string name="nav_mini_apps">Mini-Apps</string>
     <string name="nav_adb_commands">Permissions</string>
     <string name="nav_settings">System Settings</string>
