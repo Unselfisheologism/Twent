@@ -402,7 +402,7 @@ class ComposioApiService(private val context: Context) {
             
             // First, try to list existing auth configs for this toolkit
             try {
-                val listUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug&limit=1")
+                val listUrl = buildUrl("/auth_configs?toolkit_slug=$toolkitSlug&limit=1")
                 val listRequest = createAuthenticatedRequest(listUrl)
                 val listResponse = client.newCall(listRequest).execute()
                 val listBody = listResponse.body?.string()
@@ -682,7 +682,7 @@ class ComposioApiService(private val context: Context) {
             }
             
             val urlBuilder = buildUrl(ENDPOINT_CONNECTED_ACCOUNTS).toHttpUrlOrNull()?.newBuilder()
-            toolkit?.let { urlBuilder?.addQueryParameter("toolkit", it) }
+            toolkit?.let { urlBuilder?.addQueryParameter("toolkit_slugs", it) }
             
             val url = urlBuilder?.build()?.toString()
                 ?: return@withContext Result.failure(Exception("Failed to build URL"))
