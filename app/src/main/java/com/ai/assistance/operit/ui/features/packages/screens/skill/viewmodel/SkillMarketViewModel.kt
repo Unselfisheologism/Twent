@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.ai.assistance.operit.data.api.GitHubApiService
 import com.ai.assistance.operit.data.api.GitHubComment
 import com.ai.assistance.operit.data.api.GitHubIssue
+import com.ai.assistance.operit.data.api.GitHubLabel
 import com.ai.assistance.operit.data.api.GitHubReaction
 import com.ai.assistance.operit.data.api.GitHubRepository
 import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
@@ -240,17 +241,40 @@ class SkillMarketViewModel(
             clawhubCursor = null
 
             try {
-                val issues = if (_searchQuery.value.isNotBlank()) {
-                    fetchFromClawHubSearch(_searchQuery.value)
-                } else {
-                    fetchFromClawHubList(cursor = null)
+                val query = _searchQuery.value
+                val results = mutableListOf<GitHubIssue>()
+
+                // Fetch from ClawHub
+                try {
+                    val clawhubResults = if (query.isNotBlank()) {
+                        fetchFromClawHubSearch(query)
+                    } else {
+                        fetchFromClawHubList(cursor = null)
+                    }
+                    results.addAll(clawhubResults)
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "ClawHub fetch failed, continuing with GitHub", e)
                 }
-                _skillIssues.value = issues
+
+                // Fetch from GitHub repos
+                try {
+                    val githubResults = fetchFromGitHub(query.ifBlank { "mcp skill" })
+                    // Deduplicate by title
+                    val existingTitles = results.map { it.title.lowercase() }.toSet()
+                    results.addAll(githubResults.filter { it.title.lowercase() !in existingTitles })
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "GitHub fetch failed", e)
+                }
+
+                _skillIssues.value = results
+                if (results.isEmpty()) {
+                    _hasMore.value = false
+                }
             } catch (e: Exception) {
                 _errorMessage.value = context.getString(R.string.skillmarket_load_failed, e.message ?: "")
                 _skillIssues.value = emptyList()
                 _hasMore.value = false
-                AppLogger.e(TAG, "Failed to load skill market data from ClawHub", e)
+                AppLogger.e(TAG, "Failed to load skill market data", e)
             } finally {
                 _isLoading.value = false
             }
@@ -345,6 +369,73 @@ class SkillMarketViewModel(
             }
         }
     }
+
+    /**
+     * Fetch skills from GitHub search API (no auth needed, 60 req/hr limit).
+     * Searches for repos with "mcp skill" or the user's query in the name/description.
+     */
+    private suspend fun fetchFromGitHub(query: String): List<GitHubIssue> {
+        return withContext(Dispatchers.IO) {
+            val searchQuery = if (query.isBlank()) "mcp skill" else "$query skill"
+            val encodedQuery = java.net.URLEncoder.encode(searchQuery, "UTF-8")
+            val url = java.net.URL("https://api.github.com/search/repositories?q=$encodedQuery&sort=stars&order=desc&per_page=20")
+            val body = httpGet(url)
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            val response = json.decodeFromString<GitHubSearchResponse>(body)
+            response.items.mapIndexed { index, repo ->
+                GitHubIssue(
+                    id = repo.id + 100000 + index,
+                    number = (repo.id % 100000).toInt() + index,
+                    title = repo.full_name,
+                    body = "<!-- operit-skill-json: {\"description\":\"${(repo.description ?: "").replace("\"", "\\\"")}\",\"repositoryUrl\":\"${repo.html_url}\"} -->\n\n${repo.description ?: ""}",
+                    html_url = repo.html_url,
+                    state = "open",
+                    labels = listOf(
+                        GitHubLabel(
+                            id = 0,
+                            name = if (repo.language?.isNotBlank() == true) repo.language else "repo",
+                            color = "0e8a16",
+                            description = "GitHub"
+                        )
+                    ),
+                    user = com.ai.assistance.operit.data.preferences.GitHubUser(
+                        id = 0,
+                        login = repo.owner.login,
+                        name = repo.owner.login,
+                        avatarUrl = repo.owner.avatar_url
+                    ),
+                    created_at = repo.created_at,
+                    updated_at = repo.updated_at,
+                    reactions = null
+                )
+            }
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class GitHubSearchResponse(
+        val items: List<GitHubRepo> = emptyList(),
+        val total_count: Int = 0
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class GitHubRepo(
+        val id: Long = 0,
+        val full_name: String = "",
+        val description: String? = null,
+        val html_url: String = "",
+        val language: String? = null,
+        val stargazers_count: Int = 0,
+        val created_at: String = "",
+        val updated_at: String = "",
+        val owner: GitHubRepoOwner = GitHubRepoOwner()
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class GitHubRepoOwner(
+        val login: String = "",
+        val avatar_url: String = ""
+    )
 
     private fun httpGet(url: java.net.URL): String {
         val conn = url.openConnection() as java.net.HttpURLConnection
