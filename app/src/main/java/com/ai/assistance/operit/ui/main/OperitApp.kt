@@ -26,11 +26,9 @@ import androidx.navigation.compose.rememberNavController
 import com.ai.assistance.operit.core.tools.AIToolHandler
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import com.ai.assistance.operit.data.preferences.ApiPreferences
-import com.ai.assistance.operit.data.preferences.ChatAnnouncementPreferences
 import com.ai.assistance.operit.data.preferences.DisplayPreferencesManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.ui.common.NavItem
-import com.ai.assistance.operit.ui.features.announcement.ChatBindingAnnouncementDialog
 import com.ai.assistance.operit.ui.main.layout.PhoneLayout
 import com.ai.assistance.operit.ui.main.layout.TabletLayout
 import com.ai.assistance.operit.ui.main.screens.OperitRouter
@@ -65,7 +63,6 @@ fun OperitApp(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val announcementPreferences = remember { ChatAnnouncementPreferences(context) }
 
     // Navigation state - using a custom back stack
     var selectedItem by remember { mutableStateOf(initialNavItem) }
@@ -179,15 +176,6 @@ fun OperitApp(
     // - Less than 600dp: phone
     // - 600dp and above: tablet
     val useTabletLayout = screenWidthDp >= 600
-
-    var showChatBindingAnnouncement by remember {
-        mutableStateOf(announcementPreferences.shouldShowChatBindingAnnouncement())
-    }
-
-    fun dismissChatBindingAnnouncement() {
-        announcementPreferences.setChatBindingAnnouncementAcknowledged()
-        showChatBindingAnnouncement = false
-    }
 
     // Power user mode state (needs to be before navGroups)
     val userPreferencesManager = remember { UserPreferencesManager.getInstance(context) }
@@ -330,10 +318,5 @@ fun OperitApp(
             }
         }
 
-        if (showChatBindingAnnouncement) {
-            ChatBindingAnnouncementDialog(
-                onAcknowledge = { dismissChatBindingAnnouncement() }
-            )
-        }
     }
 }

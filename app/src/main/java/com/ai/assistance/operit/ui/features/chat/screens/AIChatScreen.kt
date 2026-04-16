@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -441,21 +440,6 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
     LaunchedEffect(isCurrentScreen, showWebView, showAiComputer, appBarContentColor) {
         if (isCurrentScreen) {
             setTopBarActions {
-                // AI电脑模式切换按钮
-                IconButton(
-                        onClick = {
-                            actualViewModel.onAiComputerButtonClick()
-                        }
-                ) {
-                    Icon(
-                            imageVector = Icons.Default.Terminal,
-                            contentDescription = stringResource(R.string.ai_computer),
-                            tint =
-                            if (showAiComputer) MaterialTheme.colorScheme.primaryContainer
-                            else appBarContentColor
-                    )
-                }
-
                 // Web开发模式切换按钮
                 IconButton(
                         onClick = {

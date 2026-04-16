@@ -724,10 +724,6 @@
 <string name="chat_attach_memory_folders_failed">Chat Attach Memory Folders Failed</string>
 <string name="chat_attaching_memory_folders">Chat Attaching Memory Folders</string>
 <string name="chat_attachment_processing_failed">Chat Attachment Processing Failed</string>
-<string name="chat_binding_announcement_acknowledge">Chat Binding Announcement Acknowledge</string>
-<string name="chat_binding_announcement_acknowledge_countdown">Chat Binding Announcement Acknowledge Countdown</string>
-<string name="chat_binding_announcement_body">Chat Binding Announcement Body</string>
-<string name="chat_binding_announcement_title">Chat Binding Announcement Title</string>
 <string name="chat_binding_scope_hint">Chat Binding Scope Hint</string>
 <string name="chat_branch_created">Chat Branch Created</string>
 <string name="chat_cancelled_current_conversation">Chat Cancelled Current Conversation</string>

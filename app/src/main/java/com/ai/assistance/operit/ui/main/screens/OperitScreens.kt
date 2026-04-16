@@ -1047,7 +1047,7 @@ sealed class Screen(
 
     // Terminal screen - can accept an optional initial command
     data class Terminal(val initialCommand: String? = null) :
-            Screen(parentScreen = Toolbox, navItem = NavItem.Toolbox, titleRes = R.string.screen_title_terminal) {
+            Screen(navItem = NavItem.Terminal, titleRes = R.string.screen_title_terminal) {
         @Composable
         override fun Content(
                 navController: NavController,
@@ -1440,6 +1440,7 @@ object OperitRouter {
             NavItem.AgentCLIs -> Screen.AgentCLIs
             NavItem.MiniApps -> Screen.MiniApps
             NavItem.Integrations -> Screen.Integrations
+            NavItem.Terminal -> Screen.Terminal()
             else -> Screen.AiChat
         }
     }
