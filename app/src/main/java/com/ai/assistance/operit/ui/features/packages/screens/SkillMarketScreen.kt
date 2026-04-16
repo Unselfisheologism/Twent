@@ -122,6 +122,11 @@ fun SkillMarketScreen(
         viewModel.refreshInstalledSkills()
     }
 
+    // Re-fetch when search query changes
+    LaunchedEffect(searchQuery) {
+        viewModel.loadSkillMarketData()
+    }
+
     errorMessage?.let { error ->
         LaunchedEffect(error) {
             Toast.makeText(context, error, Toast.LENGTH_LONG).show()

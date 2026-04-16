@@ -85,6 +85,11 @@ fun MCPMarketScreen(
         viewModel.loadMCPMarketData()
     }
 
+    // Re-fetch when search query changes
+    LaunchedEffect(searchQuery) {
+        viewModel.loadMCPMarketData()
+    }
+
     // 错误处理
     errorMessage?.let { error ->
         LaunchedEffect(error) {
