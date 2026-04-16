@@ -287,11 +287,11 @@ class MCPMarketViewModel(
                     _hasMore.value = !response.metadata?.nextCursor.isNullOrBlank()
                     // Filter to latest versions only, deduplicate by name
                     val latestServers = response.servers
-                        .filter { it._meta?.isLatest != false }
+                        .filter { it.officialMeta?.isLatest != false }
                         .distinctBy { it.server.name }
                     latestServers.mapIndexed { index, entry ->
                         val server = entry.server
-                        val meta = entry._meta
+                        val meta = entry.officialMeta
                         val displayName = server.title.ifBlank { server.name }
                         val installConfig = buildInstallConfig(server)
                         val bodyText = buildString {
@@ -426,8 +426,11 @@ class MCPMarketViewModel(
     @kotlinx.serialization.Serializable
     private data class McpServerEntry(
         val server: McpServerJson,
-        val _meta: McpServerMeta? = null
-    )
+        val _meta: Map<String, McpServerMeta>? = null
+    ) {
+        val officialMeta: McpServerMeta?
+            get() = _meta?.get("io.modelcontextprotocol.registry/official")
+    }
 
     @kotlinx.serialization.Serializable
     private data class McpServerJson(
