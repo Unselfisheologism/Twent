@@ -285,7 +285,11 @@ class MCPMarketViewModel(
                     val response = json.decodeFromString<McpRegistryResponse>(body)
                     registryCursor = response.metadata?.nextCursor
                     _hasMore.value = !response.metadata?.nextCursor.isNullOrBlank()
-                    response.servers.mapIndexed { index, entry ->
+                    // Filter to latest versions only, deduplicate by name
+                    val latestServers = response.servers
+                        .filter { it._meta?.isLatest != false }
+                        .distinctBy { it.server.name }
+                    latestServers.mapIndexed { index, entry ->
                         val server = entry.server
                         val meta = entry._meta
                         val displayName = server.title.ifBlank { server.name }
@@ -347,18 +351,62 @@ class MCPMarketViewModel(
     }
 
     private fun buildInstallConfig(server: McpServerJson): String? {
+        val sn = server.name.replace("\"", "\\\"")
+
+        // Remote servers (SSE, streamable-http) with optional auth headers
         if (!server.remotes.isNullOrEmpty()) {
             val remote = server.remotes.first()
-            return "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"url\":\"${remote.url.replace("\"", "\\\"")}\"}}}"
+            val parts = mutableListOf("\"url\":\"${remote.url.replace("\"", "\\\"")}\"")
+            // Add headers (Bearer tokens, API keys, custom auth)
+            if (!remote.headers.isNullOrEmpty()) {
+                val hdrs = remote.headers.joinToString(",") { h ->
+                    "\"${h.name.replace("\"", "\\\"")}\":\"${h.value.replace("\"", "\\\"")}\""
+                }
+                parts.add("\"headers\":{$hdrs}")
+            }
+            return "{\"mcpServers\":{\"$sn\":{${parts.joinToString(",")}}}}"
         }
+
+        // Package-based servers (npm, pypi, docker, nuget, crate) with env vars
         if (!server.packages.isNullOrEmpty()) {
             val pkg = server.packages.first()
-            return when (pkg.registryType) {
-                "npm" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"npx\",\"args\":[\"-y\",\"${pkg.identifier}${if (pkg.version.isNotBlank()) "@${pkg.version}" else ""}\"]}}}"
-                "pypi" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"uvx\",\"args\":[\"${pkg.identifier}${if (pkg.version.isNotBlank()) "==${pkg.version}" else ""}\"]}}}"
-                "docker" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"docker\",\"args\":[\"run\",\"-i\",\"--rm\",\"${pkg.identifier}${if (pkg.version.isNotBlank()) ":${pkg.version}" else ""}\"]}}}"
-                else -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"${pkg.identifier.replace("\"", "\\\"")}\"}}}"
+            val parts = mutableListOf<String>()
+            when (pkg.registryType) {
+                "npm" -> {
+                    val id = "${pkg.identifier}${if (pkg.version.isNotBlank()) "@${pkg.version}" else ""}"
+                    parts.add("\"command\":\"npx\"")
+                    parts.add("\"args\":[\"-y\",\"${id.replace("\"", "\\\"")}\"]")
+                }
+                "pypi" -> {
+                    val id = "${pkg.identifier}${if (pkg.version.isNotBlank()) "==${pkg.version}" else ""}"
+                    parts.add("\"command\":\"uvx\"")
+                    parts.add("\"args\":[\"${id.replace("\"", "\\\"")}\"]")
+                }
+                "docker" -> {
+                    val id = "${pkg.identifier}${if (pkg.version.isNotBlank()) ":${pkg.version}" else ""}"
+                    parts.add("\"command\":\"docker\"")
+                    parts.add("\"args\":[\"run\",\"-i\",\"--rm\",\"${id.replace("\"", "\\\"")}\"]")
+                }
+                "nuget" -> {
+                    parts.add("\"command\":\"dotnet\"")
+                    parts.add("\"args\":[\"tool\",\"run\",\"${pkg.identifier.replace("\"", "\\\"")}\"]")
+                }
+                "crate" -> {
+                    parts.add("\"command\":\"cargo\"")
+                    parts.add("\"args\":[\"run\",\"--package\",\"${pkg.identifier.replace("\"", "\\\"")}\"]")
+                }
+                else -> {
+                    parts.add("\"command\":\"${pkg.identifier.replace("\"", "\\\"")}\"")
+                }
             }
+            // Add environment variables
+            if (!pkg.environmentVariables.isNullOrEmpty()) {
+                val env = pkg.environmentVariables.joinToString(",") { ev ->
+                    "\"${ev.name.replace("\"", "\\\"")}\":\"${if (ev.isRequired) "REQUIRED" else ""}\""
+                }
+                parts.add("\"env\":{$env}")
+            }
+            return "{\"mcpServers\":{\"$sn\":{${parts.joinToString(",")}}}}"
         }
         return null
     }
@@ -393,7 +441,20 @@ class MCPMarketViewModel(
     )
 
     @kotlinx.serialization.Serializable
-    private data class McpRemote(val type: String = "", val url: String = "")
+    private data class McpRemote(
+        val type: String = "",
+        val url: String = "",
+        val headers: List<McpHeader>? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpHeader(
+        val name: String = "",
+        val value: String = "",
+        val description: String = "",
+        val isRequired: Boolean = false,
+        val isSecret: Boolean = false
+    )
 
     @kotlinx.serialization.Serializable
     private data class McpRepository(val url: String = "", val source: String = "")
@@ -402,14 +463,29 @@ class MCPMarketViewModel(
     private data class McpPackage(
         val registryType: String = "",
         val identifier: String = "",
-        val version: String = ""
+        val version: String = "",
+        val transport: McpPackageTransport? = null,
+        val environmentVariables: List<McpEnvVar>? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpPackageTransport(val type: String = "")
+
+    @kotlinx.serialization.Serializable
+    private data class McpEnvVar(
+        val name: String = "",
+        val description: String = "",
+        val isRequired: Boolean = false,
+        val isSecret: Boolean = false,
+        val format: String = ""
     )
 
     @kotlinx.serialization.Serializable
     private data class McpServerMeta(
         val status: String = "",
         val publishedAt: String = "",
-        val updatedAt: String = ""
+        val updatedAt: String = "",
+        val isLatest: Boolean = false
     )
 
     /**
