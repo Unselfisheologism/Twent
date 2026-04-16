@@ -11,6 +11,7 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.api.GitHubApiService
 import com.ai.assistance.operit.data.api.GitHubIssue
 import com.ai.assistance.operit.data.api.GitHubComment
+import com.ai.assistance.operit.data.api.GitHubLabel
 
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import com.ai.assistance.operit.data.mcp.MCPLocalServer
