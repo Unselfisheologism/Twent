@@ -223,7 +223,12 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             SkillMarketScreen(
-                onNavigateBack = onGoBack
+                onNavigateBack = onGoBack,
+                onNavigateToPublish = { navigateTo(SkillPublish) },
+                onNavigateToManage = { navigateTo(SkillManage) },
+                onNavigateToDetail = { issue ->
+                    navigateTo(SkillDetail(issue))
+                }
             )
         }
     }
@@ -322,7 +327,12 @@ sealed class Screen(
                 onGestureConsumed: (Boolean) -> Unit
         ) {
             MCPMarketScreen(
-                onNavigateBack = onGoBack
+                onNavigateBack = onGoBack,
+                onNavigateToPublish = { navigateTo(MCPPublish) },
+                onNavigateToManage = { navigateTo(MCPManage) },
+                onNavigateToDetail = { issue ->
+                    navigateTo(MCPPluginDetail(issue))
+                }
             )
         }
     }

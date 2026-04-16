@@ -3,34 +3,95 @@ package com.ai.assistance.operit.ui.features.packages.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.api.GitHubIssue
+import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
+import com.ai.assistance.operit.data.preferences.GitHubUser
 import com.ai.assistance.operit.data.skill.SkillRepository
 import com.ai.assistance.operit.ui.features.packages.screens.skill.viewmodel.SkillMarketViewModel
+import com.ai.assistance.operit.ui.features.packages.utils.SkillIssueParser
 import kotlinx.coroutines.launch
 
 @Composable
 fun SkillMarketScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToPublish: () -> Unit = {},
+    onNavigateToManage: () -> Unit = {},
+    onNavigateToDetail: ((GitHubIssue) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -40,18 +101,23 @@ fun SkillMarketScreen(
         factory = SkillMarketViewModel.Factory(context.applicationContext, skillRepository)
     )
 
-    val skills by viewModel.skills.collectAsState()
+    val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
+    val isLoggedIn by githubAuth.isLoggedInFlow.collectAsState(initial = false)
+    val currentUser by githubAuth.userInfoFlow.collectAsState(initial = null)
+
+    val issues by viewModel.skillIssues.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+
     val searchQuery by viewModel.searchQuery.collectAsState()
     val installingSkills by viewModel.installingSkills.collectAsState()
     val installedSkillNames by viewModel.installedSkillNames.collectAsState()
+    val installedSkillRepoUrls by viewModel.installedSkillRepoUrls.collectAsState()
 
-    // Tab state
     var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        viewModel.loadSkills()
+        viewModel.loadSkillMarketData()
         viewModel.refreshInstalledSkills()
     }
 
@@ -62,8 +128,9 @@ fun SkillMarketScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Tab row
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         TabRow(
             selectedTabIndex = selectedTab,
             modifier = Modifier.fillMaxWidth()
@@ -80,30 +147,36 @@ fun SkillMarketScreen(
             )
         }
 
-        // Content
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTab) {
                 0 -> SkillBrowseTab(
-                    skills = skills,
+                    issues = issues,
                     isLoading = isLoading,
                     searchQuery = searchQuery,
                     onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                    viewModel = viewModel,
                     installingSkills = installingSkills,
+                    installedSkillRepoUrls = installedSkillRepoUrls,
                     installedSkillNames = installedSkillNames,
-                    onInstall = { skill -> viewModel.installSkill(skill) },
+                    onInstall = { repoUrl ->
+                        viewModel.installSkillFromRepoUrl(repoUrl)
+                    },
                     onRefresh = {
-                        viewModel.loadSkills()
-                        viewModel.refreshInstalledSkills()
+                        scope.launch {
+                            viewModel.loadSkillMarketData()
+                            viewModel.refreshInstalledSkills()
+                        }
                     },
-                    onOpenUrl = { url ->
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        context.startActivity(intent)
-                    },
-                    viewModel = viewModel
+                    onViewDetails = { issue ->
+                        if (onNavigateToDetail != null) {
+                            onNavigateToDetail(issue)
+                        } else {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(issue.html_url))
+                            context.startActivity(intent)
+                        }
+                    }
                 )
-                1 -> SkillMyTab(
-                    skillRepository = skillRepository
-                )
+                1 -> SkillInstalledTab(skillRepository = skillRepository)
             }
         }
     }
@@ -111,25 +184,36 @@ fun SkillMarketScreen(
 
 @Composable
 private fun SkillBrowseTab(
-    skills: List<SkillMarketViewModel.SkillItem>,
+    issues: List<GitHubIssue>,
     isLoading: Boolean,
     searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
+    viewModel: SkillMarketViewModel,
     installingSkills: Set<String>,
+    installedSkillRepoUrls: Set<String>,
     installedSkillNames: Set<String>,
-    onInstall: (SkillMarketViewModel.SkillItem) -> Unit,
+    onInstall: (String) -> Unit,
     onRefresh: () -> Unit,
-    onOpenUrl: (String) -> Unit,
-    viewModel: SkillMarketViewModel
+    onViewDetails: (GitHubIssue) -> Unit
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState()
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
+    val hasMore by viewModel.hasMore.collectAsState()
 
-    LaunchedEffect(listState, skills.size) {
+    LaunchedEffect(listState, issues.size, searchQuery, hasMore, isLoadingMore) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
             .collect { lastVisibleIndex ->
-                if (lastVisibleIndex >= skills.size - 5 && !isLoadingMore) {
-                    viewModel.loadMoreSkills()
+                if (searchQuery.isNotBlank()) return@collect
+                val headerCount = if (searchQuery.isBlank()) 1 else 0
+                val lastIssueIndex = headerCount + issues.size - 1
+                if (
+                    hasMore &&
+                    !isLoadingMore &&
+                    issues.isNotEmpty() &&
+                    lastVisibleIndex >= (lastIssueIndex - 2)
+                ) {
+                    viewModel.loadMoreSkillMarketData()
                 }
             }
     }
@@ -183,13 +267,34 @@ private fun SkillBrowseTab(
                         }
                     }
 
-                    items(skills, key = { it.id }) { skill ->
-                        SkillCard(
-                            skill = skill,
-                            isInstalling = skill.id in installingSkills,
-                            isInstalled = skill.id in installedSkillNames || skill.displayName in installedSkillNames,
-                            onInstall = { onInstall(skill) },
-                            onOpenUrl = onOpenUrl
+                    items(issues, key = { it.id }) { issue ->
+                        val skillInfo = remember(issue) { SkillIssueParser.parseSkillInfo(issue) }
+                        val repoUrl = skillInfo.repositoryUrl
+                        val isInstalling = repoUrl.isNotBlank() && repoUrl in installingSkills
+                        val isInstalled =
+                            (repoUrl.isNotBlank() && repoUrl in installedSkillRepoUrls) ||
+                                issue.title in installedSkillNames
+
+                        SkillIssueCard(
+                            issue = issue,
+                            skillInfo = skillInfo,
+                            viewModel = viewModel,
+                            isInstalling = isInstalling,
+                            isInstalled = isInstalled,
+                            onInstall = {
+                                if (repoUrl.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.skill_repo_url_not_found_cannot_install),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    onInstall(repoUrl)
+                                }
+                            },
+                            onViewDetails = {
+                                onViewDetails(issue)
+                            }
                         )
                     }
 
@@ -206,7 +311,7 @@ private fun SkillBrowseTab(
                         }
                     }
 
-                    if (skills.isEmpty() && !isLoading) {
+                    if (issues.isEmpty() && !isLoading) {
                         item {
                             Card(
                                 modifier = Modifier
@@ -250,20 +355,12 @@ private fun SkillBrowseTab(
 }
 
 @Composable
-private fun SkillMyTab(
+private fun SkillInstalledTab(
     skillRepository: SkillRepository
 ) {
-    // Observe installed skills - refresh on each recomposition
-    var installedSkills by remember { mutableStateOf(skillRepository.getAvailableSkillPackages()) }
+    val installedSkills = skillRepository.getAvailableSkillPackages().toList()
 
-    // Refresh when tab becomes visible
-    LaunchedEffect(Unit) {
-        installedSkills = skillRepository.getAvailableSkillPackages()
-    }
-
-    val skillsList = installedSkills.toList()
-
-    if (skillsList.isEmpty()) {
+    if (installedSkills.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -305,79 +402,67 @@ private fun SkillMyTab(
                 )
             }
 
-            items(skillsList, key = { it.first }) { (name, skillPackage) ->
-                InstalledSkillCard(
-                    name = name,
-                    description = skillPackage.description
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun InstalledSkillCard(
-    name: String,
-    description: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                if (description.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = description.take(120) + if (description.length > 120) "..." else "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+            items(installedSkills, key = { it.first }) { (name, skillPackage) ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (skillPackage.description.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = skillPackage.description.take(100) + if (skillPackage.description.length > 100) "..." else "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(34.dp).padding(8.dp)
+                            )
+                        }
+                    }
                 }
             }
-
-            // Installed indicator
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier
-                        .size(34.dp)
-                        .padding(8.dp)
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun SkillCard(
-    skill: SkillMarketViewModel.SkillItem,
-    isInstalling: Boolean,
-    isInstalled: Boolean,
+private fun SkillIssueCard(
+    issue: GitHubIssue,
+    skillInfo: SkillIssueParser.ParsedSkillInfo,
+    viewModel: SkillMarketViewModel,
     onInstall: () -> Unit,
-    onOpenUrl: (String) -> Unit
+    onViewDetails: () -> Unit,
+    isInstalling: Boolean,
+    isInstalled: Boolean
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onViewDetails() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -390,72 +475,93 @@ private fun SkillCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = skill.displayName,
+                    text = issue.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                if (skill.summary.isNotBlank()) {
+                if (skillInfo.description.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = skill.summary.take(120) + if (skill.summary.length > 120) "..." else "",
+                        text = skillInfo.description.take(100) + if (skillInfo.description.length > 100) "..." else "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                val avatarUrl by viewModel.userAvatarCache.collectAsState()
+                LaunchedEffect(skillInfo.repositoryOwner) {
+                    if (skillInfo.repositoryOwner.isNotBlank()) {
+                        viewModel.fetchUserAvatar(skillInfo.repositoryOwner)
+                    }
+                }
+
+                val thumbsUpCount = issue.reactions?.thumbs_up ?: 0
+                val heartCount = issue.reactions?.heart ?: 0
 
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = {
-                            Text(
-                                skill.source,
-                                style = MaterialTheme.typography.labelSmall
+                    if (skillInfo.repositoryOwner.isNotBlank()) {
+                        val userAvatarUrl = avatarUrl[skillInfo.repositoryOwner]
+                        if (userAvatarUrl != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(userAvatarUrl),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp).clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
-                        },
-                        modifier = Modifier.height(22.dp)
+                        } else {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    Image(
+                        painter = rememberAsyncImagePainter(issue.user.avatarUrl),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
 
-                    if (skill.version.isNotBlank()) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    "v${skill.version}",
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
-                            modifier = Modifier.height(22.dp)
+                    if (thumbsUpCount > 0) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.ThumbUp,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
-                    }
-
-                    if (skill.owner.isNotBlank()) {
                         Text(
-                            text = "@${skill.owner}",
+                            text = thumbsUpCount.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
 
-                if (skill.repoUrl?.isNotBlank() == true) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = skill.repoUrl,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { onOpenUrl(skill.repoUrl) },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (heartCount > 0) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color(0xFFE91E63)
+                        )
+                        Text(
+                            text = heartCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFE91E63)
+                        )
+                    }
                 }
             }
 
@@ -463,18 +569,23 @@ private fun SkillCard(
             val containerColor = when {
                 isInstalled -> MaterialTheme.colorScheme.secondaryContainer
                 isInstalling -> MaterialTheme.colorScheme.primaryContainer
-                else -> MaterialTheme.colorScheme.primary
+                issue.state == "open" -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.surfaceVariant
             }
             val contentColor = when {
                 isInstalled -> MaterialTheme.colorScheme.onSecondaryContainer
                 isInstalling -> MaterialTheme.colorScheme.onPrimaryContainer
-                else -> MaterialTheme.colorScheme.onPrimary
+                issue.state == "open" -> MaterialTheme.colorScheme.onPrimary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
             }
 
-            Surface(shape = CircleShape, color = containerColor) {
+            Surface(
+                shape = CircleShape,
+                color = containerColor
+            ) {
                 IconButton(
                     onClick = {
-                        if (!isInstalled && !isInstalling) {
+                        if (issue.state == "open" && !isInstalled && !isInstalling) {
                             onInstall()
                         }
                     },
@@ -496,9 +607,17 @@ private fun SkillCard(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                        else -> {
+                        issue.state == "open" -> {
                             Icon(
                                 Icons.Default.Download,
+                                contentDescription = null,
+                                tint = contentColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        else -> {
+                            Icon(
+                                Icons.Default.Info,
                                 contentDescription = null,
                                 tint = contentColor,
                                 modifier = Modifier.size(18.dp)
@@ -510,3 +629,5 @@ private fun SkillCard(
         }
     }
 }
+
+
