@@ -244,21 +244,22 @@ private suspend fun loadIntegrations(
         
         toolkitsResult.fold(
             onSuccess = { toolkits ->
-                // Get connected toolkit slugs
-                val connectedToolkits = mutableMapOf<String, String>() // slug -> accountId
+                // Build a map of connected toolkit slugs -> connected account IDs
+                val connectedToolkits = mutableMapOf<String, String>()
                 connectionsResult.getOrNull()?.forEach { conn ->
-                    // Note: The toolkit info would need to be parsed from the response
-                    // For now, we'll handle this in the response parsing
+                    if (conn.status == "ACTIVE") {
+                        connectedToolkits[conn.toolkit] = conn.id
+                    }
                 }
                 
                 val items = toolkits.map { toolkit ->
                     ToolkitItem(
-                        slug = toolkit.name.lowercase().replace(" ", "-"),
-                        name = toolkit.name,
+                        slug = toolkit.name, // parseToolkitsResponse puts slug in "name" field
+                        name = toolkit.displayName,
                         description = toolkit.description,
-                        isConnected = connectedToolkits.containsKey(toolkit.name.lowercase()),
-                        connectedAccountId = connectedToolkits[toolkit.name.lowercase()],
-                        logoUrl = null // Logo would come from toolkit metadata
+                        isConnected = connectedToolkits.containsKey(toolkit.name),
+                        connectedAccountId = connectedToolkits[toolkit.name],
+                        logoUrl = null
                     )
                 }
                 onSuccess(items)
