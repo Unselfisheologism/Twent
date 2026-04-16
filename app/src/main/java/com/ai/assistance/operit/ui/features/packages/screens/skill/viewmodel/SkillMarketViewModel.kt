@@ -161,8 +161,11 @@ class SkillMarketViewModel(
         private const val MARKET_REPO_OWNER = "AAswordman"
         private const val MARKET_REPO_NAME = "OperitSkillMarket"
         private const val SKILL_LABEL = "skill-plugin"
-        private const val MARKET_PAGE_SIZE = 50
+        private const val MARKET_PAGE_SIZE = 30
+        private const val CLAWHUB_BASE_URL = "https://clawhub.ai/api/v1"
     }
+
+    private var clawhubCursor: String? = null
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
@@ -234,46 +237,20 @@ class SkillMarketViewModel(
             _errorMessage.value = null
             _isRateLimitError.value = false
             _hasMore.value = true
-            currentPage = 1
-
-            val isLoggedIn = try {
-                githubAuth.isLoggedIn()
-            } catch (_: Exception) {
-                false
-            }
+            clawhubCursor = null
 
             try {
-                val result = githubApiService.getRepositoryIssues(
-                    owner = MARKET_REPO_OWNER,
-                    repo = MARKET_REPO_NAME,
-                    state = "open",
-                    labels = SKILL_LABEL,
-                    page = 1,
-                    perPage = MARKET_PAGE_SIZE
-                )
-
-                result.fold(
-                    onSuccess = { issues ->
-                        _skillIssues.value = issues
-                        _hasMore.value = issues.size >= MARKET_PAGE_SIZE
-                    },
-                    onFailure = { error ->
-                        val msg = error.message ?: "Unknown error"
-                        _errorMessage.value = context.getString(R.string.skillmarket_load_failed, msg)
-                        _skillIssues.value = emptyList()
-                        _hasMore.value = false
-
-                        if (msg.contains("403") || msg.contains("rate") || msg.contains("Rate")) {
-                            _isRateLimitError.value = !isLoggedIn
-                        }
-
-                        AppLogger.e(TAG, "Failed to load skill market data", error)
-                    }
-                )
+                val issues = if (_searchQuery.value.isNotBlank()) {
+                    fetchFromClawHubSearch(_searchQuery.value)
+                } else {
+                    fetchFromClawHubList(cursor = null)
+                }
+                _skillIssues.value = issues
             } catch (e: Exception) {
-                _errorMessage.value = context.getString(R.string.skillmarket_network_error, e.message ?: "")
+                _errorMessage.value = context.getString(R.string.skillmarket_load_failed, e.message ?: "")
                 _skillIssues.value = emptyList()
-                AppLogger.e(TAG, "Exception while loading skill market data", e)
+                _hasMore.value = false
+                AppLogger.e(TAG, "Failed to load skill market data from ClawHub", e)
             } finally {
                 _isLoading.value = false
             }
@@ -281,61 +258,137 @@ class SkillMarketViewModel(
     }
 
     fun loadMoreSkillMarketData() {
+        if (_isLoading.value || _isLoadingMore.value || !_hasMore.value || clawhubCursor == null) return
         viewModelScope.launch {
-            if (_isLoading.value || _isLoadingMore.value || !_hasMore.value) return@launch
-
             _isLoadingMore.value = true
             _errorMessage.value = null
-            _isRateLimitError.value = false
-
-            val isLoggedIn = try {
-                githubAuth.isLoggedIn()
-            } catch (_: Exception) {
-                false
-            }
-
-            val nextPage = currentPage + 1
-
             try {
-                val result = githubApiService.getRepositoryIssues(
-                    owner = MARKET_REPO_OWNER,
-                    repo = MARKET_REPO_NAME,
-                    state = "open",
-                    labels = SKILL_LABEL,
-                    page = nextPage,
-                    perPage = MARKET_PAGE_SIZE
-                )
-
-                result.fold(
-                    onSuccess = { issues ->
-                        if (issues.isEmpty()) {
-                            _hasMore.value = false
-                            return@fold
-                        }
-
-                        currentPage = nextPage
-                        _skillIssues.value = (_skillIssues.value + issues).distinctBy { it.id }
-                        _hasMore.value = issues.size >= MARKET_PAGE_SIZE
-                    },
-                    onFailure = { error ->
-                        val msg = error.message ?: "Unknown error"
-                        _errorMessage.value = context.getString(R.string.skillmarket_load_more_failed, msg)
-
-                        if (msg.contains("403") || msg.contains("rate") || msg.contains("Rate")) {
-                            _isRateLimitError.value = !isLoggedIn
-                        }
-
-                        AppLogger.e(TAG, "Failed to load more skill market data", error)
-                    }
-                )
+                val moreIssues = fetchFromClawHubList(cursor = clawhubCursor)
+                if (moreIssues.isEmpty()) {
+                    _hasMore.value = false
+                } else {
+                    _skillIssues.value = (_skillIssues.value + moreIssues).distinctBy { it.id }
+                }
             } catch (e: Exception) {
-                _errorMessage.value = context.getString(R.string.skillmarket_network_error, e.message ?: "")
-                AppLogger.e(TAG, "Exception while loading more skill market data", e)
+                AppLogger.e(TAG, "Failed to load more skill market data", e)
             } finally {
                 _isLoadingMore.value = false
             }
         }
     }
+
+    private suspend fun fetchFromClawHubSearch(query: String): List<GitHubIssue> {
+        return withContext(Dispatchers.IO) {
+            val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+            val url = java.net.URL("$CLAWHUB_BASE_URL/search?q=$encodedQuery&limit=$MARKET_PAGE_SIZE")
+            val body = httpGet(url)
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            val response = json.decodeFromString<ClawHubSearchResponse>(body)
+            clawhubCursor = null // search doesn't paginate
+            _hasMore.value = false
+            response.results.mapIndexed { index, result ->
+                val repoUrl = "https://clawhub.ai/skills/${result.slug}"
+                GitHubIssue(
+                    id = result.slug.hashCode().toLong() + index,
+                    number = result.slug.hashCode() + index,
+                    title = result.displayName.ifBlank { result.slug },
+                    body = "<!-- operit-skill-json: {\"description\":\"${result.summary.replace("\"", "\\\"")}\",\"repositoryUrl\":\"$repoUrl\"} -->\n\n${result.summary}",
+                    html_url = repoUrl,
+                    state = "open",
+                    labels = emptyList(),
+                    user = com.ai.assistance.operit.data.preferences.GitHubUser(
+                        id = 0,
+                        login = "clawhub",
+                        name = "ClawHub",
+                        avatarUrl = "https://clawhub.ai/favicon.ico"
+                    ),
+                    created_at = "",
+                    updated_at = "",
+                    reactions = null
+                )
+            }
+        }
+    }
+
+    private suspend fun fetchFromClawHubList(cursor: String?): List<GitHubIssue> {
+        return withContext(Dispatchers.IO) {
+            val params = mutableListOf("limit=$MARKET_PAGE_SIZE")
+            if (cursor != null) {
+                params.add("cursor=${java.net.URLEncoder.encode(cursor, "UTF-8")}")
+            }
+            val url = java.net.URL("$CLAWHUB_BASE_URL/packages?${params.joinToString("&")}")
+            val body = httpGet(url)
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            val response = json.decodeFromString<ClawHubPackagesResponse>(body)
+            clawhubCursor = response.nextCursor
+            _hasMore.value = !response.nextCursor.isNullOrBlank()
+            response.items.mapIndexed { index, pkg ->
+                val repoUrl = "https://clawhub.ai/skills/${pkg.name}"
+                GitHubIssue(
+                    id = pkg.name.hashCode().toLong() + index,
+                    number = pkg.name.hashCode() + index,
+                    title = pkg.displayName.ifBlank { pkg.name },
+                    body = "<!-- operit-skill-json: {\"description\":\"${pkg.summary.replace("\"", "\\\"")}\",\"repositoryUrl\":\"$repoUrl\"} -->\n\n${pkg.summary}",
+                    html_url = repoUrl,
+                    state = "open",
+                    labels = emptyList(),
+                    user = com.ai.assistance.operit.data.preferences.GitHubUser(
+                        id = 0,
+                        login = pkg.ownerHandle.ifBlank { "clawhub" },
+                        name = pkg.ownerHandle.ifBlank { "ClawHub" },
+                        avatarUrl = "https://clawhub.ai/favicon.ico"
+                    ),
+                    created_at = "",
+                    updated_at = "",
+                    reactions = null
+                )
+            }
+        }
+    }
+
+    private fun httpGet(url: java.net.URL): String {
+        val conn = url.openConnection() as java.net.HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.setRequestProperty("Accept", "application/json")
+        conn.setRequestProperty("User-Agent", "TwentAI/1.0")
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
+        try {
+            if (conn.responseCode == 200) {
+                return conn.inputStream.bufferedReader().readText()
+            }
+            throw Exception("HTTP ${conn.responseCode}")
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class ClawHubSearchResponse(
+        val results: List<ClawHubSearchResult> = emptyList()
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class ClawHubSearchResult(
+        val slug: String = "",
+        val displayName: String = "",
+        val summary: String = ""
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class ClawHubPackagesResponse(
+        val items: List<ClawHubPackage> = emptyList(),
+        val nextCursor: String? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class ClawHubPackage(
+        val name: String = "",
+        val displayName: String = "",
+        val summary: String = "",
+        val ownerHandle: String = "",
+        val latestVersion: String = ""
+    )
 
     fun refreshInstalledSkills() {
         viewModelScope.launch {

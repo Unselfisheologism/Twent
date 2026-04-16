@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.ai.assistance.operit.util.AppLogger
 import android.content.SharedPreferences
 
@@ -201,8 +203,11 @@ class MCPMarketViewModel(
         private const val MARKET_REPO_OWNER = "AAswordman"
         private const val MARKET_REPO_NAME = "OperitMCPMarket"
         private const val MCP_PLUGIN_LABEL = "mcp-plugin"
-        private const val MARKET_PAGE_SIZE = 50
+        private const val MARKET_PAGE_SIZE = 30
+        private const val REGISTRY_BASE_URL = "https://registry.modelcontextprotocol.io"
     }
+
+    private var registryCursor: String? = null
 
     /**
      * 更新搜索查询
@@ -212,55 +217,24 @@ class MCPMarketViewModel(
     }
 
     /**
-     * 加载MCP市场数据
+     * 加载MCP市场数据 - from MCP Registry (registry.modelcontextprotocol.io)
      */
     fun loadMCPMarketData() {
         viewModelScope.launch {
             _isLoading.value = true
             _isLoadingMore.value = false
             _errorMessage.value = null
-            _isRateLimitError.value = false // 重置状态
-            _issueReactions.value = emptyMap() // 刷新时清除旧的Reactions缓存
+            _isRateLimitError.value = false
             _hasMore.value = true
-            currentPage = 1
+            registryCursor = null
 
             try {
-                val result = githubApiService.getRepositoryIssues(
-                    owner = MARKET_REPO_OWNER,
-                    repo = MARKET_REPO_NAME,
-                    state = "open",
-                    labels = MCP_PLUGIN_LABEL,
-                    page = 1,
-                    perPage = MARKET_PAGE_SIZE
-                )
-
-                val isLoggedIn = try {
-                    githubAuth.isLoggedIn()
-                } catch (_: Exception) {
-                    false
-                }
-
-                result.fold(
-                    onSuccess = { issues ->
-                        _mcpIssues.value = issues
-                        _hasMore.value = issues.size >= MARKET_PAGE_SIZE
-                    },
-                    onFailure = { error ->
-                        val errorMessage = error.message ?: ""
-                        if (errorMessage.contains("HTTP 403") && !isLoggedIn) {
-                            _errorMessage.value = context.getString(R.string.mcp_market_api_rate_limited_login_required)
-                            _isRateLimitError.value = true
-                        } else {
-                            _errorMessage.value = context.getString(R.string.mcp_market_load_failed_with_error, errorMessage)
-                        }
-                        _hasMore.value = false
-                        AppLogger.e(TAG, "Failed to load MCP market data", error)
-                    }
-                )
+                val issues = fetchFromMcpRegistry(search = _searchQuery.value.ifBlank { null }, cursor = null)
+                _mcpIssues.value = issues
             } catch (e: Exception) {
-                _errorMessage.value = context.getString(R.string.mcp_market_network_error_with_error, e.message ?: "")
-                AppLogger.e(TAG, "Network error while loading MCP market data", e)
+                _errorMessage.value = context.getString(R.string.mcp_market_load_failed_with_error, e.message ?: "")
                 _hasMore.value = false
+                AppLogger.e(TAG, "Failed to load MCP market data from registry", e)
             } finally {
                 _isLoading.value = false
             }
@@ -268,62 +242,174 @@ class MCPMarketViewModel(
     }
 
     fun loadMoreMCPMarketData() {
+        if (_isLoading.value || _isLoadingMore.value || !_hasMore.value || registryCursor == null) return
         viewModelScope.launch {
-            if (_isLoading.value || _isLoadingMore.value || !_hasMore.value) return@launch
-
             _isLoadingMore.value = true
             _errorMessage.value = null
-            _isRateLimitError.value = false
-
-            val isLoggedIn = try {
-                githubAuth.isLoggedIn()
-            } catch (_: Exception) {
-                false
-            }
-
-            val nextPage = currentPage + 1
-
             try {
-                val result = githubApiService.getRepositoryIssues(
-                    owner = MARKET_REPO_OWNER,
-                    repo = MARKET_REPO_NAME,
-                    state = "open",
-                    labels = MCP_PLUGIN_LABEL,
-                    page = nextPage,
-                    perPage = MARKET_PAGE_SIZE
-                )
-
-                result.fold(
-                    onSuccess = { issues ->
-                        if (issues.isEmpty()) {
-                            _hasMore.value = false
-                            return@fold
-                        }
-
-                        currentPage = nextPage
-                        _mcpIssues.value = (_mcpIssues.value + issues).distinctBy { it.id }
-                        _hasMore.value = issues.size >= MARKET_PAGE_SIZE
-                    },
-                    onFailure = { error ->
-                        val errorMessage = error.message ?: ""
-                        if (errorMessage.contains("HTTP 403") && !isLoggedIn) {
-                            _errorMessage.value = context.getString(R.string.mcp_market_api_rate_limited_login_required)
-                            _isRateLimitError.value = true
-                        } else {
-                            _errorMessage.value = context.getString(R.string.mcp_market_load_more_failed_with_error, errorMessage)
-                        }
-
-                        AppLogger.e(TAG, "Failed to load more MCP market data", error)
-                    }
-                )
+                val moreIssues = fetchFromMcpRegistry(search = _searchQuery.value.ifBlank { null }, cursor = registryCursor)
+                if (moreIssues.isEmpty()) {
+                    _hasMore.value = false
+                } else {
+                    _mcpIssues.value = (_mcpIssues.value + moreIssues).distinctBy { it.id }
+                }
             } catch (e: Exception) {
-                _errorMessage.value = context.getString(R.string.mcp_market_network_error_with_error, e.message ?: "")
-                AppLogger.e(TAG, "Network error while loading more MCP market data", e)
+                AppLogger.e(TAG, "Failed to load more MCP market data", e)
             } finally {
                 _isLoadingMore.value = false
             }
         }
     }
+
+    private suspend fun fetchFromMcpRegistry(search: String?, cursor: String?): List<GitHubIssue> {
+        return withContext(Dispatchers.IO) {
+            val params = mutableListOf("limit=$MARKET_PAGE_SIZE")
+            if (!search.isNullOrBlank()) {
+                params.add("search=${java.net.URLEncoder.encode(search, "UTF-8")}")
+            }
+            if (!cursor.isNullOrBlank()) {
+                params.add("cursor=${java.net.URLEncoder.encode(cursor, "UTF-8")}")
+            }
+            val url = java.net.URL("$REGISTRY_BASE_URL/v0.1/servers?${params.joinToString("&")}")
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("User-Agent", "TwentAI/1.0")
+            conn.connectTimeout = 15000
+            conn.readTimeout = 15000
+            try {
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().readText()
+                    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                    val response = json.decodeFromString<McpRegistryResponse>(body)
+                    registryCursor = response.metadata?.nextCursor
+                    _hasMore.value = !response.metadata?.nextCursor.isNullOrBlank()
+                    response.servers.mapIndexed { index, entry ->
+                        val server = entry.server
+                        val meta = entry._meta
+                        val displayName = server.title.ifBlank { server.name }
+                        val installConfig = buildInstallConfig(server)
+                        val bodyText = buildString {
+                            append("<!-- operit-mcp-json: ")
+                            append("{\"description\":\"${server.description.replace("\"", "\\\"")}\",")
+                            append("\"repositoryUrl\":\"${server.repository?.url?.replace("\"", "\\\"") ?: ""}\",")
+                            append("\"installConfig\":${installConfig ?: "\"\""},")
+                            append("\"category\":\"mcp\",\"tags\":\"${server.name.replace("\"", "\\\"")}\",")
+                            append("\"version\":\"${server.version.replace("\"", "\\\"")}\"")
+                            append("} -->")
+                            append("\n\n${server.description}")
+                        }
+                        GitHubIssue(
+                            id = (server.name + server.version).hashCode().toLong() + index,
+                            number = (server.name + server.version).hashCode() + index,
+                            title = displayName,
+                            body = bodyText,
+                            html_url = server.repository?.url ?: "$REGISTRY_BASE_URL/v0.1/servers/${java.net.URLEncoder.encode(server.name, "UTF-8")}",
+                            state = if (meta?.status == "active") "open" else "closed",
+                            labels = listOf(
+                                GitHubLabel(
+                                    id = 0,
+                                    name = server.version.ifBlank { "latest" },
+                                    color = "0e8a16",
+                                    description = "Version"
+                                )
+                            ),
+                            user = com.ai.assistance.operit.data.preferences.GitHubUser(
+                                id = 0,
+                                login = extractOwner(server.name),
+                                name = extractOwner(server.name),
+                                avatarUrl = "https://github.com/${extractOwner(server.name)}.png"
+                            ),
+                            created_at = meta?.publishedAt ?: "",
+                            updated_at = meta?.updatedAt ?: "",
+                            reactions = null
+                        )
+                    }
+                } else {
+                    throw Exception("HTTP ${conn.responseCode}")
+                }
+            } finally {
+                conn.disconnect()
+            }
+        }
+    }
+
+    private fun extractOwner(name: String): String {
+        val parts = name.split("/")
+        if (parts.size >= 2) {
+            val domainParts = parts[0].split(".")
+            if (domainParts.size >= 3 && domainParts[0] == "io" && domainParts[1] == "github") {
+                return domainParts[2]
+            }
+        }
+        return name.substringBefore("/")
+    }
+
+    private fun buildInstallConfig(server: McpServerJson): String? {
+        if (!server.remotes.isNullOrEmpty()) {
+            val remote = server.remotes.first()
+            return "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"url\":\"${remote.url.replace("\"", "\\\"")}\"}}}"
+        }
+        if (!server.packages.isNullOrEmpty()) {
+            val pkg = server.packages.first()
+            return when (pkg.registryType) {
+                "npm" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"npx\",\"args\":[\"-y\",\"${pkg.identifier}${if (pkg.version.isNotBlank()) "@${pkg.version}" else ""}\"]}}}"
+                "pypi" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"uvx\",\"args\":[\"${pkg.identifier}${if (pkg.version.isNotBlank()) "==${pkg.version}" else ""}\"]}}}"
+                "docker" -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"docker\",\"args\":[\"run\",\"-i\",\"--rm\",\"${pkg.identifier}${if (pkg.version.isNotBlank()) ":${pkg.version}" else ""}\"]}}}"
+                else -> "{\"mcpServers\":{\"${server.name.replace("\"", "\\\"")}\":{\"command\":\"${pkg.identifier.replace("\"", "\\\"")}\"}}}"
+            }
+        }
+        return null
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class McpRegistryResponse(
+        val servers: List<McpServerEntry> = emptyList(),
+        val metadata: McpRegistryMetadata? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpRegistryMetadata(
+        val nextCursor: String? = null,
+        val count: Int = 0
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpServerEntry(
+        val server: McpServerJson,
+        val _meta: McpServerMeta? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpServerJson(
+        val name: String = "",
+        val description: String = "",
+        val title: String = "",
+        val version: String = "",
+        val remotes: List<McpRemote>? = null,
+        val repository: McpRepository? = null,
+        val packages: List<McpPackage>? = null
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpRemote(val type: String = "", val url: String = "")
+
+    @kotlinx.serialization.Serializable
+    private data class McpRepository(val url: String = "", val source: String = "")
+
+    @kotlinx.serialization.Serializable
+    private data class McpPackage(
+        val registryType: String = "",
+        val identifier: String = "",
+        val version: String = ""
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class McpServerMeta(
+        val status: String = "",
+        val publishedAt: String = "",
+        val updatedAt: String = ""
+    )
 
     /**
      * 从Issue安装MCP
