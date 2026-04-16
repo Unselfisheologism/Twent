@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.mcp.MCPRepository
+import com.ai.assistance.operit.data.mcp.MCPLocalServer
 import com.ai.assistance.operit.ui.features.packages.screens.mcp.viewmodel.MCPMarketViewModel
 import kotlinx.coroutines.launch
 
@@ -48,6 +49,9 @@ fun MCPMarketScreen(
     val installingServers by viewModel.installingServers.collectAsState()
     val installedServerNames by viewModel.installedServerNames.collectAsState()
 
+    // Tab state
+    var selectedTab by remember { mutableStateOf(0) }
+
     LaunchedEffect(Unit) {
         viewModel.loadServers()
     }
@@ -59,22 +63,52 @@ fun MCPMarketScreen(
         }
     }
 
-    // Content
-    MCPServerBrowseTab(
-        servers = servers,
-        isLoading = isLoading,
-        searchQuery = searchQuery,
-        onSearchQueryChanged = viewModel::onSearchQueryChanged,
-        installingServers = installingServers,
-        installedServerNames = installedServerNames,
-        onInstall = { entry -> viewModel.installServer(entry) },
-        onRefresh = { viewModel.loadServers() },
-        onOpenUrl = { url ->
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            context.startActivity(intent)
-        },
-        viewModel = viewModel
-    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Tab row
+        TabRow(
+            selectedTabIndex = selectedTab,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { selectedTab = 0 },
+                text = { Text(stringResource(R.string.browse)) }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { selectedTab = 1 },
+                text = { Text(stringResource(R.string.my_tab)) }
+            )
+        }
+
+        // Content
+        Box(modifier = Modifier.weight(1f)) {
+            when (selectedTab) {
+                0 -> MCPServerBrowseTab(
+                    servers = servers,
+                    isLoading = isLoading,
+                    searchQuery = searchQuery,
+                    onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                    installingServers = installingServers,
+                    installedServerNames = installedServerNames,
+                    onInstall = { entry -> viewModel.installServer(entry) },
+                    onRefresh = { viewModel.loadServers() },
+                    onOpenUrl = { url ->
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
+                    },
+                    viewModel = viewModel
+                )
+                1 -> MCPMyTab(
+                    mcpRepository = mcpRepository,
+                    onOpenUrl = { url ->
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -220,6 +254,180 @@ private fun MCPServerBrowseTab(
 }
 
 @Composable
+private fun MCPMyTab(
+    mcpRepository: MCPRepository,
+    onOpenUrl: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val mcpLocalServer = remember { MCPLocalServer.getInstance(context) }
+    val pluginMetadata by mcpLocalServer.pluginMetadata.collectAsState()
+    val installedPlugins = pluginMetadata.values.toList()
+
+    if (installedPlugins.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.Extension,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    stringResource(R.string.no_mcp_plugins_installed),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.browse_and_install_mcp_plugins),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                Text(
+                    text = stringResource(R.string.installed_mcp_plugins),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+
+            items(installedPlugins, key = { it.id }) { plugin ->
+                InstalledMCPCard(
+                    plugin = plugin,
+                    onOpenUrl = onOpenUrl
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InstalledMCPCard(
+    plugin: MCPLocalServer.PluginMetadata,
+    onOpenUrl: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = plugin.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (plugin.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = plugin.description.take(120) + if (plugin.description.length > 120) "..." else "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Type chip
+                    SuggestionChip(
+                        onClick = {},
+                        label = {
+                            Text(
+                                plugin.type,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        modifier = Modifier.height(22.dp)
+                    )
+
+                    // Version
+                    if (plugin.version.isNotBlank()) {
+                        SuggestionChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    "v${plugin.version}",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            modifier = Modifier.height(22.dp)
+                        )
+                    }
+
+                    // Author
+                    if (plugin.author.isNotBlank()) {
+                        Text(
+                            text = "@${plugin.author}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Endpoint or repo link
+                val linkUrl = when {
+                    plugin.type == "remote" && !plugin.endpoint.isNullOrBlank() -> plugin.endpoint
+                    plugin.repoUrl.isNotBlank() -> plugin.repoUrl
+                    else -> null
+                }
+                if (linkUrl != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = linkUrl,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { onOpenUrl(linkUrl) },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Installed indicator
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .padding(8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun MCPServerCard(
     entry: MCPMarketViewModel.RegistryServerEntry,
     isInstalling: Boolean,
@@ -273,7 +481,6 @@ private fun MCPServerCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Version chip
                     if (server.version.isNotBlank()) {
                         SuggestionChip(
                             onClick = {},
@@ -287,7 +494,6 @@ private fun MCPServerCard(
                         )
                     }
 
-                    // Transport type chip
                     if (hasRemotes) {
                         val remoteType = server.remotes!!.first().type
                         SuggestionChip(
@@ -314,7 +520,6 @@ private fun MCPServerCard(
                         )
                     }
 
-                    // Status
                     if (meta?.status == "active") {
                         Icon(
                             Icons.Default.CheckCircle,
@@ -325,7 +530,6 @@ private fun MCPServerCard(
                     }
                 }
 
-                // Repository link
                 if (server.repository?.url?.isNotBlank() == true) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -339,7 +543,6 @@ private fun MCPServerCard(
                 }
             }
 
-            // Install button
             val circleSize = 34.dp
             val containerColor = when {
                 isInstalled -> MaterialTheme.colorScheme.secondaryContainer

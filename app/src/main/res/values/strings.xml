@@ -3498,6 +3498,14 @@
 <string name="skill_error_only_support_zip">Skill Error Only Support Zip</string>
 <string name="skill_import_failed">Skill Import Failed</string>
 <string name="skill_imported">Skill Imported</string>
+<string name="skill_install_success">%s installed successfully</string>
+<string name="skill_install_failed">Failed to install %s</string>
+<string name="no_mcp_plugins_installed">No MCP plugins installed</string>
+<string name="browse_and_install_mcp_plugins">Browse the market to find and install MCP plugins</string>
+<string name="installed_mcp_plugins">Installed MCP Plugins</string>
+<string name="no_skills_installed">No skills installed</string>
+<string name="browse_and_install_skills">Browse the market to find and install skills</string>
+<string name="installed_skills">Installed Skills</string>
 <string name="skill_imported_with_desc">Skill Imported With Desc</string>
 <string name="skill_invalid_github_url">Skill Invalid Github Url</string>
 <string name="skill_market_search_placeholder">Skill Market Search Placeholder</string>
