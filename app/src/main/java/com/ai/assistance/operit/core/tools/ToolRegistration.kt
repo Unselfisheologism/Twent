@@ -1806,12 +1806,12 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                                     jsonElement.entries.associate { (key, value) ->
                                         key to (when (value) {
                                             is kotlinx.serialization.json.JsonPrimitive -> {
+                                                val content = value.content
                                                 when {
-                                                    value.isString -> value.content
-                                                    value.booleanOrNull != null -> value.boolean
-                                                    value.longOrNull != null -> value.long
-                                                    value.doubleOrNull != null -> value.double
-                                                    else -> value.content
+                                                    content == "true" || content == "false" -> content.toBoolean()
+                                                    content.toLongOrNull() != null -> content.toLong()
+                                                    content.toDoubleOrNull() != null -> content.toDouble()
+                                                    else -> content
                                                 }
                                             }
                                             else -> value.toString()

@@ -49,6 +49,8 @@ class ComposioApiService(private val context: Context) {
         const val ENDPOINT_TOOL_EXECUTE = "/tools/execute/%s"
         const val ENDPOINT_CONNECTED_ACCOUNTS = "/connected_accounts"
         const val ENDPOINT_CONNECTED_ACCOUNTS_LINK = "/connected_accounts/link"
+        const val ENDPOINT_OAUTH_URL = "/connected_accounts/link"  // Same as auth link
+        const val ENDPOINT_OAUTH_EXCHANGE = "/connected_accounts/link"  // Placeholder
         
         // Default headers
         const val HEADER_API_KEY = "x-api-key"
