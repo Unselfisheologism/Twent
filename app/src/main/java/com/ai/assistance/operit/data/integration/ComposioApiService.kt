@@ -407,12 +407,15 @@ class ComposioApiService(private val context: Context) {
                 val listResponse = client.newCall(listRequest).execute()
                 val listBody = listResponse.body?.string()
                 
+                AppLogger.d(TAG, "Auth configs list response ($toolkitSlug): status=${listResponse.code} body=$listBody")
+                
                 if (listResponse.isSuccessful && listBody != null) {
                     val jsonElement = json.parseToJsonElement(listBody)
                     val items = jsonElement.jsonObject["items"]
                     if (items is kotlinx.serialization.json.JsonArray && items.isNotEmpty()) {
                         val firstConfig = items[0].jsonObject
                         val configId = firstConfig["id"]?.toString()?.replace("\"", "")
+                            ?: firstConfig["nanoid"]?.toString()?.replace("\"", "")
                         if (!configId.isNullOrBlank()) {
                             AppLogger.d(TAG, "Found existing auth config for $toolkitSlug: $configId")
                             return@withContext Result.success(configId)
@@ -424,14 +427,11 @@ class ComposioApiService(private val context: Context) {
             }
             
             // No existing config found, create one with managed auth.
-            // The Composio v3.1 API expects 'toolkit' as an object (not a string)
-            // in the request body, and 'auth_scheme' for the authentication method.
+            // The Python SDK sends toolkit as a URL query param and only
+            // {"type": "use_composio_managed_auth"} in the body for managed auth.
             AppLogger.d(TAG, "Creating new managed auth config for $toolkitSlug")
-            val createUrl = buildUrl("/auth_configs")
+            val createUrl = buildUrl("/auth_configs?toolkit=$toolkitSlug")
             val bodyMap = mapOf(
-                "toolkit" to JsonObject(mapOf("slug" to JsonPrimitive(toolkitSlug))),
-                "name" to JsonPrimitive("$toolkitSlug Auth"),
-                "auth_scheme" to JsonPrimitive("OAUTH2"),
                 "type" to JsonPrimitive("use_composio_managed_auth")
             )
             val jsonBody = JsonObject(bodyMap).toString()
@@ -445,13 +445,23 @@ class ComposioApiService(private val context: Context) {
             val createBody = createResponse.body?.string()
             
             if (createResponse.isSuccessful && createBody != null) {
+                AppLogger.d(TAG, "Auth config create response: $createBody")
                 val jsonElement = json.parseToJsonElement(createBody)
-                val configId = jsonElement.jsonObject["id"]?.toString()?.replace("\"", "")
+                val obj = jsonElement.jsonObject
+                
+                // The response may wrap the auth config in different structures.
+                // Try top-level "id" first, then nested "auth_config.id", then "nanoid".
+                val configId = obj["id"]?.toString()?.replace("\"", "")
+                    ?: obj["nanoid"]?.toString()?.replace("\"", "")
+                    ?: obj["auth_config"]?.jsonObject?.get("id")?.toString()?.replace("\"", "")
+                    ?: obj["auth_config"]?.jsonObject?.get("nanoid")?.toString()?.replace("\"", "")
+                
                 if (!configId.isNullOrBlank()) {
                     AppLogger.d(TAG, "Created auth config for $toolkitSlug: $configId")
                     Result.success(configId)
                 } else {
-                    Result.failure(Exception("Failed to parse auth config ID from response"))
+                    AppLogger.e(TAG, "Auth config response missing ID field. Response: $createBody")
+                    Result.failure(Exception("Failed to parse auth config ID from response: $createBody"))
                 }
             } else {
                 val errorMsg = "HTTP ${createResponse.code}: ${createResponse.message}. Response: $createBody"
@@ -464,6 +474,60 @@ class ComposioApiService(private val context: Context) {
         }
     }
     
+    /**
+     * Authorize a user to a toolkit in a single step.
+     * This uses the Composio toolkits authorize endpoint which auto-creates
+     * an auth config if one doesn't exist, then initiates the connection.
+     *
+     * POST /toolkits/{toolkit}/authorize
+     *
+     * @param toolkitSlug The toolkit to authorize (e.g., "github", "gmail")
+     * @param userId The user ID to authorize
+     * @param callbackUrl Optional URL to redirect after auth
+     * @return Result containing the redirect URL (Connect Link)
+     */
+    suspend fun authorizeToolkit(
+        toolkitSlug: String,
+        userId: String,
+        callbackUrl: String? = null
+    ): Result<AuthLinkResponse> = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
+            }
+
+            val url = buildUrl("/toolkits/$toolkitSlug/authorize")
+            val bodyMap = mutableMapOf<String, JsonElement>(
+                "user_id" to JsonPrimitive(userId)
+            )
+            callbackUrl?.let { bodyMap["callback_url"] = JsonPrimitive(it) }
+
+            val jsonBody = JsonObject(bodyMap).toString()
+            AppLogger.d(TAG, "Authorizing toolkit $toolkitSlug for user $userId")
+
+            val request = createAuthenticatedRequest(
+                url = url,
+                method = "POST",
+                body = jsonBody.toRequestBody("application/json".toMediaType())
+            )
+
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            if (response.isSuccessful && responseBody != null) {
+                AppLogger.d(TAG, "Authorize response: $responseBody")
+                parseAuthLinkResponse(responseBody).let { Result.success(it) }
+            } else {
+                val errorMsg = "HTTP ${response.code}: ${response.message}. Response: $responseBody"
+                AppLogger.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to authorize toolkit $toolkitSlug", e)
+            Result.failure(e)
+        }
+    }
+
     /**
      * Create an auth link for a user to connect their account
      * Uses Composio's "Connect Links" - hosted pages where users authorize access

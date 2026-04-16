@@ -289,34 +289,17 @@ private suspend fun connectToolkit(
     callback: (Boolean, String?) -> Unit
 ) {
     try {
-        // Get a persistent user ID for this app installation
         val userId = UserIdManager(context).getOrCreateUserId()
         AppLogger.d("IntegrationsScreen", "Connecting toolkit '$toolkitSlug' for user '$userId'")
         
-        // Step 1: Get or create a Composio-managed auth config for this toolkit
-        val authConfigResult = composioApi.getOrCreateAuthConfig(toolkitSlug)
-        val authConfigId = authConfigResult.getOrNull()
+        // Single step: authorize handles auth config creation + connection initiation
+        val result = composioApi.authorizeToolkit(toolkitSlug, userId)
         
-        if (authConfigId == null) {
-            callback(false, "Failed to get auth config for $toolkitSlug: ${authConfigResult.exceptionOrNull()?.message}")
-            return
-        }
-        
-        AppLogger.d("IntegrationsScreen", "Got auth config '$authConfigId' for toolkit '$toolkitSlug'")
-        
-        // Step 2: Create a Connect Link via the API
-        val authLinkResult = composioApi.createAuthLink(
-            authConfigId = authConfigId,
-            userId = userId
-        )
-        
-        authLinkResult.fold(
+        result.fold(
             onSuccess = { authLink ->
                 val redirectUrl = authLink.redirectUrl
                 if (redirectUrl.isNotBlank()) {
                     AppLogger.d("IntegrationsScreen", "Opening Connect Link: $redirectUrl")
-                    // Step 3: Open the Connect Link in the browser
-                    // This redirects to the actual OAuth provider (GitHub, Google, etc.)
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         data = Uri.parse(redirectUrl)
                     }
@@ -327,8 +310,8 @@ private suspend fun connectToolkit(
                 }
             },
             onFailure = { error ->
-                AppLogger.e("IntegrationsScreen", "Failed to create auth link: ${error.message}")
-                callback(false, "Failed to create auth link: ${error.message}")
+                AppLogger.e("IntegrationsScreen", "Failed to authorize $toolkitSlug: ${error.message}")
+                callback(false, "Failed to connect $toolkitSlug: ${error.message}")
             }
         )
     } catch (e: Exception) {
