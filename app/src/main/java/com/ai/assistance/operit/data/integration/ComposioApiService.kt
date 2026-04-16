@@ -20,6 +20,7 @@ import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -785,18 +786,6 @@ class ComposioApiService(private val context: Context) {
                         )
                     } catch (e: Exception) {
                         AppLogger.e(TAG, "Failed to parse connection item", e)
-                        null
-                    }
-                }
-            } else {
-                emptyList()
-            }
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to parse connections response", e)
-            emptyList()
-        }
-    }
-                    } catch (e: Exception) {
                         null
                     }
                 }
