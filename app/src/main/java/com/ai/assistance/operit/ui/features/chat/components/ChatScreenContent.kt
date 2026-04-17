@@ -18,6 +18,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
@@ -321,6 +322,11 @@ fun ChatScreenContent(
                         chatHeaderPipIconColor = chatHeaderPipIconColor,
                         onCharacterSwitcherClick = { showCharacterSelector = true }
                 )
+                // Add a subtle divider between header and chat area
+                HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
                 ChatArea(
                         chatHistory = chatHistory,
                         scrollState = scrollState,
@@ -375,19 +381,23 @@ fun ChatScreenContent(
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 16.dp)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                tonalElevation = 2.dp,
-                shadowElevation = 4.dp,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f)
+                shape = RoundedCornerShape(20.dp),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp,
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.98f),
+                border = BorderStroke(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+                )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
