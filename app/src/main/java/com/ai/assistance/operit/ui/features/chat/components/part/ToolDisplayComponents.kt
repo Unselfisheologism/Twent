@@ -172,12 +172,12 @@ fun DetailedToolDisplay(
             colors =
                     CardDefaults.cardColors(
                             containerColor =
-                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.18f)
+                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.35f)
                     ),
             border =
                     BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
+                            width = 1.5.dp,
+                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
                     ),
             shape = RoundedCornerShape(12.dp)
     ) {
@@ -249,7 +249,7 @@ fun DetailedToolDisplay(
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(
                                                 MaterialTheme.colorScheme.tertiaryContainer.copy(
-                                                        alpha = 0.12f
+                                                        alpha = 0.2f
                                                 )
                                         )
                 ) {

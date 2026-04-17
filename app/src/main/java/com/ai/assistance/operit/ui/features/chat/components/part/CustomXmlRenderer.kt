@@ -550,19 +550,19 @@ class CustomXmlRenderer(
         val bgColor =
                 when (statusType) {
                     "completion", "complete" ->
-                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
                     "wait_for_user_need" ->
-                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f)
-                    "warning" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
-                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f)
+                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+                    "warning" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
                 }
 
         val borderColor =
                 when (statusType) {
-                    "completion", "complete" -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                    "wait_for_user_need" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
-                    "warning" -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-                    else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                    "completion", "complete" -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                    "wait_for_user_need" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
+                    "warning" -> MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                    else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 }
 
         // 使用硬编码的文本，不管标签内有无内容

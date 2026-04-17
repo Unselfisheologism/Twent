@@ -62,8 +62,8 @@ fun ToolResultDisplay(
                             .padding(start = 24.dp, end = 16.dp, top = 2.dp, bottom = 2.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                    if (isSuccess) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f)
-                                    else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
+                                    if (isSuccess) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                                    else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
                             )
                             .clickable(enabled = hasContent && enableDialog) {
                                 // 仅在启用弹窗时才允许点击打开详情
