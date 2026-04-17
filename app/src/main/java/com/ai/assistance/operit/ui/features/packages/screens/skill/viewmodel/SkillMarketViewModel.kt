@@ -387,11 +387,12 @@ class SkillMarketViewModel(
      * Convert a GitHubRepo to a GitHubIssue for display.
      */
     private fun repoToIssue(repo: GitHubRepo, index: Int): GitHubIssue {
+        val desc = (repo.description ?: "").replace("\"", "'").replace("\\", "")
         return GitHubIssue(
             id = repo.id + index,
             number = (repo.id % 100000).toInt() + index,
             title = repo.full_name,
-            body = "<!-- operit-skill-json: {\"description\":\"${(repo.description ?: "").replace("\"", "\\\"")}\",\"repositoryUrl\":\"${repo.html_url}\"} -->\n\n${repo.description ?: ""}",
+            body = "<!-- operit-skill-json: {\"description\":\"$desc\",\"repositoryUrl\":\"${repo.html_url}\"} -->\n\n${repo.description ?: ""}",
             html_url = repo.html_url,
             state = "open",
             labels = listOfNotNull(
@@ -417,13 +418,13 @@ class SkillMarketViewModel(
     private fun curatedRepoToIssue(repoPath: String, index: Int): GitHubIssue {
         val parts = repoPath.split("/")
         val owner = parts.getOrElse(0) { "unknown" }
-        val name = parts.getOrElse(1) { repoPath }
+        val repoUrl = "https://github.com/$repoPath"
         return GitHubIssue(
             id = repoPath.hashCode().toLong() + 500000 + index,
             number = repoPath.hashCode() + index,
             title = repoPath,
-            body = "<!-- operit-skill-json: {\"description\":\"Curated skill repository\",\"\"repositoryUrl\":\"https://github.com/$repoPath\"} -->\n\nCurated skill repository",
-            html_url = "https://github.com/$repoPath",
+            body = "<!-- operit-skill-json: {\"description\":\"Curated skill repository\",\"repositoryUrl\":\"$repoUrl\"} -->\n\nCurated skill repository",
+            html_url = repoUrl,
             state = "open",
             labels = emptyList(),
             user = com.ai.assistance.operit.data.preferences.GitHubUser(
@@ -915,15 +916,68 @@ class SkillMarketViewModel(
         viewModelScope.launch {
             _installingSkills.value = _installingSkills.value + key
             try {
-                val result = skillRepository.importSkillFromGitHubRepo(key)
+                val result = if (key.contains("clawhub.ai")) {
+                    // ClawHub: download as zip
+                    installFromClawHubZip(key)
+                } else {
+                    // GitHub: clone repo
+                    skillRepository.importSkillFromGitHubRepo(key)
+                }
                 Toast.makeText(context, result, Toast.LENGTH_LONG).show()
                 _installedSkillRepoUrls.value = _installedSkillRepoUrls.value + key
                 refreshInstalledSkills()
             } catch (e: Exception) {
                 _errorMessage.value = context.getString(R.string.skillmarket_install_failed, e.message ?: "")
-                AppLogger.e(TAG, "Failed to install skill from repo", e)
+                AppLogger.e(TAG, "Failed to install skill from $key", e)
             } finally {
                 _installingSkills.value = _installingSkills.value - key
+            }
+        }
+    }
+
+    /**
+     * Download a skill from ClawHub as a zip file and import it.
+     */
+    private suspend fun installFromClawHubZip(clawhubUrl: String): String {
+        return withContext(Dispatchers.IO) {
+            // Extract slug from URL like https://clawhub.ai/skills/youtube-watcher
+            val slug = clawhubUrl.substringAfterLast("/")
+            val downloadUrl = "$CLAWHUB_BASE_URL/download?slug=$slug"
+            val tempFile = java.io.File(context.cacheDir, "skill_$slug.zip")
+
+            try {
+                val conn = java.net.URL(downloadUrl).openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("User-Agent", "TwentAI/1.0")
+                conn.connectTimeout = 15000
+                conn.readTimeout = 30000
+                try {
+                    if (conn.responseCode != 200) {
+                        return@withContext context.getString(R.string.skill_download_zip_failed)
+                    }
+                    java.io.BufferedInputStream(conn.inputStream).use { input ->
+                        java.io.FileOutputStream(tempFile).use { output ->
+                            val buffer = ByteArray(8192)
+                            var bytesRead: Int
+                            while (input.read(buffer).also { bytesRead = it } != -1) {
+                                output.write(buffer, 0, bytesRead)
+                            }
+                        }
+                    }
+                } finally {
+                    conn.disconnect()
+                }
+
+                if (!tempFile.exists() || tempFile.length() <= 0) {
+                    return@withContext context.getString(R.string.skill_download_zip_failed)
+                }
+
+                val result = skillRepository.importSkillFromZip(tempFile)
+                tempFile.delete()
+                result
+            } catch (e: Exception) {
+                if (tempFile.exists()) tempFile.delete()
+                context.getString(R.string.skill_import_failed, e.message ?: "Unknown error")
             }
         }
     }
