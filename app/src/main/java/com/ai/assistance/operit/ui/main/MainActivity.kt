@@ -42,7 +42,7 @@ import com.ai.assistance.operit.data.preferences.androidPermissionPreferences
 import com.ai.assistance.operit.data.updates.UpdateManager
 import com.ai.assistance.operit.data.updates.UpdateStatus
 import com.ai.assistance.operit.ui.common.NavItem
-import com.ai.assistance.operit.ui.features.onboarding.OnboardingScreen
+import com.ai.assistance.operit.ui.features.onboarding.TwentOnboardingScreen
 import com.ai.assistance.operit.ui.features.migration.screens.MigrationScreen
 import com.ai.assistance.operit.ui.features.permission.screens.PermissionGuideScreen
 import com.ai.assistance.operit.ui.features.startup.screens.PluginLoadingScreenWithState
@@ -704,11 +704,21 @@ class MainActivity : ComponentActivity() {
                     } else {
                         // Check if needs to show onboarding (first launch)
                         if (!agreementPreferences.isAgreementAccepted()) {
-                            OnboardingScreen(
+                            TwentOnboardingScreen(
                                 onContinue = {
                                     // Mark onboarding as complete
                                     agreementPreferences.setAgreementAccepted(true)
                                     // After onboarding, check permission level
+                                    lifecycleScope.launch {
+                                        delay(300)
+                                        checkPermissionLevelSet()
+                                        setAppContent()
+                                    }
+                                },
+                                onBasicMode = {
+                                    // Mark onboarding as complete
+                                    agreementPreferences.setAgreementAccepted(true)
+                                    // Set basic mode preference
                                     lifecycleScope.launch {
                                         delay(300)
                                         checkPermissionLevelSet()

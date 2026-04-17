@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="200dp"
+            android:height="200dp"
+            android:viewportWidth="200"
+            android:viewportHeight="200">
+            
+            <!-- Divine light rays background -->
+            <group
+                android:name="light_rays"
+                android:pivotX="100"
+                android:pivotY="100">
+                <path
+                    android:name="ray1"
+                    android:pathData="M100,100 L100,20"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray2"
+                    android:pathData="M100,100 L140,40"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray3"
+                    android:pathData="M100,100 L180,100"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray4"
+                    android:pathData="M100,100 L140,160"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray5"
+                    android:pathData="M100,100 L100,180"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray6"
+                    android:pathData="M100,100 L60,160"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray7"
+                    android:pathData="M100,100 L20,100"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+                <path
+                    android:name="ray8"
+                    android:pathData="M100,100 L60,40"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0.3" />
+            </group>
+            
+            <!-- Eye outline - pixelated style -->
+            <group
+                android:name="eye_group"
+                android:pivotX="100"
+                android:pivotY="100">
+                
+                <!-- Outer eye shape -->
+                <path
+                    android:name="eye_outer"
+                    android:pathData="M40,100 Q100,40 160,100 Q100,160 40,100 Z"
+                    android:fillColor="#00000000"
+                    android:strokeColor="#FF80C0F0"
+                    android:strokeWidth="4" />
+                
+                <!-- Iris -->
+                <path
+                    android:name="iris"
+                    android:pathData="M100,70 A30,30 0,1 1 100,130 A30,30 0,1 1 100,70 Z"
+                    android:fillColor="#FFF09020"
+                    android:strokeColor="#FFD07010"
+                    android:strokeWidth="2" />
+                
+                <!-- Pupil -->
+                <path
+                    android:name="pupil"
+                    android:pathData="M100,85 A15,15 0,1 1 100,115 A15,15 0,1 1 100,85 Z"
+                    android:fillColor="#FF0A0A0A" />
+                
+                <!-- Glitch lines -->
+                <path
+                    android:name="glitch1"
+                    android:pathData="M70,90 L130,90"
+                    android:strokeColor="#FF80C0F0"
+                    android:strokeWidth="1"
+                    android:strokeAlpha="0.5" />
+                <path
+                    android:name="glitch2"
+                    android:pathData="M75,100 L125,100"
+                    android:strokeColor="#FF80C0F0"
+                    android:strokeWidth="1"
+                    android:strokeAlpha="0.5" />
+                <path
+                    android:name="glitch3"
+                    android:pathData="M80,110 L120,110"
+                    android:strokeColor="#FF80C0F0"
+                    android:strokeWidth="1"
+                    android:strokeAlpha="0.5" />
+            </group>
+        </vector>
+    </aapt:attr>
+    
+    <!-- Light rays pulsing animation -->
+    <target android:name="light_rays">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="rotation"
+                    android:valueFrom="0"
+                    android:valueTo="360"
+                    android:duration="20000"
+                    android:repeatCount="infinite"
+                    android:interpolator="@android:interpolator/linear" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Eye opening animation -->
+    <target android:name="eye_outer">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:valueFrom="M100,100 L100,100 Q100,100 100,100 Q100,100 100,100 Z"
+                    android:valueTo="M40,100 Q100,40 160,100 Q100,160 40,100 Z"
+                    android:valueType="pathType"
+                    android:duration="1500"
+                    android:startOffset="500"
+                    android:interpolator="@android:interpolator/decelerate_cubic" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Iris glow animation -->
+    <target android:name="iris">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillColor"
+                    android:valueFrom="#FFF09020"
+                    android:valueTo="#FFFFA040"
+                    android:duration="2000"
+                    android:startOffset="2000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Glitch animation -->
+    <target android:name="glitch1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.5"
+                    android:valueTo="0"
+                    android:duration="100"
+                    android:startOffset="2500"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="glitch2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.5"
+                    android:valueTo="0"
+                    android:duration="100"
+                    android:startOffset="2600"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="glitch3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.5"
+                    android:valueTo="0"
+                    android:duration="100"
+                    android:startOffset="2700"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

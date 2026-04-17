@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="200dp"
+            android:height="200dp"
+            android:viewportWidth="200"
+            android:viewportHeight="200">
+            
+            <!-- Divine light background -->
+            <group
+                android:name="background_group"
+                android:pivotX="100"
+                android:pivotY="100">
+                <path
+                    android:name="light_circle"
+                    android:pathData="M100,100 A80,80 0,1 1 100,100 A80,80 0,1 1 100,100 Z"
+                    android:fillColor="#0DFFF09020" />
+                
+                <!-- Pixel grid -->
+                <group android:name="pixel_grid">
+                    <path
+                        android:name="pixel1"
+                        android:pathData="M20,20 L25,20 L25,25 L20,25 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel2"
+                        android:pathData="M40,30 L45,30 L45,35 L40,35 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel3"
+                        android:pathData="M160,20 L165,20 L165,25 L160,25 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel4"
+                        android:pathData="M180,30 L185,30 L185,35 L180,35 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel5"
+                        android:pathData="M20,180 L25,180 L25,185 L20,185 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel6"
+                        android:pathData="M40,170 L45,170 L45,175 L40,175 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel7"
+                        android:pathData="M160,180 L165,180 L165,185 L160,185 Z"
+                        android:fillColor="#1AFFFFFF" />
+                    <path
+                        android:name="pixel8"
+                        android:pathData="M180,170 L185,170 L185,175 L180,175 Z"
+                        android:fillColor="#1AFFFFFF" />
+                </group>
+            </group>
+            
+            <!-- Activation button -->
+            <group
+                android:name="button_group"
+                android:pivotX="100"
+                android:pivotY="100">
+                
+                <!-- Button outer glow -->
+                <path
+                    android:name="button_glow"
+                    android:pathData="M50,80 L150,80 Q170,80 170,100 L170,100 Q170,120 150,120 L50,120 Q30,120 30,100 L30,100 Q30,80 50,80 Z"
+                    android:fillColor="#00000000"
+                    android:strokeColor="#40FFF09020"
+                    android:strokeWidth="8" />
+                
+                <!-- Button background -->
+                <path
+                    android:name="button_bg"
+                    android:pathData="M50,80 L150,80 Q160,80 160,90 L160,110 Q160,120 150,120 L50,120 Q40,120 40,110 L40,90 Q40,80 50,80 Z"
+                    android:fillColor="#FFF09020"
+                    android:strokeColor="#FFD07010"
+                    android:strokeWidth="2" />
+                
+                <!-- Button text: ACTIVATE -->
+                <group android:name="button_text">
+                    <!-- A -->
+                    <path
+                        android:name="letter_a"
+                        android:pathData="M55,95 L60,95 L60,97 L57,97 L57,105 L55,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- C -->
+                    <path
+                        android:name="letter_c"
+                        android:pathData="M62,95 L67,95 L67,97 L64,97 L64,103 L67,103 L67,105 L62,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- T -->
+                    <path
+                        android:name="letter_t"
+                        android:pathData="M69,95 L76,95 L76,97 L73,97 L73,105 L71,105 L71,97 L69,97 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- I -->
+                    <path
+                        android:name="letter_i"
+                        android:pathData="M78,95 L80,95 L80,105 L78,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- V -->
+                    <path
+                        android:name="letter_v"
+                        android:pathData="M82,95 L84,95 L87,105 L85,105 L83,98 L81,105 L79,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- A -->
+                    <path
+                        android:name="letter_a2"
+                        android:pathData="M89,95 L94,95 L94,97 L91,97 L91,105 L89,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- T -->
+                    <path
+                        android:name="letter_t2"
+                        android:pathData="M96,95 L103,95 L103,97 L100,97 L100,105 L98,105 L98,97 L96,97 Z"
+                        android:fillColor="#FFFFFFFF" />
+                    <!-- E -->
+                    <path
+                        android:name="letter_e"
+                        android:pathData="M105,95 L112,95 L112,97 L107,97 L107,99 L111,99 L111,101 L107,101 L107,103 L112,103 L112,105 L105,105 Z"
+                        android:fillColor="#FFFFFFFF" />
+                </group>
+                
+                <!-- Particle effects -->
+                <group android:name="particles">
+                    <path
+                        android:name="particle1"
+                        android:pathData="M50,90 A2,2 0,1 1 50,94 A2,2 0,1 1 50,90 Z"
+                        android:fillColor="#FFFFFFFF"
+                        android:fillAlpha="0" />
+                    <path
+                        android:name="particle2"
+                        android:pathData="M150,90 A2,2 0,1 1 150,94 A2,2 0,1 1 150,90 Z"
+                        android:fillColor="#FFFFFFFF"
+                        android:fillAlpha="0" />
+                    <path
+                        android:name="particle3"
+                        android:pathData="M50,110 A2,2 0,1 1 50,114 A2,2 0,1 1 50,110 Z"
+                        android:fillColor="#FFFFFFFF"
+                        android:fillAlpha="0" />
+                    <path
+                        android:name="particle4"
+                        android:pathData="M150,110 A2,2 0,1 1 150,114 A2,2 0,1 1 150,110 Z"
+                        android:fillColor="#FFFFFFFF"
+                        android:fillAlpha="0" />
+                </group>
+            </group>
+            
+            <!-- Divine rays from button -->
+            <group
+                android:name="rays_group"
+                android:pivotX="100"
+                android:pivotY="100">
+                <path
+                    android:name="ray1"
+                    android:pathData="M100,80 L100,40"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+                <path
+                    android:name="ray2"
+                    android:pathData="M100,80 L130,50"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+                <path
+                    android:name="ray3"
+                    android:pathData="M100,80 L150,80"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+                <path
+                    android:name="ray4"
+                    android:pathData="M100,120 L100,160"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+                <path
+                    android:name="ray5"
+                    android:pathData="M100,120 L130,150"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+                <path
+                    android:name="ray6"
+                    android:pathData="M100,120 L150,120"
+                    android:strokeColor="#FFF09020"
+                    android:strokeWidth="2"
+                    android:strokeAlpha="0" />
+            </group>
+        </vector>
+    </aapt:attr>
+    
+    <!-- Button glow pulsing -->
+    <target android:name="button_glow">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeWidth"
+                    android:valueFrom="8"
+                    android:valueTo="12"
+                    android:duration="1000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.25"
+                    android:valueTo="0.5"
+                    android:duration="1000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Button hover effect -->
+    <target android:name="button_bg">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillColor"
+                    android:valueFrom="#FFF09020"
+                    android:valueTo="#FFFFA040"
+                    android:duration="2000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Particle effects -->
+    <target android:name="particle1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:duration="500"
+                    android:startOffset="1000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+                <objectAnimator
+                    android:propertyName="translateY"
+                    android:valueFrom="0"
+                    android:valueTo="-20"
+                    android:duration="1000"
+                    android:startOffset="1000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart"
+                    android:interpolator="@android:interpolator/decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="particle2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:duration="500"
+                    android:startOffset="1200"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+                <objectAnimator
+                    android:propertyName="translateY"
+                    android:valueFrom="0"
+                    android:valueTo="-20"
+                    android:duration="1000"
+                    android:startOffset="1200"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart"
+                    android:interpolator="@android:interpolator/decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="particle3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:duration="500"
+                    android:startOffset="1400"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+                <objectAnimator
+                    android:propertyName="translateY"
+                    android:valueFrom="0"
+                    android:valueTo="20"
+                    android:duration="1000"
+                    android:startOffset="1400"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart"
+                    android:interpolator="@android:interpolator/decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="particle4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:duration="500"
+                    android:startOffset="1600"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart" />
+                <objectAnimator
+                    android:propertyName="translateY"
+                    android:valueFrom="0"
+                    android:valueTo="20"
+                    android:duration="1000"
+                    android:startOffset="1600"
+                    android:repeatCount="infinite"
+                    android:repeatMode="restart"
+                    android:interpolator="@android:interpolator/decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Divine rays animation -->
+    <target android:name="ray1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="500"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="ray2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="700"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="ray3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="900"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="ray4">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="600"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="ray5">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="800"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="ray6">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="0.8"
+                    android:duration="500"
+                    android:startOffset="1000"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/accelerate_decelerate" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
