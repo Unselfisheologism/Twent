@@ -181,37 +181,29 @@ fun OperitApp(
     val userPreferencesManager = remember { UserPreferencesManager.getInstance(context) }
     val isPowerUserMode by userPreferencesManager.powerUserMode.collectAsState(initial = true)
 
-    // Navigation items grouped by category - COMPLETELY REORDERED from original
-    // Different grouping to be unrecognizable
+    // Navigation items grouped by category - Workspace and Configuration only
     val navGroups = listOf(
         NavGroup(
             R.string.nav_group_ai_features, // "Workspace"
             listOfNotNull(
                 NavItem.AiChat,
                 NavItem.Workflow,
-                NavItem.MemoryBase,
-                if (isPowerUserMode) NavItem.MiniApps else null
-            )
-        ),
-        NavGroup(
-            R.string.nav_group_tools, // "Development"
-            listOfNotNull(
+                NavItem.MiniApps,
                 NavItem.AgentCLIs,
-                NavItem.Toolbox,
-                NavItem.Packages,
-                if (isPowerUserMode) NavItem.Terminal else null
+                NavItem.Packages
             )
         ),
         NavGroup(
             R.string.nav_group_system, // "Configuration"
             listOfNotNull(
+                NavItem.MemoryBase,
+                NavItem.Terminal,
                 NavItem.AssistantConfig,
                 NavItem.TokenConfig,
                 NavItem.Integrations,
                 NavItem.Permissions,
                 NavItem.Settings,
-                NavItem.Help,
-                NavItem.About
+                NavItem.Help
             )
         )
     )

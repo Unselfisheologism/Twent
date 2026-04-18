@@ -494,6 +494,13 @@
     <string name="toolbox">Toolbox</string>
     <string name="mcp">MCP</string>
     <string name="token_config_title">DeepSeek Token Configuration</string>
+    <string name="enter_url">Enter URL...</string>
+    <string name="api_key_detected">API Key Detected!</string>
+    <string name="api_key_detected_message">It looks like you copied an API key. Would you like to save it for %s?</string>
+    <string name="api_key_saved">API Key Saved!</string>
+    <string name="api_key_saved_message">Your API key for %s has been saved.</string>
+    <string name="go_to_config_message">Go to Models & Parameters Configuration to select and configure your AI model.</string>
+    <string name="open_configuration">Open Configuration →</string>
     <string name="character_card_change_title">Character Card Updated</string>
     <string name="character_card_change_prompt">The character card has changed. Do you want to go to Chat Management to handle chats bound to it?</string>
     <string name="go_to_chat_management">Go to Chat Management</string>

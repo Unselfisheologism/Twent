@@ -619,7 +619,10 @@ sealed class Screen(
                 onError: (String) -> Unit,
                 onGestureConsumed: (Boolean) -> Unit
         ) {
-            TokenConfigWebViewScreen(onNavigateBack = onGoBack)
+            TokenConfigWebViewScreen(
+                onNavigateBack = onGoBack,
+                onNavigateToModelConfig = { navigateTo(ModelConfig) }
+            )
         }
     }
 
