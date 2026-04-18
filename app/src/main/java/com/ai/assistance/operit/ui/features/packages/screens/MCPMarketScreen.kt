@@ -43,6 +43,7 @@ import com.ai.assistance.operit.data.preferences.GitHubUser
 import com.ai.assistance.operit.ui.features.packages.screens.mcp.viewmodel.MCPMarketViewModel
 import com.ai.assistance.operit.ui.features.packages.utils.MCPPluginParser
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.rememberScrollState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -679,5 +680,101 @@ private fun MCPIssueCard(
             }
         }
     }
+    
+    // Auth Config Dialog - shown when a server requires authentication after install
+    val pendingAuthServerId by viewModel.pendingAuthServerId.collectAsState()
+    val pendingAuthDescription by viewModel.pendingAuthDescription.collectAsState()
+    
+    if (pendingAuthServerId != null) {
+        AuthConfigDialog(
+            serverId = pendingAuthServerId!!,
+            fieldDescriptions = pendingAuthDescription,
+            onDismiss = { viewModel.clearPendingAuth() },
+            onConfirm = { values ->
+                viewModel.saveServerAuth(pendingAuthServerId!!, values)
+            }
+        )
+    }
 }
 
+
+
+/**
+ * Dialog for configuring authentication (env vars or headers) after installing an MCP server.
+ */
+@Composable
+fun AuthConfigDialog(
+    serverId: String,
+    fieldDescriptions: Map<String, String>,
+    onDismiss: () -> Unit,
+    onConfirm: (Map<String, String>) -> Unit
+) {
+    val fieldValues = remember { mutableStateMapOf<String, String>() }
+    
+    // Initialize empty values for each field
+    LaunchedEffect(fieldDescriptions) {
+        fieldDescriptions.keys.forEach { key ->
+            if (key !in fieldValues) {
+                fieldValues[key] = ""
+            }
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Configure Authentication") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "This server requires authentication. Please enter the required values:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                fieldDescriptions.forEach { (fieldName, description) ->
+                    Column {
+                        Text(
+                            text = fieldName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (description.isNotBlank()) {
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = fieldValues[fieldName] ?: "",
+                            onValueChange = { fieldValues[fieldName] = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Enter $fieldName") }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(fieldValues.toMap())
+                },
+                enabled = fieldDescriptions.keys.all { fieldValues[it]?.isNotBlank() == true }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Skip")
+            }
+        }
+    )
+}
