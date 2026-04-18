@@ -109,7 +109,6 @@ fun TokenConfigWebViewScreen(
     // State
     var isLoading by remember { mutableStateOf(true) }
     var selectedTabIndex by remember { mutableStateOf(0) }
-    var showConfigDialog by remember { mutableStateOf(false) }
     
     // Provider dropdown state
     val providersWithApiKeyPages = remember { ProviderApiKeyConfig.getProvidersWithApiKeyPages() }
@@ -352,38 +351,6 @@ fun TokenConfigWebViewScreen(
     val setTopBarActions = LocalTopBarActions.current
     val appBarContentColor = LocalAppBarContentColor.current
     val isCurrentScreen = LocalIsCurrentScreen.current
-
-    // 使用DisposableEffect来设置和清理TopBar按钮，避免竞争条件
-    LaunchedEffect(isCurrentScreen, appBarContentColor) {
-        if (isCurrentScreen) {
-            setTopBarActions {
-                // 设置按钮
-                IconButton(
-                    onClick = { showConfigDialog = true }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = stringResource(R.string.settings_config),
-                        tint = appBarContentColor
-                    )
-                }
-            }
-        }
-    }
-
-    // 配置对话框
-    if (showConfigDialog) {
-        UrlConfigDialog(
-            currentConfig = urlConfig,
-            onSave = { newConfig ->
-                scope.launch {
-                    urlConfigManager.saveUrlConfig(newConfig)
-                    showConfigDialog = false
-                }
-            },
-            onDismiss = { showConfigDialog = false }
-        )
-    }
 
     // UI布局
     CustomScaffold(

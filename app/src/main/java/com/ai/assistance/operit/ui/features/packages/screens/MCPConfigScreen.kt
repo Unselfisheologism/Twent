@@ -66,6 +66,11 @@ import com.ai.assistance.operit.data.mcp.InstallResult
 import com.ai.assistance.operit.data.mcp.InstallProgress
 import com.ai.assistance.operit.ui.features.startup.screens.LocalPluginLoadingState
 import com.ai.assistance.operit.data.mcp.plugins.MCPStarter
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import android.content.Intent
+import android.net.Uri
 
 /** MCP配置屏幕 - 极简风格界面，专注于插件快速部署 */
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -207,6 +212,10 @@ fun MCPConfigScreen(
     var remoteConnectionType by remember { mutableStateOf("httpStream") }
     var remoteConnectionTypeExpanded by remember { mutableStateOf(false) }
     var remoteBearerToken by remember { mutableStateOf("") }
+    var remoteEnvVars by remember { mutableStateOf(emptyMap<String, String>()) }
+    var remoteHeaders by remember { mutableStateOf(emptyMap<String, String>()) }
+    var showRemoteEnvDialog by remember { mutableStateOf(false) }
+    var showRemoteHeadersDialog by remember { mutableStateOf(false) }
     
     // 新增：配置导入相关状态
     var configJsonInput by remember { mutableStateOf("") }
@@ -717,11 +726,33 @@ fun MCPConfigScreen(
                             OutlinedTextField(
                                 value = remoteBearerToken,
                                 onValueChange = { remoteBearerToken = it },
-                                label = { Text("Bearer Token (Optional)") },
-                                placeholder = { Text("Enter bearer token for authentication") },
+                                label = { Text(stringResource(R.string.mcp_bearer_token_optional)) },
+                                placeholder = { Text(stringResource(R.string.mcp_bearer_token_hint)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Environment Variables button
+                            OutlinedButton(
+                                onClick = { showRemoteEnvDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.mcp_env_variables_count, remoteEnvVars.size))
+                            }
+                            
+                            // Custom Headers button
+                            OutlinedButton(
+                                onClick = { showRemoteHeadersDialog = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.mcp_custom_headers_count, remoteHeaders.size))
+                            }
                         }
                         3 -> {
                             // 配置导入
@@ -853,7 +884,9 @@ fun MCPConfigScreen(
                                 type = if(isRemote) "remote" else "local",
                                 endpoint = if(isRemote) remoteEndpointInput else null,
                                 connectionType = if(isRemote) remoteConnectionType else "httpStream",
-                                bearerToken = if(isRemote && remoteBearerToken.isNotBlank()) remoteBearerToken else null
+                                bearerToken = if(isRemote && remoteBearerToken.isNotBlank()) remoteBearerToken else null,
+                                env = if(isRemote && remoteEnvVars.isNotEmpty()) remoteEnvVars else null,
+                                headers = if(isRemote && remoteHeaders.isNotEmpty()) remoteHeaders else null
                             )
                             
                             if(isRemote){
@@ -877,6 +910,8 @@ fun MCPConfigScreen(
                             remoteConnectionType = "httpStream"
                             remoteConnectionTypeExpanded = false
                             remoteBearerToken = ""
+                            remoteEnvVars = emptyMap()
+                            remoteHeaders = emptyMap()
                             showImportDialog = false
 
                             awaitPluginVisible(importId) {
@@ -917,14 +952,158 @@ fun MCPConfigScreen(
                     pluginNameInput = ""
                     zipFilePath = ""
                     remoteEndpointInput = ""
-                    remoteConnectionType = "httpStream"
-                    remoteConnectionTypeExpanded = false
-                    remoteBearerToken = ""
-                    configJsonInput = ""
-                    showImportDialog = false 
-                }) {
+                            remoteConnectionType = "httpStream"
+                            remoteConnectionTypeExpanded = false
+                            remoteBearerToken = ""
+                            remoteEnvVars = emptyMap()
+                            remoteHeaders = emptyMap()
+                            configJsonInput = ""
+                            showImportDialog = false
+                        }) {
                     Text(stringResource(R.string.cancel))
                 }
+            }
+        )
+    }
+    
+    // Remote server env vars dialog (for add remote server flow)
+    if (showRemoteEnvDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoteEnvDialog = false },
+            title = { Text(stringResource(R.string.mcp_env_variables)) },
+            text = {
+                Column {
+                    // List existing env vars
+                    remoteEnvVars.forEach { (key, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(key, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    value,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { remoteEnvVars = remoteEnvVars - key }) {
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Add new env var
+                    var tempEnvKey by remember { mutableStateOf("") }
+                    var tempEnvValue by remember { mutableStateOf("") }
+                    
+                    OutlinedTextField(
+                        value = tempEnvKey,
+                        onValueChange = { tempEnvKey = it },
+                        label = { Text(stringResource(R.string.mcp_var_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("API_KEY") }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = tempEnvValue,
+                        onValueChange = { tempEnvValue = it },
+                        label = { Text(stringResource(R.string.mcp_var_value)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (tempEnvKey.isNotBlank()) {
+                                remoteEnvVars = remoteEnvVars + (tempEnvKey to tempEnvValue)
+                                tempEnvKey = ""
+                                tempEnvValue = ""
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.mcp_add_var))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showRemoteEnvDialog = false }) { Text(stringResource(R.string.mcp_confirm)) }
+            }
+        )
+    }
+    
+    // Remote server headers dialog (for add remote server flow)
+    if (showRemoteHeadersDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoteHeadersDialog = false },
+            title = { Text(stringResource(R.string.mcp_custom_headers)) },
+            text = {
+                Column {
+                    remoteHeaders.forEach { (key, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(key, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    value,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { remoteHeaders = remoteHeaders - key }) {
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    var tempHeaderKey by remember { mutableStateOf("") }
+                    var tempHeaderValue by remember { mutableStateOf("") }
+                    
+                    OutlinedTextField(
+                        value = tempHeaderKey,
+                        onValueChange = { tempHeaderKey = it },
+                        label = { Text(stringResource(R.string.mcp_header_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("X-API-Key") }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = tempHeaderValue,
+                        onValueChange = { tempHeaderValue = it },
+                        label = { Text(stringResource(R.string.mcp_var_value)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (tempHeaderKey.isNotBlank()) {
+                                remoteHeaders = remoteHeaders + (tempHeaderKey to tempHeaderValue)
+                                tempHeaderKey = ""
+                                tempHeaderValue = ""
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.mcp_add_header))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showRemoteHeadersDialog = false }) { Text(stringResource(R.string.mcp_confirm)) }
             }
         )
     }
@@ -1558,6 +1737,28 @@ fun RemoteServerEditDialog(
     val connectionTypes = listOf("httpStream", "sse")
     var expanded by remember { mutableStateOf(false) }
     val isRemote = server.type == "remote"
+    
+    // Environment variables state
+    var envVars by remember { mutableStateOf(server.env ?: emptyMap()) }
+    var showEnvDialog by remember { mutableStateOf(false) }
+    var newEnvKey by remember { mutableStateOf("") }
+    var newEnvValue by remember { mutableStateOf("") }
+    
+    // Headers state
+    var headers by remember { mutableStateOf(server.headers ?: emptyMap()) }
+    var showHeadersDialog by remember { mutableStateOf(false) }
+    var newHeaderKey by remember { mutableStateOf("") }
+    var newHeaderValue by remember { mutableStateOf("") }
+    
+    // OAuth config state
+    var oauthConfig by remember { mutableStateOf(server.oauthConfig) }
+    var showOAuthDialog by remember { mutableStateOf(false) }
+    var oauthClientId by remember { mutableStateOf(server.oauthConfig?.clientId ?: "") }
+    var oauthClientSecret by remember { mutableStateOf(server.oauthConfig?.clientSecret ?: "") }
+    var oauthAuthUrl by remember { mutableStateOf(server.oauthConfig?.authorizationUrl ?: "") }
+    var oauthTokenUrl by remember { mutableStateOf(server.oauthConfig?.tokenUrl ?: "") }
+    var oauthScopes by remember { mutableStateOf(server.oauthConfig?.scopes?.joinToString(" ") ?: "") }
+    var oauthRedirectUri by remember { mutableStateOf(server.oauthConfig?.redirectUri ?: "operit://mcp-oauth-callback") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1626,6 +1827,67 @@ fun RemoteServerEditDialog(
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Enter bearer token for authentication") }
                     )
+                    
+                    // Environment Variables Button
+                    OutlinedButton(
+                        onClick = { showEnvDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.mcp_env_variables_count, envVars.size))
+                    }
+                    
+                    // Headers Button
+                    OutlinedButton(
+                        onClick = { showHeadersDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.mcp_custom_headers_count, headers.size))
+                    }
+                    
+                    // OAuth Config Button
+                    OutlinedButton(
+                        onClick = { showOAuthDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (oauthConfig != null) "OAuth Configured ✓" else "Configure OAuth")
+                    }
+                    
+                    // Start OAuth Flow Button (only shown when OAuth is configured)
+                    if (oauthConfig != null && oauthConfig?.authorizationUrl?.isNotEmpty() == true) {
+                        Button(
+                            onClick = {
+                                // Build OAuth authorization URL and open browser
+                                val authUrl = buildOAuthAuthorizationUrl(oauthConfig!!)
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Cannot open browser: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.mcp_oauth_start_flow))
+                        }
+                        
+                        // Show OAuth status
+                        if (oauthConfig?.accessToken != null) {
+                            Text(
+                                "✓ Authenticated (token expires: ${if (oauthConfig?.tokenExpiresAt ?: 0 > 0) "yes" else "never"})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -1637,7 +1899,10 @@ fun RemoteServerEditDialog(
                         description = description,
                         endpoint = if(isRemote) endpoint else server.endpoint,
                         connectionType = if(isRemote) connectionType else server.connectionType,
-                        bearerToken = if(isRemote && bearerToken.isNotBlank()) bearerToken else null
+                        bearerToken = if(isRemote && bearerToken.isNotBlank()) bearerToken else null,
+                        env = if(isRemote && envVars.isNotEmpty()) envVars else null,
+                        headers = if(isRemote && headers.isNotEmpty()) headers else null,
+                        oauthConfig = if(isRemote) oauthConfig else null
                     )
                     onSave(updatedServer)
                 },
@@ -1652,4 +1917,256 @@ fun RemoteServerEditDialog(
             }
         }
     )
+    
+    // Environment Variables Dialog
+    if (showEnvDialog) {
+        AlertDialog(
+            onDismissRequest = { showEnvDialog = false },
+            title = { Text("Environment Variables") },
+            text = {
+                Column {
+                    // List existing env vars
+                    envVars.forEach { (key, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(key, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    value,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { envVars = envVars - key }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Add new env var
+                    OutlinedTextField(
+                        value = newEnvKey,
+                        onValueChange = { newEnvKey = it },
+                        label = { Text(stringResource(R.string.mcp_variable_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("API_KEY") }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newEnvValue,
+                        onValueChange = { newEnvValue = it },
+                        label = { Text(stringResource(R.string.mcp_value)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (newEnvKey.isNotBlank()) {
+                                envVars = envVars + (newEnvKey to newEnvValue)
+                                newEnvKey = ""
+                                newEnvValue = ""
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Add")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showEnvDialog = false }) { Text(stringResource(R.string.mcp_done)) }
+            }
+        )
+    }
+    
+    // Headers Dialog
+    if (showHeadersDialog) {
+        AlertDialog(
+            onDismissRequest = { showHeadersDialog = false },
+            title = { Text("Custom Headers") },
+            text = {
+                Column {
+                    headers.forEach { (key, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(key, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    value,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { headers = headers - key }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = newHeaderKey,
+                        onValueChange = { newHeaderKey = it },
+                        label = { Text("Header Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("X-API-Key") }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newHeaderValue,
+                        onValueChange = { newHeaderValue = it },
+                        label = { Text("Value") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (newHeaderKey.isNotBlank()) {
+                                headers = headers + (newHeaderKey to newHeaderValue)
+                                newHeaderKey = ""
+                                newHeaderValue = ""
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Add")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHeadersDialog = false }) { Text(stringResource(R.string.mcp_done)) }
+            }
+        )
+    }
+    
+    // OAuth Config Dialog
+    if (showOAuthDialog) {
+        AlertDialog(
+            onDismissRequest = { showOAuthDialog = false },
+            title = { Text(stringResource(R.string.mcp_oauth_configuration)) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = oauthClientId,
+                        onValueChange = { oauthClientId = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_client_id)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = oauthClientSecret,
+                        onValueChange = { oauthClientSecret = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_client_secret)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = oauthAuthUrl,
+                        onValueChange = { oauthAuthUrl = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_auth_url)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("https://auth.example.com/authorize") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+                    )
+                    OutlinedTextField(
+                        value = oauthTokenUrl,
+                        onValueChange = { oauthTokenUrl = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_token_url)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("https://auth.example.com/token") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+                    )
+                    OutlinedTextField(
+                        value = oauthScopes,
+                        onValueChange = { oauthScopes = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_scopes)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("read write profile") }
+                    )
+                    OutlinedTextField(
+                        value = oauthRedirectUri,
+                        onValueChange = { oauthRedirectUri = it },
+                        label = { Text(stringResource(R.string.mcp_oauth_redirect_uri)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            oauthConfig = null
+                            showOAuthDialog = false
+                        }
+                    ) { Text(stringResource(R.string.mcp_clear)) }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            if (oauthClientId.isNotBlank() && oauthAuthUrl.isNotBlank() && oauthTokenUrl.isNotBlank()) {
+                                oauthConfig = MCPLocalServer.OAuthConfig(
+                                    clientId = oauthClientId,
+                                    clientSecret = oauthClientSecret.ifBlank { null },
+                                    authorizationUrl = oauthAuthUrl,
+                                    tokenUrl = oauthTokenUrl,
+                                    scopes = oauthScopes.split(" ").filter { it.isNotBlank() },
+                                    redirectUri = oauthRedirectUri,
+                                    accessToken = server.oauthConfig?.accessToken,
+                                    refreshToken = server.oauthConfig?.refreshToken,
+                                    tokenExpiresAt = server.oauthConfig?.tokenExpiresAt ?: 0L
+                                )
+                            }
+                            showOAuthDialog = false
+                        },
+                        enabled = oauthClientId.isNotBlank() && oauthAuthUrl.isNotBlank() && oauthTokenUrl.isNotBlank()
+                    ) { Text("Save") }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showOAuthDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 }
+
+/**
+ * Build OAuth authorization URL with required parameters
+ */
+private fun buildOAuthAuthorizationUrl(config: MCPLocalServer.OAuthConfig): String {
+    val state = config.clientId // Use client ID as state for simplicity
+    val scope = config.scopes.joinToString(" ")
+    
+    return buildString {
+        append(config.authorizationUrl)
+        if (!contains("?")) append("?") else append("&")
+        append("client_id=${Uri.encode(config.clientId)}")
+        append("&redirect_uri=${Uri.encode(config.redirectUri)}")
+        append("&response_type=code")
+        append("&state=${Uri.encode(state)}")
+        if (scope.isNotEmpty()) {
+            append("&scope=${Uri.encode(scope)}")
+        }
+    }
+}
+

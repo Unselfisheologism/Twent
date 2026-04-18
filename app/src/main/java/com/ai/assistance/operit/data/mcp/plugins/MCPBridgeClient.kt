@@ -3,6 +3,7 @@ package com.ai.assistance.operit.data.mcp.plugins
 import android.content.Context
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.mcp.MCPLocalServer
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +59,9 @@ class MCPBridgeClient(private val context: Context, private val serviceName: Str
             connectionType: String? = null,
             description: String? = null,
             bearerToken: String? = null,
-            headers: Map<String, String>? = null
+            headers: Map<String, String>? = null,
+            env: Map<String, String>? = null,
+            oauthConfig: MCPLocalServer.OAuthConfig? = null
         ): JSONObject {
             val params = JSONObject().apply {
                 put("type", type)
@@ -77,6 +80,35 @@ class MCPBridgeClient(private val context: Context, private val serviceName: Str
                     val headersObj = JSONObject()
                     headers.forEach { (key, value) -> headersObj.put(key, value) }
                     put("headers", headersObj)
+                }
+                if (env != null && env.isNotEmpty()) {
+                    val envObj = JSONObject()
+                    env.forEach { (key, value) -> envObj.put(key, value) }
+                    put("env", envObj)
+                }
+                if (oauthConfig != null && oauthConfig.authorizationUrl.isNotEmpty()) {
+                    val oauthObj = JSONObject().apply {
+                        put("clientId", oauthConfig.clientId)
+                        if (oauthConfig.clientSecret != null) {
+                            put("clientSecret", oauthConfig.clientSecret)
+                        }
+                        put("authorizationUrl", oauthConfig.authorizationUrl)
+                        put("tokenUrl", oauthConfig.tokenUrl)
+                        if (oauthConfig.scopes.isNotEmpty()) {
+                            put("scopes", JSONArray().apply { oauthConfig.scopes.forEach { put(it) } })
+                        }
+                        put("redirectUri", oauthConfig.redirectUri)
+                        if (oauthConfig.accessToken != null) {
+                            put("accessToken", oauthConfig.accessToken)
+                        }
+                        if (oauthConfig.refreshToken != null) {
+                            put("refreshToken", oauthConfig.refreshToken)
+                        }
+                        if (oauthConfig.tokenExpiresAt > 0) {
+                            put("tokenExpiresAt", oauthConfig.tokenExpiresAt)
+                        }
+                    }
+                    put("oauthConfig", oauthObj)
                 }
             }
 

@@ -4861,4 +4861,24 @@
     <string name="api_key_saved_message">Your API key for %s has been saved.</string>
     <string name="go_to_config_message">Go to Models &amp; Parameters Configuration to select and configure your AI model.</string>
     <string name="open_configuration">Open Configuration →</string>
+    <string name="mcp_bearer_token_optional">Bearer Token (Optional)</string>
+    <string name="mcp_bearer_token_hint">Enter bearer token for authentication</string>
+    <string name="mcp_env_variables_count">Environment Variables (%d)</string>
+    <string name="mcp_custom_headers_count">Custom Headers (%d)</string>
+    <string name="mcp_custom_headers">Custom Headers</string>
+    <string name="mcp_header_name">Header Name</string>
+    <string name="mcp_add_header">Add Header</string>
+    <string name="mcp_variable_name">Variable Name</string>
+    <string name="mcp_value">Value</string>
+    <string name="mcp_oauth_configuration">OAuth Configuration</string>
+    <string name="mcp_oauth_client_id">Client ID</string>
+    <string name="mcp_oauth_client_secret">Client Secret (Optional)</string>
+    <string name="mcp_oauth_auth_url">Authorization URL</string>
+    <string name="mcp_oauth_token_url">Token URL</string>
+    <string name="mcp_oauth_scopes">Scopes (space-separated)</string>
+    <string name="mcp_oauth_redirect_uri">Redirect URI</string>
+    <string name="mcp_oauth_start_flow">Start OAuth Flow</string>
+    <string name="mcp_oauth_authenticated">✓ Authenticated</string>
+    <string name="mcp_done">Done</string>
+    <string name="mcp_clear">Clear</string>
 </resources>

@@ -134,6 +134,32 @@ class MCPLocalServer private constructor(private val context: Context) {
     }
 
     /**
+     * OAuth configuration for MCP servers
+     */
+    @Serializable
+    data class OAuthConfig(
+        @SerializedName("clientId")
+        val clientId: String = "",
+        @SerializedName("clientSecret")
+        val clientSecret: String? = null,
+        @SerializedName("authorizationUrl")
+        val authorizationUrl: String = "",
+        @SerializedName("tokenUrl")
+        val tokenUrl: String = "",
+        @SerializedName("scopes")
+        val scopes: List<String> = emptyList(),
+        @SerializedName("redirectUri")
+        val redirectUri: String = "operit://mcp-oauth-callback",
+        // Stored tokens after successful OAuth
+        @SerializedName("accessToken")
+        val accessToken: String? = null,
+        @SerializedName("refreshToken")
+        val refreshToken: String? = null,
+        @SerializedName("tokenExpiresAt")
+        val tokenExpiresAt: Long = 0L
+    )
+
+    /**
      * 插件元数据
      */
     @Serializable
@@ -170,6 +196,12 @@ class MCPLocalServer private constructor(private val context: Context) {
         val bearerToken: String? = null,
         @SerializedName("headers")
         val headers: Map<String, String>? = null,
+        // Environment variables (for API key auth on remote servers)
+        @SerializedName("env")
+        val env: Map<String, String>? = null,
+        // OAuth configuration (for OAuth-based auth on remote servers)
+        @SerializedName("oauthConfig")
+        val oauthConfig: OAuthConfig? = null,
         // 本地安装相关字段
         @SerializedName("installedPath")
         val installedPath: String? = null,

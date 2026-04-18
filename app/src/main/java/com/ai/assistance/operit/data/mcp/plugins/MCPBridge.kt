@@ -28,6 +28,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.json.JSONArray
+import com.ai.assistance.operit.data.mcp.MCPLocalServer
 
 /**
  * MCPBridge - 用于与TCP桥接器通信的插件类 支持以下命令:
@@ -627,7 +628,9 @@ class MCPBridge private constructor(private val context: Context) {
         connectionType: String? = null,
         description: String? = null,
         bearerToken: String? = null,
-        headers: Map<String, String>? = null
+        headers: Map<String, String>? = null,
+        env: Map<String, String>? = null,
+        oauthConfig: MCPLocalServer.OAuthConfig? = null
     ): JSONObject? {
         return sendCommand(
             MCPBridgeClient.buildRegisterRemoteCommand(
@@ -637,7 +640,9 @@ class MCPBridge private constructor(private val context: Context) {
                 connectionType = connectionType,
                 description = description,
                 bearerToken = bearerToken,
-                headers = headers
+                headers = headers,
+                env = env,
+                oauthConfig = oauthConfig
             )
         )
     }

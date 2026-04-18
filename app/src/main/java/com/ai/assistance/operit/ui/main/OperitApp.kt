@@ -198,6 +198,7 @@ fun OperitApp(
             listOfNotNull(
                 NavItem.MemoryBase,
                 NavItem.Terminal,
+                NavItem.Toolbox,
                 NavItem.AssistantConfig,
                 NavItem.TokenConfig,
                 NavItem.Integrations,

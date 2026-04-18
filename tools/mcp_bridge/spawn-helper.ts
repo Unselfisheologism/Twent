@@ -92,10 +92,57 @@ const handlers = {
                     headers['Authorization'] = `Bearer ${serviceInfo.bearerToken}`;
                 }
 
+                // Add OAuth token if available and not expired
+                if (serviceInfo.oauthConfig?.accessToken) {
+                    const now = Math.floor(Date.now() / 1000);
+                    const expiresAt = serviceInfo.oauthConfig.tokenExpiresAt || 0;
+                    // Use OAuth token if not expired (or no expiry set)
+                    if (expiresAt === 0 || now < expiresAt) {
+                        headers['Authorization'] = `Bearer ${serviceInfo.oauthConfig.accessToken}`;
+                        console.log(`[${serviceName}] Using OAuth access token`);
+                    } else if (serviceInfo.oauthConfig.refreshToken) {
+                        console.log(`[${serviceName}] OAuth token expired, would need refresh (not implemented in bridge)`);
+                    }
+                }
+
                 // Merge custom headers if provided
                 if (serviceInfo.headers) {
                     Object.assign(headers, serviceInfo.headers);
                 }
+
+                // Use env vars to populate headers for remote connections
+                // Common pattern: API_KEY env var -> X-API-Key header or similar
+                if (serviceInfo.env) {
+                    for (const [key, value] of Object.entries(serviceInfo.env)) {
+                        // Skip if value is "REQUIRED" placeholder
+                        if (value === 'REQUIRED') continue;
+                        
+                        // Common env var to header mappings
+                        if (key === 'API_KEY' && !headers['X-API-Key'] && !headers['x-api-key']) {
+                            headers['X-API-Key'] = value;
+                        } else if (key === 'PERSONAL_ACCESS_TOKEN' && !headers['Authorization']) {
+                            headers['Authorization'] = `Bearer ${value}`;
+                        } else if (key.endsWith('_API_KEY') && !headers[`X-${key.replace(/_API_KEY$/, '')}-Key`]) {
+                            // e.g., OPENAI_API_KEY -> X-OpenAI-Key
+                            const headerName = `X-${key.replace(/_API_KEY$/, '').replace(/_/g, '-')}-Key`;
+                            headers[headerName] = value;
+                        } else if (key.startsWith('HEADER_')) {
+                            // Explicit header mapping: HEADER_X_Custom_Header -> X-Custom-Header
+                            const headerName = key.replace('HEADER_', '').replace(/_/g, '-');
+                            headers[headerName] = value;
+                        } else if (!headers[key] && !headers[key.toLowerCase()]) {
+                            // Default: use env var name as header name
+                            headers[key] = value;
+                        }
+                    }
+                    if (serviceInfo.env && Object.keys(serviceInfo.env).length > 0) {
+                        console.log(`[${serviceName}] Applied ${Object.keys(serviceInfo.env).length} env vars as headers`);
+                    }
+                }
+
+                // Log final headers (without exposing sensitive values)
+                const headerKeys = Object.keys(headers);
+                console.log(`[${serviceName}] Connecting with headers: ${headerKeys.join(', ')}`);
 
                 // 使用扩展的 connectWithHeaders 方法传递 headers
                 await client.connectWithHeaders({
@@ -142,7 +189,12 @@ const handlers = {
             });
 
             const toolCallResult = { content: result.content };
-            const toolCallError = result.isError ? { code: -32000, message: result.content[0]?.text || "Remote tool error" } : undefined;
+            const toolCallError = result.isError ? { 
+                code: -32000, 
+                message: (result.content[0] && 'text' in result.content[0]) 
+                    ? (result.content[0] as any).text 
+                    : "Remote tool error" 
+            } : undefined;
 
             process.send!({
                 event: 'tool_result',

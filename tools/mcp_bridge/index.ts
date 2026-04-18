@@ -42,6 +42,19 @@ export interface McpServiceInfo {
     bearerToken?: string;
     headers?: Record<string, string>;
 
+    // OAuth configuration for remote services
+    oauthConfig?: {
+        clientId: string;
+        clientSecret?: string;
+        authorizationUrl: string;
+        tokenUrl: string;
+        scopes?: string[];
+        redirectUri?: string;
+        accessToken?: string;
+        refreshToken?: string;
+        tokenExpiresAt?: number;
+    };
+
     created: number;
     lastUsed?: number;
 }
@@ -974,6 +987,7 @@ class McpBridge {
                         connectionType: params.connectionType,
                         bearerToken: params.bearerToken,
                         headers: params.headers,
+                        oauthConfig: params.oauthConfig,
                     });
 
                     response = {

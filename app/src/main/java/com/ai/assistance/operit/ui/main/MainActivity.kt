@@ -208,6 +208,156 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Handle MCP OAuth callback - exchange authorization code for tokens
+     * and update the MCP server's OAuth configuration
+     */
+    private fun handleMCPOAuthCallback(code: String, state: String?) {
+        lifecycleScope.launch {
+            try {
+                val mcpLocalServer = com.ai.assistance.operit.data.mcp.MCPLocalServer.getInstance(this@MainActivity)
+                
+                // Find the MCP server that initiated OAuth (match by state or use the most recent one)
+                val allServers = mcpLocalServer.getAllPluginMetadata()
+                var targetServer: com.ai.assistance.operit.data.mcp.MCPLocalServer.PluginMetadata? = null
+                
+                // Try to find server by state (state could be server ID)
+                if (state != null) {
+                    targetServer = allServers.values.find { it.id == state || it.name == state }
+                }
+                
+                // If no match by state, find remote servers with OAuth config but no token
+                if (targetServer == null) {
+                    targetServer = allServers.values.find { 
+                        it.type == "remote" && it.oauthConfig != null && it.oauthConfig.accessToken == null 
+                    }
+                }
+                
+                if (targetServer == null || targetServer.oauthConfig == null) {
+                    AppLogger.e(TAG, "No MCP server found for OAuth callback")
+                    Toast.makeText(this@MainActivity, "OAuth failed: No server configured", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
+                val oauthConfig = targetServer.oauthConfig
+                
+                // Exchange authorization code for tokens
+                val tokenResult = exchangeOAuthCode(
+                    code = code,
+                    clientId = oauthConfig.clientId,
+                    clientSecret = oauthConfig.clientSecret,
+                    tokenUrl = oauthConfig.tokenUrl,
+                    redirectUri = oauthConfig.redirectUri
+                )
+                
+                tokenResult.fold(
+                    onSuccess = { tokenResponse ->
+                        // Calculate expiry time
+                        val expiresAt = if (tokenResponse.expiresIn > 0) {
+                            System.currentTimeMillis() / 1000 + tokenResponse.expiresIn
+                        } else {
+                            0L
+                        }
+                        
+                        // Update the server's OAuth config with tokens
+                        val updatedOAuthConfig = oauthConfig.copy(
+                            accessToken = tokenResponse.accessToken,
+                            refreshToken = tokenResponse.refreshToken ?: oauthConfig.refreshToken,
+                            tokenExpiresAt = expiresAt
+                        )
+                        
+                        val updatedServer = targetServer.copy(oauthConfig = updatedOAuthConfig)
+                        mcpLocalServer.addOrUpdatePluginMetadata(updatedServer.id, updatedServer)
+                        
+                        AppLogger.d(TAG, "MCP OAuth success for server: ${targetServer.name}")
+                        Toast.makeText(
+                            this@MainActivity,
+                            "OAuth completed for ${targetServer.name}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    },
+                    onFailure = { error ->
+                        AppLogger.e(TAG, "MCP OAuth token exchange failed", error)
+                        Toast.makeText(
+                            this@MainActivity,
+                            "OAuth failed: ${error.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Exception during MCP OAuth callback", e)
+                Toast.makeText(
+                    this@MainActivity,
+                    "OAuth error: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    /**
+     * OAuth token response data class
+     */
+    private data class OAuthTokenResponse(
+        val accessToken: String,
+        val tokenType: String,
+        val expiresIn: Long,
+        val refreshToken: String?
+    )
+
+    /**
+     * Exchange OAuth authorization code for access token
+     */
+    private suspend fun exchangeOAuthCode(
+        code: String,
+        clientId: String,
+        clientSecret: String?,
+        tokenUrl: String,
+        redirectUri: String
+    ): Result<OAuthTokenResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = java.net.URL(tokenUrl)
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                connection.doOutput = true
+                
+                val params = mutableListOf(
+                    "grant_type=authorization_code",
+                    "code=$code",
+                    "client_id=$clientId",
+                    "redirect_uri=$redirectUri"
+                )
+                if (clientSecret != null) {
+                    params.add("client_secret=$clientSecret")
+                }
+                
+                val postData = params.joinToString("&")
+                connection.outputStream.write(postData.toByteArray())
+                
+                val responseCode = connection.responseCode
+                if (responseCode == 200) {
+                    val response = connection.inputStream.bufferedReader().readText()
+                    val json = org.json.JSONObject(response)
+                    
+                    Result.success(OAuthTokenResponse(
+                        accessToken = json.getString("access_token"),
+                        tokenType = json.optString("token_type", "Bearer"),
+                        expiresIn = json.optLong("expires_in", 0),
+                        refreshToken = json.optString("refresh_token", null)
+                    ))
+                } else {
+                    val error = connection.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
+                    Result.failure(Exception("Token exchange failed ($responseCode): $error"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
     override fun attachBaseContext(newBase: Context) {
         // 获取当前设置的语言
         val code = LocaleUtils.getCurrentLanguage(newBase)
@@ -282,12 +432,14 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent) // 重要：更新当前Intent
         AppLogger.d(TAG, "onNewIntent: Received intent with action: ${intent?.action}")
-        val isGitHubOAuthCallback = intent?.data?.let { uri ->
-            uri.scheme == "twent" && uri.host == "github-oauth-callback"
+        val uri = intent?.data
+        val isOAuthCallback = uri?.let {
+            (it.scheme == "operit" || it.scheme == "twent") && 
+            (it.host == "github-oauth-callback" || it.host == "mcp-oauth-callback")
         } == true
         handleIntent(intent)
 
-        if (isGitHubOAuthCallback) {
+        if (isOAuthCallback) {
             return
         }
 
@@ -315,16 +467,33 @@ class MainActivity : ComponentActivity() {
         }
 
         val uri = intent?.data
-        if (uri != null && uri.scheme == "twent" && uri.host == "github-oauth-callback") {
-            val code = uri.getQueryParameter("code")
-            if (code != null) {
-                AppLogger.d(TAG, "GitHub OAuth code received from onCreate: $code")
-                handleGitHubOAuthCode(code)
-            } else {
-                val error = uri.getQueryParameter("error")
-                AppLogger.e(TAG, "GitHub OAuth error from onCreate: $error")
+        if (uri != null && (uri.scheme == "operit" || uri.scheme == "twent")) {
+            when (uri.host) {
+                "github-oauth-callback" -> {
+                    val code = uri.getQueryParameter("code")
+                    if (code != null) {
+                        AppLogger.d(TAG, "GitHub OAuth code received: $code")
+                        handleGitHubOAuthCode(code)
+                    } else {
+                        val error = uri.getQueryParameter("error")
+                        AppLogger.e(TAG, "GitHub OAuth error: $error")
+                    }
+                    return
+                }
+                "mcp-oauth-callback" -> {
+                    val code = uri.getQueryParameter("code")
+                    val state = uri.getQueryParameter("state")
+                    if (code != null) {
+                        AppLogger.d(TAG, "MCP OAuth code received: $code, state: $state")
+                        handleMCPOAuthCallback(code, state)
+                    } else {
+                        val error = uri.getQueryParameter("error")
+                        AppLogger.e(TAG, "MCP OAuth error: $error")
+                        Toast.makeText(this, "MCP OAuth failed: $error", Toast.LENGTH_LONG).show()
+                    }
+                    return
+                }
             }
-            return
         }
 
         // Handle opened and shared files
