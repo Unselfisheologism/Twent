@@ -1867,9 +1867,9 @@ fun RemoteServerEditDialog(
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 try {
-                                    context.startActivity(intent)
+                                    LocalContext.current.startActivity(intent)
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Cannot open browser: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(LocalContext.current, LocalContext.current.getString(R.string.mcp_cannot_open_browser, e.message ?: ""), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

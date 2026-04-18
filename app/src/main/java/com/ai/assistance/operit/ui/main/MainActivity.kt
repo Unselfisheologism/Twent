@@ -63,6 +63,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
@@ -239,7 +241,8 @@ class MainActivity : ComponentActivity() {
                     return@launch
                 }
                 
-                val oauthConfig = targetServer.oauthConfig
+                // Non-null assertion is safe here because we checked above
+                val oauthConfig = targetServer.oauthConfig!!
                 
                 // Exchange authorization code for tokens
                 val tokenResult = exchangeOAuthCode(
@@ -267,7 +270,7 @@ class MainActivity : ComponentActivity() {
                         )
                         
                         val updatedServer = targetServer.copy(oauthConfig = updatedOAuthConfig)
-                        mcpLocalServer.addOrUpdatePluginMetadata(updatedServer.id, updatedServer)
+                        mcpLocalServer.addOrUpdatePluginMetadata(updatedServer)
                         
                         AppLogger.d(TAG, "MCP OAuth success for server: ${targetServer.name}")
                         Toast.makeText(
