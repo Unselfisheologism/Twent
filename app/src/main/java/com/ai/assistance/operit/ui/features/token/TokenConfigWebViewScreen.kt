@@ -388,66 +388,6 @@ fun TokenConfigWebViewScreen(
     // UI布局
     CustomScaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color.White,
-                shadowElevation = 2.dp
-                ) {
-                    Column {
-                        HorizontalDivider(
-                                color = Color.LightGray.copy(alpha = 0.3f),
-                                thickness = 0.5.dp
-                        )
-
-                    // 导航栏
-                        Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                                                .height(60.dp)
-                                                .background(Color.White),
-                                verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            navDestinations.forEachIndexed { index, destination ->
-                                val isSelected = selectedTabIndex == index
-                                Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                                        .fillMaxSize()
-                                                        .clickable {
-                                                            navigateTo(destination.url, index)
-                                                        }
-                                                        .padding(4.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                            imageVector = destination.icon,
-                                            contentDescription = destination.title,
-                                            modifier = Modifier.size(24.dp),
-                                    tint = if (isSelected) 
-                                                            MaterialTheme.colorScheme.primary
-                                                    else Color.Gray
-                                    )
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Text(
-                                            text = destination.title,
-                                            fontSize = 12.sp,
-                                    fontWeight = if (isSelected) 
-                                        FontWeight.Medium 
-                                                    else FontWeight.Normal,
-                                    color = if (isSelected)
-                                                            MaterialTheme.colorScheme.primary
-                                                    else Color.Gray
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             Column(modifier = Modifier.fillMaxSize()) {

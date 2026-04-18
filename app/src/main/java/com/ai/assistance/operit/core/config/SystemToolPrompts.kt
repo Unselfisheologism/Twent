@@ -530,6 +530,69 @@ object SystemToolPrompts {
         categoryFooter = "\n注意：记忆库和用户性格档案会在你输出任务完成标志后由独立的系统自动更新。但是，如果需要立即管理记忆或更新用户偏好，请直接使用相应的工具。"
     )
 
+    // ==================== Mini-App Tools ====================
+    val miniAppTools = SystemToolPromptCategory(
+        categoryName = "Mini-App Tools",
+        tools = listOf(
+            ToolPrompt(
+                name = "create_mini_app",
+                description = "Create an interactive mini-app (HTML/CSS/JS application) that the user can launch from the app. Mini-apps support localStorage for data persistence and can call the AI model via window.OperitMiniAppNative.aiSendMessage(). Generate complete, self-contained HTML with embedded CSS and JS.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "name", type = "string", description = "Name of the mini-app", required = true),
+                    ToolParameterSchema(name = "html", type = "string", description = "Complete HTML content with embedded CSS in <style> and JS in <script> tags", required = true),
+                    ToolParameterSchema(name = "type", type = "string", description = "App type: 'persistent' (default) or 'ephemeral'", required = false, default = "persistent"),
+                    ToolParameterSchema(name = "css", type = "string", description = "Optional separate CSS content", required = false),
+                    ToolParameterSchema(name = "javascript", type = "string", description = "Optional separate JavaScript content", required = false),
+                    ToolParameterSchema(name = "description", type = "string", description = "Brief description of the mini-app", required = false)
+                )
+            ),
+            ToolPrompt(
+                name = "list_mini_apps",
+                description = "List all existing mini-apps.",
+                parametersStructured = emptyList()
+            ),
+            ToolPrompt(
+                name = "delete_mini_app",
+                description = "Delete an existing mini-app by ID.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "app_id", type = "string", description = "The ID of the mini-app to delete", required = true)
+                )
+            )
+        ),
+        categoryFooter = "\nMini-apps are served at: http://localhost:8095/mini_app/{id}/index.html"
+    )
+
+    val miniAppToolsCn = SystemToolPromptCategory(
+        categoryName = "Mini-App 工具",
+        tools = listOf(
+            ToolPrompt(
+                name = "create_mini_app",
+                description = "创建一个交互式Mini-App（HTML/CSS/JS应用），用户可以从应用中启动。Mini-App支持localStorage数据持久化，并可以通过window.OperitMiniAppNative.aiSendMessage()调用AI模型。生成完整的自包含HTML，内嵌CSS和JS。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "name", type = "string", description = "Mini-App名称", required = true),
+                    ToolParameterSchema(name = "html", type = "string", description = "完整的HTML内容，内嵌<style>CSS和<script>JS", required = true),
+                    ToolParameterSchema(name = "type", type = "string", description = "应用类型：'persistent'（默认）或'ephemeral'", required = false, default = "persistent"),
+                    ToolParameterSchema(name = "css", type = "string", description = "可选的单独CSS内容", required = false),
+                    ToolParameterSchema(name = "javascript", type = "string", description = "可选的单独JavaScript内容", required = false),
+                    ToolParameterSchema(name = "description", type = "string", description = "Mini-App简要描述", required = false)
+                )
+            ),
+            ToolPrompt(
+                name = "list_mini_apps",
+                description = "列出所有现有Mini-App。",
+                parametersStructured = emptyList()
+            ),
+            ToolPrompt(
+                name = "delete_mini_app",
+                description = "删除指定ID的Mini-App。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "app_id", type = "string", description = "要删除的Mini-App ID", required = true)
+                )
+            )
+        ),
+        categoryFooter = "\nMini-App访问地址: http://localhost:8095/mini_app/{id}/index.html"
+    )
+
     private val internalToolCategoriesEn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesEn
     private val internalToolCategoriesCn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesCn
     
@@ -584,7 +647,8 @@ object SystemToolPrompts {
             basicTools,
             adjustedFileSystemTools,
             httpTools,
-            memoryTools
+            memoryTools,
+            miniAppTools
         )
     }
 
@@ -659,7 +723,8 @@ object SystemToolPrompts {
             basicToolsCn,
             adjustedFileSystemTools,
             httpToolsCn,
-            memoryToolsCn
+            memoryToolsCn,
+            miniAppToolsCn
         )
     }
 

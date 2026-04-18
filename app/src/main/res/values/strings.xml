@@ -4859,6 +4859,6 @@
     <string name="api_key_detected_message">It looks like you copied an API key. Would you like to save it for %s?</string>
     <string name="api_key_saved">API Key Saved!</string>
     <string name="api_key_saved_message">Your API key for %s has been saved.</string>
-    <string name="go_to_config_message">Go to Models & Parameters Configuration to select and configure your AI model.</string>
+    <string name="go_to_config_message">Go to Models &amp; Parameters Configuration to select and configure your AI model.</string>
     <string name="open_configuration">Open Configuration →</string>
 </resources>
