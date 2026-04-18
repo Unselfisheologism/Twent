@@ -35,6 +35,9 @@ class DemoStateManager(private val context: Context, private val coroutineScope:
     val isPnpmInstalled = mutableStateOf(false)
     val isPythonInstalled = mutableStateOf(false)
     val isNodejsPythonEnvironmentReady = mutableStateOf(false)
+    // Granular package status for Terminal Setup card indicators
+    val isNodejsInstalled = mutableStateOf(false)
+    val isPipInstalled = mutableStateOf(false)
 
     init {
         coroutineScope.launch {
@@ -189,10 +192,16 @@ class DemoStateManager(private val context: Context, private val coroutineScope:
                 isPnpmInstalled.value = false
                 isPythonInstalled.value = false
                 isNodejsPythonEnvironmentReady.value = false
+                isNodejsInstalled.value = false
+                isPipInstalled.value = false
                 return
             }
 
             val terminal = Terminal.getInstance(context)
+
+            // Check nodejs installation
+            val nodeResult = terminal.executeCommand(sessionId, "command -v node")
+            isNodejsInstalled.value = nodeResult != null && (nodeResult.contains("node") || nodeResult.contains("/node"))
 
             // Check pnpm installation
             val pnpmResult = terminal.executeCommand(sessionId, "command -v pnpm")
@@ -220,18 +229,21 @@ class DemoStateManager(private val context: Context, private val coroutineScope:
                 }
             }
 
+            isPipInstalled.value = hasPip
             isPythonInstalled.value = hasPython && hasPip
 
             // Environment is ready only if both pnpm and python (with pip) are ready
             isNodejsPythonEnvironmentReady.value = isPnpmInstalled.value && isPythonInstalled.value
 
-            AppLogger.d(TAG, "NodeJS environment check - pnpm: ${isPnpmInstalled.value}, python: $hasPython, pip: $hasPip, python env: ${isPythonInstalled.value}, overall ready: ${isNodejsPythonEnvironmentReady.value}")
+            AppLogger.d(TAG, "NodeJS environment check - nodejs: ${isNodejsInstalled.value}, pnpm: ${isPnpmInstalled.value}, python: $hasPython, pip: $hasPip (${isPipInstalled.value}), python env: ${isPythonInstalled.value}, overall ready: ${isNodejsPythonEnvironmentReady.value}")
 
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error checking NodeJS and Python environment", e)
             isPnpmInstalled.value = false
             isPythonInstalled.value = false
             isNodejsPythonEnvironmentReady.value = false
+            isNodejsInstalled.value = false
+            isPipInstalled.value = false
         }
     }
 }

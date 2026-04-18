@@ -44,6 +44,7 @@ import com.ai.assistance.operit.ui.features.packages.screens.mcp.viewmodel.MCPMa
 import com.ai.assistance.operit.ui.features.packages.utils.MCPPluginParser
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -92,6 +92,12 @@ fun ShizukuDemoScreen(
     val showAccessibilityWizard by remember { derivedStateOf { uiState.showAccessibilityWizard.value } }
     val showOperitTerminalWizard by remember { derivedStateOf { uiState.showOperitTerminalWizard.value } }
 
+    // Granular terminal package status
+    val isNodejsInstalled by remember { derivedStateOf { viewModel.isNodejsInstalled.value } }
+    val isPnpmInstalledState by remember { derivedStateOf { viewModel.isPnpmInstalled.value } }
+    val isPythonInstalledState by remember { derivedStateOf { viewModel.isPythonInstalled.value } }
+    val isPipInstalledState by remember { derivedStateOf { viewModel.isPipInstalled.value } }
+
     // Location permission launcher
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -362,7 +368,6 @@ fun ShizukuDemoScreen(
                                 isExpanded = showOperitTerminalWizard,
                                 onToggle = { viewModel.toggleOperitTerminalWizard() }
                             ) {
-                                // Different wizard content layout
                                 Column(
                                     verticalArrangement = Arrangement.spacedBy(TwentSpacing.md)
                                 ) {
@@ -371,12 +376,27 @@ fun ShizukuDemoScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
-                                    
+
+                                    // Package status indicators
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                            .padding(12.dp)
+                                    ) {
+                                        PackageStatusRow("Node.js", isNodejsInstalled)
+                                        PackageStatusRow("pnpm", isPnpmInstalledState)
+                                        PackageStatusRow("Python", isPythonInstalledState)
+                                        PackageStatusRow("pip", isPipInstalledState)
+                                    }
+
                                     TwentButton(
                                         onClick = {
                                             navigateTo?.invoke(Screen.TerminalSetup)
                                         },
-                                        text = "Start Setup",
+                                        text = if (isOperitTerminalInstalled) "Open Setup" else "Start Setup",
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -600,5 +620,35 @@ private fun WizardCard(
                 content()
             }
         }
+    }
+}
+
+@Composable
+private fun PackageStatusRow(
+    name: String,
+    isInstalled: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = if (isInstalled) Icons.Filled.CheckCircle else Icons.Filled.RemoveCircle,
+            contentDescription = null,
+            tint = if (isInstalled) SuccessGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = if (isInstalled) "Installed" else "Not installed",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isInstalled) SuccessGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        )
     }
 }

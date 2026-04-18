@@ -34,6 +34,10 @@ class ShizukuDemoViewModel(application: Application) : AndroidViewModel(applicat
         get() = stateManager.isPythonInstalled
     val isNodejsPythonEnvironmentReady
         get() = stateManager.isNodejsPythonEnvironmentReady
+    val isNodejsInstalled
+        get() = stateManager.isNodejsInstalled
+    val isPipInstalled
+        get() = stateManager.isPipInstalled
 
     /** Initialize the ViewModel with context data */
     fun initialize(context: Context) {
