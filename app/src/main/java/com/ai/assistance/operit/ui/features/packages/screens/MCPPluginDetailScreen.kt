@@ -110,7 +110,7 @@ fun MCPPluginDetailScreen(
                 PluginActions(
                     onInstall = {
                         scope.launch {
-                            viewModel.installMCPFromIssue(issue)
+                            viewModel.installMCPFromRegistry(issue)
                         }
                     },
                     pluginInfo = pluginInfo,

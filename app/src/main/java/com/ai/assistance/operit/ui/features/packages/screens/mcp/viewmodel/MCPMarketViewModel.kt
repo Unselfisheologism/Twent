@@ -1688,4 +1688,288 @@ class MCPMarketViewModel(
             it.content == reactionType && it.user.login == currentUser.login 
         }
     }
+
+    /**
+     * Fetch full server.json from MCP Registry and convert to mcpServers config format.
+     * This is the authoritative source for installation.
+     * 
+     * @param serverName The server name from the registry (e.g., "com.apify/apify-mcp-server")
+     * @return JSON string in mcpServers config format, or null if fetch/parse fails
+     */
+    suspend fun fetchServerConfigFromRegistry(serverName: String): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val encodedName = java.net.URLEncoder.encode(serverName, "UTF-8")
+                val url = java.net.URL("$REGISTRY_BASE_URL/v0.1/servers/$encodedName/versions/latest")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Accept", "application/json")
+                conn.setRequestProperty("User-Agent", "TwentAI/1.0")
+                conn.connectTimeout = 15000
+                conn.readTimeout = 15000
+                
+                try {
+                    if (conn.responseCode == 200) {
+                        val body = conn.inputStream.bufferedReader().readText()
+                        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                        val response = json.decodeFromString<McpRegistryServerResponse>(body)
+                        val config = convertServerJsonToMcpServersConfig(response.server)
+                        AppLogger.d(TAG, "Fetched and converted server.json for $serverName")
+                        config
+                    } else {
+                        AppLogger.w(TAG, "Failed to fetch server.json for $serverName: HTTP ${conn.responseCode}")
+                        null
+                    }
+                } finally {
+                    conn.disconnect()
+                }
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Error fetching server.json for $serverName", e)
+                null
+            }
+        }
+    }
+
+    /**
+     * Response model for single server fetch from registry
+     */
+    @kotlinx.serialization.Serializable
+    private data class McpRegistryServerResponse(
+        val server: McpServerJson,
+        val _meta: Map<String, McpServerMeta>? = null
+    )
+
+    /**
+     * Convert MCP Registry server.json to standard mcpServers config format.
+     * 
+     * This produces JSON like:
+     * {
+     *   "mcpServers": {
+     *     "server-name": {
+     *       "command": "npx",
+     *       "args": ["-y", "@org/package"],
+     *       "env": {"API_KEY": "REQUIRED"}
+     *     }
+     *   }
+     * }
+     * 
+     * Or for remote servers:
+     * {
+     *   "mcpServers": {
+     *     "server-name": {
+     *       "url": "https://...",
+     *       "connectionType": "streamable-http",
+     *       "headers": {"Authorization": "REQUIRED"}
+     *     }
+     *   }
+     * }
+     */
+    private fun convertServerJsonToMcpServersConfig(server: McpServerJson): String? {
+        val serverId = server.name.substringAfterLast("/").replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        
+        // Prefer remote servers if available
+        if (!server.remotes.isNullOrEmpty()) {
+            val remote = server.remotes.first()
+            val configObj = org.json.JSONObject().apply {
+                put("url", remote.url)
+                // Map remote type to connectionType
+                put("connectionType", when (remote.type) {
+                    "sse" -> "sse"
+                    "streamable-http" -> "httpStream"
+                    else -> remote.type
+                })
+                // Add headers with REQUIRED placeholder for required ones
+                if (!remote.headers.isNullOrEmpty()) {
+                    val headersObj = org.json.JSONObject()
+                    remote.headers.forEach { header ->
+                        val value = if (header.isRequired) "REQUIRED" else ""
+                        headersObj.put(header.name, value)
+                    }
+                    put("headers", headersObj)
+                }
+            }
+            
+            return org.json.JSONObject().apply {
+                put("mcpServers", org.json.JSONObject().apply {
+                    put(serverId, configObj)
+                })
+            }.toString(2)
+        }
+        
+        // Handle package-based servers
+        if (!server.packages.isNullOrEmpty()) {
+            val pkg = server.packages.first()
+            val configObj = org.json.JSONObject().apply {
+                when (pkg.registryType) {
+                    "npm" -> {
+                        put("command", "npx")
+                        val pkgId = if (pkg.version.isNotBlank()) "${pkg.identifier}@${pkg.version}" else pkg.identifier
+                        put("args", org.json.JSONArray().apply {
+                            put("-y")
+                            put(pkgId)
+                        })
+                    }
+                    "pypi" -> {
+                        put("command", "uvx")
+                        val pkgId = if (pkg.version.isNotBlank()) "${pkg.identifier}==${pkg.version}" else pkg.identifier
+                        put("args", org.json.JSONArray().apply { put(pkgId) })
+                    }
+                    "docker" -> {
+                        put("command", "docker")
+                        val imageId = if (pkg.version.isNotBlank()) "${pkg.identifier}:${pkg.version}" else pkg.identifier
+                        put("args", org.json.JSONArray().apply {
+                            put("run")
+                            put("-i")
+                            put("--rm")
+                            put(imageId)
+                        })
+                    }
+                    "oci" -> {
+                        // OCI containers - treat as docker
+                        put("command", "docker")
+                        put("args", org.json.JSONArray().apply {
+                            put("run")
+                            put("-i")
+                            put("--rm")
+                            put(pkg.identifier)
+                        })
+                    }
+                    "nuget" -> {
+                        put("command", "dotnet")
+                        put("args", org.json.JSONArray().apply {
+                            put("tool")
+                            put("run")
+                            put(pkg.identifier)
+                        })
+                    }
+                    "crate" -> {
+                        put("command", "cargo")
+                        put("args", org.json.JSONArray().apply {
+                            put("run")
+                            put("--package")
+                            put(pkg.identifier)
+                        })
+                    }
+                    else -> {
+                        AppLogger.w(TAG, "Unsupported registry type: ${pkg.registryType} for ${server.name}")
+                        return null
+                    }
+                }
+                
+                // Add environment variables
+                if (!pkg.environmentVariables.isNullOrEmpty()) {
+                    val envObj = org.json.JSONObject()
+                    pkg.environmentVariables.forEach { envVar ->
+                        val value = if (envVar.isRequired) "REQUIRED" else ""
+                        envObj.put(envVar.name, value)
+                    }
+                    put("env", envObj)
+                }
+            }
+            
+            return org.json.JSONObject().apply {
+                put("mcpServers", org.json.JSONObject().apply {
+                    put(serverId, configObj)
+                })
+            }.toString(2)
+        }
+        
+        // Fallback: try to generate from repository URL
+        if (server.repository?.url?.startsWith("http") == true) {
+            val githubMatch = Regex("github\\.com/([^/]+)/([^/]+?)(?:\\.git)?/?$").find(server.repository.url)
+            if (githubMatch != null) {
+                val owner = githubMatch.groupValues[1]
+                val repo = githubMatch.groupValues[2]
+                val configObj = org.json.JSONObject().apply {
+                    put("command", "npx")
+                    put("args", org.json.JSONArray().apply {
+                        put("-y")
+                        put("github:${owner}/${repo}")
+                    })
+                }
+                return org.json.JSONObject().apply {
+                    put("mcpServers", org.json.JSONObject().apply {
+                        put(serverId, configObj)
+                    })
+                }.toString(2)
+            }
+        }
+        
+        AppLogger.w(TAG, "Could not convert server.json to mcpServers config for ${server.name}")
+        return null
+    }
+
+    /**
+     * Install MCP server from registry using the proper server.json approach.
+     * Fetches the authoritative server.json, converts to mcpServers config, and imports.
+     */
+    fun installMCPFromRegistry(issue: GitHubIssue) {
+        viewModelScope.launch {
+            try {
+                // Extract server name from the issue body metadata
+                val metadata = parseMCPMetadata(issue.body ?: "")
+                val serverName = metadata?.tags ?: issue.title
+                
+                AppLogger.d(TAG, "Installing MCP from registry: $serverName")
+                
+                // Mark as installing
+                val pluginId = generateMCPId(issue)
+                _installingPlugins.value = _installingPlugins.value + pluginId
+                
+                // Try to fetch the full server.json from registry
+                // The server name is embedded in the tags field of our metadata
+                val registryServerName = extractRegistryServerName(issue)
+                
+                if (registryServerName != null) {
+                    AppLogger.d(TAG, "Fetching server.json from registry for: $registryServerName")
+                    val config = fetchServerConfigFromRegistry(registryServerName)
+                    
+                    if (config != null) {
+                        // Use config import approach
+                        val mcpLocalServer = MCPLocalServer.getInstance(context)
+                        val mergeResult = mcpLocalServer.mergeConfigFromJson(config)
+                        
+                        mergeResult.fold(
+                            onSuccess = { count ->
+                                _installingPlugins.value = _installingPlugins.value - pluginId
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.mcp_market_install_success, issue.title),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                mcpRepository.refreshPluginList()
+                                AppLogger.i(TAG, "Successfully installed $serverName from registry via config import")
+                                return@launch
+                            },
+                            onFailure = { error ->
+                                AppLogger.w(TAG, "Config import failed for $serverName, falling back to legacy install: ${error.message}")
+                                // Fall through to legacy install
+                            }
+                        )
+                    }
+                }
+                
+                // Fallback to legacy install from issue body
+                AppLogger.d(TAG, "Falling back to legacy install for ${issue.title}")
+                installMCPFromIssue(issue)
+                
+            } catch (e: Exception) {
+                val pluginId = generateMCPId(issue)
+                _installingPlugins.value = _installingPlugins.value - pluginId
+                _errorMessage.value = context.getString(R.string.mcp_market_install_failed_with_error, e.message ?: "")
+                AppLogger.e(TAG, "Failed to install MCP from registry", e)
+            }
+        }
+    }
+
+    /**
+     * Extract the registry server name from issue metadata.
+     * The server name is stored in the "tags" field of our metadata.
+     */
+    private fun extractRegistryServerName(issue: GitHubIssue): String? {
+        val body = issue.body ?: return null
+        val metadata = parseMCPMetadata(body) ?: return null
+        // The tags field contains the registry server name
+        return metadata.tags.ifBlank { null }
+    }
 } 
