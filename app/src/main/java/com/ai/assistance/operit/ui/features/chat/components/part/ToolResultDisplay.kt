@@ -59,17 +59,13 @@ fun ToolResultDisplay(
     Row(
             modifier =
                     Modifier.fillMaxWidth()
-                            .padding(start = 24.dp, end = 16.dp, top = 2.dp, bottom = 2.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                    if (isSuccess) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
-                                    else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                            )
+                            .padding(start = 24.dp, end = 16.dp, top = 0.dp, bottom = 0.dp)
+                            .clip(RoundedCornerShape(4.dp))
                             .clickable(enabled = hasContent && enableDialog) {
                                 // 仅在启用弹窗时才允许点击打开详情
                                 if (hasContent && enableDialog) showDetailDialog = true
                             }
-                            .padding(vertical = 6.dp, horizontal = 10.dp),
+                            .padding(vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
     ) {
         // 子目录箭头图标，表示这是上个工具的执行结果
@@ -77,8 +73,8 @@ fun ToolResultDisplay(
                 imageVector = Icons.Default.SubdirectoryArrowRight,
                 contentDescription = context.getString(R.string.tool_execution_result),
                 tint =
-                        if (isSuccess) MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                        if (isSuccess) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        else MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
         )
 
@@ -89,7 +85,7 @@ fun ToolResultDisplay(
                 imageVector = if (isSuccess) Icons.Default.Check else Icons.Default.Close,
                 contentDescription = if (isSuccess) context.getString(R.string.success) else context.getString(R.string.failed),
                 tint =
-                        if (isSuccess) MaterialTheme.colorScheme.secondary
+                        if (isSuccess) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(14.dp)
         )
@@ -100,10 +96,10 @@ fun ToolResultDisplay(
         Text(
                 text = if (hasContent) result.take(200) else if (isSuccess) context.getString(R.string.execution_success) else context.getString(R.string.execution_failed),
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (!hasContent) FontWeight.SemiBold else FontWeight.Normal,
+                fontWeight = if (!hasContent) FontWeight.Medium else FontWeight.Normal,
                 color =
-                        if (isSuccess) MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
-                        else MaterialTheme.colorScheme.error.copy(alpha = 0.85f),
+                        if (isSuccess) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -121,7 +117,7 @@ fun ToolResultDisplay(
                 Icon(
                         imageVector = Icons.Default.ContentCopy,
                         contentDescription = context.getString(R.string.copy_result),
-                        tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         modifier = Modifier.size(14.dp)
                 )
             }
@@ -145,14 +141,11 @@ private fun ToolResultDetailDialog(
     ) {
         Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 // 标题栏
                 Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -164,9 +157,9 @@ private fun ToolResultDetailDialog(
                                     if (isSuccess) Icons.Default.Check else Icons.Default.Close,
                             contentDescription = if (isSuccess) context.getString(R.string.success) else context.getString(R.string.failed),
                             tint =
-                                    if (isSuccess) MaterialTheme.colorScheme.secondary
+                                    if (isSuccess) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -176,7 +169,7 @@ private fun ToolResultDetailDialog(
                             text = "$toolName ${if (isSuccess) context.getString(R.string.execution_success) else context.getString(R.string.execution_failed)}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -186,7 +179,7 @@ private fun ToolResultDetailDialog(
                         Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = context.getString(R.string.copy_result),
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -194,7 +187,7 @@ private fun ToolResultDetailDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 分隔线
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -208,22 +201,22 @@ private fun ToolResultDetailDialog(
                                                 color =
                                                         if (isSuccess)
                                                                 MaterialTheme.colorScheme
-                                                                        .secondaryContainer.copy(
-                                                                        alpha = 0.15f
+                                                                        .surfaceVariant.copy(
+                                                                        alpha = 0.5f
                                                                 )
                                                         else
                                                                 MaterialTheme.colorScheme
                                                                         .errorContainer.copy(
-                                                                        alpha = 0.15f
+                                                                        alpha = 0.2f
                                                                 ),
-                                                shape = RoundedCornerShape(12.dp)
+                                                shape = RoundedCornerShape(8.dp)
                                         )
-                                        .padding(14.dp)
+                                        .padding(12.dp)
                 ) {
                     Text(
                             text = result,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (isSuccess) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -233,10 +226,9 @@ private fun ToolResultDetailDialog(
                 Button(
                         onClick = onDismiss,
                         modifier = Modifier.align(Alignment.End),
-                        shape = RoundedCornerShape(12.dp),
                         colors =
                                 ButtonDefaults.buttonColors(
-                                        containerColor = if (isSuccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+                                        containerColor = MaterialTheme.colorScheme.primary
                                 )
                 ) { Text(context.getString(R.string.close)) }
             }

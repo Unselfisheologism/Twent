@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -172,32 +171,6 @@ fun ChatArea(
                 maxOf(0, maxVisibleIndex - currentDepth.value * messagesPerPage + 1)
             val hasMoreMessages = minVisibleIndex > 0
 
-            // 当AI正在响应但尚未输出任何文本时，显示加载指示器 - 放在最顶部
-            if (showLoadingIndicator) {
-                when (chatStyle) {
-                    ChatStyle.BUBBLE -> {
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)) {
-                            Box(modifier = Modifier.padding(start = 16.dp)) {
-                                LoadingDotsIndicator(aiTextColor)
-                            }
-                        }
-                    }
-
-                    ChatStyle.CURSOR -> {
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)) {
-                            Box(modifier = Modifier.padding(start = 16.dp)) {
-                                LoadingDotsIndicator(aiTextColor)
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
             // "加载更多"文本 - 改为灰色文本而非按钮
             if (hasMoreMessages) {
                 Text(
@@ -208,15 +181,10 @@ fun ChatArea(
                         .clickable { currentDepth.value += 1 }
                         .padding(vertical = 16.dp),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    color = Color.Gray,
                     textAlign = TextAlign.Center,
                 )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 48.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // 根据当前深度筛选显示的消息
@@ -258,7 +226,35 @@ fun ChatArea(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // 当AI正在响应但尚未输出任何文本时，显示加载指示器
+            if (showLoadingIndicator) {
+                when (chatStyle) {
+                    ChatStyle.BUBBLE -> {
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 0.dp)
+                            .offset(y = (-24).dp)) {
+                            // 加载指示器放在左侧，与标签对齐
+                            Box(modifier = Modifier.padding(start = 16.dp)) {
+                                LoadingDotsIndicator(aiTextColor)
+                            }
+                        }
+                    }
+
+                    ChatStyle.CURSOR -> {
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 0.dp)) {
+                            // 加载指示器放在左侧，与标签对齐
+                            Box(modifier = Modifier.padding(start = 16.dp)) {
+                                LoadingDotsIndicator(aiTextColor)
+                            }
+                        }
+                    }
+                }
             }
 
             // 添加额外的空白区域，防止消息被输入框遮挡
@@ -312,8 +308,8 @@ private fun MessageItem(
             .then(
                 if (isSelected) {
                     Modifier.background(
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(10.dp)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
                     )
                 } else Modifier
             )
@@ -370,8 +366,8 @@ private fun MessageItem(
             expanded = showContextMenu,
             onDismissRequest = { showContextMenu = false },
             modifier = Modifier
-                .width(150.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(12.dp)),
+                .width(140.dp)
+                .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(6.dp)),
             properties = PopupProperties(
                 focusable = true,
                 dismissOnBackPress = true,

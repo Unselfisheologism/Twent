@@ -550,19 +550,19 @@ class CustomXmlRenderer(
         val bgColor =
                 when (statusType) {
                     "completion", "complete" ->
-                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     "wait_for_user_need" ->
-                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-                    "warning" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                    "warning" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                 }
 
         val borderColor =
                 when (statusType) {
-                    "completion", "complete" -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
-                    "wait_for_user_need" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
-                    "warning" -> MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
-                    else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    "completion", "complete" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    "wait_for_user_need" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
+                    "warning" -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                    else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 }
 
         // 使用硬编码的文本，不管标签内有无内容
@@ -577,21 +577,20 @@ class CustomXmlRenderer(
                 }
 
         Card(
-                modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
+                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
                 colors = CardDefaults.cardColors(containerColor = bgColor),
                 border = BorderStroke(width = 1.dp, color = borderColor),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                     text = statusText,
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                     color =
                             when (statusType) {
-                                "completion", "complete" -> MaterialTheme.colorScheme.secondary
+                                "completion", "complete" -> MaterialTheme.colorScheme.primary
                                 "wait_for_user_need" -> MaterialTheme.colorScheme.tertiary
                                 "warning" -> MaterialTheme.colorScheme.error
-                                else -> textColor.copy(alpha = 0.9f)
+                                else -> textColor
                             },
                     modifier = Modifier.padding(12.dp),
                     maxLines = if (statusType == "warning") 1 else Int.MAX_VALUE

@@ -77,7 +77,7 @@ fun CompactToolDisplay(
     Row(
             modifier =
                     modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .clearAndSetSemantics {
                                 contentDescription = semanticDescription
                             }
@@ -92,7 +92,7 @@ fun CompactToolDisplay(
         Icon(
                 imageVector = getToolIcon(toolName),
                 contentDescription = context.getString(R.string.tool_call),
-                tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                 modifier = Modifier.size(16.dp)
         )
 
@@ -102,8 +102,8 @@ fun CompactToolDisplay(
         Text(
                 text = toolName,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.widthIn(min = 80.dp, max = 120.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -121,7 +121,7 @@ fun CompactToolDisplay(
             Text(
                     text = summary,
                     style = MaterialTheme.typography.bodySmall,
-                    color = textColor.copy(alpha = 0.6f),
+                    color = textColor.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -172,16 +172,16 @@ fun DetailedToolDisplay(
             colors =
                     CardDefaults.cardColors(
                             containerColor =
-                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.35f)
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     ),
             border =
                     BorderStroke(
-                            width = 1.5.dp,
-                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             // 工具标题行
             Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -191,7 +191,7 @@ fun DetailedToolDisplay(
                 Icon(
                         imageVector = getToolIcon(toolName),
                         contentDescription = context.getString(R.string.tool_call),
-                        tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                         modifier = Modifier.size(16.dp)
                 )
 
@@ -201,8 +201,8 @@ fun DetailedToolDisplay(
                 Text(
                         text = toolName,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -214,7 +214,7 @@ fun DetailedToolDisplay(
                     Text(
                             text = "$lineCount ${context.getString(R.string.lines_count)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             maxLines = 1,
                             softWrap = false,
                             overflow = TextOverflow.Ellipsis
@@ -224,7 +224,7 @@ fun DetailedToolDisplay(
 
             // 参数内容 - 使用代码风格显示
             if (params.isNotBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // 按行拆分参数文本，并用remember缓存，仅在params改变时重新计算
                 val lines = remember(params.length) {
@@ -246,10 +246,10 @@ fun DetailedToolDisplay(
                         modifier =
                                 Modifier.fillMaxWidth()
                                         .heightIn(min = 10.dp, max = 200.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                                MaterialTheme.colorScheme.tertiaryContainer.copy(
-                                                        alpha = 0.2f
+                                                MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                        alpha = 0.5f
                                                 )
                                         )
                 ) {
