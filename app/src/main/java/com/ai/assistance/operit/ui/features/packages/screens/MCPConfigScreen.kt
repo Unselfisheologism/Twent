@@ -1860,6 +1860,7 @@ fun RemoteServerEditDialog(
                     
                     // Start OAuth Flow Button (only shown when OAuth is configured)
                     if (oauthConfig != null && oauthConfig?.authorizationUrl?.isNotEmpty() == true) {
+                        val contextForOAuth = LocalContext.current
                         Button(
                             onClick = {
                                 // Build OAuth authorization URL and open browser
@@ -1867,9 +1868,9 @@ fun RemoteServerEditDialog(
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 try {
-                                    LocalContext.current.startActivity(intent)
+                                    contextForOAuth.startActivity(intent)
                                 } catch (e: Exception) {
-                                    Toast.makeText(LocalContext.current, LocalContext.current.getString(R.string.mcp_cannot_open_browser, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(contextForOAuth, contextForOAuth.getString(R.string.mcp_cannot_open_browser, e.message ?: ""), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
