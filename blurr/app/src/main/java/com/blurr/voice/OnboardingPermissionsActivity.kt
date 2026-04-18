@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import com.blurr.voice.utilities.AccessibilityGuideHelper
 import com.blurr.voice.utilities.OnboardingManager
 import android.widget.VideoView
 import androidx.lifecycle.lifecycleScope
@@ -236,24 +237,9 @@ class OnboardingPermissionsActivity : AppCompatActivity() {
         startActivity(intent) // (no launcher)
     }
     private fun showAccessibilityConsentDialog() {
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.accessibility_consent_title))
-            .setMessage(getString(R.string.accessibility_permission_details))
-            .setPositiveButton(getString(R.string.accept)) { _, _ ->
-                // User clicked Accept, navigate to System Settings
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-            }
-            .setNegativeButton(getString(R.string.decline)) { dialog, _ ->
-                // User clicked Decline, just dismiss the dialog and do nothing
-                dialog.dismiss()
-            }
-            .create()
-
-        // Now, show the dialog
-        dialog.show()
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.GREEN)
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.parseColor("#F44336"))
+        // Show the detailed OEM-aware guide dialog.
+        // On Android 13+ this explains the two-phase restricted-settings flow.
+        AccessibilityGuideHelper.showGuideDialog(this)
     }
     private fun setupLaunchers() {
         requestPermissionLauncher =

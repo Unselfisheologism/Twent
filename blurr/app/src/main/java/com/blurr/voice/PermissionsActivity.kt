@@ -15,9 +15,10 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.blurr.voice.utilities.AccessibilityGuideHelper
 
 class PermissionsActivity : AppCompatActivity() {
 
@@ -108,24 +109,10 @@ class PermissionsActivity : AppCompatActivity() {
     }
 
     private fun showAccessibilityConsentDialog() {
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.accessibility_consent_title))
-            .setMessage(getString(R.string.accessibility_consent_message))
-            .setPositiveButton(getString(R.string.accept)) { _, _ ->
-                // User clicked Accept, navigate to System Settings
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-            }
-            .setNegativeButton(getString(R.string.decline)) { dialog, _ ->
-                // User clicked Decline, just dismiss the dialog and do nothing
-                dialog.dismiss()
-            }
-            .create()
-
-        // Now, show the dialog
-        dialog.show()
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.GREEN)
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.parseColor("#F44336"))
+        // Show the detailed OEM-aware guide dialog instead of the simple consent dialog.
+        // On Android 13+ this explains the two-phase restricted-settings flow.
+        // On older versions it shows the simpler guide.
+        AccessibilityGuideHelper.showGuideDialog(this)
     }
 
     private fun updatePermissionStatuses() {
