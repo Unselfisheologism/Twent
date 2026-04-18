@@ -396,7 +396,8 @@ class MCPMarketViewModel(
                     parts.add("\"args\":[\"run\",\"--package\",\"${pkg.identifier.replace("\"", "\\\"")}\"]")
                 }
                 else -> {
-                    parts.add("\"command\":\"${pkg.identifier.replace("\"", "\\\"")}\"")
+                    AppLogger.w(TAG, "Unsupported registry type: ${pkg.registryType} for server $sn")
+                    return null
                 }
             }
             // Add environment variables
@@ -408,9 +409,33 @@ class MCPMarketViewModel(
             }
             return "{\"mcpServers\":{\"$sn\":{${parts.joinToString(",")}}}}"
         }
+        
+        // Fallback: If only repository URL is available, generate install config from it
+        // This handles servers in the registry that list a repository but no packages/remotes
+        if (server.repository?.url?.startsWith("http") == true) {
+            val repoUrl = server.repository.url
+            // Try to extract GitHub owner/repo for npx-based install
+            val githubMatch = Regex("github\\.com/([^/]+)/([^/]+?)(?:\\.git)?/?$").find(repoUrl)
+            if (githubMatch != null) {
+                val owner = githubMatch.groupValues[1]
+                val repo = githubMatch.groupValues[2]
+                // Generate a config that uses npx with the GitHub repo
+                // Many MCP servers can be installed via: npx -y github:owner/repo
+                val parts = mutableListOf(
+                    "\"command\":\"npx\"",
+                    "\"args\":[\"-y\",\"github:${owner}/${repo}\"]"
+                )
+                AppLogger.d(TAG, "Generated fallback install config from repository URL for $sn: $owner/$repo")
+                return "{\"mcpServers\":{\"$sn\":{${parts.joinToString(",")}}}}"
+            }
+            // For non-GitHub repos, just return the repo URL as metadata
+            // The user will need to manually configure it
+            AppLogger.d(TAG, "Server $sn has repository URL but no packages/remotes: $repoUrl")
+            return null
+        }
+        
         return null
     }
-
     @kotlinx.serialization.Serializable
     private data class McpRegistryResponse(
         val servers: List<McpServerEntry> = emptyList(),

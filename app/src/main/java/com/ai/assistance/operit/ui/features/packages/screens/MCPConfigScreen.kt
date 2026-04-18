@@ -203,7 +203,7 @@ fun MCPConfigScreen(
     var pluginNameInput by remember { mutableStateOf("") }
     var isImporting by remember { mutableStateOf(false) }
     // 新增：导入方式选择和压缩包路径
-    var importTabIndex by remember { mutableStateOf(0) } // 0: 仓库导入, 1: 压缩包导入
+    var importTabIndex by remember { mutableStateOf(3) } // 0: 仓库导入, 1: 压缩包导入, 2: 远程服务, 3: 配置导入
     var zipFilePath by remember { mutableStateOf("") }
     var showFilePickerDialog by remember { mutableStateOf(false) }
 
@@ -1280,6 +1280,23 @@ fun MCPConfigScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    // Refresh button
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch {
+                                                refreshMcpScreen()
+                                            }
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Refresh,
+                                            contentDescription = stringResource(R.string.mcp_market_refresh),
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    
                                     Box(
                                         modifier = Modifier
                                             .size(8.dp)
