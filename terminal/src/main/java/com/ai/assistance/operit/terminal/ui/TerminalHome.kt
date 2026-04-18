@@ -76,6 +76,25 @@ import android.graphics.Typeface
 import android.view.inputmethod.InputMethodManager
 import java.io.File
 
+
+// ── Modern Dark Theme Colors ──────────────────────────────────
+private object TerminalColors {
+    val Background = Color(0xFF1A1B26)        // Deep blue-black
+    val Surface = Color(0xFF24273A)           // Card/panel surface
+    val SurfaceDim = Color(0xFF1E2030)        // Subtle dim surface
+    val Accent = Color(0xFF7AA2F7)            // Blue accent
+    val AccentMuted = Color(0xFF3D4460)       // Muted accent
+    val PromptBg = Color(0xFF3D4460)          // Prompt pill background
+    val TextPrimary = Color(0xFFCAD3F5)       // Primary text
+    val TextSecondary = Color(0xFF8087A2)     // Secondary/muted text
+    val TextCommand = Color(0xFF9ECE6A)       // Green for commands
+    val Danger = Color(0xFFF7768E)            // Red for delete/danger
+    val KeyBg = Color(0xFF2A2D3E)             // Keyboard key bg
+    val KeyActive = Color(0xFF7AA2F7)         // Active modifier key
+    val Divider = Color(0xFF363A4E)           // Subtle divider
+    val CardShadow = Color(0xFF0D0E16)        // Card shadow color
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TerminalHome(
@@ -283,7 +302,7 @@ fun TerminalHome(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(TerminalColors.Background)
     ) {
         // 会话标签页
         SessionTabBar(
@@ -388,16 +407,16 @@ fun TerminalHome(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            modifier = Modifier.padding(end = padding * 0.5f),
-                            color = Color(0xFF006400), // DarkGreen
-                            shape = RoundedCornerShape(4.dp)
+                            modifier = Modifier.padding(end = padding),
+                            color = TerminalColors.PromptBg,
+                            shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
                                 text = getTruncatedPrompt(env.currentDirectory.ifEmpty { "$ " }),
-                                color = Color.White,
+                                color = TerminalColors.Accent,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = fontSize,
-                                modifier = Modifier.padding(horizontal = padding * 0.5f, vertical = padding * 0.1f)
+                                modifier = Modifier.padding(horizontal = padding, vertical = padding * 0.4f)
                             )
                         }
                         BasicTextField(
@@ -408,11 +427,11 @@ fun TerminalHome(
                                 .focusRequester(inputFocusRequester),
                             enabled = true,
                             textStyle = TextStyle(
-                                color = SyntaxColors.commandDefault,
+                                color = TerminalColors.TextCommand,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = fontSize
                             ),
-                            cursorBrush = SolidColor(Color.Green),
+                            cursorBrush = SolidColor(TerminalColors.Accent),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             keyboardActions = KeyboardActions(onSend = {
@@ -424,8 +443,8 @@ fun TerminalHome(
                             modifier = Modifier
                                 .padding(start = padding * 0.5f)
                                 .clickable { showVirtualKeyboard = !showVirtualKeyboard },
-                            color = if (showVirtualKeyboard) Color(0xFF4A4A4A) else Color(0xFF3A3A3A),
-                            shape = RoundedCornerShape(4.dp)
+                            color = if (showVirtualKeyboard) TerminalColors.Accent else TerminalColors.PromptBg,
+                            shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
                                 text = "⌨",
@@ -439,8 +458,8 @@ fun TerminalHome(
                             modifier = Modifier
                                 .padding(start = padding * 0.5f)
                                 .clickable { toggleDirectInputMode() },
-                            color = if (isDirectInputMode) Color(0xFF4A4A4A) else Color(0xFF3A3A3A),
-                            shape = RoundedCornerShape(4.dp)
+                            color = if (isDirectInputMode) TerminalColors.Accent else TerminalColors.PromptBg,
+                            shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
                                 text = "⇄",
@@ -483,13 +502,13 @@ fun TerminalHome(
             title = {
                 Text(
                     text = context.getString(com.ai.assistance.operit.terminal.R.string.confirm_delete_session),
-                    color = Color.White
+                    color = TerminalColors.TextPrimary
                 )
             },
             text = {
                 Text(
                     text = context.getString(com.ai.assistance.operit.terminal.R.string.delete_session_message, sessionTitle),
-                    color = Color.Gray
+                    color = TerminalColors.TextSecondary
                 )
             },
             confirmButton = {
@@ -504,7 +523,7 @@ fun TerminalHome(
                 ) {
                     Text(
                         text = context.getString(com.ai.assistance.operit.terminal.R.string.delete),
-                        color = Color.Red
+                        color = TerminalColors.Danger
                     )
                 }
             },
@@ -517,13 +536,13 @@ fun TerminalHome(
                 ) {
                     Text(
                         text = context.getString(com.ai.assistance.operit.terminal.R.string.cancel),
-                        color = Color.White
+                        color = TerminalColors.TextSecondary
                     )
                 }
             },
-            containerColor = Color(0xFF2D2D2D),
-            titleContentColor = Color.White,
-            textContentColor = Color.Gray
+            containerColor = TerminalColors.Surface,
+            titleContentColor = TerminalColors.TextPrimary,
+            textContentColor = TerminalColors.TextSecondary
         )
     }
 }
@@ -547,8 +566,8 @@ private fun SessionTabBar(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF2D2D2D),
-        shadowElevation = 4.dp
+        color = TerminalColors.Surface,
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
@@ -601,17 +620,17 @@ private fun SessionTab(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() },
-        color = if (isActive) Color(0xFF4A4A4A) else Color(0xFF3A3A3A),
-        shape = RoundedCornerShape(8.dp)
+        color = if (isActive) TerminalColors.Accent else TerminalColors.SurfaceDim,
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = session.title,
-                color = if (isActive) Color.White else Color.Gray,
+                color = if (isActive) Color.White else TerminalColors.TextSecondary,
                 fontSize = 12.sp,
                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
@@ -628,7 +647,7 @@ private fun SessionTab(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = context.getString(com.ai.assistance.operit.terminal.R.string.close_session),
-                        tint = Color.Gray,
+                        tint = TerminalColors.TextSecondary,
                         modifier = Modifier.size(12.dp)
                     )
                 }
@@ -653,8 +672,8 @@ private fun TerminalToolbar(
     val context = LocalContext.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF1A1A1A),
-        shadowElevation = 2.dp
+        color = TerminalColors.SurfaceDim,
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
@@ -667,8 +686,8 @@ private fun TerminalToolbar(
                 // Ctrl+C 中断按钮
                 Surface(
                     modifier = Modifier.clickable { onInterrupt() },
-                    color = Color(0xFF4A4A4A),
-                    shape = RoundedCornerShape(6.dp)
+                    color = TerminalColors.PromptBg,
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = padding * 0.75f, vertical = padding * 0.4f),
@@ -696,7 +715,7 @@ private fun TerminalToolbar(
                     modifier = Modifier
                         .width(1.dp)
                         .height(padding * 1.5f)
-                        .background(Color(0xFF3A3A3A))
+                        .background(TerminalColors.Divider)
                 )
             }
 
@@ -705,8 +724,8 @@ private fun TerminalToolbar(
             // 环境配置按钮
             Surface(
                 modifier = Modifier.clickable { onNavigateToSetup() },
-                color = Color(0xFF4A4A4A),
-                shape = RoundedCornerShape(6.dp)
+                color = TerminalColors.PromptBg,
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = padding * 0.75f, vertical = padding * 0.4f),
@@ -725,8 +744,8 @@ private fun TerminalToolbar(
             if (isDirectInputMode) {
                 Surface(
                     modifier = Modifier.clickable { onToggleVirtualKeyboard() },
-                    color = if (showVirtualKeyboard) Color(0xFF4A4A4A) else Color(0xFF3A3A3A),
-                    shape = RoundedCornerShape(6.dp)
+                    color = if (showVirtualKeyboard) TerminalColors.Accent else TerminalColors.PromptBg,
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
                         text = "⌨",
@@ -738,8 +757,8 @@ private fun TerminalToolbar(
                 }
                 Surface(
                     modifier = Modifier.clickable { onToggleInputMode() },
-                    color = Color(0xFF4A4A4A),
-                    shape = RoundedCornerShape(6.dp)
+                    color = TerminalColors.PromptBg,
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
                         text = "⇄",
@@ -755,7 +774,7 @@ private fun TerminalToolbar(
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = context.getString(com.ai.assistance.operit.terminal.R.string.settings),
-                tint = Color.Gray,
+                tint = TerminalColors.TextSecondary,
                 modifier = Modifier
                     .clickable { onNavigateToSettings() }
                     .padding(start = padding)
@@ -778,8 +797,8 @@ private fun VirtualKeyboard(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF1A1A1A),
-        shadowElevation = 4.dp
+        color = TerminalColors.SurfaceDim,
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
@@ -832,21 +851,21 @@ private fun KeyButton(
     isActive: Boolean = false,
     onClickOverride: (() -> Unit)? = null
 ) {
-    val backgroundColor = if (isActive) Color(0xFF2563EB) else Color(0xFF3A3A3A)
+    val backgroundColor = if (isActive) TerminalColors.KeyActive else TerminalColors.KeyBg
     Surface(
         modifier = modifier
             .clickable { onClickOverride?.invoke() ?: onKeyPress(key) },
         color = backgroundColor,
-        shape = RoundedCornerShape(4.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Box(
             modifier = Modifier
-                .padding(horizontal = padding * 0.5f, vertical = padding * 0.8f),
+                .padding(horizontal = padding * 0.5f, vertical = padding * 1.0f),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = label,
-                color = Color.White,
+                color = if (isActive) Color.White else TerminalColors.TextPrimary,
                 fontFamily = FontFamily.Monospace,
                 fontSize = fontSize,
                 fontWeight = FontWeight.Medium,
