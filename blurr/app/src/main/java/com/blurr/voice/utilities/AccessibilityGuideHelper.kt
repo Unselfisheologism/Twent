@@ -12,6 +12,11 @@ import androidx.appcompat.app.AlertDialog
 import com.blurr.voice.R
 
 /**
+ * The Supademo interactive tutorial URL for accessibility setup.
+ */
+private const val DEMO_TUTORIAL_URL = "https://app.supademo.com/demo/cmo4mfzy702e2yd0jl0j1z1c8?preview=true"
+
+/**
  * Helper that builds an OEM-aware, step-by-step guide for granting the
  * Accessibility permission on Android 13+ (where "restricted settings"
  * adds an extra gate before the accessibility toggle can be switched on).
@@ -182,7 +187,8 @@ object AccessibilityGuideHelper {
             <b>Step 10:</b> A confirmation popup will appear. Tap <b>"Allow"</b>.<br><br>
 
             <font color='#4CAF50'><b>✓ Done!</b></font> The accessibility permission should now be granted.<br>
-            Come back to the $appName app to verify.
+            Come back to the $appName app to verify.<br><br>
+            <font color='#2196F3'><b>💡 Prefer a visual walkthrough?</b></font> Tap <b>"Watch Demo"</b> below for an interactive step-by-step tutorial.
         """.trimIndent()
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -211,7 +217,8 @@ object AccessibilityGuideHelper {
 
             <b>Step 5:</b> A confirmation popup will appear. Tap <b>"Allow"</b>.<br><br>
 
-            <font color='#4CAF50'><b>✓ Done!</b></font> Come back to the $appName app to verify.
+            <font color='#4CAF50'><b>✓ Done!</b></font> Come back to the $appName app to verify.<br><br>
+            <font color='#2196F3'><b>💡 Prefer a visual walkthrough?</b></font> Tap <b>"Watch Demo"</b> below for an interactive step-by-step tutorial.
         """.trimIndent()
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -265,6 +272,10 @@ object AccessibilityGuideHelper {
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                 context.startActivity(intent)
             }
+            .setNeutralButton("Watch Demo") { _, _ ->
+                val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(DEMO_TUTORIAL_URL))
+                context.startActivity(intent)
+            }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
                 onDismiss?.invoke()
@@ -277,6 +288,9 @@ object AccessibilityGuideHelper {
         // Style the buttons
         dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { btn ->
             btn.setTextColor(context.getColor(android.R.color.holo_green_dark))
+        }
+        dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { btn ->
+            btn.setTextColor(context.getColor(android.R.color.holo_blue_dark))
         }
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { btn ->
             btn.setTextColor(context.getColor(android.R.color.holo_red_dark))
