@@ -137,7 +137,7 @@ fun MCPMarketScreen(
                     installProgress = installProgress,
                     installedPluginIds = installedPluginIds,
                     onInstallMCP = { issue ->
-                        viewModel.installMCPFromRegistry(issue)
+                        // View config - handled in detail screen
                     },
                     onRefresh = {
                         scope.launch {

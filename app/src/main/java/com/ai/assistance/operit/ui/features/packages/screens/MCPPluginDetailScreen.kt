@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.font.FontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,17 +90,8 @@ fun MCPPluginDetailScreen(
                 PluginHeader(issue, pluginInfo, viewModel)
             }
             item {
-                PluginActions(
-                    onInstall = {
-                        scope.launch {
-                            viewModel.installMCPFromRegistry(issue)
-                        }
-                    },
-                    pluginInfo = pluginInfo,
-                    issue = issue,
-                    context = context,
-                    viewModel = viewModel
-                )
+                // Show mcp.json config with copy button
+                McpConfigSection(issue = issue, viewModel = viewModel, context = context)
             }
             if (pluginInfo.description.isNotBlank()) {
                 item {
@@ -112,20 +104,7 @@ fun MCPPluginDetailScreen(
         }
     }
 
-    // Auth Config Dialog - shown when a server requires authentication after install
-    val pendingAuthServerId by viewModel.pendingAuthServerId.collectAsState()
-    val pendingAuthDescription by viewModel.pendingAuthDescription.collectAsState()
     
-    if (pendingAuthServerId != null) {
-        AuthConfigDialog(
-            serverId = pendingAuthServerId!!,
-            fieldDescriptions = pendingAuthDescription,
-            onDismiss = { viewModel.clearPendingAuth() },
-            onConfirm = { values ->
-                viewModel.saveServerAuth(pendingAuthServerId!!, values)
-            }
-        )
-    }
 }
 
 @Composable
@@ -199,116 +178,146 @@ private fun PluginHeader(
 }
 
 @Composable
-private fun PluginActions(
-    onInstall: () -> Unit,
-    pluginInfo: MCPPluginParser.ParsedPluginInfo,
+private fun McpConfigSection(
     issue: GitHubIssue,
-    context: Context,
-    viewModel: MCPMarketViewModel
+    viewModel: MCPMarketViewModel,
+    context: Context
 ) {
-    val installingPlugins by viewModel.installingPlugins.collectAsState()
-    val installProgress by viewModel.installProgress.collectAsState()
-    val installedPluginIds by viewModel.installedPluginIds.collectAsState()
-
-    val pluginId = remember(issue) {
-        pluginInfo.title.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+    var configDisplay by remember { mutableStateOf<MCPMarketViewModel.McpConfigDisplay?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    LaunchedEffect(issue.number) {
+        isLoading = true
+        try {
+            configDisplay = viewModel.getMcpConfigForDisplay(issue)
+        } catch (e: Exception) {
+            errorMessage = e.message
+        }
+        isLoading = false
     }
-
-    val isInstalling = pluginId in installingPlugins
-    val isInstalled = pluginId in installedPluginIds
-    val currentProgress = installProgress[pluginId]
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        if (issue.state == "open") {
-            if (isInstalled) {
+    
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "mcp.json Config",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            if (configDisplay != null) {
                 Button(
-                    onClick = { /* No-op */ },
-                    modifier = Modifier.weight(1f),
-                    enabled = false,
-                    colors = ButtonDefaults.buttonColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    onClick = {
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("mcp.json", configDisplay!!.configJson)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Copied to clipboard!", Toast.LENGTH_SHORT).show()
+                    }
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.mcp_plugin_installed))
+                    Text("Copy Config")
                 }
-            } else if (isInstalling) {
-                Button(
-                    onClick = { /* Installing */ },
-                    modifier = Modifier.weight(1f),
-                    enabled = false,
-                    colors = ButtonDefaults.buttonColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+            }
+        }
+        
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    when (currentProgress) {
-                        is com.ai.assistance.operit.data.mcp.InstallProgress.Downloading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator()
+                }
+            }
+            errorMessage != null -> {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Failed to load config: $errorMessage",
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+            configDisplay != null -> {
+                // Config code block
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = configDisplay!!.configJson,
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Auth instructions
+                if (configDisplay!!.authFields.isNotEmpty()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Authentication Required",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            configDisplay!!.authFields.forEach { field ->
+                                Text(
+                                    text = "• ${field.name}: ${field.description}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                stringResource(R.string.downloading_progress, if (currentProgress.progress >= 0) "${currentProgress.progress}%" else "")
-                            )
-                        }
-                        is com.ai.assistance.operit.data.mcp.InstallProgress.Extracting -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                stringResource(R.string.extracting_progress)
-                            )
-                        }
-                        else -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                stringResource(R.string.installing_progress)
+                                text = "Replace the placeholder value with your actual API key after pasting into Config Import.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
                 }
-            } else {
-                Button(
-                    onClick = onInstall,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.mcp_plugin_install))
-                }
-            }
-        }
-
-        if (pluginInfo.repositoryUrl.isNotBlank()) {
-            OutlinedButton(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pluginInfo.repositoryUrl))
-                    context.startActivity(intent)
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
+                
+                // Usage instructions
                 Text(
-                    text = stringResource(R.string.mcp_plugin_repository),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    text = "Copy this config and paste it into the Config Import tab (📋 icon) in the MCP Management screen.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            else -> {
+                Text(
+                    text = "Could not generate config for this server.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         }

@@ -2186,4 +2186,132 @@ class MCPMarketViewModel(
         
         return null
     }
+
+    /**
+     * Get mcp.json config string for display/copy.
+     * Fetches from registry and converts.
+     */
+    suspend fun getMcpConfigForDisplay(issue: GitHubIssue): McpConfigDisplay? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val registryServerName = extractRegistryServerName(issue)
+                if (registryServerName == null) {
+                    AppLogger.w(TAG, "Could not extract server name for display")
+                    return@withContext null
+                }
+                
+                val response = fetchServerJsonFromRegistry(registryServerName)
+                if (response == null) {
+                    AppLogger.w(TAG, "Could not fetch server.json for display")
+                    return@withContext null
+                }
+                
+                val server = response.server
+                val serverId = server.name.substringAfterLast("/")
+                
+                // Remote server
+                if (!server.remotes.isNullOrEmpty()) {
+                    val remote = server.remotes.first()
+                    val authFields = mutableListOf<AuthField>()
+                    
+                    remote.headers?.forEach { h ->
+                        if (h.isRequired) {
+                            authFields.add(AuthField(h.name, h.description))
+                        }
+                    }
+                    
+                    val configJson = org.json.JSONObject().apply {
+                        put("mcpServers", org.json.JSONObject().apply {
+                            put(serverId, org.json.JSONObject().apply {
+                                put("url", remote.url)
+                                if (authFields.isNotEmpty()) {
+                                    val headersObj = org.json.JSONObject()
+                                    authFields.forEach { field ->
+                                        val placeholder = if (field.description.contains("Bearer", ignoreCase = true)) {
+                                            "Bearer YOUR_${field.name.uppercase()}"
+                                        } else {
+                                            "YOUR_${field.name.uppercase()}"
+                                        }
+                                        headersObj.put(field.name, placeholder)
+                                    }
+                                    put("headers", headersObj)
+                                }
+                            })
+                        })
+                    }.toString(2)
+                    
+                    return@withContext McpConfigDisplay(
+                        configJson = configJson,
+                        authFields = authFields,
+                        serverType = "remote"
+                    )
+                }
+                
+                // Local/package server
+                if (!server.packages.isNullOrEmpty()) {
+                    val pkg = server.packages.first()
+                    val authFields = mutableListOf<AuthField>()
+                    
+                    pkg.environmentVariables?.forEach { ev ->
+                        if (ev.isRequired) {
+                            authFields.add(AuthField(ev.name, ev.description))
+                        }
+                    }
+                    
+                    val configJson = org.json.JSONObject().apply {
+                        put("mcpServers", org.json.JSONObject().apply {
+                            put(serverId, org.json.JSONObject().apply {
+                                when (pkg.registryType) {
+                                    "npm" -> {
+                                        put("command", "npx")
+                                        val pkgId = if (pkg.version.isNotBlank()) "${pkg.identifier}@${pkg.version}" else pkg.identifier
+                                        put("args", org.json.JSONArray().apply {
+                                            put("-y")
+                                            put(pkgId)
+                                        })
+                                    }
+                                    "pypi" -> {
+                                        put("command", "uvx")
+                                        val pkgId = if (pkg.version.isNotBlank()) "${pkg.identifier}==${pkg.version}" else pkg.identifier
+                                        put("args", org.json.JSONArray().apply { put(pkgId) })
+                                    }
+                                    "docker", "oci" -> {
+                                        put("command", "docker")
+                                        put("args", org.json.JSONArray().apply {
+                                            put("run")
+                                            put("-i")
+                                            put("--rm")
+                                            put(pkg.identifier)
+                                        })
+                                    }
+                                }
+                                if (authFields.isNotEmpty()) {
+                                    val envObj = org.json.JSONObject()
+                                    authFields.forEach { field ->
+                                        envObj.put(field.name, "YOUR_${field.name.uppercase()}")
+                                    }
+                                    put("env", envObj)
+                                }
+                            })
+                        })
+                    }.toString(2)
+                    
+                    return@withContext McpConfigDisplay(
+                        configJson = configJson,
+                        authFields = authFields,
+                        serverType = "local"
+                    )
+                }
+                
+                null
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Error getting mcp config for display", e)
+                null
+            }
+        }
+    }
+    
+    data class AuthField(val name: String, val description: String)
+    data class McpConfigDisplay(val configJson: String, val authFields: List<AuthField>, val serverType: String)
+
 } 
