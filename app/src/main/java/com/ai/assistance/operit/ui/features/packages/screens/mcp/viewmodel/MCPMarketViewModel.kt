@@ -1908,70 +1908,61 @@ class MCPMarketViewModel(
     }
 
     /**
-     * Install MCP server from registry using the proper server.json approach.
-     * Fetches the authoritative server.json and installs directly.
-     * For remote servers: creates PluginMetadata directly.
-     * For local servers: uses mergeConfigFromJson.
-     * Returns info about required env vars/headers for the user to fill in.
+     * Install MCP server from registry.
+     * Simple flow: fetch server.json → convert to mcp.json → import → prompt for auth
      */
     fun installMCPFromRegistry(issue: GitHubIssue) {
         viewModelScope.launch {
+            val pluginId = generateMCPId(issue)
+            _installingPlugins.value = _installingPlugins.value + pluginId
+            
             try {
-                val pluginId = generateMCPId(issue)
-                _installingPlugins.value = _installingPlugins.value + pluginId
-                
-                // Get registry server name
+                // Step 1: Get registry server name from tags
                 val registryServerName = extractRegistryServerName(issue)
                 
                 if (registryServerName == null) {
-                    AppLogger.w(TAG, "No registry server name found, falling back to legacy install")
-                    installMCPFromIssue(issue)
+                    AppLogger.w(TAG, "No registry server name in metadata for: ${issue.title}")
+                    _installingPlugins.value = _installingPlugins.value - pluginId
+                    _errorMessage.value = "Could not determine server name from registry"
                     return@launch
                 }
                 
-                AppLogger.d(TAG, "Fetching server.json from registry for: $registryServerName")
+                AppLogger.d(TAG, "Fetching server.json for: $registryServerName")
                 
-                // Fetch full server.json from registry
+                // Step 2: Fetch server.json from registry
                 val response = fetchServerJsonFromRegistry(registryServerName)
                 
                 if (response == null) {
-                    AppLogger.w(TAG, "Failed to fetch server.json, falling back to legacy install")
-                    installMCPFromIssue(issue)
+                    _installingPlugins.value = _installingPlugins.value - pluginId
+                    _errorMessage.value = "Failed to fetch server details from registry"
                     return@launch
                 }
                 
                 val server = response.server
+                val serverId = server.name.substringAfterLast("/").replace(Regex("[^a-zA-Z0-9_-]"), "_")
                 val mcpLocalServer = MCPLocalServer.getInstance(context)
                 
-                // Determine server ID
-                val serverId = server.name.substringAfterLast("/").replace(Regex("[^a-zA-Z0-9_-]"), "_")
-                
-                // Check if this is a remote server
+                // Step 3: Handle remote servers
                 if (!server.remotes.isNullOrEmpty()) {
                     val remote = server.remotes.first()
                     
-                    // Collect required headers (auth info)
-                    val requiredHeaders = mutableMapOf<String, String>()
-                    val headersDescription = mutableMapOf<String, String>()
-                    remote.headers?.forEach { header ->
-                        val value = if (header.isRequired) "REQUIRED" else ""
-                        requiredHeaders[header.name] = value
-                        if (header.description.isNotBlank()) {
-                            headersDescription[header.name] = header.description
-                        }
+                    // Collect auth info
+                    val headersMap = mutableMapOf<String, String>()
+                    val authDescriptions = mutableMapOf<String, String>()
+                    remote.headers?.forEach { h ->
+                        headersMap[h.name] = if (h.isRequired) "REQUIRED" else ""
+                        if (h.description.isNotBlank()) authDescriptions[h.name] = h.description
                     }
                     
-                    // Create plugin metadata for remote server
+                    // Create and save metadata
                     val metadata = MCPLocalServer.PluginMetadata(
                         id = serverId,
-                        name = server.title.ifBlank { server.name.substringAfterLast("/") },
+                        name = server.title.ifBlank { serverId },
                         description = server.description,
                         logoUrl = response.server.icons?.firstOrNull()?.src,
                         author = extractOwner(server.name),
                         isInstalled = true,
                         version = server.version,
-                        updatedAt = "",
-                        longDescription = server.description,
                         repoUrl = server.repository?.url ?: "",
                         type = "remote",
                         endpoint = remote.url,
@@ -1980,95 +1971,73 @@ class MCPMarketViewModel(
                             "streamable-http" -> "httpStream"
                             else -> remote.type
                         },
-                        headers = if (requiredHeaders.isNotEmpty()) requiredHeaders else null,
-                        bearerToken = null
+                        headers = if (headersMap.isNotEmpty()) headersMap else null
                     )
-                    
                     mcpLocalServer.addOrUpdatePluginMetadata(metadata)
                     mcpLocalServer.updateServerStatus(serverId, active = false)
                     
+                    // Clear installing state
                     _installingPlugins.value = _installingPlugins.value - pluginId
                     mcpRepository.refreshPluginList()
                     
-                    // Check if auth is required
-                    val hasRequiredAuth = remote.headers?.any { it.isRequired } == true
-                    
-                    if (hasRequiredAuth) {
-                        // Set flag to show auth config dialog
+                    // Prompt for auth if required
+                    if (authDescriptions.isNotEmpty()) {
                         _pendingAuthServerId.value = serverId
-                        _pendingAuthDescription.value = headersDescription
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.mcp_market_install_success, issue.title) + " - Please configure authentication",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        _pendingAuthDescription.value = authDescriptions
+                        Toast.makeText(context, "Installed! Please configure authentication.", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.mcp_market_install_success, issue.title),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, context.getString(R.string.mcp_market_install_success, issue.title), Toast.LENGTH_SHORT).show()
                     }
-                    
-                    AppLogger.i(TAG, "Successfully installed remote MCP server: $serverId")
                     return@launch
                 }
                 
-                // Handle package-based (local) servers
+                // Step 4: Handle local/package servers
                 if (!server.packages.isNullOrEmpty()) {
                     val config = convertServerJsonToMcpServersConfig(server)
                     
                     if (config != null) {
-                        val mergeResult = mcpLocalServer.mergeConfigFromJson(config)
+                        AppLogger.d(TAG, "Merging config: $config")
+                        val result = mcpLocalServer.mergeConfigFromJson(config)
                         
-                        mergeResult.fold(
-                            onSuccess = { count ->
+                        result.fold(
+                            onSuccess = {
                                 _installingPlugins.value = _installingPlugins.value - pluginId
                                 mcpRepository.refreshPluginList()
                                 
-                                // Check if env vars are required
+                                // Check for required env vars
                                 val pkg = server.packages.first()
-                                val requiredEnvVars = pkg.environmentVariables?.filter { it.isRequired }
-                                
-                                if (!requiredEnvVars.isNullOrEmpty()) {
-                                    val envDescription = requiredEnvVars.associate { it.name to it.description }
+                                val requiredEnv = pkg.environmentVariables?.filter { it.isRequired }
+                                if (!requiredEnv.isNullOrEmpty()) {
+                                    val envDesc = requiredEnv.associate { it.name to it.description }
                                     _pendingAuthServerId.value = serverId
-                                    _pendingAuthDescription.value = envDescription
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.mcp_market_install_success, issue.title) + " - Please configure environment variables",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                    _pendingAuthDescription.value = envDesc
+                                    Toast.makeText(context, "Installed! Please configure environment variables.", Toast.LENGTH_LONG).show()
                                 } else {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.mcp_market_install_success, issue.title),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast.makeText(context, context.getString(R.string.mcp_market_install_success, issue.title), Toast.LENGTH_SHORT).show()
                                 }
-                                
-                                AppLogger.i(TAG, "Successfully installed local MCP server: $serverId")
                                 return@launch
                             },
                             onFailure = { error ->
-                                AppLogger.e(TAG, "Config import failed: ${error.message}")
                                 _installingPlugins.value = _installingPlugins.value - pluginId
-                                _errorMessage.value = context.getString(R.string.mcp_market_install_failed_with_error, error.message ?: "")
+                                _errorMessage.value = "Config import failed: ${error.message}"
                                 return@launch
                             }
                         )
+                    } else {
+                        _installingPlugins.value = _installingPlugins.value - pluginId
+                        _errorMessage.value = "Could not generate install config"
+                        return@launch
                     }
                 }
                 
-                // Fallback to legacy install
-                AppLogger.d(TAG, "No packages/remotes found, falling back to legacy install")
-                installMCPFromIssue(issue)
+                // No packages or remotes
+                _installingPlugins.value = _installingPlugins.value - pluginId
+                _errorMessage.value = "Server has no installable packages or remote endpoints"
                 
             } catch (e: Exception) {
-                val pluginId = generateMCPId(issue)
                 _installingPlugins.value = _installingPlugins.value - pluginId
-                _errorMessage.value = context.getString(R.string.mcp_market_install_failed_with_error, e.message ?: "")
-                AppLogger.e(TAG, "Failed to install MCP from registry", e)
+                _errorMessage.value = "Install failed: ${e.message}"
+                AppLogger.e(TAG, "Install failed for ${issue.title}", e)
             }
         }
     }
@@ -2177,13 +2146,43 @@ class MCPMarketViewModel(
     }
 
     /**
-     * Extract the registry server name from issue metadata.
-     * The server name is stored in the "tags" field of our metadata.
+     * Extract registry server name from issue.
+     * The html_url for registry servers is: registry.modelcontextprotocol.io/v0.1/servers/{encoded_name}
      */
     private fun extractRegistryServerName(issue: GitHubIssue): String? {
-        val body = issue.body ?: return null
-        val metadata = parseMCPMetadata(body) ?: return null
-        // The tags field contains the registry server name
-        return metadata.tags.ifBlank { null }
+        // Try parsing from metadata first
+        val body = issue.body
+        if (body != null) {
+            try {
+                val prefix = "<!-- operit-mcp-json: "
+                val start = body.indexOf(prefix)
+                if (start >= 0) {
+                    val jsonStart = start + prefix.length
+                    val end = body.indexOf(" -->", startIndex = jsonStart)
+                    if (end > jsonStart) {
+                        val jsonString = body.substring(jsonStart, end)
+                        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                        val meta = json.decodeFromString<MCPMetadata>(jsonString)
+                        if (meta.tags.isNotBlank()) {
+                            return meta.tags
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "Failed to parse metadata from issue body", e)
+            }
+        }
+        
+        // Fallback: extract from html_url if it's a registry URL
+        val url = issue.html_url
+        if (url.contains("registry.modelcontextprotocol.io")) {
+            // URL format: https://registry.modelcontextprotocol.io/v0.1/servers/{encoded_name}
+            val match = Regex("servers/(.+?)(?:/|$)").find(url)
+            if (match != null) {
+                return java.net.URLDecoder.decode(match.groupValues[1], "UTF-8")
+            }
+        }
+        
+        return null
     }
 } 

@@ -44,6 +44,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,20 +64,10 @@ fun MCPPluginDetailScreen(
     val isLoggedIn by githubAuth.isLoggedInFlow.collectAsState(initial = false)
     val currentUser by githubAuth.userInfoFlow.collectAsState(initial = null)
 
-    val comments by viewModel.issueComments.collectAsState()
-    val isLoadingComments by viewModel.isLoadingComments.collectAsState()
-    val isPostingComment by viewModel.isPostingComment.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     val pluginInfo = remember(issue) {
         MCPPluginParser.parsePluginInfo(issue)
-    }
-
-    var commentText by remember { mutableStateOf("") }
-    var showCommentDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(issue.number) {
-        viewModel.loadIssueComments(issue.number)
     }
 
     errorMessage?.let { error ->
@@ -85,17 +77,7 @@ fun MCPPluginDetailScreen(
         }
     }
 
-    CustomScaffold(
-        floatingActionButton = {
-            if (isLoggedIn) {
-                FloatingActionButton(
-                    onClick = { showCommentDialog = true },
-                ) {
-                    Icon(Icons.Default.AddComment, contentDescription = stringResource(R.string.mcp_plugin_add_comment))
-                }
-            }
-        }
-    ) { paddingValues ->
+    CustomScaffold { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,57 +109,21 @@ fun MCPPluginDetailScreen(
             item {
                 PluginMetadata(issue = issue, pluginInfo = pluginInfo, viewModel = viewModel)
             }
-            item {
-                PluginReactions(issue, viewModel, currentUser)
-            }
-
-            item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            }
-
-            item {
-                CommentsHeader(
-                    commentCount = comments[issue.number]?.size ?: 0,
-                    isLoading = isLoadingComments.contains(issue.number),
-                    onRefresh = {
-                        scope.launch {
-                            viewModel.loadIssueComments(issue.number)
-                        }
-                    }
-                )
-            }
-
-            val issueComments = comments[issue.number] ?: emptyList()
-            if (issueComments.isEmpty() && !isLoadingComments.contains(issue.number)) {
-                item {
-                    EmptyCommentsCard()
-                }
-            } else {
-                items(issueComments) { comment ->
-                    CommentCard(comment = comment)
-                }
-            }
         }
     }
 
-    if (showCommentDialog) {
-        CommentInputDialog(
-            commentText = commentText,
-            onCommentTextChange = { commentText = it },
-            onDismiss = {
-                showCommentDialog = false
-                commentText = ""
-            },
-            onPost = {
-                if (commentText.isNotBlank()) {
-                    scope.launch {
-                        viewModel.postComment(issue.number, commentText)
-                        showCommentDialog = false
-                        commentText = ""
-                    }
-                }
-            },
-            isPosting = isPostingComment.contains(issue.number)
+    // Auth Config Dialog - shown when a server requires authentication after install
+    val pendingAuthServerId by viewModel.pendingAuthServerId.collectAsState()
+    val pendingAuthDescription by viewModel.pendingAuthDescription.collectAsState()
+    
+    if (pendingAuthServerId != null) {
+        AuthConfigDialog(
+            serverId = pendingAuthServerId!!,
+            fieldDescriptions = pendingAuthDescription,
+            onDismiss = { viewModel.clearPendingAuth() },
+            onConfirm = { values ->
+                viewModel.saveServerAuth(pendingAuthServerId!!, values)
+            }
         )
     }
 }
@@ -723,3 +669,82 @@ private fun formatDate(dateString: String): String {
         dateString
     }
 } 
+
+/**
+ * Dialog for configuring authentication (env vars or headers) after installing an MCP server.
+ */
+@Composable
+fun AuthConfigDialog(
+    serverId: String,
+    fieldDescriptions: Map<String, String>,
+    onDismiss: () -> Unit,
+    onConfirm: (Map<String, String>) -> Unit
+) {
+    val fieldValues = remember { mutableStateMapOf<String, String>() }
+    
+    LaunchedEffect(fieldDescriptions) {
+        fieldDescriptions.keys.forEach { key ->
+            if (key !in fieldValues) {
+                fieldValues[key] = ""
+            }
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Configure Authentication") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "This server requires authentication. Please enter the required values:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                fieldDescriptions.forEach { (fieldName, description) ->
+                    Column {
+                        Text(
+                            text = fieldName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (description.isNotBlank()) {
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = fieldValues[fieldName] ?: "",
+                            onValueChange = { fieldValues[fieldName] = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Enter $fieldName") }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(fieldValues.toMap())
+                },
+                enabled = fieldDescriptions.keys.all { fieldValues[it]?.isNotBlank() == true }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Skip")
+            }
+        }
+    )
+}
