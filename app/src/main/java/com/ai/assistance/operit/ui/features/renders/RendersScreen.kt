@@ -58,6 +58,9 @@ class RendersViewModel(private val context: android.content.Context) : ViewModel
     val showCode = _showCode.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            manager.ensureServerRunning(context)
+        }
         loadRenders()
     }
 
@@ -76,8 +79,12 @@ class RendersViewModel(private val context: android.content.Context) : ViewModel
     }
 
     fun selectRender(render: MiniApp) {
-        _selectedRender.value = render
-        _showCode.value = false
+        viewModelScope.launch {
+            // Ensure the mini-app server is running before showing preview
+            manager.ensureServerRunning(context)
+            _selectedRender.value = render
+            _showCode.value = false
+        }
     }
 
     fun closePreview() {
