@@ -2249,7 +2249,7 @@ class MCPMarketViewModel(
                     }.toString(2)
                     
                     return@withContext McpConfigDisplay(
-                        configJson = configJson,
+                        configJson = configJson.replace("\\/", "/"),
                         authFields = authFields,
                         serverType = "remote"
                     )
@@ -2305,7 +2305,7 @@ class MCPMarketViewModel(
                     }.toString(2)
                     
                     return@withContext McpConfigDisplay(
-                        configJson = configJson,
+                        configJson = configJson.replace("\\/", "/"),
                         authFields = authFields,
                         serverType = "local"
                     )

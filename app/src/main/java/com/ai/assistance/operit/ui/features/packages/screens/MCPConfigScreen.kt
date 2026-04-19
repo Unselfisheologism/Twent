@@ -1299,6 +1299,11 @@ fun MCPConfigScreen(
                         context = context,
                         onPluginSelected = { pluginInfo ->
                             selectedPluginForDetails = pluginInfo
+                        },
+                        onRefresh = {
+                            scope.launch {
+                                refreshMcpScreen()
+                            }
                         }
                     )
                     1 -> BrowseServersTab(
@@ -2114,14 +2119,15 @@ private fun MyServersTab(
     isRefreshing: Boolean,
     scope: kotlinx.coroutines.CoroutineScope,
     context: android.content.Context,
-    onPluginSelected: (MCPLocalServer.PluginMetadata) -> Unit
+    onPluginSelected: (MCPLocalServer.PluginMetadata) -> Unit,
+    onRefresh: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 200.dp)
     ) {
-        // Status indicator
+        // Status indicator with refresh button
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -2143,6 +2149,26 @@ private fun MyServersTab(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Refresh button
+                        IconButton(
+                            onClick = onRefresh,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            if (isRefreshing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Refresh",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        // Status indicator
                         Box(
                             modifier = Modifier.size(8.dp).background(
                                 color = when {
@@ -2155,7 +2181,7 @@ private fun MyServersTab(
                             )
                         )
                         Text(
-                            text = "${"$"}{successfulToolRequests.value}/${"$"}totalEnabledPlugins",
+                            text = "${successfulToolRequests.value}/$totalEnabledPlugins",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
