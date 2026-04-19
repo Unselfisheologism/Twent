@@ -892,9 +892,18 @@ class PluginLoadingState {
                     index: Int,
                     total: Int
             ) {
-                // 记录插件加载结果
+                // Record plugin loading result
                 if (success) {
                     setPluginSuccess(pluginId)
+                    // Register MCP tools for this server
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        try {
+                            val mcpManager = com.ai.assistance.operit.core.tools.mcp.MCPManager.getInstance(context)
+                            mcpManager.registerServerTools(pluginId, context)
+                        } catch (e: Exception) {
+                            AppLogger.e("PluginLoadingState", "Failed to register MCP tools for $pluginId", e)
+                        }
+                    }
                 } else {
                     setPluginFailed(pluginId, context.getString(R.string.plugin_verification_failed))
                     forceExpanded()

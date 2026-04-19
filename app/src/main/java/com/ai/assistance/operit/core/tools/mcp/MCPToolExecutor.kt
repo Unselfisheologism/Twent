@@ -589,4 +589,44 @@ class MCPManager(private val context: Context) {
         clientCache.values.forEach { it.disconnect() }
         clientCache.clear()
     }
+
+    /**
+     * Register MCP tools for a server with the AIToolHandler.
+     * Call this after MCP server starts and tools are discovered.
+     */
+    suspend fun registerServerTools(serverName: String, context: android.content.Context) {
+        try {
+            val client = getOrCreateClient(serverName) ?: return
+            val tools = client.getTools()
+            
+            if (tools.isEmpty()) {
+                AppLogger.d(TAG, "No tools found for server: $serverName")
+                return
+            }
+            
+            val toolHandler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(context)
+            val mcpExecutor = MCPToolExecutor(context, this)
+            
+            // Register each tool with format "server_name:tool_name"
+            tools.forEach { toolJson ->
+                val toolName = toolJson.optString("name", "")
+                if (toolName.isNotBlank()) {
+                    val fullName = "$serverName:$toolName"
+                    val description = toolJson.optString("description", "MCP tool from $serverName")
+                    
+                    // Register the tool with AIToolHandler
+                    toolHandler.registerTool(
+                        name = fullName,
+                        executor = mcpExecutor
+                    )
+                    AppLogger.d(TAG, "Registered MCP tool: $fullName - $description")
+                }
+            }
+            
+            AppLogger.i(TAG, "Registered ${tools.size} MCP tools for server: $serverName")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to register MCP tools for $serverName", e)
+        }
+    }
+
 }
