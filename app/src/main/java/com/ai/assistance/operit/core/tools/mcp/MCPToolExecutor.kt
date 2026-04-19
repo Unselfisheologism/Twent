@@ -217,20 +217,68 @@ class MCPToolExecutor(private val context: Context, private val mcpManager: MCPM
     }
 
     override fun invoke(tool: AITool): ToolResult {
-        // 从工具名称中提取服务器名称和工具名称
-        // 格式：服务器名称:工具名称
-        val toolNameParts = tool.name.split(":")
-        if (toolNameParts.size < 2) {
-            return ToolResult(
+        // Handle two calling formats:
+        // 1. Direct: tool.name = "server_name:tool_name" with params in tool.parameters
+        // 2. Via mcp_tool: tool.name = "mcp_tool" with server, tool, params in tool.parameters
+        
+        val serverName: String
+        val actualToolName: String
+        val parameters: Map<String, Any>
+        
+        if (tool.name == "mcp_tool") {
+            // Format 2: Called via mcp_tool with server, tool, params parameters
+            val serverParam = tool.parameters.find { it.name == "server" }?.value
+            val toolParam = tool.parameters.find { it.name == "tool" }?.value
+            val paramsParam = tool.parameters.find { it.name == "params" }?.value
+            
+            if (serverParam.isNullOrBlank() || toolParam.isNullOrBlank()) {
+                return ToolResult(
                     toolName = tool.name,
                     success = false,
                     result = StringResultData(""),
-                    error = "Invalid MCP tool name format, should be 'server_name:tool_name'"
-            )
+                    error = "Missing required parameters: 'server' and 'tool' are required for mcp_tool"
+                )
+            }
+            
+            serverName = serverParam
+            actualToolName = toolParam
+            
+            // Parse params - could be a JSON string or already a map
+            parameters = when (paramsParam) {
+                null -> emptyMap()
+                is String -> {
+                    if (paramsParam.isBlank()) {
+                        emptyMap()
+                    } else {
+                        try {
+                            val jsonObj = org.json.JSONObject(paramsParam)
+                            val map = mutableMapOf<String, Any>()
+                            jsonObj.keys().forEach { key -> map[key] = jsonObj.get(key) }
+                            map
+                        } catch (e: Exception) {
+                            emptyMap()
+                        }
+                    }
+                }
+                is Map<*, *> -> paramsParam.filterKeys { it is String }.mapKeys { it.key as String }.mapValues { it.value as Any }
+                else -> emptyMap()
+            }
+        } else {
+            // Format 1: Direct call with server_name:tool_name format
+            val toolNameParts = tool.name.split(":")
+            if (toolNameParts.size < 2) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Invalid MCP tool name format. Use 'server_name:tool_name' or call mcp_tool with server and tool parameters."
+                )
+            }
+            
+            serverName = toolNameParts[0]
+            actualToolName = toolNameParts.subList(1, toolNameParts.size).joinToString(":")
+            parameters = tool.parameters.associate { it.name to it.value }
         }
-
-        val serverName = toolNameParts[0]
-        val actualToolName = toolNameParts.subList(1, toolNameParts.size).joinToString(":")
 
         // 获取MCP桥接客户端
         val mcpClient = mcpManager.getOrCreateClient(serverName)
@@ -243,7 +291,7 @@ class MCPToolExecutor(private val context: Context, private val mcpManager: MCPM
             )
         }
 
-        // 在调用工具前，检查服务是否处于激活状态
+        // Check if service is active
         val isActive = kotlinx.coroutines.runBlocking { mcpClient.isActive() }
         if (!isActive) {
             return ToolResult(
@@ -251,16 +299,13 @@ class MCPToolExecutor(private val context: Context, private val mcpManager: MCPM
                     success = false,
                     result = StringResultData(""),
                     error =
-                            "MCP service '$serverName' is not activated. Please use the 'use_package' tool with the package name '$serverName' to activate it first."
+                            "MCP service '$serverName' is not running. Go to Plugins > MCP tab and start the '$serverName' server using the Run button (▶)."
             )
         }
 
         AppLogger.d(TAG, "准备调用MCP工具: $serverName:$actualToolName")
 
-        // 将AITool参数转换为Map
-        val parameters = tool.parameters.associate { it.name to it.value }
-
-        // 获取工具参数类型信息 (如果可用)
+        // 获取工具参数类型信息 (if available)
         val toolInfo = getToolInfo(serverName, actualToolName)
 
         // 自动类型转换处理

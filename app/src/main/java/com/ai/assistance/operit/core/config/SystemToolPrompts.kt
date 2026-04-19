@@ -643,18 +643,22 @@ object SystemToolPrompts {
     private val internalToolCategoriesCn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesCn
     
     // MCP Tools category - explains how to use MCP server tools
+    // IMPORTANT: MCP tools are DIFFERENT from packages and Composio.
+    // - MCP tools are always available when the server is running (no activation needed)
+    // - Tool format: server_name:tool_name (e.g., apify:scrape_url)
+    // - Do NOT use use_package for MCP servers
     private val mcpToolsEn = SystemToolPromptCategory(
         categoryName = "mcp_tools",
-        categoryHeader = "MCP Server Tools - Tools from connected MCP (Model Context Protocol) servers. Each tool is in format 'server_name:tool_name'.",
+        categoryHeader = "MCP Server Tools - Tools from Model Context Protocol servers. These are AUTOMATICALLY available when servers are running. Do NOT use use_package for MCP servers.",
         tools = listOf(
             ToolPrompt(
                 name = "mcp_tool",
-                description = "Call a tool from a connected MCP server. Tool names follow the format 'server_name:tool_name'. Example: 'apify:scrape_url'. Available tools are listed when MCP servers are started.",
+                description = "Call a tool from a running MCP server. Format: 'server_name:tool_name' (e.g., 'apify:scrape_url'). MCP tools are different from packages - they are ready to use immediately without activation. Just call the tool directly. To see available tools, check Plugins > MCP tab.",
                 parametersStructured = listOf(
                     ToolParameterSchema(
                         name = "server",
                         type = "string",
-                        description = "The MCP server name",
+                        description = "The MCP server name (must be running)",
                         required = true
                     ),
                     ToolParameterSchema(
@@ -666,7 +670,7 @@ object SystemToolPrompts {
                     ToolParameterSchema(
                         name = "params",
                         type = "object",
-                        description = "Tool parameters as a JSON object",
+                        description = "Tool parameters as JSON object",
                         required = false
                     )
                 )
@@ -676,16 +680,16 @@ object SystemToolPrompts {
     
     private val mcpToolsCn = SystemToolPromptCategory(
         categoryName = "mcp_tools",
-        categoryHeader = "MCP服务器工具 - 来自已连接MCP服务器的工具。每个工具的格式为'服务器名:工具名'。",
+        categoryHeader = "MCP服务器工具 - Model Context Protocol服务器的工具。服务器运行时自动可用，无需激活。不要对MCP服务器使用use_package。",
         tools = listOf(
             ToolPrompt(
                 name = "mcp_tool",
-                description = "调用MCP服务器的工具。工具名称格式为'服务器名:工具名'，例如'apify:scrape_url'。启动MCP服务器时会列出可用工具。",
+                description = "调用运行中MCP服务器的工具。格式：'服务器名:工具名'（如'apify:scrape_url'）。MCP工具与包不同 - 无需激活即可直接使用。查看可用工具：插件 > MCP标签页。",
                 parametersStructured = listOf(
                     ToolParameterSchema(
                         name = "server",
                         type = "string",
-                        description = "MCP服务器名称",
+                        description = "MCP服务器名称（必须正在运行）",
                         required = true
                     ),
                     ToolParameterSchema(
