@@ -243,25 +243,19 @@ class MCPToolExecutor(private val context: Context, private val mcpManager: MCPM
             serverName = serverParam
             actualToolName = toolParam
             
-            // Parse params - could be a JSON string or already a map
-            parameters = when (paramsParam) {
-                null -> emptyMap()
-                is String -> {
-                    if (paramsParam.isBlank()) {
-                        emptyMap()
-                    } else {
-                        try {
-                            val jsonObj = org.json.JSONObject(paramsParam)
-                            val map = mutableMapOf<String, Any>()
-                            jsonObj.keys().forEach { key -> map[key] = jsonObj.get(key) }
-                            map
-                        } catch (e: Exception) {
-                            emptyMap()
-                        }
-                    }
+            // Parse params - treat as JSON string
+            parameters = if (paramsParam.isNullOrBlank()) {
+                emptyMap()
+            } else {
+                try {
+                    val jsonObj = org.json.JSONObject(paramsParam)
+                    val map = mutableMapOf<String, Any>()
+                    jsonObj.keys().forEach { key -> map[key] = jsonObj.get(key) }
+                    map
+                } catch (e: Exception) {
+                    AppLogger.w(TAG, "Failed to parse params as JSON: ${e.message}")
+                    emptyMap()
                 }
-                is Map<*, *> -> paramsParam.filterKeys { it is String }.mapKeys { it.key as String }.mapValues { it.value as Any }
-                else -> emptyMap()
             }
         } else {
             // Format 1: Direct call with server_name:tool_name format
