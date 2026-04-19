@@ -260,7 +260,13 @@ class MCPRepository(private val context: Context) {
      * 获取已安装插件的路径
      */
     fun getInstalledPluginPath(serverId: String): String? {
-        // 对于 npx/uvx/uv 类型的插件，返回一个虚拟路径标记
+        // Check if this is a remote server first
+        val metadata = mcpLocalServer.getPluginMetadata(serverId)
+        if (metadata?.type == "remote") {
+            return "remote://${metadata.endpoint ?: serverId}"
+        }
+        
+        // For npx/uvx/uv type plugins, return virtual path
         if (!needsPhysicalInstallation(serverId)) {
             return "virtual://$serverId"
         }

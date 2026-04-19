@@ -812,19 +812,35 @@ class PluginLoadingState {
                     // 启动所有插件 - MCPStarter会处理各种检查逻辑
                     mcpStarter.startAllDeployedPlugins(progressListener)
                 } catch (e: Exception) {
-                    // 处理插件加载过程中的异常
-                    AppLogger.e("PluginLoadingState", "加载插件过程中出错", e)
+                    // Handle exceptions during plugin loading
+                    AppLogger.e("PluginLoadingState", "Error during plugin loading", e)
                     updateMessage(e.message ?: context.getString(R.string.plugin_loading_failed))
                     updateProgress(1.0f)
 
                     forceExpanded()
+                    // Auto-hide after showing error for 3 seconds
+                    val scope = lifecycleScope
+                    scope.launch {
+                        delay(3000L)
+                        if (isVisible.value) {
+                            hide()
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                AppLogger.e("PluginLoadingState", "启动MCP服务器和插件时出错", e)
+                AppLogger.e("PluginLoadingState", "Error starting MCP server and plugins", e)
                 updateMessage(e.message ?: context.getString(R.string.plugin_other_error))
                 updateProgress(1.0f)
 
                 forceExpanded()
+                // Auto-hide after showing error for 3 seconds
+                val scope = lifecycleScope
+                scope.launch {
+                    delay(3000L)
+                    if (isVisible.value) {
+                        hide()
+                    }
+                }
             } finally {
                 mcpInitInProgress.set(false)
             }
@@ -944,6 +960,13 @@ class PluginLoadingState {
                 val hasFailures = successCount < totalCount && totalCount > 0
                 if (status != MCPStarter.PluginInitStatus.SUCCESS || hasFailures) {
                     forceExpanded()
+                    // Auto-hide after showing error for 3 seconds
+                    lifecycleScope.launch {
+                        delay(3000L)
+                        if (isVisible.value) {
+                            hide()
+                        }
+                    }
                 } else {
                     lifecycleScope.launch {
                         delay(100L)
