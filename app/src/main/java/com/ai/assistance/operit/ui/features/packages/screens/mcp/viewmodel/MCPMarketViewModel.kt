@@ -298,7 +298,7 @@ class MCPMarketViewModel(
                             append("<!-- operit-mcp-json: ")
                             append("{\"description\":\"${server.description.replace("\"", "\\\"")}\",")
                             append("\"repositoryUrl\":\"${server.repository?.url?.replace("\"", "\\\"") ?: ""}\",")
-                            append("\"installConfig\":${installConfig ?: "\"\""},")
+                            append("\"installConfig\":\"${(installConfig ?: "").replace("\"", "\\\"")}\",")
                             append("\"category\":\"mcp\",\"tags\":\"${server.name.replace("\"", "\\\"")}\",")
                             append("\"version\":\"${server.version.replace("\"", "\\\"")}\"")
                             append("} -->")
@@ -309,7 +309,8 @@ class MCPMarketViewModel(
                             number = (server.name + server.version).hashCode() + index,
                             title = displayName,
                             body = bodyText,
-                            html_url = server.repository?.url ?: "$REGISTRY_BASE_URL/v0.1/servers/${java.net.URLEncoder.encode(server.name, "UTF-8")}",
+                            // Store registry server name in html_url for easy extraction
+                            html_url = "https://registry.modelcontextprotocol.io/v0.1/servers/${java.net.URLEncoder.encode(server.name, "UTF-8")}",
                             state = if (meta?.status == "active") "open" else "closed",
                             labels = listOf(
                                 GitHubLabel(
