@@ -644,27 +644,26 @@ object SystemToolPrompts {
     
     // MCP Tools category - explains how to use MCP server tools
     private val mcpToolsEn = SystemToolPromptCategory(
-        name = "mcp_tools",
-        displayName = "MCP Server Tools",
-        description = "Tools from connected MCP (Model Context Protocol) servers. Each tool is in format 'server_name:tool_name'.",
+        categoryName = "mcp_tools",
+        categoryHeader = "MCP Server Tools - Tools from connected MCP (Model Context Protocol) servers. Each tool is in format 'server_name:tool_name'.",
         tools = listOf(
-            SystemToolPrompt(
+            ToolPrompt(
                 name = "mcp_tool",
                 description = "Call a tool from a connected MCP server. Tool names follow the format 'server_name:tool_name'. Example: 'apify:scrape_url'. Available tools are listed when MCP servers are started.",
                 parametersStructured = listOf(
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "server",
                         type = "string",
                         description = "The MCP server name",
                         required = true
                     ),
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "tool",
                         type = "string",
                         description = "The tool name on the server",
                         required = true
                     ),
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "params",
                         type = "object",
                         description = "Tool parameters as a JSON object",
@@ -676,27 +675,26 @@ object SystemToolPrompts {
     )
     
     private val mcpToolsCn = SystemToolPromptCategory(
-        name = "mcp_tools",
-        displayName = "MCP服务器工具",
-        description = "来自已连接MCP服务器的工具。每个工具的格式为'服务器名:工具名'。",
+        categoryName = "mcp_tools",
+        categoryHeader = "MCP服务器工具 - 来自已连接MCP服务器的工具。每个工具的格式为'服务器名:工具名'。",
         tools = listOf(
-            SystemToolPrompt(
+            ToolPrompt(
                 name = "mcp_tool",
                 description = "调用MCP服务器的工具。工具名称格式为'服务器名:工具名'，例如'apify:scrape_url'。启动MCP服务器时会列出可用工具。",
                 parametersStructured = listOf(
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "server",
                         type = "string",
                         description = "MCP服务器名称",
                         required = true
                     ),
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "tool",
                         type = "string",
                         description = "服务器上的工具名称",
                         required = true
                     ),
-                    ToolParameterPrompt(
+                    ToolParameterSchema(
                         name = "params",
                         type = "object",
                         description = "工具参数（JSON对象）",
