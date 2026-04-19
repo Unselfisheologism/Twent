@@ -84,7 +84,7 @@ fun OnboardingScreen(
 
             // Welcome text
             Text(
-                text = "Welcome to Twent AI",
+                text = "Welcome to Twent",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -132,7 +132,7 @@ fun OnboardingScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Twent AI is a free application. If you purchased this app from anyone, you were scammed. We do not sell this app through any third party.",
+                        text = "Twent is a free application. If you purchased this app from anyone, you were scammed. We do not sell this app through any third party.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,

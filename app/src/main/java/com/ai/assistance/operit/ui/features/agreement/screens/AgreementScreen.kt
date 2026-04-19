@@ -74,7 +74,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Twent AI — Agentic OS Agreement",
+                text = "Twent — Agentic OS Agreement",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
@@ -112,7 +112,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                         icon = Icons.Default.Info,
                         title = "Free & Open Agentic OS",
                         content = """
-                            Twent AI is a free, open agentic operating system. All features and capabilities are available to you at no cost — now and forever. We believe powerful agentic infrastructure should be accessible to everyone.
+                            Twent is a free, open agentic operating system. All features and capabilities are available to you at no cost — now and forever. We believe powerful agentic infrastructure should be accessible to everyone.
                         """.trimIndent()
                     )
 
@@ -125,7 +125,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                         icon = Icons.Default.MonetizationOn,
                         title = "How We Stay Free",
                         content = """
-                            Twent AI is supported by AI-powered advertisements served through our partners. These ads are designed to be relevant and non-intrusive. By using the app, you consent to the display of these advertisements.
+                            Twent is supported by AI-powered advertisements served through our partners. These ads are designed to be relevant and non-intrusive. By using the app, you consent to the display of these advertisements.
 
                             We do not sell the app, charge for any features, or require payments from users. If you acquired this app through a paid channel, you were not charged by us.
                         """.trimIndent()
@@ -181,7 +181,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                         icon = Icons.Default.Lightbulb,
                         title = "Acceptable Use",
                         content = """
-                            Twent AI is designed to enhance your productivity through autonomous agent capabilities. You agree to use the agentic OS responsibly and not for any unlawful purposes. The AI agent systems are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
+                            Twent is designed to enhance your productivity through autonomous agent capabilities. You agree to use the agentic OS responsibly and not for any unlawful purposes. The AI agent systems are meant to assist you, and while we strive for accuracy, you should verify critical decisions.
                         """.trimIndent()
                     )
 
@@ -233,7 +233,7 @@ fun AgreementScreen(onAgreementAccepted: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Twent AI is distributed as a free APK. There is no paid version or tier. All agentic OS features are unlocked by default.",
+                                text = "Twent is distributed as a free APK. There is no paid version or tier. All agentic OS features are unlocked by default.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )

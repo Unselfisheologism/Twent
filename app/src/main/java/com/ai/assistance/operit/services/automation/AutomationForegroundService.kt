@@ -207,7 +207,7 @@ class AutomationForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Twent AI Agent")
+            .setContentTitle("Twent Agent")
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)

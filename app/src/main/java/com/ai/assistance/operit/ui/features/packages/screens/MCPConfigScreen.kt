@@ -71,6 +71,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import android.content.Intent
 import android.net.Uri
+import com.ai.assistance.operit.ui.features.packages.screens.mcp.viewmodel.MCPMarketViewModel
 
 /** MCP配置屏幕 - 极简风格界面，专注于插件快速部署 */
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -1310,9 +1311,62 @@ fun MCPConfigScreen(
                 }
             }
         }
+    }
+    
+    // Browse server detail dialog
+    if (selectedBrowseServer != null) {
+        BrowseServerDetailDialog(
+            issue = selectedBrowseServer!!,
+            viewModel = marketViewModel,
+            context = context,
+            onDismiss = { selectedBrowseServer = null }
+        )
+    }
+    
+    // 插件详情对话框
+    if (selectedPluginForDetails != null) {
+        val installedPath = viewModel.getInstalledPath(selectedPluginForDetails!!.id)
+        MCPServerDetailsDialog(
+            server = selectedPluginForDetails!!,
+            onDismiss = { selectedPluginForDetails = null },
+            onInstall = { /* No-op */ },
+            onUninstall = { server ->
+                viewModel.uninstallServer(server)
+                selectedPluginForDetails = null
+            },
+            installedPath = installedPath,
+            pluginConfig = pluginConfigJson,
+            onSaveConfig = {
+                selectedPluginId?.let { pluginId ->
+                    scope.launch {
+                        mcpLocalServer.savePluginConfig(pluginId, pluginConfigJson)
+                        Toast.makeText(context, context.getString(R.string.config_saved), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onUpdateConfig = { newConfig -> pluginConfigJson = newConfig }
+        )
+    }
+
+    // Remote server edit dialog
+    if (showRemoteEditDialog && editingRemoteServer != null) {
+        RemoteServerEditDialog(
+            server = editingRemoteServer!!,
+            onDismiss = {
+                showRemoteEditDialog = false
+                editingRemoteServer = null
+            },
+            onSave = { updatedServer ->
+                viewModel.updateRemoteServer(updatedServer)
+                showRemoteEditDialog = false
+                editingRemoteServer = null
+                Toast.makeText(context, context.getString(R.string.remote_service_updated, updatedServer.name), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 }
 
-// 从插件ID中提取显示名称
+// Utility functions
 private fun getPluginDisplayName(pluginId: String, mcpRepository: MCPRepository): String {
     val pluginInfo = mcpRepository.getInstalledPluginInfo(pluginId)
     val originalName = pluginInfo?.name
@@ -2333,5 +2387,4 @@ private fun BrowseServerDetailDialog(
     )
 }
 
-}
 }

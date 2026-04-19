@@ -1,5 +1,5 @@
 ﻿ <resources>
-    <string name="app_name">Twent AI</string>
+    <string name="app_name">Twent</string>
     <string name="accessibility_service_description">Used to obtain the UI hierarchy, providing faster interface analysis capabilities for AI assistants, and does not collect or store any personal information.</string>
     <!-- Model selector related -->
     <string name="model_selector_title">Select Model Configuration</string>
@@ -536,9 +536,9 @@
     <string name="open_termux">Open Termux</string>
     <string name="termux_setup_guide">Termux Setup Guide</string>
     <!-- About Screen -->
-    <string name="about_title">About Twent AI</string>
+    <string name="about_title">About Twent</string>
     <string name="about_version">Version: %1$s</string>
-    <string name="about_description">Twent AI is an intelligent assistant application that helps users use their devices more efficiently, providing interface analysis, chat conversations, and more.</string>
+    <string name="about_description">Twent is an intelligent assistant application that helps users use their devices more efficiently, providing interface analysis, chat conversations, and more.</string>
     <string name="about_developer">Developer: &lt;a href="https://github.com/AAswordman"&gt;AAswordman&lt;/a&gt;</string>
     <string name="about_contact">Contact Us: aaswordsman@foxmail.com</string>
     <string name="about_website">&lt;a href="https://github.com/AAswordman/Twent"&gt;GitHub: https://github.com/AAswordman/Twent&lt;/a&gt;</string>
@@ -562,7 +562,7 @@
     <string name="network_status">Network Status: %1$s</string>
     <string name="network_status_label">Network Status</string>
     <!-- Configuration Screen -->
-    <string name="config_title">Twent AI Assistant</string>
+    <string name="config_title">Twent Assistant</string>
     <string name="config_description">We use DeepSeek API by default. For alternatives, click the custom option below</string>
     <string name="config_api_key_label">API Key</string>
     <string name="config_api_key_placeholder">DeepSeek API Key</string>
@@ -3954,7 +3954,7 @@
     <string name="default_assistant_guide_step1_title">Open System Settings</string>
     <string name="default_assistant_guide_step1_desc">First, you need to enter the Android system settings interface</string>
     <string name="default_assistant_guide_step1_detail1">• Open System Settings → Apps → Default apps → Digital assistant app</string>
-    <string name="default_assistant_guide_step1_detail2">• Find and select "Twent AI" in the assistant app list</string>
+    <string name="default_assistant_guide_step1_detail2">• Find and select "Twent" in the assistant app list</string>
     <string name="default_assistant_guide_step1_detail_android12">Android 12+: Settings → Apps → Default apps → Digital assistant app → Default digital assistant app</string>
     <string name="default_assistant_guide_open_settings">Open Settings</string>
     <!-- Step 2 -->
@@ -3968,8 +3968,8 @@
     <string name="default_assistant_guide_step2_detail_android12">Android 12+: Settings → Apps → Default apps → Digital assistant app → Default digital assistant app</string>
     <!-- Step 3 -->
     <string name="default_assistant_guide_step3_title">Select Twent</string>
-    <string name="default_assistant_guide_step3_desc">Choose Twent AI from the assistant app list</string>
-    <string name="default_assistant_guide_step3_detail1">• Find \"Twent AI\" in the available assistant apps list</string>
+    <string name="default_assistant_guide_step3_desc">Choose Twent from the assistant app list</string>
+    <string name="default_assistant_guide_step3_detail1">• Find \"Twent\" in the available assistant apps list</string>
     <string name="default_assistant_guide_step3_detail2">• Tap to select, and the system will set Twent as the default assistant</string>
     <string name="default_assistant_guide_step3_detail3">• You can try speaking or typing to interact with the assistant</string>
     <!-- Step 4 -->
@@ -3981,7 +3981,7 @@
     <string name="default_assistant_guide_troubleshooting_title">Having Problems?</string>
     <string name="default_assistant_guide_troubleshooting_content">If you can\'t find Twent in the list, please ensure:\n\n• The app is properly installed and not disabled\n• Necessary permissions have been granted (microphone, overlay, etc.)\n• Try restarting the device and setting it up again\n\nSome custom systems may restrict third-party apps from being set as default assistants. If you encounter this situation, you can still use Twent through the in-app floating window feature.</string>
     <!-- Voice Interaction Service -->
-    <string name="voice_interaction_service_name">Twent AI Assistant</string>
+    <string name="voice_interaction_service_name">Twent Assistant</string>
     <string name="voice_interaction_service_summary">Intelligent voice assistant service</string>
     <!-- Tool Permission Settings -->
     <string name="tool_permissions_title">Tool Permissions</string>
@@ -5794,7 +5794,7 @@
     <string name="html_export_updated">Updated</string>
     <string name="html_export_group">Group</string>
     <string name="html_export_message_count">Message Count</string>
-    <string name="html_export_footer">Exported from Twent AI Assistant</string>
+    <string name="html_export_footer">Exported from Twent Assistant</string>
     <!-- MnnModelDownloadManager -->
     <string name="mnn_no_cache_data">No cache data</string>
     <string name="mnn_response_empty">Response body is empty</string>

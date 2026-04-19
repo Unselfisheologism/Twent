@@ -6,7 +6,7 @@
     <string name="content_filtering">Content Filtering</string>
     <string name="write_things_you_want_to_avoid">Write Things you want to avoid</string>
     <string name="accessibility_service_label">Twent Accessibility Service</string>
-    <string name="accessibility_service_description">Twent AI Assistant uses accessibility services to provide voice-controlled device automation. This allows hands-free operation of your phone through AI-powered commands, making technology more accessible. The service reads screen content and performs actions only when actively requested by you.</string>
+    <string name="accessibility_service_description">Twent Assistant uses accessibility services to provide voice-controlled device automation. This allows hands-free operation of your phone through AI-powered commands, making technology more accessible. The service reads screen content and performs actions only when actively requested by you.</string>
     <string name="view_source_code_on_github">⭐ See the code on Github</string>
     <string name="hello_sir">Hey, Twent Here</string>
     <string name="assistant_at_nyour_command">Assistant at\nYour Command</string>
@@ -94,7 +94,7 @@
     <string name="why_permissions_needed"><u>Why are these permissions needed?</u></string>
     <string name="permissions_explained_title">Permissions Explained</string>
     <string name="accessibility_permission_title">Accessibility Service</string>
-    <string name="accessibility_permission_desc">🤖 Enable Twent AI to control your phone through voice commands. This permission allows reading screen content and performing actions for hands-free device automation and improved accessibility.</string>
+    <string name="accessibility_permission_desc">🤖 Enable Twent to control your phone through voice commands. This permission allows reading screen content and performing actions for hands-free device automation and improved accessibility.</string>
     <string name="microphone_permission_title">Microphone</string>
     <string name="microphone_permission_desc">The microphone is required for the voice command and wake-word features. It allows you to give instructions to Twent by speaking.</string>
     <string name="overlay_permission_title">Display Over Other Apps</string>

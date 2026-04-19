@@ -31,7 +31,7 @@ import com.ai.assistance.operit.ui.theme.*
 
 @Composable
 fun TwentNavigationDrawerHeader(
-    appName: String = "Twent AI",
+    appName: String = "Twent",
     subtitle: String = "Agentic OS",
     onClose: () -> Unit
 ) {
@@ -277,7 +277,7 @@ fun TwentNavigationDrawerFooter(
         ) {
             // Version info
             Text(
-                text = "Twent AI $version",
+                text = "Twent $version",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
