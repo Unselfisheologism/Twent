@@ -9,6 +9,7 @@
     <!-- Navigation -->
     <string name="nav_ai_chat">Agent Chat</string>
     <string name="nav_mini_apps">Mini-Apps</string>
+    <string name="nav_renders">Renders</string>
     <string name="nav_adb_commands">Permissions</string>
     <string name="nav_settings">System Settings</string>
     <string name="nav_tool_permissions">Tool Permissions</string>
@@ -4696,6 +4697,7 @@
     <string name="toolreg_text_to_speech_desc">Speak text: %1$s</string>
     <string name="toolreg_speech_to_text_desc">Speech recognition (language: %1$s)</string>
     <string name="toolreg_create_mini_app_desc">Create mini-app: %1$s (%2$s)</string>
+    <string name="toolreg_render_openui_desc">Render OpenUI: %1$s</string>
     <string name="toolreg_list_mini_apps_desc">List all available mini-apps</string>
     <string name="toolreg_delete_mini_app_desc">Delete mini-app: %1$s</string>
     <!-- Skill Market -->

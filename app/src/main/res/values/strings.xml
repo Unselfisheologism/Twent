@@ -2402,6 +2402,7 @@
 <string name="nav_agent_clis">Agent CLIs</string>
 <string name="nav_integrations">Integrations</string>
 <string name="nav_mini_apps">Mini Apps</string>
+<string name="nav_renders">渲染</string>
 <string name="integrations_title">Integrations</string>
 <string name="integrations_description">Connect external services like GitHub, Gmail, Slack, and 1000+ more. Your AI agent can use tools from connected services.</string>
 <string name="integrations_no_api_key">Composio API key not configured. Add COMPOSIO_API_KEY to local.properties.</string>
@@ -4040,8 +4041,9 @@
 <string name="toolreg_sleep_desc">Toolreg Sleep Desc</string>
 <string name="toolreg_speech_to_text_desc">Toolreg Speech To Text Desc</string>
 <string name="toolreg_create_mini_app_desc">Create mini-app: {0} ({1})</string>
-<string name="toolreg_list_mini_apps_desc">List all available mini-apps</string>
-<string name="toolreg_delete_mini_app_desc">Delete mini-app: {0}</string>
+<string name="toolreg_render_openui_desc">渲染OpenUI: {0}</string>
+<string name="toolreg_list_mini_apps_desc">列出所有可用的Mini-App</string>
+<string name="toolreg_delete_mini_app_desc">删除Mini-App: {0}</string>
 <string name="toolreg_ssh_exit_desc">Toolreg Ssh Exit Desc</string>
 <string name="toolreg_ssh_login_desc">Toolreg Ssh Login Desc</string>
 <string name="toolreg_start_app_desc">Toolreg Start App Desc</string>

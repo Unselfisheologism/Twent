@@ -185,13 +185,14 @@ fun OperitApp(
     val navGroups = listOf(
         NavGroup(
             R.string.nav_group_ai_features, // "Workspace"
-            listOfNotNull(
-                NavItem.AiChat,
-                NavItem.Workflow,
-                NavItem.MiniApps,
-                NavItem.AgentCLIs,
-                NavItem.Packages
-            )
+        listOfNotNull(
+            NavItem.AiChat,
+            NavItem.Workflow,
+            NavItem.MiniApps,
+            NavItem.Renders,
+            NavItem.AgentCLIs,
+            NavItem.Packages
+        )
         ),
         NavGroup(
             R.string.nav_group_system, // "Configuration"

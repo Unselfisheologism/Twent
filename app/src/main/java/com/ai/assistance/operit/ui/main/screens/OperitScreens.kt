@@ -445,6 +445,23 @@ sealed class Screen(
     }
 
 
+    data object Renders : Screen(navItem = NavItem.Renders) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            com.ai.assistance.operit.ui.features.renders.RendersScreen(onGoBack = onGoBack)
+        }
+    }
+
+
     data object Permissions : Screen(navItem = NavItem.Permissions) {
         @Composable
         override fun Content(
@@ -1441,8 +1458,9 @@ object OperitRouter {
             NavItem.UpdateHistory -> Screen.UpdateHistory
             NavItem.Workflow -> Screen.Workflow
             NavItem.AgentCLIs -> Screen.AgentCLIs
-            NavItem.MiniApps -> Screen.MiniApps
-            NavItem.Integrations -> Screen.Integrations
+        NavItem.MiniApps -> Screen.MiniApps
+        NavItem.Renders -> Screen.Renders
+        NavItem.Integrations -> Screen.Integrations
             NavItem.Terminal -> Screen.Terminal()
             else -> Screen.AiChat
         }

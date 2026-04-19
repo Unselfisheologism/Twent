@@ -817,6 +817,67 @@ class ActionExecutor(private val finger: Finger) {
                 }
             }
 
+            is Action.RenderOpenUI -> {
+                try {
+                    // Load template from assets
+                    val template = context.assets.open("openui/template.html")
+                        .bufferedReader()
+                        .use { it.readText() }
+
+                    // Escape code for safe JS embedding
+                    val escapedCode = action.code
+                        .replace("\\", "\\\\")
+                        .replace("'", "\\'")
+                        .replace("\n", "\\n")
+                        .replace("\r", "")
+                        .replace("</script>", "<\\/script>")
+
+                    val html = template.replace("__OPENUI_CODE__", escapedCode)
+
+                    val miniAppType = if (action.type.equals("ephemeral", ignoreCase = true)) {
+                        com.ai.assistance.operit.data.model.MiniAppType.EPHEMERAL
+                    } else {
+                        com.ai.assistance.operit.data.model.MiniAppType.PERSISTENT
+                    }
+
+                    val files = mutableMapOf<String, String>()
+                    files["index.html"] = html
+
+                    val scaffold = com.ai.assistance.operit.data.miniapp.MiniAppScaffold.FromFiles(
+                        files = files,
+                        name = action.title,
+                        type = miniAppType,
+                        description = "OpenUI: ${action.title}",
+                        entryFile = "index.html",
+                        metadata = mapOf(
+                            "created_by" to "voice_agent_openui",
+                            "openui_code" to action.code,
+                            "created_at" to System.currentTimeMillis().toString()
+                        )
+                    )
+
+                    val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
+                    val ensureName = kotlinx.coroutines.runBlocking { manager.ensureUniqueName(action.title, miniAppType) }
+                    val result = kotlinx.coroutines.runBlocking { manager.createMiniApp(scaffold.copy(name = ensureName)) }
+
+                    result.fold(
+                        onSuccess = { miniApp ->
+                            val url = manager.getMiniAppUrl(miniApp)
+                            ActionResult(
+                                longTermMemory = "Rendered OpenUI '$ensureName' (ID: ${miniApp.id}). URL: $url",
+                                extractedContent = "OpenUI rendered: $ensureName\nID: ${miniApp.id}\nURL: $url\nOpen with: open_mini_app?id=${miniApp.id}",
+                                includeExtractedContentOnlyOnce = true
+                            )
+                        },
+                        onFailure = { e ->
+                            ActionResult(error = "Failed to render OpenUI: ${e.message}")
+                        }
+                    )
+                } catch (e: Exception) {
+                    ActionResult(error = "Failed to render OpenUI: ${e.message}")
+                }
+            }
+
             is Action.ListMiniApps -> {
                 try {
                     val manager = com.ai.assistance.operit.data.miniapp.MiniAppManager.getInstance(context)
