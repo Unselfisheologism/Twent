@@ -1310,76 +1310,6 @@ fun MCPConfigScreen(
                 }
             }
         }
-                                        selectedPluginForDetails = getPluginAsServer(pluginId, mcpRepository, context)
-                                    },
-                                    onDeploy = {
-                                        pluginToDeploy = pluginId
-                                        showConfirmDialog = true // 显示确认对话框而不是直接进入命令编辑
-                                    },
-                                    onEdit = {
-                                        // 设置要编辑的服务器并显示对话框
-                                        val serverToEdit = getPluginAsServer(pluginId, mcpRepository,context)
-                                        if(serverToEdit != null){
-                                            editingRemoteServer = serverToEdit
-                                            showRemoteEditDialog = true
-                                        }
-                                    },
-                                    isEnabled = pluginEnabledState.value,
-                                    onEnabledChange = { isChecked ->
-                                        scope.launch {
-                                            mcpLocalServer.setServerEnabled(pluginId, isChecked)
-                                        }
-                                    },
-                                    isRunning = pluginRunningState.value,
-                                    isDeployed = deploySuccessState.value
-                            )
-                            HorizontalDivider(modifier = Modifier.padding(horizontal = 4.dp))
-                        }
-                    } else {
-                        // 无插件提示
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                )
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Extension,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(48.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            stringResource(R.string.no_plugins),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            stringResource(R.string.use_import_function_to_add),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-    }
 }
 
 // 从插件ID中提取显示名称
@@ -2403,4 +2333,5 @@ private fun BrowseServerDetailDialog(
     )
 }
 
+}
 }
