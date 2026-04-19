@@ -98,6 +98,9 @@ fun ShizukuDemoScreen(
     val isPythonInstalledState by remember { derivedStateOf { viewModel.isPythonInstalled.value } }
     val isPipInstalledState by remember { derivedStateOf { viewModel.isPipInstalled.value } }
 
+    // Accessibility guide dialog state
+    var showA11yGuide by remember { mutableStateOf(false) }
+
     // Location permission launcher
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -208,12 +211,7 @@ fun ShizukuDemoScreen(
                         isGranted = hasAccessibilityServiceEnabled,
                         isRequired = true,
                         onClick = {
-                            try {
-                                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, context.getString(R.string.cannot_open_accessibility_settings), Toast.LENGTH_SHORT).show()
-                            }
+                            showA11yGuide = true
                         }
                     )
 
@@ -334,16 +332,65 @@ fun ShizukuDemoScreen(
                                 isExpanded = showAccessibilityWizard,
                                 onToggle = { viewModel.toggleAccessibilityWizard() }
                             ) {
-                                // Different wizard content layout
                                 Column(
                                     verticalArrangement = Arrangement.spacedBy(TwentSpacing.md)
                                 ) {
                                     Text(
-                                        text = "Enable accessibility service for UI automation",
+                                        text = "Enable accessibility service for UI automation. On Android 13+, this requires an extra \"Allow restricted settings\" step first.",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
-                                    
+
+                                    // Step-by-step instructions
+                                    val steps = listOf(
+                                        "Open Settings → Apps and find Twent",
+                                        "Tap the ⋮ menu → \"Allow restricted settings\" (enter PIN)",
+                                        "Come back here and tap \"Open Settings\" below",
+                                        "Go to Installed apps → find Twent → toggle ON"
+                                    )
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                            .padding(12.dp)
+                                    ) {
+                                        steps.forEachIndexed { i, step ->
+                                            Row(
+                                                verticalAlignment = Alignment.Top,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Text(
+                                                    text = "${i + 1}.",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = OrangePrimary,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    text = step,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Supademo tutorial link
+                                    OutlinedButton(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://app.supademo.com/demo/cmo4mfzy702e2yd0jl0j1z1c8?preview=true"))
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(vertical = 12.dp)
+                                    ) {
+                                        Icon(Icons.Outlined.PlayCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Watch Video Tutorial", fontSize = 14.sp)
+                                    }
+
                                     TwentButton(
                                         onClick = {
                                             try {
@@ -353,7 +400,7 @@ fun ShizukuDemoScreen(
                                                 Toast.makeText(context, context.getString(R.string.cannot_open_accessibility_settings), Toast.LENGTH_SHORT).show()
                                             }
                                         },
-                                        text = "Open Settings",
+                                        text = "Open Accessibility Settings",
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -404,6 +451,26 @@ fun ShizukuDemoScreen(
                         }
                     }
                 }
+            }
+
+            // Accessibility guide dialog
+            if (showA11yGuide) {
+                AccessibilityGuideDialog(
+                    onDismiss = { showA11yGuide = false },
+                    onOpenSettings = {
+                        showA11yGuide = false
+                        try {
+                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, context.getString(R.string.cannot_open_accessibility_settings), Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onWatchDemo = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://app.supademo.com/demo/cmo4mfzy702e2yd0jl0j1z1c8?preview=true"))
+                        context.startActivity(intent)
+                    }
+                )
             }
         }
     }
@@ -651,4 +718,153 @@ private fun PackageStatusRow(
             color = if (isInstalled) SuccessGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
     }
+}
+
+@Composable
+private fun AccessibilityGuideDialog(
+    onDismiss: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onWatchDemo: () -> Unit
+) {
+    val isAndroid13Plus = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    val oem = remember {
+        val m = Build.MANUFACTURER.lowercase()
+        when {
+            m.contains("samsung") -> "Samsung"
+            m.contains("xiaomi") || m.contains("redmi") || m.contains("poco") -> "Xiaomi"
+            m.contains("oppo") -> "OPPO"
+            m.contains("vivo") -> "vivo"
+            m.contains("oneplus") -> "OnePlus"
+            m.contains("huawei") || m.contains("honor") -> "Huawei"
+            m.contains("realme") -> "Realme"
+            m.contains("google") || m.contains("pixel") -> "Pixel"
+            else -> Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (isAndroid13Plus) "Enable Accessibility ($oem)" else "Enable Accessibility",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (isAndroid13Plus) {
+                    // Phase A
+                    Text(
+                        "PHASE A — Allow Restricted Settings",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(0xFFFF9800),
+                        fontWeight = FontWeight.Bold
+                    )
+                    val phaseASteps = listOf(
+                        "Open your phone's Settings app",
+                        "Go to Settings → Apps and find \"Twent\"",
+                        "Tap the ⋮ menu (top-right) → \"Allow restricted settings\"",
+                        "Enter your PIN/password to confirm"
+                    )
+                    phaseASteps.forEachIndexed { i, step ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("${i + 1}.", color = Color(0xFFFF9800), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(step, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
+                    // Phase B
+                    Text(
+                        "PHASE B — Enable Accessibility",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                    val phaseBSteps = listOf(
+                        "Come back here and tap \"Open Settings\" below",
+                        "Tap \"Installed apps\" → find \"Twent\"",
+                        "Tap the toggle switch to turn it ON",
+                        "Tap \"Allow\" in the confirmation popup"
+                    )
+                    phaseBSteps.forEachIndexed { i, step ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("${i + 5}.", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(step, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                } else {
+                    // Simple flow for Android 12 and below
+                    val steps = listOf(
+                        "Tap \"Open Settings\" below",
+                        "Find \"Installed apps\" → tap \"Twent\"",
+                        "Tap the toggle switch to turn it ON",
+                        "Tap \"Allow\" in the confirmation popup"
+                    )
+                    steps.forEachIndexed { i, step ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("${i + 1}.", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(step, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+
+                // Supademo link
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                        .clickable { onWatchDemo() }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.PlayCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Watch video tutorial",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "Interactive step-by-step demo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                    Icon(
+                        Icons.Outlined.OpenInNew,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) {
+                Text("Open Settings", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface
+    )
 }
