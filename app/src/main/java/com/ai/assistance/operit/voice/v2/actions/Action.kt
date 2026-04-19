@@ -105,13 +105,6 @@ sealed class Action {
     data object ListMiniApps : Action()
     data class DeleteMiniApp(val appId: String) : Action()
 
-    // OpenUI Generative UI Tool
-    data class RenderOpenUI(
-        val code: String,
-        val title: String = "OpenUI",
-        val type: String = "persistent"
-    ) : Action()
-
     // ========== Workflow Tools ==========
     data object GetAllWorkflows : Action()
     data class GetWorkflow(val workflowId: String) : Action()
@@ -391,22 +384,6 @@ sealed class Action {
                         css = args["css"] as? String ?: "",
                         javascript = args["javascript"] as? String ?: "",
                         description = args["description"] as? String ?: ""
-                    )
-                }
-            ),
-            "render_openui" to Spec(
-                name = "render_openui",
-                description = "Render a professional, interactive UI from OpenUI Lang code — a compact declarative language that is 67% more token-efficient than raw HTML. Use INSTEAD of create_mini_app for dashboards, data tables, forms, charts, settings panels. OpenUI Lang: each line is `name = Component(args)`. Must include `root = Stack([...])`.",
-                params = listOf(
-                    ParamSpec("code", String::class, "OpenUI Lang code. Format: name = Component(args) per line. Must include root = ..."),
-                    ParamSpec("title", String::class, "Title for the rendered UI."),
-                    ParamSpec("type", String::class, "App type: 'persistent' (default) or 'ephemeral'.")
-                ),
-                build = { args ->
-                    RenderOpenUI(
-                        code = args["code"] as String,
-                        title = args["title"] as? String ?: "OpenUI",
-                        type = args["type"] as? String ?: "persistent"
                     )
                 }
             ),

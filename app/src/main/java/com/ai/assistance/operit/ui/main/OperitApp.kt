@@ -189,7 +189,6 @@ fun OperitApp(
             NavItem.AiChat,
             NavItem.Workflow,
             NavItem.MiniApps,
-            NavItem.Renders,
             NavItem.AgentCLIs,
             NavItem.Packages
         )

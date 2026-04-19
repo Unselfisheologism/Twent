@@ -20,7 +20,6 @@ sealed class NavItem(val route: String, val titleResId: Int, val icon: ImageVect
     object Workflow : NavItem("workflow", R.string.nav_workflow, Icons.Outlined.AccountTree)
     object Terminal : NavItem("terminal", R.string.terminal, Icons.Outlined.Code)
     object MiniApps      : NavItem("mini_apps",         R.string.nav_mini_apps,         Icons.Outlined.Widgets)
-    object Renders       : NavItem("renders",           R.string.nav_renders,           Icons.Outlined.AutoAwesome)
     object Mcp           : NavItem("mcp",               R.string.mcp,                   Icons.Outlined.Hub)
     object Integrations : NavItem("integrations", R.string.nav_integrations, Icons.Outlined.Extension)
     

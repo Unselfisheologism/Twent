@@ -530,52 +530,6 @@ object SystemToolPrompts {
         categoryFooter = "\n注意：记忆库和用户性格档案会在你输出任务完成标志后由独立的系统自动更新。但是，如果需要立即管理记忆或更新用户偏好，请直接使用相应的工具。"
     )
 
-    // ==================== OpenUI Generative UI Tools ====================
-    val openUITools = SystemToolPromptCategory(
-        categoryName = "Generative UI Tools (OpenUI)",
-        tools = listOf(
-            ToolPrompt(
-                name = "render_openui",
-                description = "Render a professional, interactive UI from OpenUI Lang code — a compact declarative language that is 67% more token-efficient than generating raw HTML. Use this INSTEAD of create_mini_app for dashboards, data tables, forms, charts, settings panels, and data-driven UIs. OpenUI Lang uses a line-oriented format: each line assigns a component expression to a name (e.g., `root = Stack([header, chart])`). Supports Stack, Card, TextContent, Table, LineChart, BarChart, PieChart, Form, Input, Select, Button, Modal, Tabs, Accordion, and more. Prefer this tool over create_mini_app when the UI is primarily displaying/interacting with structured data.",
-                parametersStructured = listOf(
-                    ToolParameterSchema(name = "code", type = "string", description = "OpenUI Lang code to render. Format: `name = Component(args)` one per line. Must include `root = ...`. Example: `root = Stack([header])\nheader = CardHeader(\"Dashboard\")`", required = true),
-                    ToolParameterSchema(name = "title", type = "string", description = "Optional title for the rendered UI", required = false, default = "OpenUI"),
-                    ToolParameterSchema(name = "type", type = "string", description = "App type: 'persistent' (default) or 'ephemeral'", required = false, default = "persistent")
-                )
-            )
-        ),
-        categoryFooter = "\nOpenUI Lang reference:\n" +
-            "- root = Stack([child1, child2], \"column\") — layout container (direction: column/row)\n" +
-            "- Card([children]) — rounded card container\n" +
-            "- CardHeader(\"Title\", \"subtitle\") — card header\n" +
-            "- TextContent(\"text\", \"large-heavy\") — text (variants: large-heavy, large, medium, small, small-heavy, tiny)\n" +
-            "- Table(cols, rows) — data table. Cols: [Col(\"Name\", \"string\")]. Rows: [[val1, val2]]\n" +
-            "- LineChart(labels, [Series(\"Name\", data)]) / BarChart / PieChart\n" +
-            "- Form(\"name\", buttons, [FormControl(\"Label\", Input(...))])\n" +
-            "- Input(\"name\", \"placeholder\", \"text\") / Select(\"name\", [SelectItem(\"val\", \"Label\")])\n" +
-            "- Button(\"label\", \"primary\") — variants: primary, secondary, success, danger\n" +
-            "- Tag(\"text\", \"neutral\") — variants: neutral, success, warning, danger, info, primary\n" +
-            "- Callout(\"info\", \"Title\", \"body\") — variants: info, success, warning, error\n" +
-            "- Modal(\"Title\", isOpen, [children]) / Tabs([TabItem(\"id\", \"Label\", [content])])\n" +
-            "- Image(\"url\", \"alt\") / CodeBlock(\"lang\", \"code\") / FollowUpBlock(\"suggestion\")\n"
-    )
-
-    val openUIToolsCn = SystemToolPromptCategory(
-        categoryName = "生成式UI工具 (OpenUI)",
-        tools = listOf(
-            ToolPrompt(
-                name = "render_openui",
-                description = "使用OpenUI Lang代码渲染专业的交互式UI——一种紧凑的声明式语言，比生成原始HTML节省67%的token。对于仪表板、数据表、表单、图表、设置面板和数据驱动的UI，用此工具替代create_mini_app。",
-                parametersStructured = listOf(
-                    ToolParameterSchema(name = "code", type = "string", description = "要渲染的OpenUI Lang代码。格式：每行一个 `name = Component(args)`。必须包含 `root = ...`。", required = true),
-                    ToolParameterSchema(name = "title", type = "string", description = "渲染UI的可选标题", required = false, default = "OpenUI"),
-                    ToolParameterSchema(name = "type", type = "string", description = "应用类型：'persistent'（默认）或'ephemeral'", required = false, default = "persistent")
-                )
-            )
-        ),
-        categoryFooter = "\nOpenUI Lang参考：同英文版"
-    )
-
     // ==================== Mini-App Tools ====================
     val miniAppTools = SystemToolPromptCategory(
         categoryName = "Mini-App Tools",
@@ -761,7 +715,6 @@ object SystemToolPrompts {
             adjustedFileSystemTools,
             httpTools,
             memoryTools,
-            openUITools,
             miniAppTools,
             mcpToolsEn
         )
@@ -839,7 +792,6 @@ object SystemToolPrompts {
             adjustedFileSystemTools,
             httpToolsCn,
             memoryToolsCn,
-            openUIToolsCn,
             miniAppToolsCn,
             mcpToolsCn
         )
