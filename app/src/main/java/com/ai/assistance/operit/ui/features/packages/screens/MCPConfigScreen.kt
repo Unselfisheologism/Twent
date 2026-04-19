@@ -2099,7 +2099,7 @@ private fun buildOAuthAuthorizationUrl(config: MCPLocalServer.OAuthConfig): Stri
             append("&scope=${Uri.encode(scope)}")
         }
     }
-
+}
 
 @Composable
 private fun MyServersTab(
@@ -2387,4 +2387,3 @@ private fun BrowseServerDetailDialog(
     )
 }
 
-}
