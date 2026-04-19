@@ -103,6 +103,14 @@ class MCPMarketViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+        // Reload with new search
+        loadMCPMarketData()
+    }
+
+
     val mcpIssues: StateFlow<List<GitHubIssue>> =
         combine(_mcpIssues, _searchQuery) { issues, query ->
             if (query.isBlank()) {

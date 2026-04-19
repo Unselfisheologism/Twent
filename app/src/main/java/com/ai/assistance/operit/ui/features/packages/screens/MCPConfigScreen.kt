@@ -125,6 +125,23 @@ fun MCPConfigScreen(
     // Freeze list order within this screen session (avoid jumping when status changes)
     var lockedPluginOrder by remember { mutableStateOf<List<String>?>(null) }
 
+    // Main tab state: 0 = My Servers, 1 = Browse
+    var mainTabIndex by remember { mutableStateOf(0) }
+    
+    // Browse tab state
+    val marketViewModel: MCPMarketViewModel = remember {
+        MCPMarketViewModel.Factory(context, mcpRepository).create(MCPMarketViewModel::class.java)
+    }
+    val browseServers by marketViewModel.mcpIssues.collectAsState()
+    val isBrowseLoading by marketViewModel.isLoading.collectAsState()
+    val browseSearchQuery by marketViewModel.searchQuery.collectAsState()
+    var selectedBrowseServer by remember { mutableStateOf<com.ai.assistance.operit.data.api.GitHubIssue?>(null) }
+    
+    // Load browse data on first view
+    LaunchedEffect(Unit) {
+        marketViewModel.loadMCPMarketData()
+    }
+
     suspend fun refreshMcpScreen() {
         if (isRefreshing) return
         isRefreshing = true
@@ -364,6 +381,18 @@ fun MCPConfigScreen(
             }
         }
     }
+
+
+    // Browse server detail dialog
+    if (selectedBrowseServer != null) {
+        BrowseServerDetailDialog(
+            issue = selectedBrowseServer!!,
+            viewModel = marketViewModel,
+            context = context,
+            onDismiss = { selectedBrowseServer = null }
+        )
+    }
+    
 
     // 插件详情对话框
     if (selectedPluginForDetails != null) {
@@ -1210,17 +1239,7 @@ fun MCPConfigScreen(
                             }
                         }
                         
-                        // 市场按钮
-                        FloatingActionButton(
-                            onClick = onNavigateToMCPMarket,
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(56.dp)
-                        ) {
-                            Icon(Icons.Default.Store, contentDescription = stringResource(R.string.mcp_market))
-                        }
-                        
-                        // 导入按钮
+                        // Import button (Plus icon)
                         FloatingActionButton(
                             onClick = {
                                 showImportDialog = true
@@ -1229,7 +1248,7 @@ fun MCPConfigScreen(
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(56.dp)
                         ) {
-                            Icon(Icons.Default.Download, contentDescription = stringResource(R.string.import_action))
+                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.import_action))
                         }
                     }
                 }
@@ -1243,144 +1262,54 @@ fun MCPConfigScreen(
                 CircularProgressIndicator()
             }
         } else {
-            Box(modifier = Modifier.fillMaxSize()) {
-                // 主界面内容
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(
-                        start = 8.dp,
-                        top = 8.dp,
-                        end = 8.dp,
-                        bottom = 200.dp // 为悬浮按钮留出空间
-                    )
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                // Main tabs: My Servers | Browse
+                TabRow(
+                    selectedTabIndex = mainTabIndex,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 状态指示器
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.mcp_management),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    // Refresh button
-                                    IconButton(
-                                        onClick = {
-                                            scope.launch {
-                                                refreshMcpScreen()
-                                            }
-                                        },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Refresh,
-                                            contentDescription = stringResource(R.string.mcp_market_refresh),
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .background(
-                                                color = when {
-                                                    totalEnabledPlugins == 0 -> Color.Gray
-                                                    successfulToolRequests.value == totalEnabledPlugins -> Color.Green
-                                                    successfulToolRequests.value > 0 -> Color(0xFFFFA500) // Orange
-                                                    else -> Color.Red
-                                                },
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                    )
-                                    Text(
-                                        text = "${successfulToolRequests.value}/$totalEnabledPlugins",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                    Tab(
+                        selected = mainTabIndex == 0,
+                        onClick = { mainTabIndex = 0 },
+                        text = { Text("My Servers") },
+                        icon = { Icon(Icons.Default.Storage, contentDescription = null) }
+                    )
+                    Tab(
+                        selected = mainTabIndex == 1,
+                        onClick = { mainTabIndex = 1 },
+                        text = { Text("Browse") },
+                        icon = { Icon(Icons.Default.Explore, contentDescription = null) }
+                    )
+                }
+                
+                // Tab content
+                when (mainTabIndex) {
+                    0 -> MyServersTab(
+                        installedPlugins = installedPlugins,
+                        sortedPluginIds = sortedPluginIds,
+                        mcpRepository = mcpRepository,
+                        mcpLocalServer = mcpLocalServer,
+                        viewModel = viewModel,
+                        totalEnabledPlugins = totalEnabledPlugins,
+                        successfulToolRequests = successfulToolRequests,
+                        pluginToolsMap = pluginToolsMap,
+                        isRefreshing = isRefreshing,
+                        scope = scope,
+                        context = context,
+                        onPluginSelected = { pluginInfo ->
+                            selectedPluginForDetails = pluginInfo
                         }
-                    }
-
-                    
-                    // 插件列表标题
-                    if (installedPlugins.isNotEmpty()) {
-                        
-                        // 插件列表
-                        items(items = sortedPluginIds, key = { it }) { pluginId ->
-                            val pluginInfo = remember(pluginId) {
-                                mcpRepository.getInstalledPluginInfo(pluginId)
-                            }
-                            val isRemote = pluginInfo?.type == "remote"
-
-                            // 获取插件服务器状态
-                            val pluginServerStatus = mcpLocalServer.getServerStatus(pluginId)
-
-                            // 获取插件部署状态（通过检查Linux文件系统）
-                            val deploySuccessState = remember(pluginId) {
-                                mutableStateOf(false)
-                            }
-
-                            // 获取插件启用状态 - 从配置读取
-                            val pluginEnabledState = remember(pluginId) {
-                                mutableStateOf(mcpLocalServer.isServerEnabled(pluginId))
-                            }
-
-                            // 获取插件运行状态
-                            val pluginRunningState = remember(pluginId) {
-                                mutableStateOf(pluginServerStatus?.active == true)
-                            }
-                            
-                            // 检查部署状态
-                            LaunchedEffect(pluginId) {
-                                deploySuccessState.value = mcpLocalServer.isPluginDeployed(pluginId)
-                            }
-                            
-                            // 监听服务器状态变化
-                            LaunchedEffect(pluginId) {
-                                mcpLocalServer.serverStatus.collect { statusMap ->
-                                    val status = statusMap[pluginId]
-                                    pluginRunningState.value = status?.active == true
-                                    // 重新检查部署状态
-                                    deploySuccessState.value = mcpLocalServer.isPluginDeployed(pluginId)
-                                }
-                            }
-                            
-                            // 监听配置变化（isEnabled状态）
-                            LaunchedEffect(pluginId) {
-                                mcpLocalServer.mcpConfig.collect { _ ->
-                                    pluginEnabledState.value = mcpLocalServer.isServerEnabled(pluginId)
-                                }
-                            }
-
-                            PluginListItem(
-                                    pluginId = pluginId,
-                                    displayName = getPluginDisplayName(pluginId, mcpRepository),
-                                    isOfficial = pluginId.startsWith("official_"),
-                                    isRemote = isRemote, // 传递插件类型
-                                    toolNames = pluginToolsMap[pluginId] ?: emptyList(), // 传递工具信息
-                                    onClick = {
-                                        selectedPluginId = pluginId
-                                        pluginConfigJson = mcpLocalServer.getPluginConfig(pluginId)
+                    )
+                    1 -> BrowseServersTab(
+                        servers = browseServers,
+                        isLoading = isBrowseLoading,
+                        searchQuery = browseSearchQuery,
+                        onSearchQueryChange = { marketViewModel.setSearchQuery(it) },
+                        onServerClick = { selectedBrowseServer = it }
+                    )
+                }
+            }
+        }
                                         selectedPluginForDetails = getPluginAsServer(pluginId, mcpRepository, context)
                                     },
                                     onDeploy = {
@@ -2186,5 +2115,292 @@ private fun buildOAuthAuthorizationUrl(config: MCPLocalServer.OAuthConfig): Stri
             append("&scope=${Uri.encode(scope)}")
         }
     }
+
+
+@Composable
+private fun MyServersTab(
+    installedPlugins: Set<String>,
+    sortedPluginIds: List<String>,
+    mcpRepository: MCPRepository,
+    mcpLocalServer: MCPLocalServer,
+    viewModel: MCPViewModel,
+    totalEnabledPlugins: Int,
+    successfulToolRequests: androidx.compose.runtime.MutableState<Int>,
+    pluginToolsMap: Map<String, List<String>>,
+    isRefreshing: Boolean,
+    scope: kotlinx.coroutines.CoroutineScope,
+    context: android.content.Context,
+    onPluginSelected: (MCPLocalServer.PluginMetadata) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 200.dp)
+    ) {
+        // Status indicator
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.mcp_management),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(8.dp).background(
+                                color = when {
+                                    totalEnabledPlugins == 0 -> Color.Gray
+                                    successfulToolRequests.value == totalEnabledPlugins -> Color.Green
+                                    successfulToolRequests.value > 0 -> Color(0xFFFFA500)
+                                    else -> Color.Red
+                                },
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                        )
+                        Text(
+                            text = "${"$"}{successfulToolRequests.value}/${"$"}totalEnabledPlugins",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        
+        if (installedPlugins.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Default.Extension,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.no_mcp_plugins_installed),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = stringResource(R.string.browse_and_install_mcp_plugins),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        } else {
+            items(sortedPluginIds) { pluginId ->
+                val pluginInfo = mcpRepository.getInstalledPluginInfo(pluginId)
+                val isRemote = pluginInfo?.type == "remote"
+                val isEnabled = mcpLocalServer.isServerEnabled(pluginId)
+                val isActive = mcpLocalServer.getServerStatus(pluginId)?.active == true
+                val tools = pluginToolsMap[pluginId] ?: emptyList()
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isActive) 
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else 
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = pluginInfo?.name ?: pluginId,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = if (isRemote) "Remote" else "Local",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (tools.isNotEmpty()) {
+                                Text(
+                                    text = "${"$"}{tools.size} tools",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        IconButton(onClick = {
+                            pluginInfo?.let { onPluginSelected(it) }
+                        }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Configure")
+                        }
+                        
+                        Switch(
+                            checked = isEnabled,
+                            onCheckedChange = { checked ->
+                                scope.launch {
+                                    mcpLocalServer.setServerEnabled(pluginId, checked)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
+@Composable
+private fun BrowseServersTab(
+    servers: List<com.ai.assistance.operit.data.api.GitHubIssue>,
+    isLoading: Boolean,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onServerClick: (com.ai.assistance.operit.data.api.GitHubIssue) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Search bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            placeholder = { Text("Search MCP servers...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            singleLine = true
+        )
+        
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 200.dp)
+            ) {
+                items(servers) { server ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onServerClick(server) }
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = server.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = server.body?.take(100) ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BrowseServerDetailDialog(
+    issue: com.ai.assistance.operit.data.api.GitHubIssue,
+    viewModel: MCPMarketViewModel,
+    context: android.content.Context,
+    onDismiss: () -> Unit
+) {
+    var configDisplay by remember { mutableStateOf<MCPMarketViewModel.McpConfigDisplay?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    
+    LaunchedEffect(issue.number) {
+        configDisplay = viewModel.getMcpConfigForDisplay(issue)
+        isLoading = false
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(issue.title) },
+        text = {
+            Column {
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (configDisplay != null) {
+                    Text("mcp.json Config:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = configDisplay!!.configJson,
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                        )
+                    }
+                    if (configDisplay!!.authFields.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Required auth:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        configDisplay!!.authFields.forEach { field ->
+                            Text("• ${"$"}{field.name}: ${"$"}{field.description}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                } else {
+                    Text("Could not generate config")
+                }
+            }
+        },
+        confirmButton = {
+            if (configDisplay != null) {
+                Button(onClick = {
+                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("mcp.json", configDisplay!!.configJson)
+                    clipboard.setPrimaryClip(clip)
+                    android.widget.Toast.makeText(context, "Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Copy")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+}
