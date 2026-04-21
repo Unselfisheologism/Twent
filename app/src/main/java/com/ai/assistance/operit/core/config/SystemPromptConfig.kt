@@ -475,9 +475,9 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
     // Information about using packages
     packagesSection.appendLine()
     packagesSection.appendLine("HOW TO USE PACKAGES:")
-    packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., <tool name="serverName:toolName">...)")
-    packagesSection.appendLine("- For skills: Use <tool name="use_skill"><param name="skill_name">skill_name</param></tool>")
-    packagesSection.appendLine("- For JavaScript packages: Use <tool name="use_package"><param name="package_name">package_name</param></tool>")
+    packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., serverName:toolName)")
+    packagesSection.appendLine("- For skills: Use the use_skill tool with skill_name parameter")
+    packagesSection.appendLine("- For JavaScript packages: Use the use_package tool with package_name parameter")
 
     // Select appropriate template based on custom template or language preference
     val templateToUse = if (customSystemPromptTemplate.isNotEmpty()) {
