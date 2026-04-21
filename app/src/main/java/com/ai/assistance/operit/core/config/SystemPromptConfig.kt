@@ -407,18 +407,66 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
         }
       }
 
-      // List available MCP servers as regular packages
+      // List available MCP servers with their tools
+      val mcpToolRegistry = mutableListOf<Pair<String, com.ai.assistance.operit.core.tools.mcp.MCPTool>>()
+      
       for ((serverName, serverConfig) in mcpServers) {
         packagesSection.appendLine("- $serverName : ${serverConfig.description}")
+        
+        // Try to discover and list MCP tools
+        try {
+          val context = com.ai.assistance.operit.core.application.OperitApplication.instance.applicationContext
+          val mcpPackage = com.ai.assistance.operit.core.tools.mcp.MCPPackage.fromServer(context, serverConfig)
+          
+          if (mcpPackage != null && mcpPackage.mcpTools.isNotEmpty()) {
+            packagesSection.appendLine("  Available tools:")
+            mcpPackage.mcpTools.forEach { tool ->
+              val toolFullName = "$serverName:${tool.name}"
+              packagesSection.appendLine("  - $toolFullName: ${tool.description}")
+              if (tool.parameters.isNotEmpty()) {
+                packagesSection.appendLine("    Parameters:")
+                tool.parameters.forEach { param ->
+                  val requiredText = if (param.required) "(required)" else "(optional)"
+                  packagesSection.appendLine("    - ${param.name} $requiredText: ${param.description}")
+                }
+              }
+              // Store for registration
+              mcpToolRegistry.add(Pair(serverName, tool))
+            }
+          } else {
+            packagesSection.appendLine("  [No tools available or server not responding]")
+          }
+        } catch (e: Exception) {
+          packagesSection.appendLine("  [Tools available after server activation]")
+        }
       }
 
-      // List available Skills as regular packages
-      for ((skillName, skill) in skillPackages) {
-        if (skill.description.isNotBlank()) {
-          packagesSection.appendLine("- $skillName : ${skill.description}")
-        } else {
-          packagesSection.appendLine("- $skillName")
+      // Register MCP tools directly with the AI tool handler
+      if (mcpToolRegistry.isNotEmpty()) {
+        try {
+          val context = com.ai.assistance.operit.core.application.OperitApplication.instance.applicationContext
+          val aiToolHandler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(context)
+          val mcpManager = com.ai.assistance.operit.core.tools.mcp.MCPManager.getInstance(context)
+          val mcpToolExecutor = com.ai.assistance.operit.core.tools.mcp.MCPToolExecutor(context, mcpManager)
+          
+          mcpToolRegistry.forEach { (serverName, tool) ->
+            val toolFullName = "$serverName:${tool.name}"
+            // Register the MCP tool directly
+            aiToolHandler.registerTool(
+              name = toolFullName,
+              executor = mcpToolExecutor
+            )
+          }
+        } catch (e: Exception) {
+          // If registration fails, tools will be available after use_package
         }
+      }
+
+      // List available Skills with capabilities
+      for ((skillName, skill) in skillPackages) {
+        val description = if (skill.description.isNotBlank()) skill.description else "No description"
+        packagesSection.appendLine("- $skillName : $description")
+        packagesSection.appendLine("  [Use 'use_skill' tool to load this skill]")
       }
     } else {
       packagesSection.appendLine("No packages are currently available.")
@@ -426,10 +474,10 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
 
     // Information about using packages
     packagesSection.appendLine()
-    packagesSection.appendLine("To use a package:")
-    packagesSection.appendLine(
-            "<tool name=\"use_package\"><param name=\"package_name\">package_name_here</param></tool>"
-    )
+    packagesSection.appendLine("HOW TO USE PACKAGES:")
+    packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., <tool name="serverName:toolName">...)")
+    packagesSection.appendLine("- For skills: Use <tool name="use_skill"><param name="skill_name">skill_name</param></tool>")
+    packagesSection.appendLine("- For JavaScript packages: Use <tool name="use_package"><param name="package_name">package_name</param></tool>")
 
     // Select appropriate template based on custom template or language preference
     val templateToUse = if (customSystemPromptTemplate.isNotEmpty()) {

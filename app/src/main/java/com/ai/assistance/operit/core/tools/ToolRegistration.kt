@@ -283,6 +283,52 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // Skill usage tool
+    handler.registerTool(
+            name = "use_skill",
+            descriptionGenerator = { tool ->
+                val skillName = tool.parameters.find { it.name == "skill_name" }?.value ?: ""
+                s(R.string.toolreg_use_skill_desc, skillName)
+            },
+            executor = { tool ->
+                val skillName = tool.parameters.find { it.name == "skill_name" }?.value ?: ""
+                if (skillName.isBlank()) {
+                    ToolResult(
+                        toolName = tool.name,
+                        success = false,
+                        result = StringResultData(""),
+                        error = "Missing required parameter: skill_name"
+                    )
+                } else {
+                    try {
+                        val skillManager = com.ai.assistance.operit.core.tools.skill.SkillManager.getInstance(context)
+                        val skillPrompt = skillManager.getSkillSystemPrompt(skillName)
+                        if (skillPrompt != null) {
+                            ToolResult(
+                                toolName = tool.name,
+                                success = true,
+                                result = StringResultData(skillPrompt)
+                            )
+                        } else {
+                            ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = "Skill not found: $skillName"
+                            )
+                        }
+                    } catch (e: Exception) {
+                        ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error loading skill: ${e.message}"
+                        )
+                    }
+                }
+            }
+    )
+
     // ADB命令执行工具
 
     // 计算器工具

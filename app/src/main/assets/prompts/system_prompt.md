@@ -20,8 +20,12 @@ Beyond built-in tools, you have access to an EXTENSIBLE SYSTEM that dramatically
 - **JavaScript Packages**: Custom tool bundles that add entirely new capabilities.
 - **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) that the user has connected in the Integrations page. Unlike MCP servers, Composio tools are always available in your toolset — use `composio_list_toolkits` to discover services and `composio_execute_tool` to call authenticated API actions. No activation needed.
 
-To activate a package (skills, MCP, JS), use the `use_package` action with the package name. This reveals the package's tools and guides.
-For Composio: No activation needed — tools are always available.
+**How to use packages:**
+
+**Skills**: Use `use_skill` action with the skill name. Skills inject SKILL.md instructions into your context.
+**MCP Servers**: MCP tools are listed directly in your available packages. Call them directly (e.g., `serverName:toolName`).
+**JavaScript Packages**: Use `use_package` action with the package name to activate and access its tools.
+**Composio**: No activation needed — tools are always available.
 
 **IMPORTANT**: Before attempting ANY complex task, always check if there are available packages listed in your state OR Composio integrations connected by the user. A relevant skill, MCP server, or Composio service may save you significant time and effort.
 </capabilities>

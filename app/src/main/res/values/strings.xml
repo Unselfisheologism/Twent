@@ -4066,7 +4066,8 @@
 <string name="toolreg_update_user_preferences_desc">Toolreg Update User Preferences Desc</string>
 <string name="toolreg_update_workflow_desc">Toolreg Update Workflow Desc</string>
 <string name="toolreg_update_workflow_with_name_desc">Toolreg Update Workflow With Name Desc</string>
-<string name="toolreg_use_package_desc">Toolreg Use Package Desc</string>
+<string name="toolreg_use_package_desc">Activate a package (skill, MCP server, or JavaScript package) to access its tools</string>
+<string name="toolreg_use_skill_desc">Load and execute a skill by name - injects the skill's SKILL.md instructions into your context</string>
 <string name="toolreg_user_pref_ai_style">Toolreg User Pref Ai Style</string>
 <string name="toolreg_user_pref_birth_date">Toolreg User Pref Birth Date</string>
 <string name="toolreg_user_pref_gender">Toolreg User Pref Gender</string>
