@@ -224,24 +224,34 @@ fun ShizukuDemoScreen(
                         onClick = {
                             try {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                    // Android R+ (API 30+): Use ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+                                    // with package URI to jump directly to this app's toggle
+                                    val intent = Intent(
+                                        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                        Uri.parse("package:" + context.packageName)
+                                    )
                                     context.startActivity(intent)
                                 } else {
-                                    val intent =
-                                        Intent(
-                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                            Uri.parse("package:" + context.packageName)
-                                        )
+                                    // Older Android: Use ACTION_APPLICATION_DETAILS_SETTINGS
+                                    val intent = Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.parse("package:" + context.packageName)
+                                    )
                                     context.startActivity(intent)
                                 }
                             } catch (e: Exception) {
+                                // Fallback: Try ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION (shows all apps)
                                 try {
-                                    val intent =
-                                        Intent(
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                                        context.startActivity(intent)
+                                    } else {
+                                        val intent = Intent(
                                             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                             Uri.parse("package:" + context.packageName)
                                         )
-                                    context.startActivity(intent)
+                                        context.startActivity(intent)
+                                    }
                                 } catch (e: Exception) {
                                     Toast.makeText(context, context.getString(R.string.cannot_open_permission_settings), Toast.LENGTH_SHORT).show()
                                 }
