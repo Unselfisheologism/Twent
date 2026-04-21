@@ -123,6 +123,17 @@ class ConversationalAgentService : Service() {
         super.onCreate()
         Log.d("ConvAgent", "Service onCreate")
 
+        // CRITICAL: call startForeground() IMMEDIATELY to avoid ForegroundServiceDidNotStartInTimeException.
+        // The 5-second window starts when startForegroundService() is called (in AssistEntryActivity),
+        // and onCreate() runs before onStartCommand(), so we must foreground here — not in onStartCommand().
+        createNotificationChannel()
+        try {
+            startForeground(NOTIFICATION_ID, createNotification())
+        } catch (e: Exception) {
+            Log.e("ConvAgent", "Failed to start foreground in onCreate: ${e.message}")
+            // Service will be killed by the system if we don't foreground in time
+        }
+
         MyApplication.init(this)
 
         try {
@@ -143,7 +154,6 @@ class ConversationalAgentService : Service() {
         }
 
         isRunning = true
-        createNotificationChannel()
         initializeConversation()
         clarificationAttempts = 0
         sttErrorAttempts = 0
@@ -524,19 +534,6 @@ Format your response clearly with headings and bullet points.
             Log.e("ConvAgent", "RECORD_AUDIO permission not granted. Cannot start foreground service.")
             Toast.makeText(this, "Microphone permission required for voice assistant", Toast.LENGTH_LONG).show()
             stopSelf()
-            return START_NOT_STICKY
-        }
-
-        try {
-            startForeground(NOTIFICATION_ID, createNotification())
-        } catch (e: SecurityException) {
-            serviceScope.launch {
-                speechCoordinator.speakText("Hello, please give microphone permission or some other type of permission you have not given me!")
-                delay(2000)
-                stopSelf()
-            }
-            Log.e("ConvAgent", "Failed to start foreground service: ${e.message}")
-            Toast.makeText(this, "Cannot start voice assistant - permission missing", Toast.LENGTH_LONG).show()
             return START_NOT_STICKY
         }
 

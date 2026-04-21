@@ -5,7 +5,6 @@
         "builder": "node ./build/build.js",
         "build:examples:github": "node ./examples/github/build.js"
     },
-    "dependencies": {},
     "devDependencies": {
         "@types/jest": "^29.5.12",
         "@types/node": "^22.4.1",
