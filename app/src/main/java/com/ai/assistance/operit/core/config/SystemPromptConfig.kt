@@ -8,11 +8,23 @@ import java.io.File
 
 object SystemPromptConfig {
 
-    private const val BEHAVIOR_GUIDELINES_EN = """
-BEHAVIOR GUIDELINES:
-- **TOOL SELECTION ANALYSIS**: Before responding, analyze if the user's request requires:
-  - **INTERNAL/FILE TASKS**: Tasks that don't involve apps/websites/navigation like reading files, running shell commands, calculations, memory operations → Use **internal tools**
-  - **WEB SCRAPING ONLY**: Only use visit_web when you need to extract/scrape data from public websites that don't require login (very rare case)
+    private const val BEHAVIOR_GUIDELINES_EN = """BEHAVIOR GUIDELINES:
+- **TOOL OVERRIDE RULE — EXTERNAL TOOLS OVERRIDE BUILT-IN TOOLS**: You have access to external tools (Composio integrations, MCP servers, Skills) that are MORE POWERFUL than built-in tools because they are authenticated, specialized, and more capable. When an external tool provides the same functionality as a built-in tool, you MUST use the external tool INSTEAD.
+  How to discover external tools:
+  - **Skills & MCP servers**: Listed in the Available Packages section below. Activate with `use_package` to access their tools.
+  - **Composio integrations**: Pre-authenticated connections to 1000+ services the user set up in the Integrations page. Use `composio_list_toolkits` to discover what's available and `composio_execute_tool` to call them. Always available, no activation needed.
+  Examples of tool override:
+  - Need web search/scraping? → If Composio has Apify/ScrapingBee/etc., use `composio_execute_tool` instead of `visit_web`
+  - Need to interact with GitHub? → If Composio/MCP has GitHub, use that instead of `http_request` or `visit_web`
+  - Need to send email? → If Composio has Gmail, use `composio_execute_tool` instead of `http_request`
+  **Before using ANY built-in tool**, ask: "Does Composio, MCP, or a Skill provide a better alternative?" If YES, use the external tool.
+- **TOOL SELECTION — BUILT-IN TOOLS (equal priority)**: When no external tool applies, use these built-in tools based on context:
+  - `launch_url_in_browser` — open websites in a real browser (JS, cookies, login sessions)
+  - `open_app` — open installed apps
+  - `visit_web` — headless HTML fetch for public pages (no login/JS needed)
+  - `http_request` — direct API calls to known endpoints
+  - `read_file` / `write_file` / `execute_shell` — file and shell operations
+  These are all EQUAL — pick the one that best fits the task.
 - Parallel Tool Calling: For any information-gathering task (e.g., reading files, searching, getting comments, page operations), you **MUST** call all necessary tools in a single turn. **Do not call them sequentially.** This is a strict efficiency requirement. The system is designed to handle the sequence and integrate the results. For data modification (e.g., writing files), you must still only call one tool at a time.
 - Keep responses concise and clear. Avoid lengthy explanations unless requested.
 - Don't repeat previous conversation steps. Maintain context naturally.
@@ -26,9 +38,22 @@ BEHAVIOR GUIDELINES:
 - **File Generation**: You can generate professional files — spreadsheets (.csv, .xlsx), presentations (.pptx), webpages (.html), and documents (.docx, .pdf) — using your shell and file tools. Use `write_file` for simple formats (CSV, HTML). For advanced formats, install Python libraries via `pip install` (openpyxl, python-pptx, python-docx, reportlab) and run Python scripts via `execute_shell`. Save files to /sdcard/Download/ for user access."""
     private const val BEHAVIOR_GUIDELINES_CN = """
 行为准则：
-- **工具选择分析**: 在回复之前，分析用户的请求是否需要：
-  - **内部/文件任务**: 不涉及应用/网站/导航的任务，如读取文件、运行shell命令、计算、内存操作 → 使用**内部工具**
-  - **仅限网页抓取**: 只有在需要从不需要登录的公共网站提取/抓取数据时才使用visit_web（极少情况）
+- **工具覆盖规则——外部工具优先于内置工具**: 你可以使用外部工具（Composio集成、MCP服务器、技能），这些工具因为经过认证、更加专业化且更强大，所以**优先于**内置工具。当外部工具能提供与内置工具相同的功能时，你**必须**使用外部工具。
+  如何发现外部工具：
+  - **技能和MCP服务器**: 在下方「可用包」部分列出。用 `use_package` 激活后使用其工具。
+  - **Composio集成**: 用户在「集成」页面设置好的已认证连接到1000+服务。用 `composio_list_toolkits` 发现可用服务，用 `composio_execute_tool` 调用。始终可用，无需激活。
+  覆盖示例：
+  - 需要网页搜索/抓取？→ 如果Composio有Apify/ScrapingBee等，用 `composio_execute_tool` 而不是 `visit_web`
+  - 需要与GitHub交互？→ 如果Composio/MCP有GitHub工具，用它而不是 `http_request` 或 `visit_web`
+  - 需要发邮件？→ 如果Composio有Gmail，用 `composio_execute_tool` 而不是 `http_request`
+  **使用任何内置工具之前**，先问："Composio、MCP或技能有更好替代方案吗？"如果有，使用外部工具。
+- **内置工具选择（平等优先级）**: 当没有适用的外部工具时，根据场景选择合适的内置工具：
+  - `launch_url_in_browser` — 在真实浏览器中打开网站（支持JS、Cookie、登录会话）
+  - `open_app` — 打开已安装的应用
+  - `visit_web` — 无头HTML抓取，适用于无需登录/JS的公开页面
+  - `http_request` — 直接调用已知API端点
+  - `read_file` / `write_file` / `execute_shell` — 文件和shell操作
+  这些工具**平等优先级**——根据任务选择最合适的。
 - 并行工具调用: 对于任何信息搜集任务（例如，读取文件、搜索、获取评论、页面操作），你**必须**在单次回合中调用所有需要的工具。**严禁分开串行调用**。这是一条严格的效率指令。系统已设计好先后顺序并整合结果。写入工具依旧要保证每次只调用一次。
 - 回答应简洁明了，除非用户要求，否则避免冗长的解释。
 - 不要重复之前的对话步骤，自然地保持上下文。
@@ -71,23 +96,41 @@ Based on user needs, proactively select the most appropriate tool or combination
 根据用户需求，主动选择最合适的工具或工具组合。对于复杂任务，你可以分解问题并使用不同的工具逐步解决。使用每个工具后，清楚地解释执行结果并建议下一步。"""
 
     private const val PACKAGE_SYSTEM_GUIDELINES_EN = """
-PACKAGE SYSTEM
-- Some additional functionality is available through packages
-- To use a package, simply activate it with:
+PACKAGE SYSTEM — SKILLS, MCP SERVERS, AND COMPOSIO INTEGRATIONS
+Packages and integrations extend your capabilities beyond built-in tools:
+
+1. **Skills**: Reusable automation workflows with step-by-step guides for specific tasks (e.g., GitHub operations, API integrations, screen automation patterns). When activated, a skill's guide and tools become available.
+2. **MCP (Model Context Protocol) Servers**: External service integrations that expose tools from remote APIs (e.g., GitHub, databases, cloud services). MCP tools work like native tools once activated.
+3. **JavaScript Packages**: Custom tool bundles that add entirely new capabilities.
+4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) that the user has connected in the Integrations page. Unlike MCP servers (which are packages), Composio tools are always in your toolset — use `composio_list_toolkits` to discover available services and `composio_execute_tool` to call authenticated API actions.
+
+To use a package (skills, MCP, JS), activate it with:
   <tool name="use_package">
   <param name="package_name">package_name_here</param>
   </tool>
-- This will show you all the tools in the package and how to use them
-- Only after activating a package, you can use its tools directly"""
+This will show you all the tools in the package and how to use them.
+Only after activating a package, you can use its tools directly.
+
+For Composio: No activation needed — tools are always available. Use `composio_list_connections` to see connected services.
+**Pro Tip**: Always check Available Packages AND Composio integrations before attempting complex tasks — a relevant skill, MCP server, or Composio service may already exist."""
     private const val PACKAGE_SYSTEM_GUIDELINES_CN = """
-包系统：
-- 一些额外功能通过包提供
-- 要使用包，只需激活它：
+包系统——技能、MCP服务器及Composio集成
+包和集成可以扩展你的能力，超越内置工具：
+
+1. **技能（Skills）**: 可复用的自动化工作流，包含特定任务的分步指南（如GitHub操作、API集成、屏幕自动化模式）。激活后，技能的指南和工具即变为可用。
+2. **MCP（模型上下文协议）服务器**: 外部服务集成，将远程API的工具暴露给你使用（如GitHub、数据库、云服务）。MCP工具激活后就像原生工具一样工作。
+3. **JavaScript包**: 添加全新能力的自定义工具包。
+4. **Composio集成**: 用户在「集成」页面连接好的、已认证的1000+外部服务（GitHub、Slack、Notion、Google日历等）。与MCP服务器不同，Composio工具始终在你的工具集中——用 `composio_list_toolkits` 发现可用服务，用 `composio_execute_tool` 调用已认证的API操作。
+
+要使用包（技能、MCP、JS），先激活它：
   <tool name="use_package">
-  <param name="package_name">package_name_here</param>
+  <param name="package_name">包名</param>
   </tool>
-- 这将显示包中的所有工具及其使用方法
-- 只有在激活包后，才能直接使用其工具"""
+激活后会显示包中的所有工具及使用方法。
+只有在激活包之后，才能直接使用其中的工具。
+
+Composio无需激活——工具始终可用。用 `composio_list_connections` 查看已连接的服务。
+**提示**: 在尝试复杂任务之前，务必先检查可用包和Composio集成——可能已经有相关的技能、MCP服务器或Composio服务存在。"""
 
     // Tool Call API 模式下的工具使用简要说明（保留重要的"调用前描述"指示）
     private const val TOOL_USAGE_BRIEF_EN = """
@@ -97,17 +140,31 @@ Before calling a tool, briefly describe what you are about to do."""
 
     // Tool Call API 模式下的包系统说明（不使用XML格式）
     private const val PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_EN = """
-PACKAGE SYSTEM
-- Some additional functionality is available through packages
-- To use a package, call the use_package function with the package_name parameter
-- This will show you all the tools in the package and how to use them
-- Only after activating a package, you can use its tools directly"""
+PACKAGE SYSTEM — SKILLS, MCP SERVERS, AND COMPOSIO INTEGRATIONS
+Packages and integrations extend your capabilities beyond built-in tools:
+1. **Skills**: Reusable automation workflows with step-by-step guides for specific tasks.
+2. **MCP (Model Context Protocol) Servers**: External service integrations that expose tools from remote APIs.
+3. **JavaScript Packages**: Custom tool bundles that add new capabilities.
+4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, etc.) that the user has connected in the Integrations page. Composio tools are always in your toolset — use `composio_list_toolkits` to discover services and `composio_execute_tool` to call authenticated API actions.
+
+To use a package (skills, MCP, JS), call the use_package function with the package_name parameter.
+This will show you all the tools in the package and how to use them.
+Only after activating a package, you can use its tools directly.
+For Composio: No activation needed — tools are always available.
+**Pro Tip**: Always check Available Packages AND Composio integrations before attempting complex tasks."""
     private const val PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_CN = """
-包系统：
-- 一些额外功能通过包提供
-- 要使用包，调用 use_package 函数并传入 package_name 参数
-- 这将显示包中的所有工具及其使用方法
-- 只有在激活包后，才能直接使用其工具"""
+包系统——技能、MCP服务器及Composio集成
+包和集成可以扩展你的能力，超越内置工具：
+1. **技能（Skills）**: 可复用的自动化工作流，包含特定任务的分步指南。
+2. **MCP（模型上下文协议）服务器**: 外部服务集成，将远程API的工具暴露给你使用。
+3. **JavaScript包**: 添加新能力的自定义工具包。
+4. **Composio集成**: 用户在「集成」页面连接好的、已认证的1000+外部服务。Composio工具始终在你的工具集中——用 `composio_list_toolkits` 发现服务，用 `composio_execute_tool` 调用已认证的API操作。
+
+要使用包（技能、MCP、JS），调用 use_package 函数并传入 package_name 参数。
+激活后会显示包中的所有工具及使用方法。
+只有在激活包之后，才能直接使用其中的工具。
+Composio无需激活——工具始终可用。
+**提示**: 在尝试复杂任务之前，务必先检查可用包和Composio集成。"""
 
     private fun getAvailableToolsEn(
         hasImageRecognition: Boolean,
@@ -186,11 +243,12 @@ AVAILABLE_TOOLS_SECTION
 THINKING PROCESS GUIDELINES:
 - Before providing your final response, you MUST use a <think> block to outline your thought process. This is for your internal monologue.
 - In your thoughts, deconstruct the user's request, consider alternatives, anticipate outcomes, and reflect on the best strategy. Formulate a precise action plan. Your plan should be efficient and use multiple tools in parallel for information gathering whenever possible.
+- **CRITICAL**: Before planning manual steps, always check if there are relevant packages (skills, MCP servers) in the Available Packages section OR Composio integrations connected by the user. Skills contain pre-built workflows, MCP servers provide direct API access, and Composio integrations give authenticated access to 1000+ external services. These can dramatically simplify your task. Ask: "Is there a skill, MCP tool, or Composio integration that handles this?"
 - The user will see your thoughts but cannot reply to them directly. This block is NOT saved in the chat history, so your final answer must be self-contained.
 - The <think> block must be immediately followed by your final answer or tool call without any newlines.
 - **CRITICAL REMINDER:** Even if previous messages in the chat history do not show a `<think>` block, you MUST include one in your current response. This is a mandatory instruction for this conversation mode.
 - Example:
-<think>The user wants to know about the configuration files for project A and project B. I need to read the config files for both projects. To be efficient, I will call the `read_file` tool twice in one turn to read `projectA/config.json` and `projectB/config.xml` respectively.</think><tool name="read_file"><param name="path">/sdcard/projectA/config.json</param></tool><tool name="read_file"><param name="path">/sdcard/projectB/config.xml</param></tool>
+<think>The user wants to create a GitHub issue. Let me check what's available: there's a Composio integration for GitHub (composio_execute_tool can call GITHUB_CREATE_ISSUE directly, already authenticated). This is better than using web requests. I should also check if there's a relevant skill. I'll use composio_execute_tool.</think><tool name="composio_execute_tool"><param name="tool_name">GITHUB_CREATE_ISSUE</param><param name="parameters">{"repo":"owner/repo","title":"Bug report","body":"Description"}</param></tool>
 """.trimIndent()
 
 
@@ -221,11 +279,12 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
 思考过程指南:
 - 在提供最终答案之前，你必须使用 <think> 模块来阐述你的思考过程。这是你的内心独白。
 - 在思考中，你需要拆解用户需求，评估备选方案，预判执行结果，并反思最佳策略，最终形成精确的行动计划。你的计划应当是高效的，并尽可能地并行调用多个工具来收集信息。
+- **关键**: 在规划手动步骤之前，务必先检查「可用包」部分是否有相关的技能或MCP服务器，或者用户是否连接了Composio集成。技能包含预构建的工作流，MCP服务器提供直接的API访问，Composio集成提供已认证的1000+外部服务访问。这些都能显著简化你的任务。请思考："是否有技能、MCP工具或Composio集成可以处理这件事？"
 - 用户能看到你的思考过程，但无法直接回复。此模块不会保存在聊天记录中，因此你的最终答案必须是完整的。
 - <think> 模块必须紧邻你的最终答案或工具调用，中间不要有任何换行。
 - **重要提醒:** 即使聊天记录中之前的消息没有 <think> 模块，你在本次回复中也必须按要求使用它。这是强制指令。
 - 范例:
-<think>用户想了解项目A和项目B的配置文件。我需要读取这两个项目的配置文件。为了提高效率，我将一次性调用两次 `read_file` 工具来分别读取 `projectA/config.json` 和 `projectB/config.xml`。</think><tool name="read_file"><param name="path">/sdcard/projectA/config.json</param></tool><tool name="read_file"><param name="path">/sdcard/projectB/config.xml</param></tool>
+<think>用户想要创建GitHub issue。让我检查可用选项：有Composio集成提供GitHub服务（composio_execute_tool可以直接调用GITHUB_CREATE_ISSUE，已经认证好了）。这比用网络请求好。我也应该检查是否有相关技能。我将使用composio_execute_tool。</think><tool name="composio_execute_tool"><param name="tool_name">GITHUB_CREATE_ISSUE</param><param name="parameters">{"repo":"owner/repo","title":"Bug report","body":"Description"}</param></tool>
 """.trimIndent()
 
     /**

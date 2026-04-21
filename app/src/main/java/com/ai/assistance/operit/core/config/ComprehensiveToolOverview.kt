@@ -96,83 +96,13 @@ Here's a complete overview of what you can do:
 • send_notification - Send system notifications
 • get_device_location - Get GPS location
 
-### 8. MATHEMATICS & CALCULATION
+### 7. MATHEMATICS & CALCULATION
 ═══════════════════════════════════════════════════════════════════════
 
 • calculate - Evaluate mathematical expressions
 
 ═══════════════════════════════════════════════════════════════════════
-### 9. UI AUTOMATION TOOLS
-══════════════════════════════════════════════════════════════════════
-### 9. UI AUTOMATION TOOLS
-══════════════════════════════════════════════════════════════════════
-
-These are coordinate-based tools for direct UI interaction. Use these instead of code-based automation.
-
-• tap - Tap at coordinates (x, y)
-• double_tap - Double tap at coordinates
-• long_press - Long press at coordinates
-• click_element - Click element by index, text, or content_description
-• swipe - Custom swipe from (start_x, start_y) to (end_x, end_y)
-• swipe_left/right/up/down - Swipe in direction by pixels
-• scroll_left/right/up/down - Scroll in direction by pixels
-• hold - Hold at coordinates (same as long_press)
-• press_key - Press key (back, home, enter, recents)
-• type_text - Type text into focused input
-• open_app - Open app by package_name or app_name
-• back - Press back button
-• home - Press home button
-• get_page_info - Get current UI page information
-• get_current_activity - Get current foreground activity
-
-When to use UI automation:
-• Use these granular tools for direct control - no hallucination risk
-• The agent can chain multiple actions together
-• Each tool has explicit parameters (coordinates, text, etc.)
-
-Example - Tap at coordinates:
-```
-{
-  "name": "tap",
-  "parameters": [
-    {"name": "x", "value": "540"},
-    {"name": "y", "value": "1200"}
-  ]
-}
-```
-
-Example - Swipe up to scroll:
-```
-{
-  "name": "swipe_up",
-  "parameters": [
-    {"name": "pixels", "value": "500"}
-  ]
-}
-```
-
-Example - Open an app:
-```
-{
-  "name": "open_app",
-  "parameters": [
-    {"name": "app_name", "value": "微信"}
-  ]
-}
-```
-
-Example - Type text:
-```
-{
-  "name": "type_text",
-  "parameters": [
-    {"name": "text", "value": "Hello World"}
-  ]
-}
-```
-
-══════════════════════════════════════════════════════════════════════
-### 10. WORKFLOW TOOLS
+### 8. WORKFLOW TOOLS
 ═══════════════════════════════════════════════════════════════════════
 
 • get_all_workflows - List all available workflows
@@ -184,7 +114,7 @@ Example - Type text:
 • trigger_workflow - Execute a workflow
 
 ═══════════════════════════════════════════════════════════════════════
-### 11. COMPOSIO INTEGRATION TOOLS (EXTERNAL SERVICES)
+### 9. COMPOSIO INTEGRATION TOOLS (EXTERNAL SERVICES)
 ═══════════════════════════════════════════════════════════════════════
 
 Connect to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) via Composio. These tools allow direct integration with external apps without creating workflows.
@@ -230,7 +160,7 @@ Example - Connect a GitHub account:
 ```
 
 ═══════════════════════════════════════════════════════════════════════
-### 12. CHAT & CONVERSATION TOOLS
+### 10. CHAT & CONVERSATION TOOLS
 ════════════════════════════════════════════════════════════════════════
 
 • start_chat_service - Start floating chat interface
@@ -245,13 +175,13 @@ Example - Connect a GitHub account:
 • agent_status - Check chat processing status
 
 ═══════════════════════════════════════════════════════════════════════
-### 13. TASKER INTEGRATION
+### 11. TASKER INTEGRATION
 ═══════════════════════════════════════════════════════════════════════
 
 • trigger_tasker_event - Trigger Tasker events for automation
 
 ═══════════════════════════════════════════════════════════════════════
-### 14. MEDIA PROCESSING
+### 12. MEDIA PROCESSING
 ════════════════════════════════════════════════════════════════════════
 
 • ffmpeg_execute - Execute FFmpeg commands
@@ -259,16 +189,30 @@ Example - Connect a GitHub account:
 • ffmpeg_convert - Convert video/audio formats
 
 ═══════════════════════════════════════════════════════════════════════
-### 15. PACKAGE SYSTEM (EXTENSIBILITY)
-════════════════════════════════════════════════════════════════════════
+### 13. PACKAGE SYSTEM (EXTENSIBILITY) — SKILLS, MCP SERVERS, AND MORE
+═══════════════════════════════════════════════════════════════════════
 
-Additional functionality is available through packages:
-• Use use_package to activate a package
-• Activating a package reveals its specific tools
-• Packages can provide specialized capabilities (MCP servers, skills, etc.)
+Your capabilities are NOT limited to the built-in tools listed above. Packages and integrations dramatically extend what you can do. There are four types:
+
+**Skills**: Reusable automation workflows with step-by-step guides for specific tasks (GitHub operations, API integrations, app-specific patterns). Skills contain critical knowledge — API endpoints, parameters, workflows — that you won't discover on your own. A skill can tell you exactly how to accomplish a complex task.
+
+**MCP (Model Context Protocol) Servers**: External service integrations that expose tools from remote APIs. MCP servers give you direct access to services like GitHub, Slack, Notion, databases, and 1000+ other services. MCP tools work like native tools once the server is activated.
+
+**JavaScript Packages**: Custom tool bundles that add entirely new capabilities to your toolset.
+
+**Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) — see section 9 for full details. Composio tools are ALWAYS in your toolset (no activation needed). Use `composio_list_connections` to see what's connected.
+
+How to use packages (skills, MCP, JS):
+• Activate with `use_package` (XML mode) or call `use_package` function (Tool Call API mode)
+• The "Available Packages" section in your system prompt lists all currently installed packages
+• Only after activating a package can you use its tools
+
+For Composio: No activation needed — tools are always available. See section 9.
+
+**CRITICAL**: Always check Available Packages AND Composio integrations before attempting complex tasks — a relevant skill, MCP server, or Composio service may already exist that can handle your task efficiently
 
 ════════════════════════════════════════════════════════════════════════
-### 16. FILE GENERATION (SPREADSHEETS, PRESENTATIONS, WEBPAGES, DOCUMENTS)
+### 14. FILE GENERATION (SPREADSHEETS, PRESENTATIONS, WEBPAGES, DOCUMENTS)
 ════════════════════════════════════════════════════════════════════════
 
 You can generate professional files directly using your shell and file tools. The Ubuntu environment (environment="linux") has Python 3 available. You can install additional libraries with `pip install` or `apt install python3-pip && pip install <package>`.
@@ -304,7 +248,7 @@ Workflow:
 You can combine multiple file types in a single task (e.g., generate a spreadsheet AND a presentation from the same data).
 
 ═══════════════════════════════════════════════════════════════════════
-### 17. MINI-APP CREATION & MANAGEMENT
+### 15. MINI-APP CREATION & MANAGEMENT
 ════════════════════════════════════════════════════════════════════════
 
 You can create interactive mini-apps (HTML/CSS/JS applications) that run inside the Operit app:
