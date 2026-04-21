@@ -65,13 +65,6 @@ class AcpRegistryService {
                 // Parse JSON manually since the structure may vary
                 val agents = parseRegistryResponse(body)
                 AppLogger.i(TAG, "Successfully fetched ${agents.size} agents from ACP registry")
-                
-                // Log distribution types for debugging
-                val npxCount = agents.count { it.distribution?.npx != null }
-                val binaryCount = agents.count { it.distribution?.binary != null }
-                val uvxCount = agents.count { it.distribution?.uvx != null }
-                AppLogger.i(TAG, "Distribution types: npx=$npxCount, binary=$binaryCount, uvx=$uvxCount")
-                
                 Result.success(agents)
             }
         } catch (e: Exception) {
@@ -118,123 +111,52 @@ class AcpRegistryService {
 
     /**
      * Parse a single agent entry from JSON.
-     * Handles the ACP registry structure with distribution objects.
+     * Handles various field name variations in the registry.
      */
     private fun parseAgentEntry(obj: org.json.JSONObject): AcpAgentEntry? {
         return try {
-            val id = obj.optString("id", "")
-            if (id.isEmpty()) {
-                AppLogger.w(TAG, "Agent entry missing id, skipping")
-                return null
-            }
-            
+            val id = obj.optString("id", obj.optString("name", "").lowercase().replace(" ", "-"))
             val name = obj.optString("name", id.replace("-", " ").replaceFirstChar { it.uppercase() })
             val version = obj.optString("version", "unknown")
-            val description = obj.optString("description", "")
-            val repository = obj.optString("repository", null)
-            val icon = obj.optString("icon", null)
-            val homepage = obj.optString("homepage", obj.optString("website", null))
-            val license = obj.optString("license", null)
-            
-            // Parse authors array
-            val authors = if (obj.has("authors")) {
-                val arr = obj.getJSONArray("authors")
+            val description = obj.optString("description", obj.optString("desc", ""))
+            val repository = obj.optString("repository", obj.optString("repo", obj.optString("github", null)))
+            val icon = obj.optString("icon", obj.optString("iconUrl", obj.optString("logo", null)))
+            val homepage = obj.optString("homepage", obj.optString("website", obj.optString("url", null)))
+            val installCommand = obj.optString("installCommand", obj.optString("install", obj.optString("cliInstallCmd", null)))
+            val binary = obj.optString("binary", obj.optString("bin", obj.optString("executable", null)))
+
+            // Parse auth methods
+            val authMethods = if (obj.has("authMethods")) {
+                val arr = obj.getJSONArray("authMethods")
                 List(arr.length()) { arr.optString(it) }
             } else {
                 null
             }
-            
-            // Parse distribution object
-            val distribution = if (obj.has("distribution")) {
-                val distObj = obj.getJSONObject("distribution")
-                parseDistribution(distObj)
+
+            // Parse tags
+            val tags = if (obj.has("tags")) {
+                val arr = obj.getJSONArray("tags")
+                List(arr.length()) { arr.optString(it) }
             } else {
                 null
             }
-            
+
             AcpAgentEntry(
-                id = id,
-                name = name,
+                id = id.takeIf { it.isNotEmpty() } ?: return null,
+                name = name.takeIf { it.isNotEmpty() } ?: id,
                 version = version,
                 description = description,
                 repository = repository,
                 icon = icon,
                 homepage = homepage,
-                distribution = distribution,
-                license = license,
-                authors = authors?.takeIf { it.isNotEmpty() }
+                installCommand = installCommand,
+                binary = binary,
+                authMethods = authMethods?.takeIf { it.isNotEmpty() },
+                tags = tags?.takeIf { it.isNotEmpty() }
             )
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error parsing agent entry: ${e.message}")
             null
         }
-    }
-    
-    /**
-     * Parse distribution object from JSON.
-     */
-    private fun parseDistribution(obj: org.json.JSONObject): AcpDistribution {
-        // Parse npx distribution
-        val npx = if (obj.has("npx")) {
-            val npxObj = obj.getJSONObject("npx")
-            val packageName = npxObj.optString("package", "")
-            if (packageName.isNotEmpty()) {
-                val args = if (npxObj.has("args")) {
-                    val arr = npxObj.getJSONArray("args")
-                    List(arr.length()) { arr.optString(it) }
-                } else null
-                
-                val env = if (npxObj.has("env")) {
-                    val envObj = npxObj.getJSONObject("env")
-                    val envMap = mutableMapOf<String, String>()
-                    for (key in envObj.keys()) {
-                        envMap[key] = envObj.optString(key, "")
-                    }
-                    envMap
-                } else null
-                
-                AcpNpxDistribution(packageName = packageName, args = args, env = env)
-            } else null
-        } else null
-        
-        // Parse binary distribution
-        val binary = if (obj.has("binary")) {
-            val binaryObj = obj.getJSONObject("binary")
-            val binaryMap = mutableMapOf<String, AcpBinaryDistribution>()
-            for (platform in binaryObj.keys()) {
-                val platformObj = binaryObj.getJSONObject(platform)
-                val archive = platformObj.optString("archive", "")
-                val cmd = platformObj.optString("cmd", "")
-                if (archive.isNotEmpty() && cmd.isNotEmpty()) {
-                    val args = if (platformObj.has("args")) {
-                        val arr = platformObj.getJSONArray("args")
-                        List(arr.length()) { arr.optString(it) }
-                    } else null
-                    
-                    binaryMap[platform] = AcpBinaryDistribution(
-                        archive = archive,
-                        cmd = cmd,
-                        args = args
-                    )
-                }
-            }
-            binaryMap.takeIf { it.isNotEmpty() }
-        } else null
-        
-        // Parse uvx distribution
-        val uvx = if (obj.has("uvx")) {
-            val uvxObj = obj.getJSONObject("uvx")
-            val packageName = uvxObj.optString("package", "")
-            if (packageName.isNotEmpty()) {
-                val args = if (uvxObj.has("args")) {
-                    val arr = uvxObj.getJSONArray("args")
-                    List(arr.length()) { arr.optString(it) }
-                } else null
-                
-                AcpUvxDistribution(packageName = packageName, args = args)
-            } else null
-        } else null
-        
-        return AcpDistribution(npx = npx, binary = binary, uvx = uvx)
     }
 }
