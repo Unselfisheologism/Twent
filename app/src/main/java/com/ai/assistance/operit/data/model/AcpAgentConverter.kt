@@ -64,9 +64,9 @@ object AcpAgentConverter {
                 val npx = distribution.npx!!
                 val args = npx.args?.joinToString(" ") ?: ""
                 if (args.isNotEmpty()) {
-                    "npx ${npx.package} $args"
+                    "npx ${npx.packageName} $args"
                 } else {
-                    "npx ${npx.package}"
+                    "npx ${npx.packageName}"
                 }
             }
             
@@ -75,9 +75,9 @@ object AcpAgentConverter {
                 val uvx = distribution.uvx!!
                 val args = uvx.args?.joinToString(" ") ?: ""
                 if (args.isNotEmpty()) {
-                    "uvx ${uvx.package} $args"
+                    "uvx ${uvx.packageName} $args"
                 } else {
-                    "uvx ${uvx.package}"
+                    "uvx ${uvx.packageName}"
                 }
             }
             
@@ -105,15 +105,15 @@ object AcpAgentConverter {
         return when {
             // For npx, the binary is the package name (last part after /)
             distribution?.npx != null -> {
-                val packageName = distribution.npx!!.package
+                val pkgName = distribution.npx!!.packageName
                 // Extract binary name from package name (e.g., "@anthropic-ai/claude-code" -> "claude-code")
-                packageName.substringAfterLast("/")
+                pkgName.substringAfterLast("/")
             }
             
             // For uvx, similar to npx
             distribution?.uvx != null -> {
-                val packageName = distribution.uvx!!.package
-                packageName.substringAfterLast("/")
+                val pkgName = distribution.uvx!!.packageName
+                pkgName.substringAfterLast("/")
             }
             
             // For binary, use the command name from first available platform

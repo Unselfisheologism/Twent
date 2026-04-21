@@ -21,7 +21,7 @@ data class AcpDistribution(
  * NPX distribution (npm package).
  */
 data class AcpNpxDistribution(
-    val package: String,
+    val packageName: String,
     val args: List<String>? = null,
     val env: Map<String, String>? = null
 )
@@ -39,7 +39,7 @@ data class AcpBinaryDistribution(
  * UVX distribution (Python package).
  */
 data class AcpUvxDistribution(
-    val package: String,
+    val packageName: String,
     val args: List<String>? = null
 )
 
@@ -51,10 +51,10 @@ data class AcpAgentEntry(
     val name: String,
     val version: String,
     val description: String,
-    val repository: String?,          // GitHub repo URL
-    val icon: String?,                // Icon URL or SVG data
-    val homepage: String?,            // Project homepage
-    val distribution: AcpDistribution?, // Distribution information
-    val license: String?,             // License type
-    val authors: List<String>?        // Authors
+    val repository: String?,
+    val icon: String?,
+    val homepage: String?,
+    val distribution: AcpDistribution?,
+    val license: String?,
+    val authors: List<String>?
 )

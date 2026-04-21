@@ -193,7 +193,7 @@ class AcpRegistryService {
                     envMap
                 } else null
                 
-                AcpNpxDistribution(package = packageName, args = args, env = env)
+                AcpNpxDistribution(packageName = packageName, args = args, env = env)
             } else null
         } else null
         
@@ -231,7 +231,7 @@ class AcpRegistryService {
                     List(arr.length()) { arr.optString(it) }
                 } else null
                 
-                AcpUvxDistribution(package = packageName, args = args)
+                AcpUvxDistribution(packageName = packageName, args = args)
             } else null
         } else null
         
