@@ -9,6 +9,41 @@ data class AcpRegistryResponse(
 )
 
 /**
+ * Distribution information for an agent.
+ */
+data class AcpDistribution(
+    val npx: AcpNpxDistribution? = null,
+    val binary: Map<String, AcpBinaryDistribution>? = null,
+    val uvx: AcpUvxDistribution? = null
+)
+
+/**
+ * NPX distribution (npm package).
+ */
+data class AcpNpxDistribution(
+    val package: String,
+    val args: List<String>? = null,
+    val env: Map<String, String>? = null
+)
+
+/**
+ * Binary distribution for a specific platform.
+ */
+data class AcpBinaryDistribution(
+    val archive: String,
+    val cmd: String,
+    val args: List<String>? = null
+)
+
+/**
+ * UVX distribution (Python package).
+ */
+data class AcpUvxDistribution(
+    val package: String,
+    val args: List<String>? = null
+)
+
+/**
  * Represents a single agent entry from the ACP registry.
  */
 data class AcpAgentEntry(
@@ -19,8 +54,7 @@ data class AcpAgentEntry(
     val repository: String?,          // GitHub repo URL
     val icon: String?,                // Icon URL or SVG data
     val homepage: String?,            // Project homepage
-    val installCommand: String?,      // npm install, pip install, etc.
-    val binary: String?,              // The binary name for `which` check
-    val authMethods: List<String>?,   // Supported auth methods
-    val tags: List<String>?           // Tags/categories
+    val distribution: AcpDistribution?, // Distribution information
+    val license: String?,             // License type
+    val authors: List<String>?        // Authors
 )
