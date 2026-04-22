@@ -207,15 +207,21 @@ How to use packages:
 **Skills**: 
 • Use `use_skill` tool: <tool name="use_skill"><param name="skill_name">skill_name</param></tool>
 • Skills inject SKILL.md instructions into your context
-• **CRITICAL**: After loading a skill, you MUST follow its instructions step-by-step until the task is complete
-• **WHEN TO USE**: When a skill exists for your task, ALWAYS use it - don't try to figure it out yourself
+• **CRITICAL RULES**:
+  1. When a skill exists for your task, ALWAYS use it - don't try to figure it out yourself
+  2. CALL THE TOOL IMMEDIATELY. Do NOT describe what you will do first.
+  3. After loading a skill, FOLLOW ITS INSTRUCTIONS step-by-step until the task is complete
+  4. Do NOT stop after calling `use_skill`. Continue working immediately.
 • The "Available Packages" section lists installed skills with descriptions
 
 **MCP Servers**:
 • MCP tools are listed directly in your "Available Packages" section
 • Call MCP tools directly: <tool name="serverName:toolName"><param name="param">value</param></tool>
 • No activation needed - tools are already available
-• **WHEN TO USE**: When an MCP server provides the tool you need, use it instead of built-in tools
+• **CRITICAL RULES**:
+  1. When an MCP server provides the tool you need, use it instead of built-in tools
+  2. After calling an MCP tool, CONTINUE WORKING. Do NOT stop.
+  3. Process the tool result and take the next action.
 
 **JavaScript Packages**:
 • Activate with `use_package`: <tool name="use_package"><param name="package_name">package_name</param></tool>
