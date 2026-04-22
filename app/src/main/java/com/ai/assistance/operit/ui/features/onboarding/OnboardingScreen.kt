@@ -3,6 +3,7 @@ package com.ai.assistance.operit.ui.features.onboarding
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,37 +37,37 @@ fun OnboardingScreen(onComplete: () -> Unit) {
 
     val onboardingSteps = listOf(
         OnboardingStep(
-            imageRes = R.drawable.onboarding_welcome,
+            imageRes = R.drawable.apply_the_first_202604171651,
             title = "",
             isVideo = true
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_transition,
+            imageRes = R.drawable.remove_the_sky_202604171721,
             title = "",
             isTransition = true
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide1,
+            imageRes = R.drawable.apply_the_first_202604171651,
             title = "An Assistant So\nGreat,\nYou Feel You Were\nMissing Out."
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide2,
+            imageRes = R.drawable.apply_the_first_202604171658,
             title = "Get Back Time\nFrom Your Busy\nLife, Delegate The\nBoring"
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide3,
+            imageRes = R.drawable.apply_the_first_202604171724,
             title = "A Swarm\nOf Agents\nAt Your\nService"
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide4,
+            imageRes = R.drawable.apply_the_first_202604171816,
             title = "Total Privacy: Bring\nYour Own Key, No\nTracking,\nNo Telemetry, Local\nModels"
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide5,
+            imageRes = R.drawable.apply_the_first_202604172002,
             title = "Your Agents Can Use\n1000+ Integrations,\nYou Control How"
         ),
         OnboardingStep(
-            imageRes = R.drawable.onboarding_slide6,
+            imageRes = R.drawable.create_the_following_202604171506,
             title = "Mini Apps\nFor All Your\nNeeds,\nMade By AI."
         )
     )
