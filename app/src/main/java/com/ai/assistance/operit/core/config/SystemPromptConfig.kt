@@ -117,16 +117,6 @@ When no external tool applies, use these based on context:
 - 工具执行后：**继续工作**。不要停止。处理结果并采取下一步行动。
 - 复杂任务：逐步使用工具。每个工具后，解释结果并建议下一步。"""
 
-使用工具时，请使用以下格式：
-
-<tool name="tool_name">
-<param name="parameter_name">parameter_value</param>
-</tool>
-
-输出XML（如 <tool>、<status>）时，必须在XML前换行，并确保起始标签位于行首。
-
-根据用户需求，主动选择最合适的工具或工具组合。对于复杂任务，你可以分解问题并使用不同的工具逐步解决。使用每个工具后，清楚地解释执行结果并建议下一步。"""
-
     private const val PACKAGE_SYSTEM_GUIDELINES_EN = """
 PACKAGE SYSTEM — SKILLS, MCP SERVERS, AND COMPOSIO INTEGRATIONS
 Packages and integrations extend your capabilities beyond built-in tools:
