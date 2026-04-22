@@ -187,7 +187,7 @@ fun OnboardingScreen(
                 
                 pushStringAnnotation(
                     tag = "URL",
-                    annotation = "https://example.com/user-manual"
+                    annotation = "https://twent.xyz/terms"
                 )
                 withStyle(
                     style = SpanStyle(

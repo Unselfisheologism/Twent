@@ -32,9 +32,7 @@ fun HelpScreen(onBackPressed: () -> Unit = {}) {
     var isLoading by remember { mutableStateOf(true) }
     val helpUrls = remember {
         listOf(
-            "https://operit.aaswordsman.org",
-            "https://operit.dev.tc",
-            "https://aaswordman.github.io/OperitWeb/"
+            "https://twent.xyz/docs"
         )
     }
     var currentUrlIndex by remember { mutableStateOf(0) }
@@ -48,7 +46,7 @@ fun HelpScreen(onBackPressed: () -> Unit = {}) {
             repeat(helpUrls.size) { add(false) }
         }
     }
-    var showMirrorDialog by remember { mutableStateOf(true) }
+    var showMirrorDialog by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val isCurrentScreen = LocalIsCurrentScreen.current
     
@@ -98,12 +96,8 @@ fun HelpScreen(onBackPressed: () -> Unit = {}) {
         focusRequester.requestFocus()
     }
     LaunchedEffect(helpUrls) {
-        helpUrls.forEachIndexed { index, url ->
-            launch {
-                val latency = pingUrl(url)
-                latencies[index] = latency
-                pingCompleted[index] = true
-            }
+        webView.loadUrl(helpUrls[0])
+    }
         }
     }
 
