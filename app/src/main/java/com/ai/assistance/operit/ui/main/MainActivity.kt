@@ -876,21 +876,9 @@ class MainActivity : ComponentActivity() {
                     } else {
                         // Check if needs to show onboarding (first launch)
                         if (!agreementPreferences.isAgreementAccepted()) {
-                            TwentOnboardingScreen(onComplete = 
-                                onContinue = {
-                                    // Mark onboarding as complete
+                            TwentOnboardingScreen(
+                                onComplete = {
                                     agreementPreferences.setAgreementAccepted(true)
-                                    // After onboarding, check permission level
-                                    lifecycleScope.launch {
-                                        delay(300)
-                                        checkPermissionLevelSet()
-                                        setAppContent()
-                                    }
-                                },
-                                onBasicMode = {
-                                    // Mark onboarding as complete
-                                    agreementPreferences.setAgreementAccepted(true)
-                                    // Set basic mode preference
                                     lifecycleScope.launch {
                                         delay(300)
                                         checkPermissionLevelSet()
