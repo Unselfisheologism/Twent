@@ -876,7 +876,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         // Check if needs to show onboarding (first launch)
                         if (!agreementPreferences.isAgreementAccepted()) {
-                            TwentOnboardingScreen(
+                            TwentOnboardingScreen(onComplete = 
                                 onContinue = {
                                     // Mark onboarding as complete
                                     agreementPreferences.setAgreementAccepted(true)
