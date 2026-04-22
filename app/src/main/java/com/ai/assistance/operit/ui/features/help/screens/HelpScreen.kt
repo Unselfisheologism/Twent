@@ -98,7 +98,6 @@ fun HelpScreen(onBackPressed: () -> Unit = {}) {
     LaunchedEffect(helpUrls) {
         webView.loadUrl(helpUrls[0])
     }
-        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
