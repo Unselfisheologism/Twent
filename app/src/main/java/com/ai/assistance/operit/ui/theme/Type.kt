@@ -44,6 +44,11 @@ val RobotoFamily = FontFamily(
     Font(R.font.roboto, FontWeight.Bold)
 )
 
+val CalivePixelFamily = FontFamily(
+    Font(R.font.calive_pixel, FontWeight.Normal),
+    Font(R.font.calivepixelregulardemo_og8p8, FontWeight.Normal)
+)
+
 // Set of Material typography styles with custom fonts
 val Typography = Typography(
     displayLarge = TextStyle(

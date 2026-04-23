@@ -881,7 +881,8 @@ class MainActivity : ComponentActivity() {
                                     agreementPreferences.setAgreementAccepted(true)
                                     lifecycleScope.launch {
                                         delay(300)
-                                        checkPermissionLevelSet()
+                                        // checkPermissionLevelSet() - permission guide bypassed
+                                        showPermissionGuide = false
                                         setAppContent()
                                     }
                                 }
@@ -900,18 +901,7 @@ class MainActivity : ComponentActivity() {
                                     }
                             )
                         }
-                        // 检查是否需要显示权限引导界面
-                        else if (showPermissionGuide) {
-                            PermissionGuideScreen(
-                                    onComplete = {
-                                        showPermissionGuide = false
-                                        justCompletedOnboarding = true
-                                        // 权限设置完成后，重新设置应用内容
-                                        setAppContent()
-                                    }
-                            )
-                        }
-                        // 显示主应用界面
+
                         else {
                             // 处理待处理的分享文件
                             processPendingSharedFiles()
