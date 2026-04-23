@@ -3,7 +3,7 @@ package com.ai.assistance.operit.ui.features.onboarding
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,37 +12,37 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.theme.CalivePixelFamily
 import com.ai.assistance.operit.ui.theme.OrangePrimary
-import kotlinx.coroutines.delay
-import androidx.compose.ui.text.style.TextDecoration
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ui.PlayerView
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TwentOnboardingScreen(onComplete: () -> Unit) {
     val context = LocalContext.current
 
-    // Total slides: 8 (0=Video, 1-6=content slides, 7=consent)
+    // Total slides: 7 (0=Video, 1-6=content slides, 6=consent)
     var currentStep by remember { mutableStateOf(0) }
-    val totalSteps = 8
+    val totalSteps = 7
 
     // Video player state
     var videoPlayer by remember { mutableStateOf<ExoPlayer?>(null) }
@@ -51,47 +51,60 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
     DisposableEffect(Unit) {
         onDispose {
             videoPlayer?.release()
+            videoPlayer = null
         }
     }
 
-    // Define slide data - matching user's Canva design
+    // Video completion callback - auto-advance to first slide
+    LaunchedEffect(videoPlayer) {
+        videoPlayer?.addListener(object : com.google.android.exoplayer2.Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == com.google.android.exoplayer2.Player.STATE_ENDED) {
+                    // Video finished playing once - advance to slide 1 with blur-fade
+                    currentStep = 1
+                }
+            }
+        })
+    }
+
+    // Define slide data with correct image resources and text
     val slideData = listOf(
-        // Step 0: Video placeholder (handled separately)
+        // Step 0: Video (handled separately)
         OnboardingStep(imageRes = 0, title = "", isVideo = true),
 
-        // Step 1: "An Assistant So Great, You Feel You Were Missing Out."
+        // Step 1
         OnboardingStep(
-            imageRes = R.drawable.remove_the_text_202604171810,
+            imageRes = R.drawable.onboarding_1,
             title = "An Assistant So Great,\nYou Feel You Were\nMissing Out."
         ),
 
-        // Step 2: "Get Back Time From Your Busy Life, Delegate The Boring"
+        // Step 2
         OnboardingStep(
-            imageRes = R.drawable.remove_the_duplicate_202604171914,
+            imageRes = R.drawable.onboarding_2,
             title = "Get Back Time\nFrom Your Busy\nLife, Delegate\nThe Boring"
         ),
 
-        // Step 3: "A Swarm Of Agents At Your Service"
+        // Step 3
         OnboardingStep(
-            imageRes = R.drawable.apply_the_first_202604171724,
+            imageRes = R.drawable.onboarding_3,
             title = "A Swarm\nOf Agents\nAt Your\nService"
         ),
 
-        // Step 4: "Total Privacy: Bring Your Own Key, No Tracking, No Telemetry, Local Models"
+        // Step 4
         OnboardingStep(
-            imageRes = R.drawable.apply_the_first_202604171816,
+            imageRes = R.drawable.onboarding_4,
             title = "Total Privacy:\nBring Your Own\nKey, No Tracking,\nNo Telemetry,\nLocal Models"
         ),
 
-        // Step 5: "Your Agents Can Use 1000+ Integrations, You Control How"
+        // Step 5
         OnboardingStep(
-            imageRes = R.drawable.apply_the_first_202604172002,
+            imageRes = R.drawable.onboarding_5,
             title = "Your Agents Can Use\n1000+ Integrations,\nYou Control How"
         ),
 
-        // Step 6: "Mini Apps For All Your Needs, Made By AI."
+        // Step 6
         OnboardingStep(
-            imageRes = R.drawable.create_the_following_202604171506,
+            imageRes = R.drawable.onboarding_6,
             title = "Mini Apps\nFor All Your\nNeeds,\nMade By AI."
         ),
 
@@ -104,22 +117,20 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Step 0: Video player (with intro.mp4 from res/raw)
+        // Step 0: Video player
         if (currentStep == 0) {
-            // Stop video when leaving this screen
             DisposableEffect(Unit) {
                 onDispose {
                     videoPlayer?.release()
                     videoPlayer = null
                 }
             }
-            
+
             LaunchedEffect(Unit) {
-                // Initialize and start video
                 val player = ExoPlayer.Builder(context).build().apply {
                     val uri = android.net.Uri.parse("android.resource://${context.packageName}/${R.raw.intro}")
                     setMediaItem(MediaItem.fromUri(uri))
-                    repeatMode = ExoPlayer.REPEAT_MODE_ONE
+                    repeatMode = ExoPlayer.REPEAT_MODE_OFF // play only once
                     prepare()
                     playWhenReady = true
                 }
@@ -138,33 +149,36 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                     view.player = videoPlayer
                 }
             )
-
-            // Tap to proceed to first slide
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { currentStep = 1 }
-            ) {
-                Text(
-                    "Tap to continue →",
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(24.dp),
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 16.sp,
-                    fontFamily = CalivePixelFamily
-                )
-            }
         } else {
-            // Show slide content for steps 1-6
+            // Slides 1-6 with blur-fade transitions
             if (currentStep in 1..6) {
                 AnimatedContent(
                     targetState = currentStep,
                     transitionSpec = {
-                        fadeIn(animationSpec = tween(600)) with
-                                fadeOut(animationSpec = tween(600))
+                        val duration = 800
+                        // Custom blur-fade transition
+                        val fadeIn = fadeIn(animationSpec = tween(duration))
+                        val fadeOut = fadeOut(animationSpec = tween(duration))
+                        val scaleIn = scaleIn(initialScale = 1.05f, animationSpec = tween(duration))
+                        val scaleOut = scaleOut(targetScale = 0.95f, animationSpec = tween(duration))
+
+                        // Blur transitions
+                        val blurIn = keyframes {
+                            durationMillis = duration
+                            0.dp at 0 with LinearEasing
+                            20.dp at duration / 2 with LinearEasing
+                            0.dp at duration with LinearEasing
+                        }
+                        val blurOut = keyframes {
+                            durationMillis = duration
+                            0.dp at 0 with LinearEasing
+                            20.dp at duration / 2 with LinearEasing
+                            0.dp at duration with LinearEasing
+                        }
+
+                        (fadeIn + scaleIn) with (fadeOut + scaleOut)
                     },
-                    label = "slideTransition"
+                    label = "blurFadeTransition"
                 ) { step ->
                     val stepData = slideData[step]
 
@@ -182,28 +196,32 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f))
+                                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f))
                         )
 
-                        // Text overlay - spread horizontally, bottom-aligned with padding
+                        // Text overlay - positioned higher, left-aligned, not full width
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 32.dp, vertical = 48.dp),
-                            contentAlignment = Alignment.BottomStart
+                                .padding(
+                                    start = 24.dp,
+                                    end = 24.dp,
+                                    top = 180.dp, // raised from bottom
+                                    bottom = 100.dp // leave space for buttons
+                                ),
+                            contentAlignment = Alignment.TopStart
                         ) {
                             Text(
                                 text = stepData.title,
                                 style = MaterialTheme.typography.headlineLarge.copy(
                                     fontFamily = CalivePixelFamily,
-                                    fontSize = 32.sp,
+                                    fontSize = 30.sp,
                                     lineHeight = 38.sp,
                                     color = Color.White
                                 ),
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
+                                    .wrapContentSize()
                             )
                         }
                     }
@@ -336,89 +354,40 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
             }
         }
 
-        // Navigation buttons (not shown on video step or consent step)
+        // Arrow navigation buttons - positioned at bottom corners
         if (currentStep in 1..6) {
-            Column(
+            // Back arrow - bottom left (hidden on first slide)
+            if (currentStep > 1) {
+                IconButton(
+                    onClick = { currentStep-- },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .padding(16.dp)
+                        .align(Alignment.BottomStart)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_left),
+                        contentDescription = "Back",
+                        tint = OrangePrimary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            // Next arrow - bottom right
+            IconButton(
+                onClick = { currentStep++ },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Bottom
+                    .size(56.dp)
+                    .padding(16.dp)
+                    .align(Alignment.BottomEnd)
             ) {
-                // Progress indicator
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(6) { index ->
-                        val isActive = index + 1 == currentStep
-                        Box(
-                            modifier = Modifier
-                                .size(
-                                    width = if (isActive) 24.dp else 8.dp,
-                                    height = 8.dp
-                                )
-                                .background(
-                                    color = if (isActive) OrangePrimary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    shape = MaterialTheme.shapes.small
-                                )
-                        )
-                        if (index < 5) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Next / Back buttons row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Back button (hide on first content slide)
-                    if (currentStep > 1) {
-                        OutlinedButton(
-                            onClick = { currentStep-- },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Text(
-                                text = "← Back",
-                                fontFamily = CalivePixelFamily,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-
-                    // Next / Continue button
-                    Button(
-                        onClick = {
-                            currentStep++
-                        },
-                        modifier = Modifier
-                            .weight(if (currentStep > 1) 1f else 2f)
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = OrangePrimary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text(
-                            text = "Next →",
-                            fontFamily = CalivePixelFamily,
-                            fontSize = 18.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(48.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_right),
+                    contentDescription = "Next",
+                    tint = OrangePrimary,
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     }
