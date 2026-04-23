@@ -366,7 +366,7 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                         .align(Alignment.BottomStart)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_left),
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
                         contentDescription = "Back",
                         tint = OrangePrimary,
                         modifier = Modifier.size(32.dp)
@@ -374,7 +374,7 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                 }
             }
 
-            // Next arrow - bottom right
+            // Next arrow - bottom right (using same icon rotated 180°)
             IconButton(
                 onClick = { currentStep++ },
                 modifier = Modifier
@@ -383,10 +383,12 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                     .align(Alignment.BottomEnd)
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_right),
+                    painter = painterResource(id = R.drawable.ic_arrow_back),
                     contentDescription = "Next",
                     tint = OrangePrimary,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .graphicsLayer { rotationZ = 180f }
                 )
             }
         }
