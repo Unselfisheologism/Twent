@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.components.CustomScaffold
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 /**
  * 默认助手设置引导屏幕
@@ -56,6 +61,21 @@ private fun DefaultAssistantGuideContent() {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var expandedStepIndex by remember { mutableStateOf<Int?>(0) }
+
+    // Microphone permission handling
+    var hasMicrophonePermission by remember { mutableStateOf(false) }
+    val microphonePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicrophonePermission = isGranted
+    }
+
+    LaunchedEffect(Unit) {
+        hasMicrophonePermission = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
     Column(
         modifier = Modifier

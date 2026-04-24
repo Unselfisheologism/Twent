@@ -115,6 +115,32 @@ fun ShizukuDemoScreen(
             }
         }
 
+    // Microphone permission launcher
+    var hasMicrophonePermission by remember { mutableStateOf(false) }
+    val microphonePermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            hasMicrophonePermission = isGranted
+            if (isGranted) {
+                // Optionally refresh or update UI further if needed
+            } else {
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(R.string.microphone_permission_denied_toast),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    // Check initial microphone permission
+    LaunchedEffect(Unit) {
+        hasMicrophonePermission = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     // Initialize ViewModel
     LaunchedEffect(Unit) {
         viewModel.setLoading(true)
@@ -300,6 +326,19 @@ fun ShizukuDemoScreen(
                                     android.Manifest.permission.ACCESS_COARSE_LOCATION
                                 )
                             )
+                        }
+                    )
+
+                    PermissionCard(
+                        name = "Microphone",
+                        description = "Voice input",
+                        icon = Icons.Outlined.Mic,
+                        isGranted = hasMicrophonePermission,
+                        isRequired = false,
+                        onClick = {
+                            if (!hasMicrophonePermission) {
+                                microphonePermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                            }
                         }
                     )
 
