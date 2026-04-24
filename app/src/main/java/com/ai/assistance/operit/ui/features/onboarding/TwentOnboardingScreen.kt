@@ -108,7 +108,7 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
 }
 
 @Composable
-fun VideoStep(onVideoEnd: () -> Unit) {
+private fun VideoStep(onVideoEnd: () -> Unit) {
     val context = LocalContext.current
     var player by remember { mutableStateOf<ExoPlayer?>(null) }
 
@@ -150,7 +150,7 @@ fun VideoStep(onVideoEnd: () -> Unit) {
 }
 
 @Composable
-fun SlideStep(step: Int, slideData: List<OnboardingStep>) {
+private fun SlideStep(step: Int, slideData: List<OnboardingStep>) {
     val data = slideData[step]
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -192,7 +192,7 @@ fun SlideStep(step: Int, slideData: List<OnboardingStep>) {
 }
 
 @Composable
-fun ArrowButton(
+private fun ArrowButton(
     arrow: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -217,7 +217,7 @@ fun ArrowButton(
 }
 
 @Composable
-fun ConsentDialog(onComplete: () -> Unit) {
+private fun ConsentDialog(onComplete: () -> Unit) {
     val context = LocalContext.current
     Box(
         modifier = Modifier
