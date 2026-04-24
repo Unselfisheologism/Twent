@@ -879,6 +879,7 @@ class MainActivity : ComponentActivity() {
                             TwentOnboardingScreen(
                                 onComplete = {
                                     agreementPreferences.setAgreementAccepted(true)
+                                    justCompletedOnboarding = true
                                     lifecycleScope.launch {
                                         delay(300)
                                         // checkPermissionLevelSet() - permission guide bypassed

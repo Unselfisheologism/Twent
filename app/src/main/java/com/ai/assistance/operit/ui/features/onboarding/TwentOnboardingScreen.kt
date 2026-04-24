@@ -85,7 +85,7 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                     arrow = "←",
                     onClick = { currentStep-- },
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(start = 24.dp, bottom = 32.dp)
                         .align(Alignment.BottomStart)
                 )
             }
@@ -95,7 +95,7 @@ fun TwentOnboardingScreen(onComplete: () -> Unit) {
                 arrow = "→",
                 onClick = { currentStep++ },
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(end = 24.dp, bottom = 32.dp)
                     .align(Alignment.BottomEnd)
             )
         }
@@ -184,7 +184,7 @@ private fun SlideStep(step: Int, slideData: List<OnboardingStep>) {
                     lineHeight = 38.sp,
                     color = Color.White
                 ),
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -202,7 +202,7 @@ private fun ArrowButton(
             .size(56.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = OrangePrimary,
+        color = Color(0xFF8A2BE2), // purple
         contentColor = Color.White
     ) {
         Box(contentAlignment = Alignment.Center) {
