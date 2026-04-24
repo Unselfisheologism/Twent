@@ -202,7 +202,7 @@ private fun ArrowButton(
             .size(56.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF8A2BE2), // purple
+        color = OrangePrimary,
         contentColor = Color.White
     ) {
         Box(contentAlignment = Alignment.Center) {
@@ -210,7 +210,7 @@ private fun ArrowButton(
                 text = arrow,
                 fontSize = 24.sp,
                 fontFamily = CalivePixelFamily,
-                color = Color.White
+                color = Color(0xFF8A2BE2) // purple arrows
             )
         }
     }
