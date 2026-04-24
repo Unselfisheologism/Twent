@@ -554,7 +554,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     // 从原始stream收集内容并处理
                     var chunkCount = 0
                     var totalChars = 0
-                    var lastLogTime = System.currentTimeMillis()
+
                     val streamStartTime = System.currentTimeMillis()
 
                     responseStream.collect { content ->
@@ -574,12 +574,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                         chunkCount++
                         totalChars += content.length
 
-                        // 周期性日志
-                        val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastLogTime > 5000) { // 每5秒记录一次
-                            AppLogger.d(TAG, "已接收 $chunkCount 个内容块，总计 $totalChars 个字符")
-                            lastLogTime = currentTime
-                        }
+                        // Periodic logging removed for performance (bloat)
 
                         // 更新streamBuffer，保持与原有逻辑一致
                         execContext.streamBuffer.append(content)
@@ -674,91 +669,25 @@ class EnhancedAIService private constructor(private val context: Context) {
      * @return 经过增强检测的内容，可能会修复格式问题
      */
     private suspend fun enhanceToolDetection(content: String): String {
-        try {
-            // 检查内容是否包含可能的工具调用标记
-            if (!content.contains("<tool") && !content.contains("</tool>")) {
-                return content
-            }
-
-            // 创建字符流以应用流处理，使用 stream() 替代 asCharStream()
-            val charStream = content.stream()
-
-            // 使用XML插件来拆分流
-            val plugins = listOf(StreamXmlPlugin())
-
-            // 保存增强后的内容
-            val enhancedContent = StringBuilder()
-
-            // 追踪是否发现了工具标签
-            var foundToolTag = false
-
-            // 处理拆分的结果
-            charStream.splitBy(plugins).collect { group ->
-                when (val tag = group.tag) {
-                    // 匹配到XML标签
-                    is StreamXmlPlugin -> {
-                        val xmlContent = StringBuilder()
-                        group.stream.collect { char -> xmlContent.append(char) }
-
-                        val xml = xmlContent.toString()
-                        // 检查是否是工具标签
-                        if (xml.contains("<tool") && xml.contains("</tool>")) {
-                            foundToolTag = true
-                            // 格式标准化，使其符合工具调用的正则表达式预期格式
-                            val normalizedXml = normalizeToolXml(xml)
-                            enhancedContent.append(normalizedXml)
-                            AppLogger.d(TAG, "工具调用XML被增强流处理检测到并标准化")
-                        } else {
-                            // 保留其他XML标签
-                            enhancedContent.append(xml)
-                        }
-                    }
-                    // 纯文本内容
-                    null -> {
-                        val textContent = StringBuilder()
-                        group.stream.collect { char -> textContent.append(char) }
-                        enhancedContent.append(textContent.toString())
-                    }
-                    // 添加必要的else分支
-                    else -> {
-                        val textContent = StringBuilder()
-                        group.stream.collect { char -> textContent.append(char) }
-                        enhancedContent.append(textContent.toString())
-                        AppLogger.w(TAG, "未知标签类型: ${tag::class.java.simpleName}")
-                    }
-                }
-            }
-
-            // 如果找到了工具标签，返回增强的内容；否则返回原始内容
-            return if (foundToolTag) {
-                AppLogger.d(TAG, "增强的XML工具检测完成")
-                enhancedContent.toString()
-            } else {
-                content
-            }
-        } catch (e: Exception) {
-            // 如果流处理失败，返回原始内容并记录错误
-            AppLogger.e(TAG, "增强工具检测失败: ${e.message}", e)
+        // Quick check: if no tool tags, return as-is
+        if (!content.contains("<tool") && !content.contains("</tool>")) {
             return content
         }
-    }
-
-    /**
-     * 规范化工具XML以符合正则表达式预期
-     * @param xml 原始XML文本
-     * @return 标准化后的XML
-     */
-    private fun normalizeToolXml(xml: String): String {
-        var result = xml.trim()
-
-        // 确保工具名称格式正确
+        
+        // Simple normalization: fix whitespace in tool and param tags
+        var result = content
         result = result.replace(Regex("<tool\\s+name\\s*="), "<tool name=")
-
-        // 确保参数格式正确
         result = result.replace(Regex("<param\\s+name\\s*="), "<param name=")
-
+        
+        // If we made changes, log it (debug only)
+        if (result != content) {
+            AppLogger.d(TAG, "工具调用XML已标准化")
+        }
+        
         return result
     }
+
+    // normalizeToolXml removed - dead code after simplify enhanceToolDetection
 
     /** 在处理完流后调用，使用增强的工具检测功能 */
     private suspend fun processStreamCompletion(
@@ -941,18 +870,19 @@ class EnhancedAIService private constructor(private val context: Context) {
             }
         }
 
-        if (enableMemoryQuery) {
-            // 保存问题记录到库
-            toolProcessingScope.launch {
-                com.ai.assistance.operit.api.chat.library.ProblemLibrary.saveProblemAsync(
-                        this@EnhancedAIService.context,
-                        toolHandler,
-                        context.conversationHistory,
-                        content,
-                        multiServiceManager.getServiceForFunction(FunctionType.PROBLEM_LIBRARY)
-                )
-            }
-        }
+        // REMOVED FOR PERFORMANCE: Problem library save (bloat)
+        // if (enableMemoryQuery) {
+        //     // 保存问题记录到库
+        //     toolProcessingScope.launch {
+        //         com.ai.assistance.operit.api.chat.library.ProblemLibrary.saveProblemAsync(
+        //                 this@EnhancedAIService.context,
+        //                 toolHandler,
+        //                 context.conversationHistory,
+        //                 content,
+        //                 multiServiceManager.getServiceForFunction(FunctionType.PROBLEM_LIBRARY)
+        //         )
+        //     }
+        // }
 
         if (!isSubTask) {
         // 在会话结束后停止服务（服务销毁时会自动发送通知）
@@ -1175,7 +1105,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                 // 处理流
                 var chunkCount = 0
                 var totalChars = 0
-                var lastLogTime = System.currentTimeMillis()
+
 
                 responseStream.collect { content ->
                     // 更新streamBuffer
@@ -1188,11 +1118,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     chunkCount++
                     totalChars += content.length
 
-                    // 定期记录日志
-                    val currentTime = System.currentTimeMillis()
-                    if (currentTime - lastLogTime > 5000) { // 每5秒记录一次
-                        lastLogTime = currentTime
-                    }
+
 
                     // 通过收集器将内容发射出去，让UI可以接收到
                     collector.emit(content)
