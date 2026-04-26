@@ -193,7 +193,7 @@ CRITICAL TOOL PRIORITY ORDER (check from top to bottom):
    - If the app is NOT installed → use launch_url_in_browser with the website URL
 
 3. HEADLESS TOOLS (use ONLY when browser is NOT needed):
-   - visit_web: HEADLESS HTML fetch. ONLY for public pages that don't need login or JavaScript.
+   - execute_shell: Run shell commands. Use `ddgs text -k "query"` for DuckDuckGo web search (requires `pip install -U duckduckgo-search`).
    - http_request: DIRECT API calls to known endpoints. NOT for browsing websites.
 
 4. UI AUTOMATION (tap_element, swipe, type, etc.):

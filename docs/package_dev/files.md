@@ -58,9 +58,8 @@ await Tools.Files.read("/home/user/config.txt", "linux");
 -   `unzip(source: string, destination: string): Promise<FileOperationData>`: 将一个 zip 压缩包解压到指定目录。
 -   `download(url: string, destination: string): Promise<FileOperationData>`: 从给定的 URL 下载文件并保存到本地。
     -   也支持对象参数形式：`Tools.Files.download({ ... })`。
-        -   可用 `url` 直接下载。
-        -   或者使用 `visit_key` + `link_number` / `image_number`，从上一次 `visit_web` 的 `Results:` / `Images:` 编号中按序号下载。
--   `apply(path: string, type: "replace" | "delete" | "create", old?: string, newContent?: string, environment?: FileEnvironment): Promise<FileApplyResultData>`: **（AI特定功能）** 将 AI 生成的变更智能地应用（合并/修改）到文件中。
+- 可用 `url` 直接下载。
+- `apply(path: string, type: "replace" | "delete" | "create", old?: string, newContent?: string, environment?: FileEnvironment): Promise<FileApplyResultData>`: **（AI特定功能）** 将 AI 生成的变更智能地应用（合并/修改）到文件中。
 
     - **参数说明**：
         - `type`:

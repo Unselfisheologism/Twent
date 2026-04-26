@@ -356,8 +356,8 @@ const dailyLife = (function () {
                 "https://www.baidu.com/s?wd=当前天气" :
                 `https://www.baidu.com/s?wd=${encodeURIComponent(location + " 天气")}`;
             console.log(`搜索天气信息: ${searchUrl}`);
-            // 使用visit_web工具直接访问搜索页面
-            const result = await Tools.Net.visit(searchUrl);
+// 使用 ddgs 进行网页搜索
+const result = await Tools.System.shell(`ddgs text -k "${searchQuery}"`);
             // 从网页内容中提取有用的信息
             // 由于结果现在是页面内容而非结构化搜索结果，我们需要提取有用信息
             const extractedInfo = extractWeatherInfo(result.content);

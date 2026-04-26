@@ -145,7 +145,7 @@ fun getJsToolsDefinition(): String {
                         if (params.headers !== undefined && params.headers !== null && typeof params.headers === 'object') {
                             params.headers = JSON.stringify(params.headers);
                         }
-                    } else {
+} else {
                         params = {};
                     }
                     return toolCall("download_file", params);
@@ -161,18 +161,6 @@ fun getJsToolsDefinition(): String {
                     }
                     return toolCall("http_request", params);
                 },
-                visit: (params) => {
-                    if (typeof params === 'string') {
-                        // 向后兼容，如果只传入一个字符串，则假定为URL
-                        return toolCall("visit_web", { url: params });
-                    }
-                    // 否则，假定为参数对象
-                    if (params && typeof params === 'object' && params.headers !== undefined && typeof params.headers === 'object') {
-                        params = { ...params, headers: JSON.stringify(params.headers) };
-                    }
-                    return toolCall("visit_web", params);
-                },
-                // 新增增强版HTTP请求
                 http: (options) => {
                     const params = { ...options };
                     if (params.body !== undefined && typeof params.body === 'object') {

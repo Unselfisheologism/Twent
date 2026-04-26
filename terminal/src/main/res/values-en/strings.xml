@@ -44,6 +44,8 @@
     <string name="package_python_pip_desc">Python package manager</string>
     <string name="package_uv_name">uv</string>
     <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
+    <string name="package_ddgs_name">DuckDuckGo Search (ddgs)</string>
+    <string name="package_ddgs_desc">DuckDuckGo CLI for AI agents: ddgs text -k "query" for web search, ddgs images -k "query" for image search</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 development environment</string>
     <string name="package_gradle_name">Gradle</string>

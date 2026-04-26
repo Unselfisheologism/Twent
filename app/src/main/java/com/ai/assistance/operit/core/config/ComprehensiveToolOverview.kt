@@ -51,7 +51,7 @@ Here's a complete overview of what you can do:
 ### 3. WEB & NETWORK TOOLS
 ════════════════════════════════════════════════════════════════════════
 
-• visit_web - Visit webpages and extract content (supports link following)
+• execute_shell + ddgs text -k "query" - Web search via duckduckgo-search CLI
 • http_request - Send HTTP requests (GET, POST, PUT, DELETE)
 • multipart_request - Upload files via multipart form data
 • manage_cookies - Manage browser cookies
@@ -304,7 +304,7 @@ WRITING FILES:
   • write_file(path="/path/to/file", content="text")
 
 SEARCHING THE WEB:
-  • visit_web(url="https://example.com")
+  • execute_shell(command="ddgs text -k 'query'")
 
 SEARCHING MEMORY:
   • query_memory(query="keywords", folder_path="/optional/folder")

@@ -364,7 +364,7 @@ const dailyLife = (function () {
 
             console.log(`搜索天气信息: ${searchUrl}`);
 
-            // 使用visit_web工具直接访问搜索页面
+            // 使用 ddgs 进行网页搜索
             const result = await Tools.Net.visit(searchUrl);
 
             // 从网页内容中提取有用的信息

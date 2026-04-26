@@ -48,7 +48,7 @@ export interface ToolResultMap {
 
     // Network operations
     'http_request': HttpResponseData;
-    'visit_web': VisitWebResultData;
+    'ddgs': DdgsResultData;
     'multipart_request': HttpResponseData;
     'manage_cookies': HttpResponseData;
 

@@ -358,30 +358,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-    // Web搜索工具
-    handler.registerTool(
-            name = "visit_web",
-            descriptionGenerator = { tool ->
-                val url = tool.parameters.find { it.name == "url" }?.value
-                val visitKey = tool.parameters.find { it.name == "visit_key" }?.value
-                val linkNumber = tool.parameters.find { it.name == "link_number" }?.value
-
-                when {
-                    !visitKey.isNullOrBlank() && !linkNumber.isNullOrBlank() ->
-                            s(
-                                    R.string.toolreg_visit_web_search_link_desc,
-                                    linkNumber,
-                                    visitKey.take(8)
-                            )
-                    !url.isNullOrBlank() -> s(R.string.toolreg_visit_web_url_desc, url)
-                    else -> s(R.string.toolreg_visit_web_desc)
-                }
-            },
-            executor = { tool ->
-                val webVisitTool = ToolGetter.getWebVisitTool(context)
-                webVisitTool.invoke(tool)
-            }
-    )
+// Web Search: use execute_shell + "ddgs text -k 'query'" instead
 
     // 休眠工具
     handler.registerTool(

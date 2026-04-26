@@ -35,7 +35,7 @@ object SystemPromptConfig {
 When no external tool applies, use these based on context:
 - `launch_url_in_browser` — open websites in real browser
 - `open_app` — open installed apps
-- `visit_web` — headless HTML fetch
+- `execute_shell` + `ddgs text -k "query"` — web search via duckduckgo-search CLI
 - `http_request` — direct API calls
 - `read_file` / `write_file` / `execute_shell` — file and shell operations
 
@@ -78,7 +78,7 @@ When no external tool applies, use these based on context:
 当没有适用的外部工具时，根据场景选择：
 - `launch_url_in_browser` — 在真实浏览器中打开网站
 - `open_app` — 打开已安装的应用
-- `visit_web` — 无头HTML抓取
+- `execute_shell` + `ddgs text -k "查询"` — 通过 duckduckgo-search CLI 进行网页搜索
 - `http_request` — 直接调用API
 - `read_file` / `write_file` / `execute_shell` — 文件和shell操作
 

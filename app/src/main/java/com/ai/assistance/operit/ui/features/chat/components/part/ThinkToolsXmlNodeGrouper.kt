@@ -366,8 +366,7 @@ private fun shouldGroupToolByName(toolName: String?): Boolean {
         "read_file_part",
         "read_file_full",
         "read_file_binary",
-        "use_package",
+"use_package",
         "find_files",
-        "visit_web"
     )
 }

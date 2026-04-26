@@ -180,7 +180,7 @@ Workflow tool usage advice (for the AI):
 - trigger / execute / condition / logic / extract
 
 Execute 节点：
-- actionType: 工具名（如 "visit_web" / "list_files" / "get_system_setting" ...）
+- actionType: 工具名（如 "execute_shell" / "list_files" / "get_system_setting" ...）
 - actionConfig: 工具参数对象，支持 ParameterValue（静态值/节点引用）
 
 Condition 节点：
@@ -227,7 +227,7 @@ Node types (node.type):
 - trigger / execute / condition / logic / extract
 
 Execute node:
-- actionType: tool name (e.g. "visit_web" / "list_files" / "get_system_setting" ...)
+- actionType: tool name (e.g. "execute_shell" / "list_files" / "get_system_setting" ...)
 - actionConfig: tool parameter object, supports ParameterValue (static value / node reference)
 
 Condition node:

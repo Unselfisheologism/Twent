@@ -351,25 +351,29 @@ const dailyLife = (function () {
         try {
             // Default to "当前天气" if no location is provided
             const location = params.location || "current";
-            // 构造搜索URL
-            const searchUrl = location === "current" ?
-                "https://www.baidu.com/s?wd=当前天气" :
-                `https://www.baidu.com/s?wd=${encodeURIComponent(location + " 天气")}`;
-            console.log(`搜索天气信息: ${searchUrl}`);
-            // 使用visit_web工具直接访问搜索页面
-            const result = await Tools.Net.visit(searchUrl);
-            // 从网页内容中提取有用的信息
-            // 由于结果现在是页面内容而非结构化搜索结果，我们需要提取有用信息
-            const extractedInfo = extractWeatherInfo(result.content);
+            // 构造搜索查询
+            const searchQuery = location === "current" ? "当前天气" : `${location} 天气`;
+            console.log(`搜索天气信息: ${searchQuery}`);
+            // 使用 ddgs 进行网页搜索
+            const result = await Tools.System.shell(`ddgs text -k "${searchQuery}"`);
+            // 解析 JSON 结果
+            let searchResults = [];
+            try {
+                searchResults = JSON.parse(result.output || "[]");
+            } catch (e) {
+                console.error("解析搜索结果失败:", e);
+            }
+            // 提取天气信息
+            const extractedInfo = extractWeatherInfo(searchResults);
             return {
                 success: true,
                 query: location === "current" ? "当前天气" : `${location} 天气`,
                 location: location,
                 timestamp: new Date().toISOString(),
-                url: result.url,
-                title: result.title,
+                title: searchResults[0]?.title || "",
+                url: searchResults[0]?.href || "",
                 weather_info: extractedInfo,
-                note: "天气数据来自网页内容提取，仅供参考。"
+                note: "天气数据来自 DuckDuckGo 搜索，仅供参考。"
             };
         }
         catch (error) {

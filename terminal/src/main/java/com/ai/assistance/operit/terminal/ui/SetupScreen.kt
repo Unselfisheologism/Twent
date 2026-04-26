@@ -94,7 +94,8 @@ fun SetupScreen(
                         PackageItem("python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_name), "python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_desc)),
                         PackageItem("python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_name), "python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_desc)),
                         PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc)),
-                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
+                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc)),
+                        PackageItem("ddgs", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_name), "pipx install duckduckgo-search", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_desc))
                     )
                 ),
                 PackageCategory(

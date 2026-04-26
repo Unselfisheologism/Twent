@@ -652,17 +652,7 @@ sealed class Action {
                         timeoutSeconds = args["timeout_seconds"] as? Int ?: 30
                     )
                 }
-            ),
-            "visit_web" to Spec(
-                name = "visit_web",
-                description = "HEADLESS web page fetch - fetches raw HTML, NOT a real browser. Use ONLY for extracting content from PUBLIC pages that don't require login, JavaScript, or cookies. NEVER use for: (a) sites requiring login like x.com, gmail, facebook; (b) sites needing JavaScript rendering; (c) interactive tasks like clicking buttons or checking notifications. For those, use open_app + UI automation (tap_element, type, etc.) instead.",
-                params = listOf(
-                    ParamSpec("url", String::class, "The URL to visit."),
-                    ParamSpec("max_content_length", Int::class, "Maximum content length to return (default 10000 chars).")
-                ),
-                build = { args -> VisitWeb(args["url"] as String, args["max_content_length"] as? Int ?: 10000) }
-            ),
-
+),
             // Shell
             "execute_shell" to Spec(
                 name = "execute_shell",
