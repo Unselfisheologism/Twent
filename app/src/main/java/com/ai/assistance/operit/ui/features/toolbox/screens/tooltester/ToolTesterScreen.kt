@@ -348,7 +348,7 @@ ToolTest("device_info", context.getString(R.string.device_info_test), context.ge
             ToolTest("get_page_info", context.getString(R.string.page_info_test), context.getString(R.string.page_info_test_desc), emptyList()),
             ToolTest("press_key", context.getString(R.string.simulate_key_test), context.getString(R.string.simulate_key_test_desc), listOf(ToolParameter("key_code", "KEYCODE_VOLUME_UP"))),
             ToolTest("set_input_text", context.getString(R.string.text_input_test), context.getString(R.string.text_input_test_desc), listOf(ToolParameter("text", "Hello from Operit!"))),
-            ToolTest("tap", context.getString(R.string.simulate_tap_test), context.getString(R.string.simulate_tap_test_desc), listOf(ToolParameter("x", "1"), ToolParameter("y", "1"))),
+ToolTest("tap", context.getString(R.string.simulate_tap_test), context.getString(R.string.simulate_tap_test_desc), listOf(ToolParameter("x", "1"), ToolParameter("y", "1"))),
             ToolTest("swipe", context.getString(R.string.simulate_swipe_test), context.getString(R.string.simulate_swipe_test_desc), listOf(ToolParameter("start_x", "500"), ToolParameter("start_y", "1000"), ToolParameter("end_x", "500"), ToolParameter("end_y", "1200")))
         )),
         ToolGroup(context.getString(R.string.cleanup_group), true, false, listOf(
