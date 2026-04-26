@@ -58,9 +58,17 @@ object ChatMarkupRegex {
         "<tool\\s+name=\"([^\"]+)\"(?:\\s+description=\"([^\"]+)\")?>([\\s\\S]*?)</tool>"
     )
 
-    val namePattern = Regex("<tool\\s+name=\"([^\"]+)\"")
+    val namePattern = Regex("<tool(?:_call)?\\s+name=\"([^\"]+)\"")
 
     val toolParamPattern = Regex("<param\\s+name=\"([^\"]+)\">([\\s\\S]*?)</param>")
+
+    // Alternative JSON-based tool_call pattern for models that output JSON arguments
+    val jsonToolCallPattern = Regex(
+        """\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?"arguments"\s*:\s*(\{[\s\S]*?\})[\s\S]*?\}""",
+        RegexOption.MULTILINE
+    )
+
+    val jsonArgumentsPattern = Regex(""""arguments"\s*:\s*\{([\s\S]*?)\}""")
 
     val nameAttr = Regex("name\\s*=\\s*\"([^\"]+)\"", RegexOption.IGNORE_CASE)
 

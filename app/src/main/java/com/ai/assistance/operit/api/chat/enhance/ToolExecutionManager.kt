@@ -16,6 +16,7 @@ import kotlinx.coroutines.coroutineScope
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.ui.common.displays.MessageContentParser
+import com.ai.assistance.operit.util.ChatMarkupRegex
 import com.ai.assistance.operit.util.stream.plugins.StreamXmlPlugin
 import com.ai.assistance.operit.util.stream.splitBy
 import com.ai.assistance.operit.util.stream.stream
@@ -23,6 +24,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import java.util.regex.Regex
 
 /** Utility class for managing tool executions */
 object ToolExecutionManager {
@@ -44,29 +46,58 @@ object ToolExecutionManager {
         val charStream = content.stream()
         val plugins = listOf(StreamXmlPlugin())
 
-        charStream.splitBy(plugins).collect { group ->
+charStream.splitBy(plugins).collect { group ->
             val chunkContent = StringBuilder()
             group.stream.collect { chunk -> chunkContent.append(chunk) }
             val chunkString = chunkContent.toString()
 
             if (chunkString.isEmpty()) return@collect
 
-            if (group.tag is StreamXmlPlugin) {
-                if (chunkString.startsWith("<tool") && chunkString.contains("</tool>")) {
-                    val nameMatch = MessageContentParser.namePattern.find(chunkString)
-                    val toolName = nameMatch?.groupValues?.get(1) ?: return@collect
+            if ((chunkString.startsWith("<tool") || chunkString.startsWith("<tool_call")) && 
+                (chunkString.contains("</tool>") || chunkString.contains("</tool_call>"))) {
+                
+                // Try XML format first (<tool name="..."><param name="...">...</param></tool>)
+                val nameMatch = MessageContentParser.namePattern.find(chunkString)
+                val toolName = nameMatch?.groupValues?.get(1)
+                
+                // If no XML tool name found, try JSON format (<tool_call>{"name": "...", "arguments": {...}}</tool_call>)
+                val jsonName = if (toolName.isNullOrEmpty()) {
+                    val jsonMatch = ChatMarkupRegex.jsonToolCallPattern.find(chunkString)
+                    jsonMatch?.groupValues?.get(1)
+                } else toolName
+                
+                if (jsonName.isNullOrEmpty()) return@collect
 
-                    val parameters = mutableListOf<ToolParameter>()
-                    MessageContentParser.toolParamPattern.findAll(chunkString)
-                        .forEach { paramMatch ->
-                            val paramName = paramMatch.groupValues[1]
-                            val paramValue = paramMatch.groupValues[2]
-                            parameters.add(ToolParameter(paramName, unescapeXml(paramValue)))
+                val parameters = mutableListOf<ToolParameter>()
+                
+                // Try XML param format first
+                MessageContentParser.toolParamPattern.findAll(chunkString)
+                    .forEach { paramMatch ->
+                        val paramName = paramMatch.groupValues[1]
+                        val paramValue = paramMatch.groupValues[2]
+                        parameters.add(ToolParameter(paramName, unescapeXml(paramValue)))
+                    }
+                
+                // If no XML params found, try JSON arguments format
+                if (parameters.isEmpty()) {
+                    val jsonArgsMatch = ChatMarkupRegex.jsonArgumentsPattern.find(chunkString)
+                    if (jsonArgsMatch != null) {
+                        val argsContent = jsonArgsMatch.groupValues[1]
+                        // Parse JSON arguments: "key": "value" or "key": number
+                        val jsonArgPattern = Regex("""\"(\w+)\"\s*:\s*(?:"([^"]*)"|(\d+\.?\d*)|(\{[\s\S]*?\})|(\[[\s\S]*?\]))""")
+                        jsonArgPattern.findAll(argsContent).forEach { argMatch ->
+                            val paramName = argMatch.groupValues[1]
+                            val paramValue = argMatch.groupValues.getOrNull(3) ?: 
+                                        argMatch.groupValues.getOrNull(4) ?: 
+                                        argMatch.groupValues.getOrNull(5) ?: 
+                                        argMatch.groupValues.getOrNull(6) ?: ""
+                            parameters.add(ToolParameter(paramName, paramValue))
                         }
-
-                    val tool = AITool(name = toolName, parameters = parameters)
-                    invocations.add(ToolInvocation(tool, chunkString, chunkString.indices))
+                    }
                 }
+
+                val tool = AITool(name = jsonName, parameters = parameters)
+                invocations.add(ToolInvocation(tool, chunkString, chunkString.indices))
             }
         }
 
