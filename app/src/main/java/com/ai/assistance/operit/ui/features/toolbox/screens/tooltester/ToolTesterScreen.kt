@@ -307,7 +307,7 @@ private fun getFinalToolTestGroups(context: android.content.Context): List<ToolG
         )),
         ToolGroup(context.getString(R.string.basic_http_group), false, false, listOf(
             ToolTest("sleep", context.getString(R.string.delay_test), context.getString(R.string.delay_test_desc), listOf(ToolParameter("duration_ms", "1000"))),
-ToolTest("device_info", context.getString(R.string.device_info_test), context.getString(R.string.device_info_test_desc), emptyList()),
+            ToolTest("device_info", context.getString(R.string.device_info_test), context.getString(R.string.device_info_test_desc), emptyList()),
             ToolTest("http_request", context.getString(R.string.http_get_test), context.getString(R.string.http_get_test_desc), listOf(ToolParameter("url", "https://httpbin.org/get"), ToolParameter("method", "GET"))),
             ToolTest("multipart_request", context.getString(R.string.file_upload_test), context.getString(R.string.file_upload_test_desc), listOf(ToolParameter("url", "https://httpbin.org/post"), ToolParameter("method", "POST"), ToolParameter("files", testFile))),
             ToolTest("manage_cookies", context.getString(R.string.manage_cookies_test), context.getString(R.string.manage_cookies_test_desc), listOf(ToolParameter("action", "get"), ToolParameter("domain", "google.com"))),
@@ -348,7 +348,7 @@ ToolTest("device_info", context.getString(R.string.device_info_test), context.ge
             ToolTest("get_page_info", context.getString(R.string.page_info_test), context.getString(R.string.page_info_test_desc), emptyList()),
             ToolTest("press_key", context.getString(R.string.simulate_key_test), context.getString(R.string.simulate_key_test_desc), listOf(ToolParameter("key_code", "KEYCODE_VOLUME_UP"))),
             ToolTest("set_input_text", context.getString(R.string.text_input_test), context.getString(R.string.text_input_test_desc), listOf(ToolParameter("text", "Hello from Operit!"))),
-ToolTest("tap", context.getString(R.string.simulate_tap_test), context.getString(R.string.simulate_tap_test_desc), listOf(ToolParameter("x", "1"), ToolParameter("y", "1"))),
+            ToolTest("tap", context.getString(R.string.simulate_tap_test), context.getString(R.string.simulate_tap_test_desc), listOf(ToolParameter("x", "1"), ToolParameter("y", "1"))),
             ToolTest("swipe", context.getString(R.string.simulate_swipe_test), context.getString(R.string.simulate_swipe_test_desc), listOf(ToolParameter("start_x", "500"), ToolParameter("start_y", "1000"), ToolParameter("end_x", "500"), ToolParameter("end_y", "1200")))
         )),
         ToolGroup(context.getString(R.string.cleanup_group), true, false, listOf(
