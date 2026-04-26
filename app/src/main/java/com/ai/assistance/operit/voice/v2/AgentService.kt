@@ -76,12 +76,12 @@ class AgentService : Service() {
         @Volatile
         var currentTask: String? = null
             private set
-        
+
         // Task control flags
         @Volatile
         var isTaskPaused: Boolean = false
             private set
-        
+
         @Volatile
         var shouldStopTask: Boolean = false
             private set
@@ -97,7 +97,7 @@ class AgentService : Service() {
             }
             context.startService(intent)
         }
-        
+
         /**
          * Pause the current task
          */
@@ -105,7 +105,7 @@ class AgentService : Service() {
             Log.d("AgentService", "Task pause requested.")
             isTaskPaused = true
         }
-        
+
         /**
          * Resume the current task
          */
@@ -123,6 +123,7 @@ class AgentService : Service() {
             context.startService(intent)
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate() {
         super.onCreate()
@@ -153,6 +154,7 @@ class AgentService : Service() {
             this
         )
     }
+
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -205,44 +207,20 @@ class AgentService : Service() {
         startForeground(NOTIFICATION_ID, createNotification("Agent is starting..."))
 
         // Show top-left task controls when task starts (along with edge glow)
-        var stopClickedOnce = false  // Track if stop has been clicked once
-        
+        // IMMEDIATE stop on red cross button - single click terminates immediately
+        // Also show full-screen tap-to-stop overlay
+
         visualFeedbackManager.showTaskActiveGlow(
             onStopClicked = {
-                if (!stopClickedOnce) {
-                    // First stop click - pause task and show follow-up input
-                    Log.i(TAG, "Stop button clicked first time - pausing task and showing follow-up input")
-                    isTaskPaused = true
-                    shouldStopTask = false  // Ensure stop flag is reset for potential follow-up
-                    visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = true)
-                    stopClickedOnce = true
-                    
-                    // Show follow-up input box with custom placeholder
-                    visualFeedbackManager.showInputBox(
-                        placeholderText = "Ask Follow-up",
-                        onActivated = {},
-                        onSubmit = { submittedText ->
-                            Log.i(TAG, "Follow-up message: $submittedText")
-                            // Resume task and add follow-up as new task
-                            isTaskPaused = false
-                            stopClickedOnce = false
-                            visualFeedbackManager.updateTaskPauseButtonIcon(isPaused = false)
-                            start(this@AgentService, submittedText)
-                        },
-                        onOutsideTap = {
-                            Log.i(TAG, "Follow-up input outside tap - keeping task paused, input stays visible")
-                        }
-                    )
-                } else {
-                    // Second stop click - completely remove overlay and stop service
-                    Log.i(TAG, "Stop button clicked second time - removing overlay completely")
-                    shouldStopTask = true  // Signal to Agent loop to stop
-                    isTaskPaused = false   // Unpause if it was paused, so it can check shouldStopTask
-                    visualFeedbackManager.hideTopLeftTaskControls()
-                    visualFeedbackManager.hideTaskActiveGlow()
-                    visualFeedbackManager.hideInputBox()
-                    stopSelf()
-                }
+                // IMMEDIATE stop - no two-stage behavior
+                Log.i(TAG, "Stop button clicked - IMMEDIATE termination")
+                shouldStopTask = true  // Signal to Agent loop to stop
+                isTaskPaused = false   // Unpause if it was paused
+                visualFeedbackManager.hideTopLeftTaskControls()
+                visualFeedbackManager.hideTaskActiveGlow()
+                visualFeedbackManager.hideInputBox()
+                visualFeedbackManager.hideFullScreenTapOverlay()
+                stopSelf()
             },
             onPauseClicked = {
                 Log.i(TAG, "Pause button clicked")
@@ -256,13 +234,27 @@ class AgentService : Service() {
             }
         )
 
+        // Show full-screen tap overlay - tapping anywhere stops the task immediately
+        visualFeedbackManager.showFullScreenTapToStopOverlay(
+            onTap = {
+                Log.i(TAG, "Screen tap detected - IMMEDIATE termination")
+                shouldStopTask = true
+                isTaskPaused = false
+                visualFeedbackManager.hideTopLeftTaskControls()
+                visualFeedbackManager.hideTaskActiveGlow()
+                visualFeedbackManager.hideInputBox()
+                visualFeedbackManager.hideFullScreenTapOverlay()
+                stopSelf()
+            }
+        )
+
         while (taskQueue.isNotEmpty()) {
             // Check if stop was requested
             if (shouldStopTask) {
                 Log.i(TAG, "Stop requested during task execution")
                 break
             }
-            
+
             val task = taskQueue.poll() ?: continue
             currentTask = task
 
@@ -284,6 +276,7 @@ class AgentService : Service() {
         // Hide top-left controls after task completes
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
+        visualFeedbackManager.hideFullScreenTapOverlay()
 
         // Show input box for follow-up message with custom placeholder
         visualFeedbackManager.showInputBox(
@@ -309,21 +302,21 @@ class AgentService : Service() {
     private suspend fun ensureAutomationServiceAvailable(): Boolean {
         var attempts = 0
         val maxAttempts = 50 // 5 seconds with 100ms delays
-        
+
         while (attempts < maxAttempts) {
             if (com.ai.assistance.operit.services.automation.OperitAutomationService.instance != null) {
                 Log.d(TAG, "OperitAutomationService is connected and available.")
                 return true
             }
-            
+
             if (attempts == 0) {
                 Log.w(TAG, "OperitAutomationService not connected yet. Waiting for connection...")
             }
-            
+
             kotlinx.coroutines.delay(100)
             attempts++
         }
-        
+
         Log.e(TAG, "OperitAutomationService failed to connect after ${maxAttempts * 100}ms")
         return false
     }
@@ -340,6 +333,7 @@ class AgentService : Service() {
         visualFeedbackManager.hideTopLeftTaskControls()
         visualFeedbackManager.hideTaskActiveGlow()
         visualFeedbackManager.hideTtsWave()
+        visualFeedbackManager.hideFullScreenTapOverlay()
         // Do NOT hide input box - it may be needed for follow-up messages
         Log.i(TAG, "Service destroyed and all resources cleaned up.")
     }
@@ -391,7 +385,7 @@ class AgentService : Service() {
                 stopPendingIntent
             )
             .setOngoing(true) // Makes notification persistent and harder to dismiss
-             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
     }
 }

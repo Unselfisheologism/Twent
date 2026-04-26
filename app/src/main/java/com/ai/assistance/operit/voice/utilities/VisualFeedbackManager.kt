@@ -554,13 +554,17 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
     // ========== 4-Edge Screen Glow with Subtle Traveling Shimmer ==========
 
-    private var edgeGlowViewTop: View? = null
+private var edgeGlowViewTop: View? = null
     private var edgeGlowViewBottom: View? = null
     private var edgeGlowViewLeft: View? = null
     private var edgeGlowViewRight: View? = null
     private var edgeGlowAnimator: android.animation.ValueAnimator? = null
     private var shimmerAnimator: android.animation.ValueAnimator? = null
     private var isGlowLinkedToAudio = false
+
+    // Full-screen tap overlay for stopping tasks
+    private var fullScreenTapOverlay: View? = null
+    private var onFullScreenTap: (() -> Unit)? = null
 
     fun showEdgeGlow() {
         showEdgeGlowInternal(linkToAudio = false)
@@ -788,9 +792,92 @@ class VisualFeedbackManager private constructor(private val context: Context) {
             }
             edgeGlowViewTop = null
             edgeGlowViewBottom = null
-            edgeGlowViewLeft = null
+edgeGlowViewLeft = null
             edgeGlowViewRight = null
             Log.d(TAG, "Edge glow strips removed.")
+        }
+    }
+
+    // ========== Full-Screen Tap to Stop Overlay ==========
+
+    /**
+     * Show a transparent full-screen overlay that captures taps anywhere to stop the task.
+     * Tapping anywhere on the screen will trigger the onTap callback for immediate termination.
+     */
+    fun showFullScreenTapToStopOverlay(onTap: () -> Unit) {
+        mainHandler.post {
+            // If already shown, update callback
+            fullScreenTapOverlay?.let { existing ->
+                if (existing.isAttachedToWindow) {
+                    onFullScreenTap = onTap
+                    return@post
+                }
+            }
+
+            onFullScreenTap = onTap
+
+            try {
+                val density = context.resources.displayMetrics.density
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.CENTER
+                }
+
+                // Create transparent view that captures all touches
+                fullScreenTapOverlay = android.view.View(context).apply {
+                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+                    // Set click listener - this captures ANY tap on the screen
+                    setOnClickListener {
+                        Log.d(TAG, "Full-screen tap detected - triggering stop")
+                        onFullScreenTap?.invoke()
+                    }
+
+                    // Also handle touch for better responsiveness
+                    setOnTouchListener { _, event ->
+                        if (event.action == MotionEvent.ACTION_DOWN) {
+                            Log.d(TAG, "Full-screen touch detected - triggering stop")
+                            onFullScreenTap?.invoke()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                }
+
+                windowManager.addView(fullScreenTapOverlay, params)
+                Log.d(TAG, "Full-screen tap overlay added - tap anywhere to stop task")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding full-screen tap overlay", e)
+            }
+        }
+    }
+
+    /**
+     * Hide the full-screen tap overlay
+     */
+    fun hideFullScreenTapOverlay() {
+        mainHandler.post {
+            fullScreenTapOverlay?.let { view ->
+                if (view.isAttachedToWindow) {
+                    try {
+                        windowManager.removeView(view)
+                        Log.d(TAG, "Full-screen tap overlay removed")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error removing full-screen tap overlay", e)
+                    }
+                }
+            }
+            fullScreenTapOverlay = null
+            onFullScreenTap = null
         }
     }
 
