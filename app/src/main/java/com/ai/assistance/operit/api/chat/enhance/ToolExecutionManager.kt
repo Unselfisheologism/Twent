@@ -24,7 +24,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import java.util.regex.Regex
 
 /** Utility class for managing tool executions */
 object ToolExecutionManager {
