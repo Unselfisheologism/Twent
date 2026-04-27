@@ -117,7 +117,7 @@ data class ModelConfigData(
         val enableGoogleSearch: Boolean = false, // 是否启用Google Search Grounding (仅Gemini支持)
 
         // Tool Call配置
-        val enableToolCall: Boolean = false // 是否启用Tool Call接口调用工具（使用模型原生工具调用而非XML格式）
+        val enableToolCall: Boolean = true // 是否启用Tool Call接口调用工具（使用模型原生工具调用而非XML格式）
 )
 
 /** 简化版的模型配置数据，用于列表显示 */
@@ -144,7 +144,7 @@ fun getModelList(modelName: String): List<String> {
     return modelName.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 }
 
-/** 
+/**
  * 计算有效的模型索引（处理越界情况）
  * 如果索引超出范围，自动返回0（第一个模型）
  * @param modelName 逗号分隔的模型名称字符串

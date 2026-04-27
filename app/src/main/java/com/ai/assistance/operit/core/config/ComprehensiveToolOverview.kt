@@ -1,9 +1,9 @@
 ﻿package com.ai.assistance.operit.core.config
 
 /**
- * Comprehensive system prompt that provides AI agents with a clear picture 
+ * Comprehensive system prompt that provides AI agents with a clear picture
  * of all available tools and their functions.
- * 
+ *
  * This is used for AI Chat page, voice activation, and long-press activation.
  */
 object ComprehensiveToolOverview {
@@ -13,10 +13,37 @@ object ComprehensiveToolOverview {
      */
     val TOOL_OVERVIEW_EN = """
 ## ═══════════════════════════════════════════════════════════════════
+## HALLUCINATION PREVENTION RULES (READ FIRST)
+## ═══════════════════════════════════════════════════════════════════
+
+### CRITICAL: Parameter Uncertainty Protocol
+If you are NOT 100% CERTAIN about a tool parameter value, you MUST:
+1. Do NOT call the tool with a guessed value.
+2. Instead, respond in plain text and ask the user to clarify.
+3. Examples of uncertainty: unknown file path, unverified URL, wrong parameter type.
+
+### CRITICAL: Tool Existence Check
+Before calling any tool, verify it appears in YOUR AVAILABLE TOOLS list below.
+DO NOT invent tool names that do not exist in this document.
+
+### CRITICAL: Parameter Format Check
+Read the full parameter schema (name, type, required/optional) before calling.
+DO NOT provide parameters that are not listed in the schema.
+
+### CRITICAL: Error Recovery
+If a tool call fails, analyze the error message. Do NOT retry the same failed call.
+Try a different approach or ask the user for guidance.
+
+### When NOT to call tools
+- Simple factual questions → answer directly without tools
+- Clarification needed → ask the user instead of guessing
+- Task is ambiguous → ask for details before acting
+
+## ═══════════════════════════════════════════════════════════════════
 ## COMPREHENSIVE TOOL OVERVIEW - YOUR CAPABILITIES
 ## ═══════════════════════════════════════════════════════════════════
 
-You have access to a wide range of tools organized into categories. 
+You have access to a wide range of tools organized into categories.
 Here's a complete overview of what you can do:
 
 ════════════════════════════════════════════════════════════════════════
@@ -204,7 +231,7 @@ Your capabilities are NOT limited to the built-in tools listed above. Packages a
 
 How to use packages:
 
-**Skills**: 
+**Skills**:
 • Use `use_skill` tool: <tool name="use_skill"><param name="skill_name">skill_name</param></tool>
 • Skills inject SKILL.md instructions into your context
 • **CRITICAL RULES**:
