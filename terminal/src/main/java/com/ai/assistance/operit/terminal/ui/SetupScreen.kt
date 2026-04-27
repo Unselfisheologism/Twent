@@ -386,7 +386,7 @@ PackageCategory(
                                     val rustEnvCommand = sourceManager.getRustSourceEnvCommand(rustSource)
                                     // 添加环境变量设置和安装命令
                                     selectedCustomCommands.add("$rustEnvCommand && curl -v --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y")
-                                } else if (pkg.id == "uv" || pkg.id == "nodejs") {
+} else if (pkg.id == "uv" || pkg.id == "nodejs" || pkg.id == "ddgs") {
                                     selectedCustomCommands.add(pkg.command)
                                 } else if (category.id == "nodejs" && pkg.id != "nodejs") {
                                     selectedNpmPackages.add(pkg.command)
@@ -397,8 +397,8 @@ PackageCategory(
                         }
                     }
 
-                    // 添加 pipx 作为 uv 的依赖
-                    if (selectedPackages.getOrDefault("uv", false) && packageStatus["uv"] != InstallStatus.INSTALLED) {
+// 添加 pipx 作为 uv 的依赖
+                    if ((selectedPackages.getOrDefault("uv", false) || selectedPackages.getOrDefault("ddgs", false)) && packageStatus["uv"] != InstallStatus.INSTALLED) {
                         selectedAptPackages.add("pipx")
                     }
 
