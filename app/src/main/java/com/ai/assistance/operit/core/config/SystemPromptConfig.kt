@@ -1,6 +1,3 @@
-Operit\app\src\main\java\com\ai\assistance\operit\core\config\SystemPromptConfig.kt
-```
-```kotlin
 package com.ai.assistance.operit.core.config
 
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
