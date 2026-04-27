@@ -1,4 +1,4 @@
-﻿package com.ai.assistance.operit.core.config
+﻿dpackage com.ai.assistance.operit.core.config
 
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
 import com.ai.assistance.operit.data.preferences.ApiPreferences
@@ -95,22 +95,38 @@ When no external tool applies, use these based on context:
 
 **文件生成**：使用Python + shell工具生成专业文件。保存到 /sdcard/Download/。"""
 
-    private const val TOOL_USAGE_GUIDELINES_EN = """TOOL USAGE:
+private const val TOOL_USAGE_GUIDELINES_EN = """TOOL USAGE:
 - When calling a tool, the user will see your response, then automatically receive tool results.
-- Use this format for tools:
+- CORRECT XML FORMAT for ALL tool calls:
   <tool name="tool_name">
   <param name="parameter_name">parameter_value</param>
+  </tool>
+- Example for execute_shell:
+  <tool name="execute_shell">
+  <param name="command">ddgs text -k 'search query'</param>
+  </tool>
+- Example for use_skill:
+  <tool name="use_skill">
+  <param name="skill_name">skill-name-here</param>
   </tool>
 - Put a newline before <tool> tags. Opening tag must be at start of line.
 - For skills: CALL THE TOOL IMMEDIATELY. Do NOT describe what you will do first.
 - After tool execution: Continue working. Do NOT stop. Process results and take next action.
 - For complex tasks: Use tools step-by-step. After each tool, explain results and suggest next steps."""
 
-    private const val TOOL_USAGE_GUIDELINES_CN = """工具使用：
+private const val TOOL_USAGE_GUIDELINES_CN = """工具使用：
 - 调用工具时，用户会看到你的响应，然后自动收到工具结果。
-- 工具格式：
+- 所有工具调用的正确XML格式：
   <tool name="tool_name">
   <param name="parameter_name">parameter_value</param>
+  </tool>
+- execute_shell示例：
+  <tool name="execute_shell">
+  <param name="command">ddgs text -k '搜索查询'</param>
+  </tool>
+- use_skill示例：
+  <tool name="use_skill">
+  <param name="skill_name">skill名称</param>
   </tool>
 - 在 <tool> 标签前换行。起始标签必须在行首。
 - 对于技能：**立即调用工具**。不要先描述你要做什么。

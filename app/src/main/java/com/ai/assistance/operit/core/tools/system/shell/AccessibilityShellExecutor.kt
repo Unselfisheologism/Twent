@@ -84,7 +84,8 @@ class AccessibilityShellExecutor(private val context: Context) : ShellExecutor {
 
     /** 检查无障碍服务是否已启用 */
     private fun isAccessibilityServiceEnabled(): Boolean {
-        val serviceString = context.packageName + "/.accessibility.YourAccessibilityService"
+        // Must match the service name in AndroidManifest.xml: .services.automation.OperitAutomationService
+        val serviceString = context.packageName + "/.services.automation.OperitAutomationService"
         val enabledServices =
                 Settings.Secure.getString(
                         context.contentResolver,
