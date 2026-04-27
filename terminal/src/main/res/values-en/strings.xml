@@ -20,8 +20,10 @@
     <!-- Package Categories -->
     <string name="category_nodejs_name">Node.js Environment</string>
     <string name="category_nodejs_desc">Node.js and frontend development environment</string>
-    <string name="category_python_name">Python Environment</string>
+<string name="category_python_name">Python Environment</string>
     <string name="category_python_desc">Python development environment</string>
+    <string name="category_ddgs_name">AI Web Search</string>
+    <string name="category_ddgs_desc">AI Agent web search tools - Required</string>
     <string name="category_java_name">Java Environment</string>
     <string name="category_java_desc">Java development environment</string>
     <string name="category_rust_name">Rust (Cargo) Environment</string>

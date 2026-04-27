@@ -20,8 +20,10 @@
     <!-- Package Categories -->
     <string name="category_nodejs_name">Node.js 环境</string>
     <string name="category_nodejs_desc">Node.js 和前端开发环境</string>
-    <string name="category_python_name">Python 环境</string>
+<string name="category_python_name">Python 环境</string>
     <string name="category_python_desc">Python 开发环境</string>
+    <string name="category_ddgs_name">AI Web 搜索</string>
+    <string name="category_ddgs_desc">AI 代理 Web 搜索工具 - 必需</string>
     <string name="category_java_name">Java 环境</string>
     <string name="category_java_desc">Java 开发环境</string>
     <string name="category_rust_name">Rust (Cargo) 环境</string>

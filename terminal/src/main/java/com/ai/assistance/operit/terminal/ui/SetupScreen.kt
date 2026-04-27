@@ -86,7 +86,7 @@ fun SetupScreen(
                         PackageItem("pnpm", context.getString(com.ai.assistance.operit.terminal.R.string.package_pnpm_name), "typescript", context.getString(com.ai.assistance.operit.terminal.R.string.package_pnpm_desc))
                     )
                 ),
-                PackageCategory(
+PackageCategory(
                     id = "python",
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_desc),
@@ -94,7 +94,14 @@ fun SetupScreen(
                         PackageItem("python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_name), "python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_desc)),
                         PackageItem("python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_name), "python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_desc)),
                         PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc)),
-                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc)),
+                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
+                    )
+                ),
+                PackageCategory(
+                    id = "ddgs",
+                    name = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_name),
+                    description = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_desc),
+                    packages = listOf(
                         PackageItem("ddgs", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_name), "pipx install duckduckgo-search", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_desc))
                     )
                 ),
@@ -487,7 +494,7 @@ private fun CategoryCard(
                         fontWeight = FontWeight.Bold
                     )
                     // Operit必须标签 - 第二行
-                    if (category.id == "nodejs" || category.id == "python") {
+                    if (category.id == "nodejs" || category.id == "python" || category.id == "ddgs") {
                         Text(
                             text = "(${context.getString(com.ai.assistance.operit.terminal.R.string.operit_required)})",
                             color = Color(0xFFFFA500), // Orange color
