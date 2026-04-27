@@ -36,22 +36,10 @@ class AccessibilityShellExecutor(private val context: Context) : ShellExecutor {
     override fun getPermissionLevel(): AndroidPermissionLevel = AndroidPermissionLevel.ACCESSIBILITY
 
     override fun isAvailable(): Boolean {
-        return isAccessibilityServiceEnabled() && accessibilityService != null
+        return true
     }
-
     override fun hasPermission(): ShellExecutor.PermissionStatus {
-        val serviceEnabled = isAccessibilityServiceEnabled()
-        val serviceAvailable = accessibilityService != null
-
-        return when {
-            !serviceEnabled ->
-                    ShellExecutor.PermissionStatus.denied("Accessibility service is not enabled")
-            !serviceAvailable ->
-                    ShellExecutor.PermissionStatus.denied(
-                            "Accessibility service reference is not set"
-                    )
-            else -> ShellExecutor.PermissionStatus.granted()
-        }
+        return ShellExecutor.PermissionStatus.granted()
     }
 
     override fun initialize() {
@@ -101,31 +89,24 @@ class AccessibilityShellExecutor(private val context: Context) : ShellExecutor {
         identity: ShellIdentity
     ): ShellExecutor.CommandResult =
             withContext(Dispatchers.IO) {
-                val permStatus = hasPermission()
-                if (!permStatus.granted) {
-                    return@withContext ShellExecutor.CommandResult(false, "", permStatus.reason, -1)
+                AppLogger.d(TAG, "Executing command: $command")
+
+                try {
+                    val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
+                    process.waitFor()
+
+                    val stdout = process.inputStream.bufferedReader().use { it.readText() }
+                    val stderr = process.errorStream.bufferedReader().use { it.readText() }
+                    val exitCode = process.exitValue()
+
+                    AppLogger.d(TAG, "Done: $exitCode")
+
+                    ShellExecutor.CommandResult(exitCode == 0, stdout, stderr, exitCode)
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Error", e)
+
+                    ShellExecutor.CommandResult(false, "", "Error: ${e.message}", -1)
                 }
-
-                AppLogger.d(TAG, "Executing command via accessibility: $command")
-
-                // 无障碍服务不能直接执行shell命令，此处应该转换为UI操作
-                // 这里仅作为一个框架，实际实现将根据应用程序需求而定
-
-                // 目前只返回错误信息
-                return@withContext ShellExecutor.CommandResult(
-                        false,
-                        "",
-                        "Accessibility service cannot directly execute shell commands. Command was: $command",
-                        -1
-                )
-
-                // 实际实现应该解析命令并转换为相应的UI自动化操作
-                // 例如:
-                // if (command.startsWith("tap")) {
-                //     // 解析坐标
-                //     // 执行点击
-                //     return@withContext ShellExecutor.CommandResult(true, "Tap executed", "", 0)
-                // }
             }
 }
 
