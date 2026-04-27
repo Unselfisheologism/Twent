@@ -470,7 +470,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     val processedInput = InputProcessor.processUserInput(message)
                     val tAfterProcessInput = System.currentTimeMillis()
                     AppLogger.d(TAG, "sendMessage本地耗时: processUserInput=${tAfterProcessInput - startTime}ms")
-                
+
 
                     // Update state to show we're processing
                     if (!isSubTask) {
@@ -497,7 +497,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                             )
                     val tAfterPrepareHistory = System.currentTimeMillis()
                     AppLogger.d(TAG, "sendMessage本地耗时: prepareConversationHistory=${tAfterPrepareHistory - tAfterProcessInput}ms")
-                    
+
                     // 关键修复：用准备好的历史记录（包含了系统提示）去同步更新内部的 conversationHistory 状态
                     execContext.conversationHistory.clear()
                     execContext.conversationHistory.addAll(preparedHistory)
@@ -526,7 +526,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     val availableTools = getAvailableToolsForFunction(functionType)
                     val tAfterGetTools = System.currentTimeMillis()
                     AppLogger.d(TAG, "sendMessage本地耗时: getAvailableToolsForFunction=${tAfterGetTools - tAfterGetService}ms")
-                    
+
                     // 使用新的Stream API
                     AppLogger.d(TAG, "调用AI服务，处理时间: ${tAfterGetTools - startTime}ms, 流式输出: $stream")
                     val responseStream =
@@ -597,7 +597,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     accumulatedInputTokenCount += inputTokens
                     accumulatedOutputTokenCount += outputTokens
                     apiPreferences.updateTokensForProviderModel(serviceForFunction.providerModel, inputTokens, outputTokens, cachedInputTokens)
-                    
+
                     // Update request count
                     apiPreferences.incrementRequestCountForProviderModel(serviceForFunction.providerModel)
 
@@ -673,17 +673,17 @@ class EnhancedAIService private constructor(private val context: Context) {
         if (!content.contains("<tool") && !content.contains("</tool>")) {
             return content
         }
-        
+
         // Simple normalization: fix whitespace in tool and param tags
         var result = content
         result = result.replace(Regex("<tool\\s+name\\s*="), "<tool name=")
         result = result.replace(Regex("<param\\s+name\\s*="), "<param name=")
-        
+
         // If we made changes, log it (debug only)
         if (result != content) {
             AppLogger.d(TAG, "工具调用XML已标准化")
         }
-        
+
         return result
     }
 
@@ -859,7 +859,7 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         // 清除内容池
         // roundManager.clearContent()
-        
+
         // 保存最后的回复内容用于通知
         lastReplyContent = context.roundManager.getDisplayContent()
 
@@ -897,7 +897,7 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         // 清除内容池
         // roundManager.clearContent()
-        
+
         // 保存最后的回复内容用于通知
         lastReplyContent = context.roundManager.getDisplayContent()
 
@@ -1050,10 +1050,10 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         // 获取对应功能类型的AIService实例
         val serviceForFunction = getAIServiceForFunction(functionType)
-        
+
         // 获取工具列表（如果启用Tool Call）- 提前获取，以便在token计算中使用
         val availableTools = getAvailableToolsForFunction(functionType)
- 
+
         // After a tool call, check if token usage exceeds the threshold
         if (maxTokens > 0) {
             val currentTokens = serviceForFunction.calculateInputTokens("", currentChatHistory, availableTools)
@@ -1073,7 +1073,7 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         // 清空之前的单次请求token计数
         _perRequestTokenCounts.value = null
-        
+
         // 使用新的Stream API处理工具执行结果
         withContext(Dispatchers.IO) {
             try {
@@ -1131,7 +1131,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                 accumulatedInputTokenCount += inputTokens
                 accumulatedOutputTokenCount += outputTokens
                 apiPreferences.updateTokensForProviderModel(serviceForFunction.providerModel, inputTokens, outputTokens, cachedInputTokens)
-                
+
                 // Update request count
                 apiPreferences.incrementRequestCountForProviderModel(serviceForFunction.providerModel)
 
@@ -1352,7 +1352,7 @@ class EnhancedAIService private constructor(private val context: Context) {
 
             // 获取对应功能类型的模型配置
             val config = multiServiceManager.getModelConfigForFunction(functionType)
-            
+
             // 检查是否启用Tool Call
             if (!config.enableToolCall) {
                 return null
@@ -1388,7 +1388,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     safBookmarkNames = safBookmarkNames
                 )
             } else {
-                SystemToolPrompts.getAIAllCategoriesCn(
+                SystemToolPrompts.getAIAllCategoriesEn(
                     hasBackendImageRecognition = hasBackendImageRecognition,
                     chatModelHasDirectImage = chatModelHasDirectImage,
                     hasBackendAudioRecognition = hasBackendAudioRecognition,

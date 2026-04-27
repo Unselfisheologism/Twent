@@ -872,7 +872,7 @@ fun NodeDialog(
 
             val internalTool =
                 (if (isChinese) {
-                    SystemToolPrompts.getAllCategoriesCn()
+                    SystemToolPrompts.getAllCategoriesEn()
                 } else {
                     SystemToolPrompts.getAllCategoriesEn()
                 })
