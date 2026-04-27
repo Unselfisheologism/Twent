@@ -313,7 +313,7 @@ private fun getFinalToolTestGroups(context: android.content.Context): List<ToolG
             ToolTest("manage_cookies", context.getString(R.string.manage_cookies_test), context.getString(R.string.manage_cookies_test_desc), listOf(ToolParameter("action", "get"), ToolParameter("domain", "google.com"))),
             ToolTest("use_package", context.getString(R.string.use_package_test), context.getString(R.string.use_package_test_desc), listOf(ToolParameter("package_name", "non_existent_package"))),
             ToolTest("query_memory", context.getString(R.string.query_knowledge_test), context.getString(R.string.query_knowledge_test_desc), listOf(ToolParameter("query", "test")))
-        ),
+        )),
         ToolGroup(context.getString(R.string.file_readonly_group), false, false, listOf(
             ToolTest("list_files", context.getString(R.string.list_files_test), context.getString(R.string.list_files_test_desc), listOf(ToolParameter("path", testBaseDir))),
             ToolTest("file_exists", context.getString(R.string.file_exists_test), context.getString(R.string.file_exists_test_desc), listOf(ToolParameter("path", testFile))),
@@ -335,7 +335,7 @@ private fun getFinalToolTestGroups(context: android.content.Context): List<ToolG
             ToolTest("copy_file", context.getString(R.string.copy_file_test), context.getString(R.string.copy_file_test_desc), listOf(ToolParameter("source", testFile), ToolParameter("destination", testFileCopy))),
             ToolTest("move_file", context.getString(R.string.move_file_test), context.getString(R.string.move_file_test_desc), listOf(ToolParameter("source", testFileCopy), ToolParameter("destination", "$testBaseDir/moved_file.txt"))),
             ToolTest("zip_files", context.getString(R.string.zip_files_test), context.getString(R.string.zip_files_test_desc), listOf(ToolParameter("source", testBaseDir), ToolParameter("destination", testZip))),
-            ToolTest("unzip_files", context.getString(R.string.unzip_files_test), context.getString(R.string.unzip_files_test_desc), listOf(ToolParameter("source", testZip), ToolParameter("destination", testUnzipDir))),
+            ToolTest("unzip_files", context.getString(R.string.unzip_files_test), context.getString(R.string.unzip_files_test_desc), listOf(ToolParameter("source", testZip), ToolParameter("destination", testUnzipDir)))
         )),
         ToolGroup(context.getString(R.string.system_group), false, false, listOf(
             ToolTest("list_installed_apps", context.getString(R.string.list_apps_test), context.getString(R.string.list_apps_test_desc), listOf(ToolParameter("include_system_apps", "false"))),
