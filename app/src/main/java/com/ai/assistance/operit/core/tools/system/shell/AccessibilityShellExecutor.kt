@@ -92,7 +92,7 @@ class AccessibilityShellExecutor(private val context: Context) : ShellExecutor {
                 AppLogger.d(TAG, "Executing command: $command")
 
                 try {
-                    val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
+                    val process = Runtime.getRuntime().exec(arrayOf("sh", "-l", "-c", command))
                     process.waitFor()
 
                     val stdout = process.inputStream.bufferedReader().use { it.readText() }

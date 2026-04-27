@@ -193,7 +193,6 @@ object SystemToolPrompts {
                 parametersStructured = listOf(
                     ToolParameterSchema(name = "command", type = "string", description = "shell command to execute. Can include pipes (|), redirects (>), environment variables, etc.", required = true),
                     ToolParameterSchema(name = "timeout_ms", type = "integer", description = "optional, maximum time to wait for command completion in milliseconds. Default 30000. Range: 1000-300000.", required = false, default = "30000"),
-                    ToolParameterSchema(name = "environment", type = "string", description = "optional, execution environment. terminal (default) or android", required = false)
                 )
             )
         )

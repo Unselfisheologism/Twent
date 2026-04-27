@@ -79,8 +79,19 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 s(R.string.toolreg_execute_shell_desc, command)
             },
             executor = { tool ->
-                val adbTool = ToolGetter.getShellToolExecutor(context)
-                adbTool.invoke(tool)
+                val command = tool.parameters.find { it.name == "command" }?.value ?: ""
+                // Always use Linux terminal (Ubuntu via PRoot)
+                try {
+                    val terminal = com.ai.assistance.operit.core.tools.system.Terminal.getInstance(context)
+                    val sessions = terminal.terminalState.value.sessions
+                    val sessionId = sessions.firstOrNull()?.id ?: terminal.createSession("default")
+                    val result = runBlocking {
+                        terminal.executeCommand(sessionId, command)
+                    }
+                    ToolResult(toolName = tool.name, success = result != null, result = com.ai.assistance.operit.core.tools.StringResultData(result ?: ""), error = if (result == null) "Failed" else "")
+                } catch (e: Exception) {
+                    ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = e.message)
+                }
             }
     )
 
