@@ -44,10 +44,12 @@
     <string name="package_python_venv_desc">Python 虚拟环境支持</string>
     <string name="package_python_pip_name">Pip</string>
     <string name="package_python_pip_desc">Python 包管理器</string>
-    <string name="package_uv_name">uv</string>
+<string name="package_uv_name">uv</string>
     <string name="package_uv_desc">一个用 Rust 编写的极速 Python 包安装器</string>
+    <string name="package_pipx_name">pipx</string>
+    <string name="package_pipx_desc">Python CLI 应用程序包管理器</string>
     <string name="package_ddgs_name">DuckDuckGo 搜索 (ddgs)</string>
-    <string name="package_ddgs_desc">AI 代理专用 DuckDuckGo CLI：ddgs text -k "查询" 进行网页搜索，ddgs images -k "查询" 进行图片搜索</string>
+    <string name="package_ddgs_desc">AI 代理专用 DuckDuckGo CLI：ddgs text -k \"查询\" 进行网页搜索</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 开发环境</string>
     <string name="package_gradle_name">Gradle</string>

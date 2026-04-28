@@ -97,12 +97,13 @@ PackageCategory(
                         PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
                     )
                 ),
-                PackageCategory(
+PackageCategory(
                     id = "ddgs",
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_desc),
                     packages = listOf(
-                        PackageItem("ddgs", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_name), "pipx install duckduckgo-search", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_desc))
+                        PackageItem("pipx", context.getString(com.ai.assistance.operit.terminal.R.string.package_pipx_name), "pipx", context.getString(com.ai.assistance.operit.terminal.R.string.package_pipx_desc)),
+                        PackageItem("ddgs", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_name), "pipx install ddgs || pip install ddgs --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_desc))
                     )
                 ),
                 PackageCategory(
