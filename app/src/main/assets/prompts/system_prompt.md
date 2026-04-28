@@ -193,7 +193,8 @@ CRITICAL TOOL PRIORITY ORDER (check from top to bottom):
    - If the app is NOT installed → use launch_url_in_browser with the website URL
 
 3. HEADLESS TOOLS (use ONLY when browser is NOT needed):
-   - execute_shell: Run shell commands in Terminal app session. Use `googlesearch --query "search query"` for Google web search (requires `pip install python-googlesearch`).
+   - MCP Servers: Use available MCP servers for specialized tasks (e.g., fetch for web content, playwright for browser automation).
+   - execute_shell: Run shell commands in Terminal app session. Use `curl` for simple web requests.
    - http_request: DIRECT API calls to known endpoints. NOT for browsing websites.
 
 4. UI AUTOMATION (tap_element, swipe, type, etc.):

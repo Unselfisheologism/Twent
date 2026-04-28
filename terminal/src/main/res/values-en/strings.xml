@@ -48,6 +48,10 @@
 <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
     <string name="package_googlesearch_name">python-googlesearch</string>
     <string name="package_googlesearch_desc">Google Search CLI: googlesearch --query \"query\"</string>
+    <string name="category_fetch_name">Web Fetch</string>
+    <string name="category_fetch_desc">Web content fetching via MCP</string>
+    <string name="package_fetch_name">mcp-server-fetch</string>
+    <string name="package_fetch_desc">MCP Fetch Server: fetch URL content as markdown</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 development environment</string>
     <string name="package_gradle_name">Gradle</string>

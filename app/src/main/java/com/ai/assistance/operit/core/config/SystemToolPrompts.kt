@@ -189,7 +189,7 @@ object SystemToolPrompts {
         tools = listOf(
             ToolPrompt(
                 name = "execute_shell",
-                description = "Execute shell commands in Terminal app session. Use `googlesearch --query \"search query\"` for Google web search. Requires: pip install python-googlesearch",
+                description = "Execute shell commands in Terminal app session. Use `curl` for simple web requests if MCP fetch not available.",
                 parametersStructured = listOf(
                     ToolParameterSchema(name = "command", type = "string", description = "shell command to execute", required = true),
                     ToolParameterSchema(name = "session_id", type = "string", description = "optional: terminal session ID to use specific session", required = false),

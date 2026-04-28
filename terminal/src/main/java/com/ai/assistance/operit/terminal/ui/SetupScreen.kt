@@ -102,7 +102,7 @@ PackageCategory(
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_desc),
                     packages = listOf(
-                        PackageItem("python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_name), "pip3 install python-googlesearch --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_desc))
+                        PackageItem("mcp-server-fetch", context.getString(com.ai.assistance.operit.terminal.R.string.package_fetch_name), "pip3 install mcp-server-fetch --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_fetch_desc))
                     )
                 ),
                 PackageCategory(
@@ -386,7 +386,7 @@ PackageCategory(
                                     val rustEnvCommand = sourceManager.getRustSourceEnvCommand(rustSource)
                                     // 添加环境变量设置和安装命令
                                     selectedCustomCommands.add("$rustEnvCommand && curl -v --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y")
-} else if (pkg.id == "uv" || pkg.id == "nodejs" || pkg.id == "python-googlesearch") {
+} else if (pkg.id == "uv" || pkg.id == "nodejs" || pkg.id == "mcp-server-fetch") {
                                     selectedCustomCommands.add(pkg.command)
                                 } else if (category.id == "nodejs" && pkg.id != "nodejs") {
                                     selectedNpmPackages.add(pkg.command)
@@ -397,8 +397,8 @@ PackageCategory(
                         }
                     }
 
-// 添加 pip as a dependency for python-googlesearch
-                    if (selectedPackages.getOrDefault("python-googlesearch", false) && packageStatus["python3-pip"] != InstallStatus.INSTALLED) {
+// 添加 pip as a dependency for mcp-server-fetch
+                    if (selectedPackages.getOrDefault("mcp-server-fetch", false) && packageStatus["python3-pip"] != InstallStatus.INSTALLED) {
                         selectedAptPackages.add("python3-pip")
                     }
 
