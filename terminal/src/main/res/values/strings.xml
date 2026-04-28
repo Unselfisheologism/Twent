@@ -47,7 +47,7 @@
     <string name="package_uv_name">uv</string>
     <string name="package_uv_desc">一个用 Rust 编写的极速 Python 包安装器</string>
     <string name="package_ddgsearch_name">DuckDuckGo MCP</string>
-    <string name="package_ddgsearch_desc">通过 MCP 使用 DuckDuckGo 搜索：uvx duckduckgo-mcp-server（无需后台运行）</string>
+    <string name="package_ddgsearch_desc">通过 MCP 使用 DuckDuckGo 搜索：pip3 install duckduckgo-mcp-server --break-system-packages</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 开发环境</string>
     <string name="package_gradle_name">Gradle</string>

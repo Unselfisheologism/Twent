@@ -47,7 +47,7 @@
     <string name="package_uv_name">uv</string>
     <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
     <string name="package_ddgsearch_name">DuckDuckGo MCP</string>
-    <string name="package_ddgsearch_desc">DuckDuckGo search via MCP: uvx duckduckgo-mcp-server (no background needed)</string>
+    <string name="package_ddgsearch_desc">DuckDuckGo search via MCP: pip3 install duckduckgo-mcp-server --break-system-packages</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 development environment</string>
     <string name="package_gradle_name">Gradle</string>

@@ -93,8 +93,7 @@ PackageCategory(
 packages = listOf(
                         PackageItem("python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_name), "python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_desc)),
                         PackageItem("python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_name), "python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_desc)),
-                        PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc)),
-                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pip3 install uv --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
+                        PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc))
                     )
                 ),
 PackageCategory(
@@ -102,8 +101,7 @@ PackageCategory(
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_desc),
                     packages = listOf(
-                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pip3 install uv --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc)),
-                        PackageItem("duckduckgo-mcp-server", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_name), "uvx duckduckgo-mcp-server --help || pip3 install duckduckgo-mcp-server --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_desc))
+                        PackageItem("duckduckgo-mcp-server", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_name), "pip3 install duckduckgo-mcp-server --break-system-packages --force-reinstall", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_desc))
                     )
                 ),
                 PackageCategory(
@@ -436,8 +434,8 @@ PackageCategory(
                         commands.add("npm config set registry https://registry.npmmirror.com/")
                         // 清理 npm 缓存
                         commands.add("npm cache clean --force")
-                        // 安装pnpm
-                        commands.add("npm install -g pnpm")
+                        // 安装pnpm (先尝试corepack，再fallback到npm)
+                        commands.add("corepack enable pnpm || npm install -g pnpm")
                         // 使用 pnpm 安装其他包
                         commands.add("pnpm add -g ${selectedNpmPackages.joinToString(" ")}")
                     }
