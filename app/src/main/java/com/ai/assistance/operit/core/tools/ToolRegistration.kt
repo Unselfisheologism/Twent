@@ -88,8 +88,10 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     val sessionId = (sessions.firstOrNull()?.id) ?: runBlocking { terminal.createSession("default") }
 
                     // Execute command with 30 sec timeout
-                    val result = withTimeoutOrNull(30000L) {
-                        runBlocking { terminal.executeCommand(sessionId, command) }
+                    val result = runBlocking(Dispatchers.Default) {
+                        withTimeoutOrNull(30000L) {
+                            runBlocking { terminal.executeCommand(sessionId, command) }
+                        }
                     }
 
                     if (result != null) {
