@@ -90,11 +90,11 @@ PackageCategory(
                     id = "python",
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_desc),
-                    packages = listOf(
+packages = listOf(
                         PackageItem("python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_name), "python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_desc)),
                         PackageItem("python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_name), "python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_desc)),
                         PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc)),
-                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pipx install uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
+                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "pip3 install uv --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
                     )
                 ),
 PackageCategory(
@@ -102,7 +102,7 @@ PackageCategory(
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_desc),
                     packages = listOf(
-                        PackageItem("python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_name), "pip install python-googlesearch --break-system-packages || pip install python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_desc))
+                        PackageItem("python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_name), "pip3 install python-googlesearch --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_desc))
                     )
                 ),
                 PackageCategory(
@@ -427,12 +427,6 @@ PackageCategory(
                     // 然后运行自定义命令（如安装 rust, uv, nodejs 等）
                     if (selectedCustomCommands.isNotEmpty()) {
                         commands.addAll(selectedCustomCommands)
-
-                        // 如果安装了 uv，则需要确保 pipx 路径可用
-                        if (selectedPackages.getOrDefault("uv", false)) {
-                            commands.add("pipx ensurepath")
-                            commands.add("source ~/.profile")
-                        }
                     }
                     
                     // 安装 NPM 包（如果 nodejs 已经安装或被选中）
