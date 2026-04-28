@@ -121,13 +121,13 @@ open class StandardShellToolExecutor(private val context: Context) {
     }
 
     /** Execute command in terminal session */
-    private fun executeInTerminalSession(sessionId: String, command: String): ToolResult {
+    private fun executeInTerminalSession(sessionId: String, command: String, toolName: String = "execute_shell"): ToolResult {
         return try {
             val terminal = Terminal.getInstance(context)
             val state = terminal.terminalState.value
             if (state.sessions.none { it.id == sessionId }) {
                 return ToolResult(
-                        toolName = tool.name,
+                        toolName = toolName,
                         success = false,
                         result = StringResultData(""),
                         error = "Terminal session not found: $sessionId"
@@ -137,7 +137,7 @@ open class StandardShellToolExecutor(private val context: Context) {
             val outputFlow = terminal.executeCommandFlow(sessionId, command)
             if (outputFlow == null) {
                 return ToolResult(
-                        toolName = tool.name,
+                        toolName = toolName,
                         success = false,
                         result = StringResultData(""),
                         error = "Failed to start command execution"
@@ -167,13 +167,13 @@ open class StandardShellToolExecutor(private val context: Context) {
 
             val fullOutput = events.joinToString("")
             ToolResult(
-                    toolName = tool.name,
+                    toolName = toolName,
                     success = hasCompleted,
                     result = ADBResultData(command = command, output = fullOutput, exitCode = if (hasCompleted) 0 else -1)
             )
         } catch (e: Exception) {
             ToolResult(
-                    toolName = tool.name,
+                    toolName = toolName,
                     success = false,
                     result = StringResultData(""),
                     error = "Terminal execution failed: ${e.message}"
@@ -186,10 +186,8 @@ open class StandardShellToolExecutor(private val context: Context) {
         return try {
             val terminal = Terminal.getInstance(context)
             val state = terminal.terminalState.value
-            // Return existing session or create new one
-            state.sessions.firstOrNull()?.id ?: run {
-                terminal.createSession("AI Agent")
-            }
+            // Return existing session
+            state.sessions.firstOrNull()?.id
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to get or create terminal session", e)
             null
