@@ -22,7 +22,7 @@
     <string name="category_nodejs_desc">Node.js and frontend development environment</string>
     <string name="category_python_name">Python Environment</string>
     <string name="category_python_desc">Python development environment</string>
-    <string name="category_websearch_name">AI Web Search</string>
+    <string name="category_websearch_name">Web Search</string>
     <string name="category_websearch_desc">AI Agent web search tools - Required</string>
     <string name="category_java_name">Java Environment</string>
     <string name="category_java_desc">Java development environment</string>
@@ -45,13 +45,7 @@
     <string name="package_python_pip_name">Pip</string>
     <string name="package_python_pip_desc">Python package manager</string>
     <string name="package_uv_name">uv</string>
-<string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
-    <string name="package_googlesearch_name">python-googlesearch</string>
-    <string name="package_googlesearch_desc">Google Search CLI: googlesearch --query \"query\"</string>
-<string name="category_websearch_name">Web Search</string>
-    <string name="category_websearch_desc">AI Agent web search tools - Required</string>
-    <string name="package_websearch_name">Web Search MCP</string>
-    <string name="package_websearch_desc">DuckDuckGo search via MCP: git clone &amp;&amp; npm install &amp;&amp; npm run build, then run: node build/index.js</string>
+    <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
     <string name="package_ddgsearch_name">DuckDuckGo MCP</string>
     <string name="package_ddgsearch_desc">DuckDuckGo search via MCP: uvx duckduckgo-mcp-server (no background needed)</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
