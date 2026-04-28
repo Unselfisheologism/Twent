@@ -15,8 +15,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 
 /**
@@ -78,32 +76,11 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             dangerCheck = { true }, // 总是危险操作
             descriptionGenerator = { tool ->
                 val command = tool.parameters.find { it.name == "command" }?.value ?: ""
-                val actualCmd = if (command.startsWith("ddgs ")) command + " 2>&1" else command
+                s(R.string.toolreg_execute_shell_desc, command)
             },
             executor = { tool ->
-                val command = tool.parameters.find { it.name == "command" }?.value ?: ""
-                val actualCmd = if (command.startsWith("ddgs ")) command + " 2>&1" else command
-                // Use Linux terminal with timeout
-                try {
-                    val terminal = com.ai.assistance.operit.core.tools.system.Terminal.getInstance(context)
-                    val sessions = terminal.terminalState.value.sessions
-                    val sessionId = (sessions.firstOrNull()?.id) ?: runBlocking { terminal.createSession("default") }
-
-                    // Execute command with 30 sec timeout
-                    val result = runBlocking(Dispatchers.Default) {
-                        withTimeoutOrNull(30000L) {
-                            runBlocking { terminal.executeCommand(sessionId, actualCmd) }
-                        }
-                    }
-
-                    if (result != null) {
-                        ToolResult(toolName = tool.name, success = true, result = com.ai.assistance.operit.core.tools.StringResultData(result))
-                    } else {
-                        ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = "Command timed out after 30 seconds")
-                    }
-                } catch (e: Exception) {
-                    ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = e.message)
-                }
+                val adbTool = ToolGetter.getShellToolExecutor(context)
+                adbTool.invoke(tool)
             }
     )
 
@@ -150,7 +127,6 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             dangerCheck = { true }, // 总是危险操作
             descriptionGenerator = { tool ->
                 val command = tool.parameters.find { it.name == "command" }?.value ?: ""
-                val actualCmd = if (command.startsWith("ddgs ")) command + " 2>&1" else command
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value
                 s(R.string.toolreg_execute_in_terminal_session_desc, sessionId ?: "", command)
             },
@@ -1466,7 +1442,6 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             dangerCheck = { true }, // 总是危险操作，因为可能会修改文件
             descriptionGenerator = { tool ->
                 val command = tool.parameters.find { it.name == "command" }?.value ?: ""
-                val actualCmd = if (command.startsWith("ddgs ")) command + " 2>&1" else command
                 s(R.string.toolreg_ffmpeg_execute_desc, command)
             },
             executor = { tool ->
