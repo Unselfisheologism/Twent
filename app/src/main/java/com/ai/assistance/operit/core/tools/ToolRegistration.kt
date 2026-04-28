@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 
 /**
@@ -80,19 +81,25 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             },
             executor = { tool ->
                 val command = tool.parameters.find { it.name == "command" }?.value ?: ""
-                // Always use Linux terminal (Ubuntu via PRoot)
+                // Use Linux terminal with timeout
                 try {
                     val terminal = com.ai.assistance.operit.core.tools.system.Terminal.getInstance(context)
-                    val sessionId = runBlocking {
-                        val sessions = terminal.terminalState.value.sessions
-                        sessions.firstOrNull()?.id ?: terminal.createSession("default")
+                    val sessions = terminal.terminalState.value.sessions
+                    val sessionId = (sessions.firstOrNull()?.id) ?: runBlocking { terminal.createSession("default") }
+                    
+                    // Execute command with 30 sec timeout
+                    val result = withTimeoutOrNull(30000L) {
+                        runBlocking { terminal.executeCommand(sessionId, command) }
                     }
-                    val result = runBlocking {
-                        terminal.executeCommand(sessionId, command)
+                    
+                    if (result != null) {
+                        ToolResult(toolName = tool.name, success = true, result = com.ai.assistance.operit.core.tools.StringResultData(result))
+                    } else {
+                        ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = "Command timed out after 30 seconds")
                     }
-                    ToolResult(toolName = tool.name, success = result != null, result = com.ai.assistance.operit.core.tools.StringResultData(result ?: ""), error = if (result == null) "Failed" else "")
                 } catch (e: Exception) {
                     ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = e.message)
+                }
                 }
             }
     )
