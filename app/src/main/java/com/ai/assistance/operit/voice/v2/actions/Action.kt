@@ -653,12 +653,13 @@ sealed class Action {
                     )
                 }
 ),
-            // Shell
+// Shell
             "execute_shell" to Spec(
                 name = "execute_shell",
-                description = "Execute a shell command on the device and return the output.",
+                description = "Execute a shell command in Terminal app session.",
                 params = listOf(
                     ParamSpec("command", String::class, "The shell command to execute."),
+                    ParamSpec("session_id", String::class, "Optional: terminal session ID to use specific session."),
                     ParamSpec("timeout_seconds", Int::class, "Command timeout in seconds (default 30).")
                 ),
                 build = { args -> ExecuteShell(args["command"] as String, args["timeout_seconds"] as? Int ?: 30) }

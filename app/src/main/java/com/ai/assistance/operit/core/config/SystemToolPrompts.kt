@@ -184,16 +184,20 @@ object SystemToolPrompts {
     )
 
     // ==================== Web Search / Shell Tools ====================
-    val httpTools = SystemToolPromptCategory(
+val httpTools = SystemToolPromptCategory(
         categoryName = "Web Search Tools",
         tools = listOf(
             ToolPrompt(
                 name = "execute_shell",
                 description = "Execute shell commands on the device. Use `ddgs text -k \"query\"` for DuckDuckGo web search, `ddgs images -k \"query\"` for image search. Requires ddgs-cli: pip install -U duckduckgo-search",
                 parametersStructured = listOf(
-                    ToolParameterSchema(name = "command", type = "string", description = "shell command to execute. Can include pipes (|), redirects (>), environment variables, etc.", required = true),
+                    ToolParameterSchema(name = "command", type = "string", description = "shell command to execute", required = true),
+                    ToolParameterSchema(name = "session_id", type = "string", description = "optional: terminal session ID to use specific session", required = false),
                     ToolParameterSchema(name = "timeout_ms", type = "integer", description = "optional, maximum time to wait for command completion in milliseconds. Default 30000. Range: 1000-300000.", required = false, default = "30000"),
                 )
+            )
+        )
+    )
             )
         )
     )

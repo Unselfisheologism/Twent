@@ -14,7 +14,7 @@ object SystemToolPromptsInternal {
                     listOf(
                         ToolPrompt(
                             name = "execute_shell",
-                            description = "Execute a device shell command.",
+                            description = "Execute a device shell command. Runs in Terminal app session by default.",
                             parametersStructured =
                                 listOf(
                                     ToolParameterSchema(
@@ -22,6 +22,12 @@ object SystemToolPromptsInternal {
                                         type = "string",
                                         description = "shell command to execute",
                                         required = true
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "session_id",
+                                        type = "string",
+                                        description = "optional: terminal session ID to use specific session",
+                                        required = false
                                     )
                                 )
                         ),
@@ -1236,7 +1242,7 @@ object SystemToolPromptsInternal {
                     listOf(
                         ToolPrompt(
                             name = "execute_shell",
-                            description = "执行设备 Shell 命令。",
+                            description = "执行设备 Shell 命令。默认在终端应用会话中执行。",
                             parametersStructured =
                                 listOf(
                                     ToolParameterSchema(
@@ -1244,6 +1250,12 @@ object SystemToolPromptsInternal {
                                         type = "string",
                                         description = "要执行的命令",
                                         required = true
+                                    ),
+                                    ToolParameterSchema(
+                                        name = "session_id",
+                                        type = "string",
+                                        description = "可选：指定终端会话 ID",
+                                        required = false
                                     )
                                 )
                         ),
