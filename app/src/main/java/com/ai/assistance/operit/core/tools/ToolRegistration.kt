@@ -86,12 +86,12 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     val terminal = com.ai.assistance.operit.core.tools.system.Terminal.getInstance(context)
                     val sessions = terminal.terminalState.value.sessions
                     val sessionId = (sessions.firstOrNull()?.id) ?: runBlocking { terminal.createSession("default") }
-                    
+
                     // Execute command with 30 sec timeout
                     val result = withTimeoutOrNull(30000L) {
                         runBlocking { terminal.executeCommand(sessionId, command) }
                     }
-                    
+
                     if (result != null) {
                         ToolResult(toolName = tool.name, success = true, result = com.ai.assistance.operit.core.tools.StringResultData(result))
                     } else {
@@ -99,7 +99,6 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     }
                 } catch (e: Exception) {
                     ToolResult(toolName = tool.name, success = false, result = com.ai.assistance.operit.core.tools.StringResultData(""), error = e.message)
-                }
                 }
             }
     )
