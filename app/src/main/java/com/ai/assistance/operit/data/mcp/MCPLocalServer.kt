@@ -271,12 +271,11 @@ class MCPLocalServer private constructor(private val context: Context) {
         defaultServers["ddg-search"] = MCPConfig.ServerConfig(
             command = "uvx",
             args = listOf("duckduckgo-mcp-server"),
-            disabled = false,
-            transportType = com.ai.assistance.operit.core.tools.mcp.MCSTransportType.STDIO
+            disabled = false
         )
         
-        val metadata = mutableMapOf<String, MCPConfig.PluginMetadata>()
-        metadata["ddg-search"] = MCPConfig.PluginMetadata(
+        val metadata = mutableMapOf<String, PluginMetadata>()
+        metadata["ddg-search"] = PluginMetadata(
             id = "ddg-search",
             name = "DuckDuckGo Search",
             description = "Free web search using DuckDuckGo via MCP",
