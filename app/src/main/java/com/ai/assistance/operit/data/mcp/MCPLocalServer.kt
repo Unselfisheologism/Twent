@@ -265,17 +265,17 @@ class MCPLocalServer private constructor(private val context: Context) {
      * 创建默认MCP配置
      */
     private fun createDefaultMCPConfig(): MCPConfig {
-        val defaultServers = mutableMapOf<String, ServerConfig>()
+        val defaultServers = mutableMapOf<String, MCPConfig.ServerConfig>()
         
         // 添加 fetch MCP 服务器
-        defaultServers["fetch"] = ServerConfig(
+        defaultServers["fetch"] = MCPConfig.ServerConfig(
             command = "python3",
             args = listOf("-m", "mcp_server_fetch"),
             disabled = false
         )
         
-        val metadata = mutableMapOf<String, PluginMetadata>()
-        metadata["fetch"] = PluginMetadata(
+        val metadata = mutableMapOf<String, MCPConfig.PluginMetadata>()
+        metadata["fetch"] = MCPConfig.PluginMetadata(
             id = "fetch",
             name = "Fetch",
             description = "Web content fetching via MCP",
