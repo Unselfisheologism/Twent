@@ -262,12 +262,57 @@ class MCPLocalServer private constructor(private val context: Context) {
     }
 
     /**
+     * 创建默认MCP配置
+     */
+    private fun createDefaultMCPConfig(): MCPConfig {
+        val defaultServers = mutableMapOf<String, ServerConfig>()
+        
+        // 添加 fetch MCP 服务器
+        defaultServers["fetch"] = ServerConfig(
+            command = "python3",
+            args = listOf("-m", "mcp_server_fetch"),
+            disabled = false
+        )
+        
+        val metadata = mutableMapOf<String, PluginMetadata>()
+        metadata["fetch"] = PluginMetadata(
+            id = "fetch",
+            name = "Fetch",
+            description = "Web content fetching via MCP",
+            logoUrl = null,
+            author = "Model Context Protocol",
+            isInstalled = false,  // 用户需要先安装依赖
+            version = "1.0.0",
+            updatedAt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+            longDescription = context.getString(R.string.mcp_fetch_description),
+            repoUrl = "",
+            type = "local",
+            endpoint = null,
+            connectionType = "httpStream"
+        )
+        
+        return MCPConfig(
+            mcpServers = defaultServers,
+            pluginMetadata = metadata
+        )
+    }
+
+    /**
      * 加载所有配置文件
      */
     private fun loadAllConfigurations() {
         try {
-            // 加载MCP配置
-            if (mcpConfigFile.exists()) {
+            // 加载MCP配置，如果不存在则创建默认配置
+            if (!mcpConfigFile.exists()) {
+                // 创建默认MCP配置，包含常用的MCP服务器
+                val defaultConfig = createDefaultMCPConfig()
+                _mcpConfig.value = defaultConfig
+                // 保存默认配置
+                coroutineScope.launch {
+                    saveMCPConfig()
+                    AppLogger.d(TAG, "已创建默认MCP配置，包含 ${defaultConfig.mcpServers.size} 个服务器")
+                }
+            } else {
                 val configJson = mcpConfigFile.readText()
                 val config = gson.fromJson(configJson, MCPConfig::class.java) ?: MCPConfig()
                 

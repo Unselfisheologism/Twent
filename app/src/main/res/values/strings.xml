@@ -2009,6 +2009,7 @@
 <string name="mcp_lines_suffix">Mcp Lines Suffix</string>
 <string name="mcp_loading_commands">Mcp Loading Commands</string>
 <string name="mcp_local_auto_detected_server">Mcp Local Auto Detected Server</string>
+    <string name="mcp_fetch_description">Fetches a URL from the internet and extracts its contents as markdown. Install: pip3 install mcp-server-fetch --break-system-packages</string>
 <string name="mcp_local_json_format_error">Mcp Local Json Format Error</string>
 <string name="mcp_local_mcp_servers_empty">Mcp Local Mcp Servers Empty</string>
 <string name="mcp_local_merge_config_failed">Mcp Local Merge Config Failed</string>

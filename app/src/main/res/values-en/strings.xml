@@ -5955,6 +5955,7 @@
     <string name="problem_library_solution_label">Solution:</string>
     <!-- MCPLocalServer -->
     <string name="mcp_local_auto_detected_server">MCP server auto-detected from configuration file</string>
+    <string name="mcp_fetch_description">Fetches a URL from the internet and extracts its contents as markdown. Install: pip3 install mcp-server-fetch --break-system-packages</string>
     <string name="mcp_local_json_format_error">JSON format error: %1$s</string>
     <string name="mcp_local_no_mcp_servers_field">mcpServers field not found in configuration</string>
     <string name="mcp_local_mcp_servers_empty">mcpServers is empty in configuration</string>
