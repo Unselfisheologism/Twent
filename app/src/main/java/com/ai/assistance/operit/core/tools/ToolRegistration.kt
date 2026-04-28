@@ -83,8 +83,10 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 // Always use Linux terminal (Ubuntu via PRoot)
                 try {
                     val terminal = com.ai.assistance.operit.core.tools.system.Terminal.getInstance(context)
-                    val sessions = terminal.terminalState.value.sessions
-                    val sessionId = sessions.firstOrNull()?.id ?: terminal.createSession("default")
+                    val sessionId = runBlocking {
+                        val sessions = terminal.terminalState.value.sessions
+                        sessions.firstOrNull()?.id ?: terminal.createSession("default")
+                    }
                     val result = runBlocking {
                         terminal.executeCommand(sessionId, command)
                     }
