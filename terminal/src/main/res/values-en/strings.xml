@@ -48,10 +48,12 @@
 <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
     <string name="package_googlesearch_name">python-googlesearch</string>
     <string name="package_googlesearch_desc">Google Search CLI: googlesearch --query \"query\"</string>
-    <string name="category_fetch_name">Web Fetch</string>
-    <string name="category_fetch_desc">Web content fetching via MCP</string>
-    <string name="package_fetch_name">mcp-server-fetch</string>
-    <string name="package_fetch_desc">MCP Fetch Server: fetch URL content as markdown</string>
+<string name="category_websearch_name">Web Search</string>
+    <string name="category_websearch_desc">AI Agent web search tools - Required</string>
+    <string name="package_websearch_name">Web Search MCP</string>
+    <string name="package_websearch_desc">DuckDuckGo search via MCP: git clone &amp;&amp; npm install &amp;&amp; npm run build, then run: node build/index.js</string>
+    <string name="package_ddgsearch_name">DuckDuckGo MCP</string>
+    <string name="package_ddgsearch_desc">DuckDuckGo search via MCP: uvx duckduckgo-mcp-server (no background needed)</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 development environment</string>
     <string name="package_gradle_name">Gradle</string>

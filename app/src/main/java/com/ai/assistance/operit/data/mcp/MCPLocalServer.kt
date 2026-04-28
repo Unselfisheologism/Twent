@@ -267,28 +267,29 @@ class MCPLocalServer private constructor(private val context: Context) {
     private fun createDefaultMCPConfig(): MCPConfig {
         val defaultServers = mutableMapOf<String, MCPConfig.ServerConfig>()
         
-        // 添加 fetch MCP 服务器
-        defaultServers["fetch"] = MCPConfig.ServerConfig(
-            command = "python3",
-            args = listOf("-m", "mcp_server_fetch"),
-            disabled = false
+        // 添加 DuckDuckGo Web Search MCP 服务器 (STDIO 模式，无需后台运行)
+        defaultServers["ddg-search"] = MCPConfig.ServerConfig(
+            command = "uvx",
+            args = listOf("duckduckgo-mcp-server"),
+            disabled = false,
+            transportType = com.ai.assistance.operit.core.tools.mcp.MCSTransportType.STDIO
         )
         
         val metadata = mutableMapOf<String, MCPConfig.PluginMetadata>()
-        metadata["fetch"] = MCPConfig.PluginMetadata(
-            id = "fetch",
-            name = "Fetch",
-            description = "Web content fetching via MCP",
+        metadata["ddg-search"] = MCPConfig.PluginMetadata(
+            id = "ddg-search",
+            name = "DuckDuckGo Search",
+            description = "Free web search using DuckDuckGo via MCP",
             logoUrl = null,
-            author = "Model Context Protocol",
-            isInstalled = false,  // 用户需要先安装依赖
+            author = "nickclyde",
+            isInstalled = false,  // 用户需要先安装 uv 和依赖
             version = "1.0.0",
             updatedAt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-            longDescription = context.getString(R.string.mcp_fetch_description),
-            repoUrl = "",
+            longDescription = context.getString(R.string.mcp_ddgsearch_description),
+            repoUrl = "https://github.com/nickclyde/duckduckgo-mcp-server",
             type = "local",
             endpoint = null,
-            connectionType = "httpStream"
+            connectionType = "stdio"
         )
         
         return MCPConfig(

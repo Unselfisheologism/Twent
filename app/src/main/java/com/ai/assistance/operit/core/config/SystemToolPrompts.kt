@@ -189,7 +189,7 @@ object SystemToolPrompts {
         tools = listOf(
             ToolPrompt(
                 name = "execute_shell",
-                description = "Execute shell commands in Terminal app session. Use `curl` for simple web requests if MCP fetch not available.",
+                description = "Execute shell commands in Terminal app session. For web search, use the ddg-search MCP server instead.",
                 parametersStructured = listOf(
                     ToolParameterSchema(name = "command", type = "string", description = "shell command to execute", required = true),
                     ToolParameterSchema(name = "session_id", type = "string", description = "optional: terminal session ID to use specific session", required = false),

@@ -2010,6 +2010,8 @@
 <string name="mcp_loading_commands">Mcp Loading Commands</string>
 <string name="mcp_local_auto_detected_server">Mcp Local Auto Detected Server</string>
     <string name="mcp_fetch_description">Fetches a URL from the internet and extracts its contents as markdown. Install: pip3 install mcp-server-fetch --break-system-packages</string>
+    <string name="mcp_websearch_description">Free web search using DuckDuckGo via MCP. 1. Install: git clone &amp;&amp; npm install &amp;&amp; npm run build 2. Run server: node build/index.js 3. Add as REMOTE MCP with endpoint http://localhost:3000/mcp</string>
+    <string name="mcp_ddgsearch_description">DuckDuckGo search via MCP. Install: pip3 install uv (or pipx), then uvx duckduckgo-mcp-server. Search tool: query, max_results, region. Content fetch: url, start_index, max_length.</string>
 <string name="mcp_local_json_format_error">Mcp Local Json Format Error</string>
 <string name="mcp_local_mcp_servers_empty">Mcp Local Mcp Servers Empty</string>
 <string name="mcp_local_merge_config_failed">Mcp Local Merge Config Failed</string>
