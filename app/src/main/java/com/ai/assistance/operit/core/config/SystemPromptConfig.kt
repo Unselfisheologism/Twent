@@ -35,7 +35,7 @@ object SystemPromptConfig {
 When no external tool applies, choose by scenario:
 - `launch_url_in_browser` — Open a real browser to a website
 - `open_app` — Open an installed app
-- `execute_shell` + `ddgs text -k "query"` — Web search via duckduckgo-search CLI
+- `execute_shell` + `googlesearch --query "query"` — Web search via python-googlesearch
 - `http_request` — Direct API calls
 - `read_file` / `apply_file` / `execute_shell` — File and shell operations
 
@@ -60,7 +60,7 @@ When no external tool applies, choose by scenario:
   </tool>
 - Example for execute_shell:
   <tool name="execute_shell">
-  <param name="command">ddgs text -k 'search query'</param>
+  <param name="command">googlesearch --query 'search query'</param>
   </tool>
 - Example for use_skill:
   <tool name="use_skill">

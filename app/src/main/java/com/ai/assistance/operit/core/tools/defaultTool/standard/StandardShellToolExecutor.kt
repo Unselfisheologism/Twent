@@ -40,7 +40,7 @@ open class StandardShellToolExecutor(private val context: Context) {
         val sessionId = tool.parameters.find { it.name == "session_id" }?.value
 
         // Default behavior: always try to use terminal session first
-        // This provides access to user-installed tools (ddgs, node, python, etc.)
+        // This provides access to user-installed tools (googlesearch, node, python, etc.)
         val actualSessionId = if (!sessionId.isNullOrBlank()) {
             sessionId
         } else {

@@ -17,13 +17,13 @@
     <string name="dialog_confirm">I Understand</string>
     <string name="dialog_cancel">Cancel</string>
     
-    <!-- Package Categories -->
+<!-- Package Categories -->
     <string name="category_nodejs_name">Node.js Environment</string>
     <string name="category_nodejs_desc">Node.js and frontend development environment</string>
-<string name="category_python_name">Python Environment</string>
+    <string name="category_python_name">Python Environment</string>
     <string name="category_python_desc">Python development environment</string>
-    <string name="category_ddgs_name">AI Web Search</string>
-    <string name="category_ddgs_desc">AI Agent web search tools - Required</string>
+    <string name="category_websearch_name">AI Web Search</string>
+    <string name="category_websearch_desc">AI Agent web search tools - Required</string>
     <string name="category_java_name">Java Environment</string>
     <string name="category_java_desc">Java development environment</string>
     <string name="category_rust_name">Rust (Cargo) Environment</string>
@@ -44,12 +44,10 @@
     <string name="package_python_venv_desc">Python virtual environment support</string>
     <string name="package_python_pip_name">Pip</string>
     <string name="package_python_pip_desc">Python package manager</string>
-<string name="package_uv_name">uv</string>
-    <string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
-    <string name="package_pipx_name">pipx</string>
-    <string name="package_pipx_desc">Python package manager for CLI applications</string>
-    <string name="package_ddgs_name">DuckDuckGo Search (ddgs)</string>
-    <string name="package_ddgs_desc">DuckDuckGo CLI for AI agents: ddgs text -k \"query\" for web search</string>
+    <string name="package_uv_name">uv</string>
+<string name="package_uv_desc">An extremely fast Python package installer written in Rust</string>
+    <string name="package_googlesearch_name">python-googlesearch</string>
+    <string name="package_googlesearch_desc">Google Search CLI: googlesearch --query \"query\"</string>
     <string name="package_openjdk_name">OpenJDK 17</string>
     <string name="package_openjdk_desc">Java 17 development environment</string>
     <string name="package_gradle_name">Gradle</string>

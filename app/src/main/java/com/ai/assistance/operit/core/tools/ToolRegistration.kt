@@ -358,7 +358,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-// Web Search: use execute_shell + "ddgs text -k 'query'" instead
+// Web Search: use execute_shell + "googlesearch --query 'query'" instead
 
     // 休眠工具
     handler.registerTool(

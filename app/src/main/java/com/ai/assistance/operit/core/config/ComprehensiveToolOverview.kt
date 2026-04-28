@@ -78,7 +78,7 @@ Here's a complete overview of what you can do:
 ### 3. WEB & NETWORK TOOLS
 ════════════════════════════════════════════════════════════════════════
 
-• execute_shell + ddgs text -k "query" - Web search via duckduckgo-search CLI
+• execute_shell + googlesearch --query "query" - Web search via python-googlesearch
 • http_request - Send HTTP requests (GET, POST, PUT, DELETE)
 • multipart_request - Upload files via multipart form data
 • manage_cookies - Manage browser cookies
@@ -331,7 +331,7 @@ WRITING FILES:
   • write_file(path="/path/to/file", content="text")
 
 SEARCHING THE WEB:
-  • execute_shell(command="ddgs text -k 'query'")
+  • execute_shell(command="googlesearch --query 'query'")
 
 SEARCHING MEMORY:
   • query_memory(query="keywords", folder_path="/optional/folder")

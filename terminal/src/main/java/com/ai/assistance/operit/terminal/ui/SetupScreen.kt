@@ -98,12 +98,11 @@ PackageCategory(
                     )
                 ),
 PackageCategory(
-                    id = "ddgs",
-                    name = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_name),
-                    description = context.getString(com.ai.assistance.operit.terminal.R.string.category_ddgs_desc),
+                    id = "websearch",
+                    name = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_name),
+                    description = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_desc),
                     packages = listOf(
-                        PackageItem("pipx", context.getString(com.ai.assistance.operit.terminal.R.string.package_pipx_name), "pipx", context.getString(com.ai.assistance.operit.terminal.R.string.package_pipx_desc)),
-                        PackageItem("ddgs", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_name), "pipx install ddgs || pip install ddgs --break-system-packages", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgs_desc))
+                        PackageItem("python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_name), "pip install python-googlesearch --break-system-packages || pip install python-googlesearch", context.getString(com.ai.assistance.operit.terminal.R.string.package_googlesearch_desc))
                     )
                 ),
                 PackageCategory(
@@ -387,7 +386,7 @@ PackageCategory(
                                     val rustEnvCommand = sourceManager.getRustSourceEnvCommand(rustSource)
                                     // 添加环境变量设置和安装命令
                                     selectedCustomCommands.add("$rustEnvCommand && curl -v --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y")
-} else if (pkg.id == "uv" || pkg.id == "nodejs" || pkg.id == "ddgs") {
+} else if (pkg.id == "uv" || pkg.id == "nodejs" || pkg.id == "python-googlesearch") {
                                     selectedCustomCommands.add(pkg.command)
                                 } else if (category.id == "nodejs" && pkg.id != "nodejs") {
                                     selectedNpmPackages.add(pkg.command)
@@ -398,9 +397,9 @@ PackageCategory(
                         }
                     }
 
-// 添加 pipx 作为 uv 的依赖
-                    if ((selectedPackages.getOrDefault("uv", false) || selectedPackages.getOrDefault("ddgs", false)) && packageStatus["uv"] != InstallStatus.INSTALLED) {
-                        selectedAptPackages.add("pipx")
+// 添加 pip as a dependency for python-googlesearch
+                    if (selectedPackages.getOrDefault("python-googlesearch", false) && packageStatus["python3-pip"] != InstallStatus.INSTALLED) {
+                        selectedAptPackages.add("python3-pip")
                     }
 
                     // 首先安装所有依赖包
@@ -495,7 +494,7 @@ private fun CategoryCard(
                         fontWeight = FontWeight.Bold
                     )
                     // Operit必须标签 - 第二行
-                    if (category.id == "nodejs" || category.id == "python" || category.id == "ddgs") {
+                    if (category.id == "nodejs" || category.id == "python" || category.id == "websearch") {
                         Text(
                             text = "(${context.getString(com.ai.assistance.operit.terminal.R.string.operit_required)})",
                             color = Color(0xFFFFA500), // Orange color

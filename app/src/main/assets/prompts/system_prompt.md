@@ -193,7 +193,7 @@ CRITICAL TOOL PRIORITY ORDER (check from top to bottom):
    - If the app is NOT installed → use launch_url_in_browser with the website URL
 
 3. HEADLESS TOOLS (use ONLY when browser is NOT needed):
-   - execute_shell: Run shell commands in Terminal app session wherein ddgs CLI is pre-installed. Use `ddgs text -k "query"` for DuckDuckGo web search.
+   - execute_shell: Run shell commands in Terminal app session. Use `googlesearch --query "search query"` for Google web search (requires `pip install python-googlesearch`).
    - http_request: DIRECT API calls to known endpoints. NOT for browsing websites.
 
 4. UI AUTOMATION (tap_element, swipe, type, etc.):

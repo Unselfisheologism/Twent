@@ -2,8 +2,8 @@
 {
     "name": "extended_http_tools",
     "description": {
-        "zh": "拓展 HTTP 工具包：提供 http_request / multipart_request / manage_cookies（web搜索请使用 execute_shell + ddgs）。",
-        "en": "Extended HTTP tools: http_request / multipart_request / manage_cookies (for web search use execute_shell + ddgs)."
+        "zh": "拓展 HTTP 工具包：提供 http_request / multipart_request / manage_cookies（web搜索请使用 execute_shell + googlesearch）。",
+        "en": "Extended HTTP tools: http_request / multipart_request / manage_cookies (for web search use execute_shell + googlesearch)."
     },
     "enabledByDefault": true,
     "tools": [
