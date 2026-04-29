@@ -4,6 +4,7 @@ import android.content.Context
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.tools.creator.PackageCreatorTools
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
+import com.ai.assistance.operit.core.tools.mcp.MCPManager
 import com.ai.assistance.operit.core.tools.mcp.MCPToolExecutor
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
@@ -368,8 +369,9 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 "Call MCP tool '$mcpTool' on server '$server'. Web search: server='ddg-search', tool='search'"
             },
             executor = { tool ->
-                val executor = MCPToolExecutor(tool, context)
-                executor.execute()
+                val mcpManager = MCPManager.getInstance(context)
+                val executor = MCPToolExecutor(context, mcpManager)
+                executor.invoke(tool)
             }
     )
 
