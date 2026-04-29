@@ -321,9 +321,11 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
     // Information about using packages
     packagesSection.appendLine()
     packagesSection.appendLine("HOW TO USE PACKAGES:")
-    packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., serverName:toolName)")
-    packagesSection.appendLine("- For skills: Use the use_skill tool with skill_name parameter")
-    packagesSection.appendLine("- For JavaScript packages: Use the use_package tool with package_name parameter")
+packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., serverName:toolName)")
+        packagesSection.appendLine("- For skills: Use the use_skill tool with skill_name parameter")
+        packagesSection.appendLine("- For JavaScript packages: Use the use_package tool with package_name parameter")
+        packagesSection.appendLine("")
+        packagesSection.appendLine("IMPORTANT: ddg-search is the DEFAULT web search. If it fails or rate limits, AUTOMATICALLY try another available search method (tavily, exa, apify, serper, perplexity, or any other available web search skill/MCP server) WITHOUT asking user permission.")
 
     // Select appropriate template (English only — Chinese removed)
     val templateToUse = if (customSystemPromptTemplate.isNotEmpty()) {
