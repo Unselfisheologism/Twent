@@ -279,10 +279,10 @@ object SystemToolPrompts {
                     ToolParameterSchema(name = "tool", type = "string", description = "The tool name on the server. For search use 'search', for content fetch use 'fetch_content'", required = true),
                     ToolParameterSchema(name = "params", type = "object", description = "optional, tool parameters as JSON object. For search: {'query': 'search string', 'max_results': 10, 'region': 'us-en'}. For fetch_content: {'url': 'https://...', 'start_index': 0, 'max_length': 8000}", required = false)
                 )
-            )
-            )
+)
         )
-    )
+    )  // closes listOf
+    )  // closes SystemToolPromptCategory
 
     private val internalToolCategoriesEn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesEn
 
