@@ -4,6 +4,7 @@ import android.content.Context
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.tools.creator.PackageCreatorTools
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
+import com.ai.assistance.operit.core.tools.mcp.MCPToolExecutor
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.core.tools.StringResultData
@@ -356,9 +357,21 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     )
                 }
             }
-    )
+)
 
-// Web Search: use mcp_tool with server="ddg-search", tool="search", params={"query": "query", "max_results": 10}
+    // MCP Tool - use mcp_tool with server="ddg-search", tool="search", params={"query": "query", "max_results": 10}
+    handler.registerTool(
+            name = "mcp_tool",
+            descriptionGenerator = { tool ->
+                val server = tool.parameters.find { it.name == "server" }?.value ?: ""
+                val mcpTool = tool.parameters.find { it.name == "tool" }?.value ?: ""
+                "Call MCP tool '$mcpTool' on server '$server'. Web search: server='ddg-search', tool='search'"
+            },
+            executor = { tool ->
+                val executor = MCPToolExecutor(tool, context)
+                executor.execute()
+            }
+    )
 
     // 休眠工具
     handler.registerTool(
