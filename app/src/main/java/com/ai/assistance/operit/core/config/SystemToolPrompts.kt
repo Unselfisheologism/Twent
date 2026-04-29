@@ -274,7 +274,7 @@ object SystemToolPrompts {
             ToolPrompt(
                 name = "mcp_tool",
                 description = "Call a tool from a running MCP server. Format: 'server_name:tool_name' or use this tool with server/tool params. For DuckDuckGo search use: server='ddg-search', tool='search', params={'query': 'search query', 'max_results': 10}. MCP tools are different from packages — they are ready to use immediately without activation. To see available tools, check Plugins > MCP tab.",
-parametersStructured = listOf(
+                parametersStructured = listOf(
                     ToolParameterSchema(name = "server", type = "string", description = "The MCP server name (must be running). For web search use 'ddg-search'", required = true),
                     ToolParameterSchema(name = "tool", type = "string", description = "The tool name on the server. For search use 'search', for content fetch use 'fetch_content'", required = true),
                     ToolParameterSchema(name = "params", type = "object", description = "optional, tool parameters as JSON object. For search: {'query': 'search string', 'max_results': 10, 'region': 'us-en'}. For fetch_content: {'url': 'https://...', 'start_index': 0, 'max_length': 8000}", required = false)
