@@ -268,7 +268,13 @@ class MCPLocalServer private constructor(private val context: Context) {
         return mutableMapOf(
             "ddg-search" to MCPConfig.ServerConfig(
                 command = "uvx",
-                args = listOf("duckduckgo-mcp-server"),
+                args = listOf(
+                    "--with",
+                    "duckduckgo-mcp-server[browser]",
+                    "duckduckgo-mcp-server",
+                    "--fetch-backend",
+                    "auto"
+                ),
                 env = mapOf(
                     "DDG_SAFE_SEARCH" to "MODERATE",
                     "DDG_REGION" to "us-en"

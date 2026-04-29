@@ -102,7 +102,7 @@ PackageCategory(
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_websearch_desc),
                     packages = listOf(
-                        PackageItem("duckduckgo-mcp-server", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_name), "pip3 install duckduckgo-mcp-server --break-system-packages --force-reinstall", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_desc))
+                        PackageItem("duckduckgo-mcp-server", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_name), "uv pip install \"duckduckgo-mcp-server[browser]\" --system", context.getString(com.ai.assistance.operit.terminal.R.string.package_ddgsearch_desc))
                     )
                 ),
                 PackageCategory(
@@ -397,8 +397,8 @@ PackageCategory(
                         }
                     }
 
-// 添加 pip as a dependency for duckduckgo-mcp-server
-                    if (selectedPackages.getOrDefault("duckduckgo-mcp-server", false) && packageStatus["python3-pip"] != InstallStatus.INSTALLED) {
+// 添加 pip 作为 duckduckgo-mcp-server 的备选依赖 (如果 uv 未安装)
+                    if (selectedPackages.getOrDefault("duckduckgo-mcp-server", false) && packageStatus["python3-pip"] != InstallStatus.INSTALLED && packageStatus["uv"] != InstallStatus.INSTALLED) {
                         selectedAptPackages.add("python3-pip")
                     }
 
