@@ -195,6 +195,15 @@ object SystemToolPrompts {
                     ToolParameterSchema(name = "session_id", type = "string", description = "optional: terminal session ID to use specific session", required = false),
                     ToolParameterSchema(name = "timeout_ms", type = "integer", description = "optional, maximum time to wait for command completion in milliseconds. Default 30000. Range: 1000-300000.", required = false, default = "30000"),
                 )
+            ),
+            ToolPrompt(
+                name = "web_search",
+                description = "WEB SEARCH tool - Search the web using DuckDuckGo MCP server. Use this when you need to find current information, news, or answers online. Tool: ddg-search:search. Parameters: query (search string), max_results (default 10), region (optional, e.g., 'us-en', 'cn-zh').",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "query", type = "string", description = "search query string", required = true),
+                    ToolParameterSchema(name = "max_results", type = "integer", description = "optional, maximum number of results (default 10)", required = false, default = "10"),
+                    ToolParameterSchema(name = "region", type = "string", description = "optional, region code like 'us-en', 'cn-zh', 'jp-ja'", required = false)
+                )
             )
         )
     )

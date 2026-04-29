@@ -262,12 +262,62 @@ class MCPLocalServer private constructor(private val context: Context) {
     }
 
     /**
+     * 默认MCP服务器配置
+     */
+    private fun getDefaultMCPServers(): Map<String, MCPConfig.ServerConfig> {
+        return mutableMapOf(
+            "ddg-search" to MCPConfig.ServerConfig(
+                command = "uvx",
+                args = listOf("duckduckgo-mcp-server"),
+                env = mapOf(
+                    "DDG_SAFE_SEARCH" to "MODERATE",
+                    "DDG_REGION" to "us-en"
+                )
+            )
+        )
+    }
+
+    /**
+     * 获取默认插件元数据
+     */
+    private fun getDefaultPluginMetadata(): Map<String, PluginMetadata> {
+        return mutableMapOf(
+            "ddg-search" to PluginMetadata(
+                id = "ddg-search",
+                name = "DuckDuckGo Search",
+                description = "Web search using DuckDuckGo MCP server. Use search(query, max_results) and fetch_content(url, start_index, max_length) tools. REQUIREMENTS: uv must be installed in Terminal setup (AI Web Search category).",
+                author = "DuckDuckGo",
+                isInstalled = true,
+                version = "1.0.0",
+                updatedAt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                longDescription = "DuckDuckGo MCP server provides web search and content fetching capabilities. Search tool: query (search string), max_results (default 10), region (optional). Fetch tool: url, start_index (default 0), max_length (default 8000). REQUIREMENTS: uv package manager must be installed (go to Terminal > Setup > AI Web Search and install uv).",
+                repoUrl = "https://github.com/nicholasoxford/duckduckgo-mcp-server",
+                type = "local"
+            )
+        )
+    }
+
+    /**
      * 加载所有配置文件
      */
     private fun loadAllConfigurations() {
         try {
+            // 首次运行或配置文件不存在时，创建默认配置
+            if (!mcpConfigFile.exists()) {
+                val defaultConfig = MCPConfig(
+                    mcpServers = getDefaultMCPServers().toMutableMap(),
+                    pluginMetadata = getDefaultPluginMetadata().toMutableMap()
+                )
+                _mcpConfig.value = defaultConfig
+                coroutineScope.launch {
+                    saveMCPConfig()
+                    initializeMissingServerStatus()
+                    AppLogger.d(TAG, "已创建默认MCP配置，包含 DuckDuckGo Search 服务器")
+                }
+                return
+            }
+
             // 加载MCP配置
-            if (mcpConfigFile.exists()) {
                 val configJson = mcpConfigFile.readText()
                 val config = gson.fromJson(configJson, MCPConfig::class.java) ?: MCPConfig()
 
