@@ -35,7 +35,7 @@ object SystemPromptConfig {
 When no external tool applies, choose by scenario:
 - `launch_url_in_browser` — Open a real browser to a website
 - `open_app` — Open an installed app
-- `execute_shell` + `googlesearch --query "query"` — Web search via python-googlesearch
+- `mcp_tool(server="ddg-search", tool="search", params={"query": "query", "max_results": 10})` — Web search via DuckDuckGo MCP server. USE THIS FOR ALL WEB SEARCH!
 - `http_request` — Direct API calls
 - `read_file` / `apply_file` / `execute_shell` — File and shell operations
 

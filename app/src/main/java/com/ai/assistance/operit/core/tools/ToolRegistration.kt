@@ -358,7 +358,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-// Web Search: use execute_shell + "googlesearch --query 'query'" instead
+// Web Search: use mcp_tool with server="ddg-search", tool="search", params={"query": "query", "max_results": 10}
 
     // 休眠工具
     handler.registerTool(

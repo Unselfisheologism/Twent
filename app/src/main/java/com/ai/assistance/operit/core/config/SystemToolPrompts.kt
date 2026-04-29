@@ -189,20 +189,11 @@ object SystemToolPrompts {
         tools = listOf(
             ToolPrompt(
                 name = "execute_shell",
-                description = "Execute shell commands in Terminal app session. For web search, use the ddg-search MCP server instead.",
+                description = "Execute shell commands in Terminal app session.",
                 parametersStructured = listOf(
                     ToolParameterSchema(name = "command", type = "string", description = "shell command to execute", required = true),
                     ToolParameterSchema(name = "session_id", type = "string", description = "optional: terminal session ID to use specific session", required = false),
                     ToolParameterSchema(name = "timeout_ms", type = "integer", description = "optional, maximum time to wait for command completion in milliseconds. Default 30000. Range: 1000-300000.", required = false, default = "30000"),
-                )
-            ),
-            ToolPrompt(
-                name = "web_search",
-                description = "WEB SEARCH tool - Search the web using DuckDuckGo MCP server. Use this when you need to find current information, news, or answers online. Tool: ddg-search:search. Parameters: query (search string), max_results (default 10), region (optional, e.g., 'us-en', 'cn-zh').",
-                parametersStructured = listOf(
-                    ToolParameterSchema(name = "query", type = "string", description = "search query string", required = true),
-                    ToolParameterSchema(name = "max_results", type = "integer", description = "optional, maximum number of results (default 10)", required = false, default = "10"),
-                    ToolParameterSchema(name = "region", type = "string", description = "optional, region code like 'us-en', 'cn-zh', 'jp-ja'", required = false)
                 )
             )
         )
@@ -273,20 +264,22 @@ object SystemToolPrompts {
     // ==================== MCP Tools ====================
     // MCP tools are DIFFERENT from packages and Composio.
     // - MCP tools are always available when the server is running (no activation needed)
-    // - Tool format: server_name:tool_name (e.g., apify:scrape_url)
+    // - Tool format: server_name:tool_name (e.g., ddg-search:search)
     // - Do NOT use use_package for MCP servers
+    // - To use DuckDuckGo web search: mcp_tool with server="ddg-search", tool="search", params={"query": "your search", "max_results": 10}
     private val mcpToolsEn = SystemToolPromptCategory(
         categoryName = "mcp_tools",
-        categoryHeader = "MCP Server Tools - Tools from Model Context Protocol servers. These are AUTOMATICALLY available when servers are running. Do NOT use use_package for MCP servers.",
+        categoryHeader = "MCP Server Tools - Tools from Model Context Protocol servers. These are AUTOMATICALLY available when servers are running. Do NOT use use_package for MCP servers. IMPORTANT: For web search, use mcp_tool with server='ddg-search' and tool='search', params={'query': 'your search query', 'max_results': 10}.",
         tools = listOf(
             ToolPrompt(
                 name = "mcp_tool",
-                description = "Call a tool from a running MCP server. Format: 'server_name:tool_name' (e.g., 'apify:scrape_url'). MCP tools are different from packages — they are ready to use immediately without activation. To see available tools, check Plugins > MCP tab.",
+                description = "Call a tool from a running MCP server. Format: 'server_name:tool_name' or use this tool with server/tool params. For DuckDuckGo search use: server='ddg-search', tool='search', params={'query': 'search query', 'max_results': 10}. MCP tools are different from packages — they are ready to use immediately without activation. To see available tools, check Plugins > MCP tab.",
                 parametersStructured = listOf(
-                    ToolParameterSchema(name = "server", type = "string", description = "The MCP server name (must be running)", required = true),
-                    ToolParameterSchema(name = "tool", type = "string", description = "The tool name on the server", required = true),
-                    ToolParameterSchema(name = "params", type = "object", description = "optional, tool parameters as JSON object", required = false)
+                    ToolParameterSchema(name = "server", type = "string", description = "The MCP server name (must be running). For web search use 'ddg-search'", required = true),
+                    ToolParameterSchema(name = "tool", type = "string", description = "The tool name on the server. For search use 'search', for content fetch use 'fetch_content'", required = true),
+                    ToolParameterSchema(name = "params", type = "object", description = "optional, tool parameters as JSON object. For search: {'query': 'search string', 'max_results': 10, 'region': 'us-en'}. For fetch_content: {'url': 'https://...', 'start_index': 0, 'max_length': 8000}", required = false)
                 )
+            )
             )
         )
     )

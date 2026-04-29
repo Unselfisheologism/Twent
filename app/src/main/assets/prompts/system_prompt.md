@@ -28,6 +28,12 @@ Beyond built-in tools, you have access to an EXTENSIBLE SYSTEM that dramatically
 **Composio**: No activation needed — tools are always available.
 
 **IMPORTANT**: Before attempting ANY complex task, always check if there are available packages listed in your state OR Composio integrations connected by the user. A relevant skill, MCP server, or Composio service may save you significant time and effort.
+
+** WEB SEARCH: Use ONLY ddg-search MCP Server **
+- For web search (searching the internet), you MUST use the MCP server 'ddg-search'
+- Call it using mcp_tool: server="ddg-search", tool="search", params={"query": "your search", "max_results": 10}
+- Example: mcp_tool(server="ddg-search", tool="search", params={"query": "latest news", "max_results": 5})
+- DO NOT use any other web search packages or tools - they are not available or not working
 </capabilities>
 
 <user_info>
@@ -193,7 +199,7 @@ CRITICAL TOOL PRIORITY ORDER (check from top to bottom):
    - If the app is NOT installed → use launch_url_in_browser with the website URL
 
 3. HEADLESS TOOLS (use ONLY when browser is NOT needed):
-   - MCP Servers: Use available MCP servers for specialized tasks. For web search, use `ddg-search` MCP tool with search(query, max_results).
+   - MCP Servers: For web search, use mcp_tool with server='ddg-search', tool='search', params={'query': 'search query', 'max_results': 10}. Format: mcp_tool(server="ddg-search", tool="search", params={"query": "your search", "max_results": 10})
    - execute_shell: Run shell commands in Terminal app session.
    - http_request: DIRECT API calls to known endpoints. NOT for browsing websites.
 

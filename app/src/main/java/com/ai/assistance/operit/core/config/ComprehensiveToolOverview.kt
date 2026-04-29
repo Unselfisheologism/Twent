@@ -76,12 +76,12 @@ Here's a complete overview of what you can do:
 
 ════════════════════════════════════════════════════════════════════════
 ### 3. WEB & NETWORK TOOLS
-════════════════════════════════════════════════════════════════════════
+ ════════════════════════════════════════════════════════════════════════
 
-• execute_shell + googlesearch --query "query" - Web search via python-googlesearch
-• http_request - Send HTTP requests (GET, POST, PUT, DELETE)
-• multipart_request - Upload files via multipart form data
-• manage_cookies - Manage browser cookies
+ • mcp_tool (server="ddg-search", tool="search", params={"query": "query", "max_results": 10}) - Web search using DuckDuckGo MCP server. Use this for ALL web search!
+ • http_request - Send HTTP requests (GET, POST, PUT, DELETE)
+ • multipart_request - Upload files via multipart form data
+ • manage_cookies - Manage browser cookies
 
 ════════════════════════════════════════════════════════════════════════
 ### 4. MEMORY & KNOWLEDGE TOOLS
@@ -331,7 +331,7 @@ WRITING FILES:
   • write_file(path="/path/to/file", content="text")
 
 SEARCHING THE WEB:
-  • execute_shell(command="googlesearch --query 'query'")
+  • mcp_tool(server="ddg-search", tool="search", params={"query": "query", "max_results": 10})
 
 SEARCHING MEMORY:
   • query_memory(query="keywords", folder_path="/optional/folder")
