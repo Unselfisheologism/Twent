@@ -284,7 +284,7 @@ parametersStructured = listOf(
     )
 }
 
-private val internalToolCategoriesEn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesEn
+    private val internalToolCategoriesEn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesEn
 
     /**
      * Get all English tool categories for AI-visible tools
