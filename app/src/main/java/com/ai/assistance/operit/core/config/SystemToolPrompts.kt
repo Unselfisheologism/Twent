@@ -13,13 +13,11 @@ object SystemToolPrompts {
         val names = safBookmarkNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct().sorted()
         if (names.isEmpty()) return ""
         val listed = names.joinToString(", ") { "repo:$it" }
-        return """
-
-**Attached Local Storage Repository:**
-- environment (optional): you can also use `environment="repo:<repositoryName>"` to operate in an attached local storage repository.
-- Paths are absolute (e.g., `/`, `/work/index.html`).
-- Available repositories: $listed
-""".trimEnd()
+        return """**Attached Local Storage Repository:**
+                  - environment (optional): you can also use `environment="repo:<repositoryName>"` to operate in an attached local storage repository.
+                  - Paths are absolute (e.g., `/`, `/work/index.html`).
+                  - Available repositories: $listed
+                  """.trimEnd()
     }
 
     // ==================== Basic Tools ====================
