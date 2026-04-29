@@ -273,7 +273,7 @@ class MCPLocalServer private constructor(private val context: Context) {
                     "duckduckgo-mcp-server[browser]",
                     "duckduckgo-mcp-server",
                     "--fetch-backend",
-                    "auto"
+                    "curl"
                 ),
                 env = mapOf(
                     "DDG_SAFE_SEARCH" to "MODERATE",
