@@ -280,7 +280,6 @@ object SystemToolPrompts {
             )
         )
     )
-}
 
     private val internalToolCategoriesEn: List<SystemToolPromptCategory> = SystemToolPromptsInternal.internalToolCategoriesEn
 
