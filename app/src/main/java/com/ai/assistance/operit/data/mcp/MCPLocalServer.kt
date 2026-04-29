@@ -297,23 +297,61 @@ class MCPLocalServer private constructor(private val context: Context) {
         )
     }
 
-    /**
+/**
      * 加载所有配置文件
      */
     private fun loadAllConfigurations() {
-        try {
-            // 首次运行或配置文件不存在时，创建默认配置
-            if (!mcpConfigFile.exists()) {
-                val defaultConfig = MCPConfig(
-                    mcpServers = getDefaultMCPServers().toMutableMap(),
-                    pluginMetadata = getDefaultPluginMetadata().toMutableMap()
-                )
-                _mcpConfig.value = defaultConfig
-                coroutineScope.launch {
-                    saveMCPConfig()
-                    initializeMissingServerStatus()
-                    AppLogger.d(TAG, "已创建默认MCP配置，包含 DuckDuckGo Search 服务器")
+        // 首次运行或配置文件不存在时，创建默认配置
+        if (!mcpConfigFile.exists()) {
+            val defaultConfig = MCPConfig(
+                mcpServers = getDefaultMCPServers().toMutableMap(),
+                pluginMetadata = getDefaultPluginMetadata().toMutableMap()
+            )
+            _mcpConfig.value = defaultConfig
+            coroutineScope.launch {
+                saveMCPConfig()
+                initializeMissingServerStatus()
+                AppLogger.d(TAG, "已创建默认MCP配置，包含 DuckDuckGo Search 服务器")
+            }
+        } else {
+            try {
+                // 加载MCP配置
+                val configJson = mcpConfigFile.readText()
+                val config = gson.fromJson(configJson, MCPConfig::class.java) ?: MCPConfig()
+
+                // 自动为 mcpServers 中存在但 pluginMetadata 中缺失的服务器创建默认元数据
+                val updatedConfig = autoFillMissingMetadata(config)
+                _mcpConfig.value = updatedConfig
+
+                // 如果有新增的元数据，保存配置
+                if (updatedConfig.pluginMetadata.size > config.pluginMetadata.size) {
+                    coroutineScope.launch {
+                        saveMCPConfig()
+                        AppLogger.d(TAG, "自动创建了 ${updatedConfig.pluginMetadata.size - config.pluginMetadata.size} 个缺失的插件元数据")
+                    }
                 }
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "加载配置时出错", e)
+            }
+        }
+
+        // 加载服务器状态
+        if (serverStatusFile.exists()) {
+            try {
+                val statusJson = serverStatusFile.readText()
+                val typeToken = object : TypeToken<Map<String, ServerStatus>>() {}.type
+                val status = gson.fromJson<Map<String, ServerStatus>>(statusJson, typeToken) ?: emptyMap()
+                _serverStatus.value = status
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "加载服务器状态时出错", e)
+            }
+        }
+
+        // 为新配置的服务器初始化状态
+        initializeMissingServerStatus()
+
+        AppLogger.d(TAG, "配置加载完成 - MCP服务器: ${_mcpConfig.value.mcpServers.size}, 插件元数据: ${_mcpConfig.value.pluginMetadata.size}")
+    }
                 return
             }
 
