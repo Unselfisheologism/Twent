@@ -370,8 +370,8 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             },
             executor = { tool ->
                 val mcpManager = MCPManager.getInstance(context)
-                val executor = MCPToolExecutor(context, mcpManager)
-                executor.invoke(tool)
+                val mcpExecutor = MCPToolExecutor(context, mcpManager)
+                mcpExecutor.invoke(tool)
             }
     )
 
