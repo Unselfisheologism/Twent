@@ -90,10 +90,11 @@ PackageCategory(
                     id = "python",
                     name = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_name),
                     description = context.getString(com.ai.assistance.operit.terminal.R.string.category_python_desc),
-packages = listOf(
+                    packages = listOf(
                         PackageItem("python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_name), "python-is-python3", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_link_desc)),
                         PackageItem("python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_name), "python3-venv", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_venv_desc)),
-                        PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc))
+                        PackageItem("python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_name), "python3-pip", context.getString(com.ai.assistance.operit.terminal.R.string.package_python_pip_desc)),
+                        PackageItem("uv", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_name), "curl -LsSf https://astral.sh/uv/install.sh | sh", context.getString(com.ai.assistance.operit.terminal.R.string.package_uv_desc))
                     )
                 ),
 PackageCategory(
