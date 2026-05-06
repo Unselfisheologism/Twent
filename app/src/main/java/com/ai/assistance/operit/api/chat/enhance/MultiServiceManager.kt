@@ -19,15 +19,37 @@ import kotlinx.coroutines.sync.withLock
 class MultiServiceManager(private val context: Context) {
     companion object {
         private const val TAG = "MultiServiceManager"
+
+        // ─── Power Toggle: /fast ────────────────────────────────────────────────
+        // When fastMode is true, getServiceForFunction returns a service configured
+        // with the fast/cheap model instead of the primary one.
+        // fastModelOverride takes precedence: if set, use that exact "provider:model".
+        // ───────────────────────────────────────────────────────────────────────
+
+        @Volatile
+        private var fastMode: Boolean = false
+
+        @Volatile
+        private var fastModelOverride: String? = null
+
+        @JvmStatic
+        fun setFastMode(enabled: Boolean, modelOverride: String? = null) {
+            fastMode = enabled
+            fastModelOverride = modelOverride
+            AppLogger.d(TAG, "FAST mode: $enabled, override: $modelOverride")
+        }
     }
 
-    // 配置管理器
+    // Configuration managers
     private val functionalConfigManager = FunctionalConfigManager(context)
     private val modelConfigManager = ModelConfigManager(context)
 
     // 服务实例缓存
     private val serviceInstances = mutableMapOf<FunctionType, AIService>()
     private val serviceMutex = Mutex()
+    // Fast-mode service cache — separate from primary cache so toggling /fast
+    // doesn't evict the user's primary service instance
+    private val fastServiceInstances = mutableMapOf<FunctionType, AIService>()
 
     private val initMutex = Mutex()
     @Volatile private var isInitialized = false
@@ -52,6 +74,35 @@ class MultiServiceManager(private val context: Context) {
     /** 获取指定功能类型的AIService */
     suspend fun getServiceForFunction(functionType: FunctionType): AIService {
         ensureInitialized()
+
+        // ─── /fast toggle: return from fast cache if active ─────────────────────
+        if (fastMode) {
+            return serviceMutex.withLock {
+                // Return cached fast service if exists
+                fastServiceInstances[functionType]?.let {
+                    AppLogger.d(TAG, "Returning cached fast service for $functionType")
+                    return@withLock it
+                }
+                // Create a new fast service
+                val configMapping = functionalConfigManager.getConfigMappingForFunction(functionType)
+                val config = modelConfigManager.getModelConfigFlow(configMapping.configId).first()
+
+                val service = if (fastModelOverride != null) {
+                    // Use exact model from override (format: "provider:model")
+                    val (provider, model) = fastModelOverride!!.split(":", limit = 2)
+                    createFastServiceFromConfig(config, configMapping.modelIndex, provider, model)
+                } else {
+                    // Auto-select second model as the fast option
+                    createFastServiceFromConfig(config, configMapping.modelIndex, null, null)
+                }
+
+                fastServiceInstances[functionType] = service
+                AppLogger.d(TAG, "Created fast service for $functionType")
+                service
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────────
+
         return serviceMutex.withLock {
             // 如果缓存中已有该服务实例，直接返回
             serviceInstances[functionType]?.let {
@@ -87,6 +138,7 @@ class MultiServiceManager(private val context: Context) {
         serviceMutex.withLock {
             val services = mutableSetOf<AIService>()
             services.addAll(serviceInstances.values)
+            services.addAll(fastServiceInstances.values)
             defaultService?.let { services.add(it) }
 
             services.forEach { service ->
@@ -167,9 +219,44 @@ class MultiServiceManager(private val context: Context) {
             }
 
             serviceInstances.clear()
+            fastServiceInstances.clear()
             defaultService = null
             AppLogger.d(TAG, "已清除所有服务实例缓存并释放资源")
         }
+    }
+
+    /**
+     * Creates a service with the fast/second model instead of the primary.
+     * Used when /fast is active.
+     * @param forcedProvider if non-null, use this provider
+     * @param forcedModel    if non-null, use this model name
+     */
+    private suspend fun createFastServiceFromConfig(
+        config: ModelConfigData,
+        modelIndex: Int,
+        forcedProvider: String?,
+        forcedModel: String?
+    ): AIService {
+        val apiPreferences = ApiPreferences.getInstance(context)
+        val customHeadersJson = apiPreferences.getCustomHeaders()
+
+        val modelName = if (forcedModel != null && forcedProvider != null) {
+            "$forcedProvider:$forcedModel"
+        } else {
+            // Auto: pick second model in the list as the fast option
+            val models = config.modelName.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            models.getOrElse(1) { models.firstOrNull() ?: config.modelName }
+        }
+
+        val fastConfig = config.copy(modelName = modelName)
+        AppLogger.d(TAG, "Creating FAST service with model: $modelName (was: ${config.modelName})")
+
+        return AIServiceFactory.createService(
+            config = fastConfig,
+            customHeadersJson = customHeadersJson,
+            modelConfigManager = modelConfigManager,
+            context = context
+        )
     }
 
     /** 根据配置创建AIService实例 */

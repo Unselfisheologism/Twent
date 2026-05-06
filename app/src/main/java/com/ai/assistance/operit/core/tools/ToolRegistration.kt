@@ -331,6 +331,33 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // hermes-agent native skill tools (MCVP Phase 3)
+    // skills_list, skill_view, skill_delete, skill_create, skill_search
+    try {
+        val twSkillsManager = Class.forName("com.ai.assistance.operit.api.chat.brain.TwSkillsManager")
+        val method = twSkillsManager.getMethod("registerNativeSkillTools",
+            Context::class.java,
+            Class.forName("com.ai.assistance.operit.core.tools.AIToolHandler"))
+        method.invoke(null, context, handler)
+    } catch (_: Exception) {
+        // TwSkillsManager not available — skip native skill tools
+    }
+
+    // Composio Tool - use composio_tool with toolkit="github", tool="github_create_issue", params={"owner": "...", "repo": "...", "title": "..."}
+    handler.registerTool(
+            name = "composio_tool",
+            descriptionGenerator = { tool ->
+                val toolkit = tool.parameters.find { it.name == "toolkit" }?.value ?: ""
+                val compTool = tool.parameters.find { it.name == "tool" }?.value ?: ""
+                "Call Composio tool '$compTool' on integration '$toolkit'. Tools from connected accounts (GitHub, Gmail, Slack, etc.)"
+            },
+            executor = { tool ->
+                val composioExecutor = com.ai.assistance.operit.core.tools.composio.ComposioToolExecutor(context)
+                composioExecutor.invoke(tool)
+            }
+    )
+
+
     // ADB命令执行工具
 
     // 计算器工具

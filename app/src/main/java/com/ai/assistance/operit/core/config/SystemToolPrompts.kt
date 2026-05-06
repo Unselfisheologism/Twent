@@ -259,6 +259,26 @@ object SystemToolPrompts {
         categoryFooter = "\nMini-apps are served at: http://localhost:8095/mini_app/{id}/index.html"
     )
 
+    // ==================== Composio Tools ====================
+    // Composio gives access to 100+ integrations (GitHub, Slack, Notion, Gmail, etc.)
+    // Format: composio_tool(toolkit="github", tool="github_create_issue", params={...})
+    // Connected accounts from the Integrations page are used automatically for auth.
+    private val composioToolsEn = SystemToolPromptCategory(
+        categoryName = "composio_tools",
+        categoryHeader = "Composio Integration Tools — Access 100+ apps (GitHub, Gmail, Slack, Notion, Linear, etc.) connected via the Integrations page. Use composio_tool to call any connected integration. Example: toolkit='github', tool='github_create_issue', params={'owner': 'username', 'repo': 'my-repo', 'title': 'Bug found', 'body': '...'}",
+        tools = listOf(
+            ToolPrompt(
+                name = "composio_tool",
+                description = "Call a Composio integration tool. Available integrations are configured in the Integrations page. For GitHub: toolkit='github', tool='github_create_issue', params={'owner': '...', 'repo': '...', 'title': '...', 'body': '...'}. For Gmail: toolkit='gmail', tool='gmail_send_email', params={'to': '...', 'subject': '...', 'body': '...'}. For Slack: toolkit='slack', tool='slack_send_message', params={'channel': '#general', 'text': '...'}. Check Integrations page for all connected apps and available tools.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "toolkit", type = "string", description = "The integration name (e.g. 'github', 'gmail', 'slack', 'notion', 'linear'). Find available toolkits in the Integrations page.", required = true),
+                    ToolParameterSchema(name = "tool", type = "string", description = "The tool name to call (e.g. 'github_create_issue', 'gmail_send_email', 'slack_send_message'). Required.", required = true),
+                    ToolParameterSchema(name = "params", type = "object", description = "Tool-specific parameters as a JSON object string. e.g. {'owner': 'username', 'repo': 'my-repo', 'title': 'Bug', 'body': 'Details...'}", required = false)
+                )
+            )
+        )
+    )
+
     // ==================== MCP Tools ====================
     // MCP tools are DIFFERENT from packages and Composio.
     // - MCP tools are always available when the server is running (no activation needed)
@@ -334,6 +354,7 @@ object SystemToolPrompts {
             httpTools,
             memoryTools,
             miniAppTools,
+            composioToolsEn,
             mcpToolsEn
         )
     }

@@ -29,6 +29,23 @@ import kotlinx.coroutines.flow.flow
 object ToolExecutionManager {
     private const val TAG = "ToolExecutionManager"
 
+    // ─── Power Toggle: /yolo ───────────────────────────────────────────────────
+    // When yoloMode is true, checkToolPermission skips ALL dangerous-command
+    // approval checks. Set via TwPowerToggles.handle("/yolo").
+    // ──────────────────────────────────────────────────────────────────────────
+
+    @Volatile
+    private var yoloMode: Boolean = false
+
+    @JvmStatic
+    fun setYoloMode(enabled: Boolean) {
+        yoloMode = enabled
+        AppLogger.d(TAG, "YOLO mode: $enabled")
+    }
+
+    @JvmStatic
+    fun isYoloMode(): Boolean = yoloMode
+
     private fun ensureEndsWithNewline(content: String): String {
         return if (content.endsWith("\n")) content else "$content\n"
     }
@@ -182,6 +199,13 @@ charStream.splitBy(plugins).collect { group ->
         toolHandler: AIToolHandler,
         invocation: ToolInvocation
     ): Pair<Boolean, ToolResult?> {
+        // ─── /yolo bypass: skip ALL permission checks ──────────────────────────
+        if (yoloMode) {
+            AppLogger.d(TAG, "YOLO: skipping permission check for ${invocation.tool.name}")
+            return Pair(true, null)
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         // 检查是否强制拒绝权限（deny_tool标记）
         val hasPromptForPermission = !invocation.rawText.contains("deny_tool")
 
