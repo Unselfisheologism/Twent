@@ -2,11 +2,18 @@ package com.ai.assistance.operit.api.chat.brain
 
 import android.content.Context
 import com.ai.assistance.operit.core.config.SystemPromptConfig
+import com.ai.assistance.operit.core.tools.ToolExecutor
+import com.ai.assistance.operit.core.tools.StringResultData
+import com.ai.assistance.operit.core.tools.packTool.PackageManager
+import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
  * Twent AI Agent Brain — Main entry point for the AI Chat page.
@@ -107,6 +114,7 @@ class TwAgentChatBrain private constructor(private val context: Context) {
     private val promptBuilder = TwPromptBuilder.getInstance(context)
     private val conversationLoop = TwConversationLoop.getInstance(context)
     private val skillsManager = TwSkillsManager
+    private val packageManager: PackageManager by lazy { PackageManager.getInstance(context) }
 
     // Brain state for this chat
     private val _brainState = MutableStateFlow<TwBrainState?>(null)
@@ -130,8 +138,12 @@ class TwAgentChatBrain private constructor(private val context: Context) {
 
         val memory = memoryManager.loadMemory()
         val userProfile = memoryManager.loadUserProfile()
-        val persona = memory.memory.personaId?.let { memoryManager.loadPersona(it) }
-            ?: memoryManager.getDefaultPersona()
+        val personaId = memory.personaId
+        val persona = if (personaId != null) {
+            memoryManager.loadPersona(personaId) ?: memoryManager.getDefaultPersona()
+        } else {
+            memoryManager.getDefaultPersona()
+        }
 
         _brainState.value = TwBrainState(
             chatId = chatId,
@@ -153,19 +165,25 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      * @param basePrompt The existing system prompt from SystemPromptConfig
      * @return Enhanced prompt with brain injection
      */
-    fun buildEnhancedSystemPrompt(
+    suspend fun buildEnhancedSystemPrompt(
         userQuery: String,
         basePrompt: String? = null
     ): String {
         val state = _brainState.value ?: return basePrompt ?: ""
 
-        val effectiveBase = basePrompt ?: SystemPromptConfig.getSystemPrompt()
+        val effectiveBase = basePrompt ?: SystemPromptConfig.getSystemPrompt(packageManager)
+
+        // Load persona if not already set
+        val personaId = state.memory.personaId
+        val persona = if (personaId != null) {
+            memoryManager.loadPersona(personaId)
+        } else null
 
         return promptBuilder.buildEnhancedPrompt(
             basePrompt = effectiveBase,
             brainState = state,
             userQuery = userQuery,
-            persona = null, // persona loaded inside buildEnhancedPrompt
+            persona = persona,
             loadedSkills = state.loadedSkills.toList()
         )
     }
@@ -176,10 +194,11 @@ class TwAgentChatBrain private constructor(private val context: Context) {
     fun buildCondensedPrompt(basePrompt: String? = null): String {
         val state = _brainState.value ?: return basePrompt ?: ""
 
-        val effectiveBase = basePrompt ?: SystemPromptConfig.getSystemPrompt()
+        val effectiveBase = basePrompt ?: SystemPromptConfig.getSystemPrompt(packageManager)
         return promptBuilder.buildCondensedPrompt(
             effectiveBase,
             state,
+            persona = null,
             loadedSkills = state.loadedSkills.toList()
         )
     }
@@ -367,7 +386,7 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      * Lists or switches active persona.
      */
     fun getPersonaList(): List<TwPersona> {
-        return _brainState.value?.personas ?: emptyList()
+        return memoryManager.listPersonas()
     }
 
     /**
@@ -375,12 +394,10 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      */
     fun switchPersona(personaId: String): Boolean {
         val state = _brainState.value ?: return false
-        val found = state.personas.find { it.id == personaId }
-        if (found != null) {
-            state.activePersonaId = found.id
-            return true
-        }
-        return false
+        val personas = memoryManager.listPersonas()
+        val found = personas.find { it.id == personaId } ?: return false
+        state.memory = state.memory.copy(personaId = found.id)
+        return true
     }
 
     // ─── TOOL HANDLING ────────────────────────────────────────────────────
@@ -407,9 +424,32 @@ class TwAgentChatBrain private constructor(private val context: Context) {
     }
 
     /**
+     * Create a brain tool executor for EnhancedAIService.
+     * The executor wraps handleBrainTool as a ToolExecutor-compatible object.
+     * Uses runBlocking since ToolExecutor.invoke() is not suspend.
+     */
+    fun createToolExecutor(): ToolExecutor = object : ToolExecutor {
+        override fun invoke(tool: AITool): ToolResult {
+            val state = _brainState.value ?: return ToolResult(
+                toolName = tool.name, success = false,
+                result = StringResultData(""), error = "Brain not initialized"
+            )
+            // Extract name and params from AITool
+            val toolName = tool.name
+            val params = tool.parameters.associate { it.name to (it.value ?: "") }
+            return runBlocking {
+                conversationLoop.handleBrainTool(toolName, params, state)
+                    ?: ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Unknown brain tool: $toolName"
+                    )
+            }
+        }
+    }
+
+    /**
      * Track a tool call for insights.
      * Called after EVERY tool execution (brain or normal).
-     */
     suspend fun trackToolCall(toolName: String) {
         val state = _brainState.value ?: return
         conversationLoop.afterToolCall(toolName, state)

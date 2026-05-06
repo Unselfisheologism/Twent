@@ -278,32 +278,22 @@ object TwSkillsManager {
             AppLogger.w(TAG, "getSkillsCatalog called before initialize()")
             return emptyList()
         }
-        sm.refreshAvailableSkills()
-        return sm.getAvailableSkills().map { pkg ->
+        val availableMap = sm.getAvailableSkills()
+        return availableMap.entries.map { (skillName, pkg) ->
             val category = try {
-                pkg.skillFile.bufferedReader().use { reader ->
-                    reader.readLines().take(15).let { lines ->
-                        val endIdx = lines.drop(1).indexOfFirst { it.trim() == "---" }
-                        if (endIdx >= 0) {
-                            lines.subList(1, endIdx + 1).forEach { raw ->
-                                val line = raw.trim()
-                                val colon = line.indexOf(':')
-                                if (colon > 0 && line.substring(0, colon).trim().lowercase() == "category") {
-                                    return@map line.substring(colon + 1).trim().removeSurrounding("\"", "'")
-                                }
-                            }
-                        }
-                    }
-                    "general"
-                }
+                val lines = pkg.skillFile.bufferedReader().use { it.readLines() }
+                lines.take(20).find { it.trim().startsWith("category:") }
+                    ?.substringAfter(":")?.trim()?.removeSurrounding("\"", "'")
+                    ?: "general"
             } catch (_: Exception) {
                 "general"
             }
             TwSkillInfo(
-                name = pkg.name,
-                displayName = pkg.name.replace("-", " ").replaceFirstChar { it.uppercase() },
+                name = skillName,
+                displayName = skillName.replace("-", " ").replaceFirstChar { it.uppercase() },
                 description = pkg.description,
-                category = category
+                category = category,
+                triggerKeywords = emptyList()
             )
         }
     }

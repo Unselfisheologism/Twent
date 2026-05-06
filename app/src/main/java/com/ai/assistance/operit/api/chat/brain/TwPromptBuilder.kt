@@ -52,19 +52,10 @@ class TwPromptBuilder(private val context: Context) {
 
         // 1. The active persona's voice/instructions FIRST
         // hermes-agent's SOUL.md = voice of the agent
-        val activePersona = persona ?: run {
-            // Try to get from brain state
-            brainState.memory.personaId?.let { id ->
-                runCatching {
-                    TwMemoryManager.getInstance(context)
-                        .loadPersona(id)
-                }.getOrNull()
-            }
-        }
-
-        if (activePersona != null) {
-            sb.appendLine("=== PERSONA (${activePersona.name}) ===")
-            sb.appendLine(activePersona.systemPromptAddition)
+        // (Persona is pre-loaded by TwAgentChatBrain.buildEnhancedSystemPrompt before calling here)
+        if (persona != null) {
+            sb.appendLine("=== PERSONA (${persona.name}) ===")
+            sb.appendLine(persona.systemPromptAddition)
             sb.appendLine()
         }
 

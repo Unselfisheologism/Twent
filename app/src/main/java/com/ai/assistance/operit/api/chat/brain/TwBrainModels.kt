@@ -75,16 +75,22 @@ data class TwBrainMemory(
  * Cross-session analytics — hermes-agent's /insights equivalent.
  */
 data class TwBrainInsights(
-    val totalSessions: Int = 0,
-    val totalTokens: Long = 0,
-    val totalToolCalls: Int = 0,
+    var totalSessions: Int = 0,
+    var totalTokens: Long = 0,
+    var totalToolCalls: Int = 0,
     val toolCallCounts: MutableMap<String, Int> = mutableMapOf(), // toolName -> count
     val providerUsage: MutableMap<String, Int> = mutableMapOf(), // provider -> count
-    val lastSessionAt: Date? = null,
+    var lastSessionAt: Date? = null,
     val sessionDates: MutableList<Date> = mutableListOf(),
-    val stalledCount: Int = 0, // times agent got stuck
-    val successfulTasks: Int = 0
-)
+    var stalledCount: Int = 0, // times agent got stuck
+    var successfulTasks: Int = 0
+) {
+
+    fun trackToolCall(toolName: String) {
+        totalToolCalls++
+        toolCallCounts[toolName] = (toolCallCounts[toolName] ?: 0) + 1
+    }
+}
 
 // ─── MID-SESSION NOTES (ephemeral context) ────────────────────────────────────
 
@@ -172,14 +178,14 @@ data class TwFileSnapshot(
  */
 data class TwBrainState(
     val chatId: String,
-    val memory: TwBrainMemory = TwBrainMemory(),
+    var memory: TwBrainMemory = TwBrainMemory(),
     val userProfile: TwUserProfile = TwUserProfile(),
     val midSessionNotes: MutableList<TwMidSessionNote> = mutableListOf(),
-    val mode: TwAgentMode = TwAgentMode(),
+    var mode: TwAgentMode = TwAgentMode(),
     val activeBranches: MutableList<TwSessionBranch> = mutableListOf(),
     val fileSnapshots: MutableMap<String, TwFileSnapshot> = mutableMapOf(), // path -> snapshot
     val iterationBudget: Int = 20, // Max tool-call iterations per turn
-    val currentIteration: Int = 0,
+    var currentIteration: Int = 0,
     val maxContextTokens: Int = 160_000, // Conservative for mobile
     val sessionStartedAt: Date = Date(),
     /** hermes-agent-style: skills loaded via /slash-command. Persists for the session. */
@@ -265,11 +271,10 @@ data class TwBrainState(
 
     /**
      * Track a tool call for insights.
+     * Delegates to TwBrainInsights.trackToolCall().
      */
     fun trackToolCall(toolName: String) {
-        memory.insights.totalToolCalls++
-        memory.insights.toolCallCounts[toolName] =
-            (memory.insights.toolCallCounts[toolName] ?: 0) + 1
+        memory.insights.trackToolCall(toolName)
     }
 
     /**

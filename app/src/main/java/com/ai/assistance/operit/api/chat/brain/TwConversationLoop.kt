@@ -93,7 +93,7 @@ class TwConversationLoop(private val context: Context) {
      *
      * hermes-agent's brain tool handlers equivalent.
      */
-    private suspend fun handleBrainTool(
+    internal suspend fun handleBrainTool(
         toolName: String,
         parameters: Map<String, String>,
         state: TwBrainState
@@ -333,7 +333,7 @@ class TwConversationLoop(private val context: Context) {
                 } else {
                     val persona = memoryManager.loadPersona(personaId)
                     if (persona != null) {
-                        state.memory.personaId = personaId
+                        state.memory = state.memory.copy(personaId = personaId)
                         memoryManager.saveMemory(state.memory)
                         "✅ Persona switched to: **${persona.name}**\n\n" +
                             "${persona.description}\n\n" +
