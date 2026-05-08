@@ -200,9 +200,9 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
         return try {
             val jsonObj = org.json.JSONObject(raw)
             val pretty = jsonObj.toString(2)
-            response.data?.let { data ->
-                if (data.isNotBlank()) "$pretty\n\nAdditional data: $data"
-            } ?: pretty
+            val additionalData = response.data ?: ""
+            if (additionalData.isNotBlank()) "$pretty\n\nAdditional data: $additionalData"
+            else pretty
         } catch (_: Exception) {
             // Not JSON — return as-is
             if (raw.isNotBlank()) raw
