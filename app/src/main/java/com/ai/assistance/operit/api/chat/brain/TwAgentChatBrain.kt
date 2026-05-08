@@ -446,10 +446,12 @@ class TwAgentChatBrain private constructor(private val context: Context) {
             }
         }
     }
+    }
 
     /**
      * Track a tool call for insights.
      * Called after EVERY tool execution (brain or normal).
+     */
     suspend fun trackToolCall(toolName: String) {
         val state = _brainState.value ?: return
         conversationLoop.afterToolCall(toolName, state)
