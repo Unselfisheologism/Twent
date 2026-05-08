@@ -112,8 +112,8 @@ class TwConversationLoop(private val context: Context) {
                     executor = { tool ->
                         val params = tool.parameters.associate { it.name to (it.value ?: "").toString() }
                         runBlocking {
-                            // Use a temporary TwBrainState for tool registration context
-                            val tempState = TwBrainState()
+                            // Use a temporary TwBrainState for tool registration context (chatId is required)
+                            val tempState = TwBrainState(chatId = "tool_registration")
                             instance.handleBrainToolSync(toolName, params, tempState)
                         }
                     }
@@ -135,7 +135,12 @@ class TwConversationLoop(private val context: Context) {
         state: TwBrainState
     ): ToolResult {
         return runBlocking {
-            handleBrainTool(toolName, parameters, state)
+            handleBrainTool(toolName, parameters, state) ?: ToolResult(
+                toolName = toolName,
+                success = false,
+                result = StringResultData(""),
+                error = "Not a brain tool"
+            )
         }
     }
 
