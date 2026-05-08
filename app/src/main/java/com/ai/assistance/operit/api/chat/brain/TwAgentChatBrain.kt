@@ -73,7 +73,10 @@ import kotlinx.coroutines.Dispatchers
  * Q3: MCVP = Phase 1: MEMORY.md + USER.md + SOUL.md + tw_remember/recall
  *     → This file + TwBrainModels + TwMemoryManager + TwPromptBuilder
  */
-class TwAgentChatBrain private constructor(private val context: Context) {
+class TwAgentChatBrain private constructor(
+    private val context: Context,
+    private val aiToolHandler: com.ai.assistance.operit.core.tools.AIToolHandler
+) {
 
     companion object {
         private const val TAG = "TwAgentChatBrain"
@@ -83,9 +86,9 @@ class TwAgentChatBrain private constructor(private val context: Context) {
         // Per-chat brain instances (one per chat conversation)
         private val chatBrains = mutableMapOf<String, TwAgentChatBrain>()
 
-        fun getInstance(context: Context): TwAgentChatBrain {
+        fun getInstance(context: Context, aiToolHandler: com.ai.assistance.operit.core.tools.AIToolHandler): TwAgentChatBrain {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: TwAgentChatBrain(context.applicationContext).also { INSTANCE = it }
+                INSTANCE ?: TwAgentChatBrain(context.applicationContext, aiToolHandler).also { INSTANCE = it }
             }
         }
 
@@ -93,9 +96,9 @@ class TwAgentChatBrain private constructor(private val context: Context) {
          * Get or create a brain instance for a specific chat.
          * Each AI Chat conversation gets its own brain state.
          */
-        fun getForChat(context: Context, chatId: String): TwAgentChatBrain {
+        fun getForChat(context: Context, aiToolHandler: com.ai.assistance.operit.core.tools.AIToolHandler, chatId: String): TwAgentChatBrain {
             return chatBrains[chatId] ?: synchronized(chatBrains) {
-                chatBrains[chatId] ?: TwAgentChatBrain(context.applicationContext).also {
+                chatBrains[chatId] ?: TwAgentChatBrain(context.applicationContext, aiToolHandler).also {
                     chatBrains[chatId] = it
                 }
             }
@@ -114,7 +117,7 @@ class TwAgentChatBrain private constructor(private val context: Context) {
     private val promptBuilder = TwPromptBuilder.getInstance(context)
     private val conversationLoop = TwConversationLoop.getInstance(context)
     private val skillsManager = TwSkillsManager
-    private val packageManager: PackageManager by lazy { PackageManager.getInstance(context) }
+    private val packageManager: PackageManager by lazy { PackageManager.getInstance(context, aiToolHandler) }
 
     // Brain state for this chat
     private val _brainState = MutableStateFlow<TwBrainState?>(null)
@@ -386,7 +389,7 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      * Lists or switches active persona.
      */
     fun getPersonaList(): List<TwPersona> {
-        return memoryManager.listPersonas()
+        return runBlocking { memoryManager.listPersonas() }
     }
 
     /**
@@ -394,7 +397,7 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      */
     fun switchPersona(personaId: String): Boolean {
         val state = _brainState.value ?: return false
-        val personas = memoryManager.listPersonas()
+        val personas = runBlocking { memoryManager.listPersonas() }
         val found = personas.find { it.id == personaId } ?: return false
         state.memory = state.memory.copy(personaId = found.id)
         return true
@@ -480,26 +483,8 @@ class TwAgentChatBrain private constructor(private val context: Context) {
      * @param handler The AIToolHandler from the ChatViewModel (call: AIToolHandler.getInstance(context))
      */
     fun registerBrainTools(handler: com.ai.assistance.operit.core.tools.AIToolHandler) {
-        val executor: com.ai.assistance.operit.core.tools.ToolExecutor = { tool ->
-            val toolName = tool.name
-            val parameters = tool.parameters.associate { p -> p.name to (p.value ?: "") }
-            // executeSync is called on IO dispatcher by ToolExecutionManager
-            // We need to run this synchronously from the caller's context
-            // Since ToolExecutor is called from a coroutine scope, we use runBlocking as a bridge
-            // The alternative is to use GlobalScope but that's worse
-            var result: com.ai.assistance.operit.data.model.ToolResult? = null
-            kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
-                result = conversationLoop.handleBrainTool(toolName, parameters, _brainState.value ?: return@runBlocking)
-            }
-            result ?: com.ai.assistance.operit.data.model.ToolResult(
-                toolName = toolName,
-                success = false,
-                result = com.ai.assistance.operit.core.tools.StringResultData(""),
-                error = "Brain not initialized"
-            )
-        }
-
-        // Register all 15 brain tools
+        // Use the (AITool) -> ToolResult lambda overload of registerTool
+        // to avoid ToolExecutor interface type inference issues
         val brainToolNames = listOf(
             "tw_remember", "tw_recall", "tw_forget", "tw_insights",
             "tw_snapshot", "tw_rollback", "tw_branch", "tw_persona",
@@ -509,9 +494,24 @@ class TwAgentChatBrain private constructor(private val context: Context) {
         brainToolNames.forEach { name ->
             handler.registerTool(
                 name = name,
-                dangerCheck = { false }, // Brain tools are safe
-                descriptionGenerator = { getBrainToolDescription(name) },
-                executor = executor
+                dangerCheck = { false },
+                descriptionGenerator = { tool: com.ai.assistance.operit.data.model.AITool ->
+                    getBrainToolDescription(name)
+                },
+                executor = { tool: com.ai.assistance.operit.data.model.AITool ->
+                    val toolName = tool.name
+                    val parameters = tool.parameters.associate { p -> p.name to (p.value ?: "") }
+                    var result: com.ai.assistance.operit.data.model.ToolResult? = null
+                    kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+                        result = conversationLoop.handleBrainTool(toolName, parameters, _brainState.value ?: return@runBlocking)
+                    }
+                    result ?: com.ai.assistance.operit.data.model.ToolResult(
+                        toolName = toolName,
+                        success = false,
+                        result = com.ai.assistance.operit.core.tools.StringResultData(""),
+                        error = "Brain not initialized"
+                    )
+                }
             )
         }
         com.ai.assistance.operit.util.AppLogger.d(TAG, "Registered ${brainToolNames.size} brain tools")

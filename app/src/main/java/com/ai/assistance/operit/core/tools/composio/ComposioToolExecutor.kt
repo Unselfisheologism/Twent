@@ -2,7 +2,6 @@ package com.ai.assistance.operit.core.tools.composio
 
 import android.content.Context
 import com.ai.assistance.operit.data.integration.ComposioApiService
-import com.ai.assistance.operit.data.integration.ComposioApiService.ToolExecutionResponse
 import com.ai.assistance.operit.data.integration.IntegrationRepository
 import com.ai.assistance.operit.data.integration.model.AccountStatus
 import com.ai.assistance.operit.data.integration.model.ConnectedAccount
@@ -198,7 +197,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
 
         // Try to pretty-print JSON for readability
         return try {
-            val jsonObj = org.json.JSONObject(raw)
+            val jsonObj = org.json.JSONObject(raw as CharSequence)
             val pretty = jsonObj.toString(2)
             response.data?.let { data ->
                 if (data.isNotBlank()) "$pretty\n\nAdditional data: $data"

@@ -292,8 +292,7 @@ object TwSkillsManager {
                 name = skillName,
                 displayName = skillName.replace("-", " ").replaceFirstChar { it.uppercase() },
                 description = pkg.description,
-                category = category,
-                triggerKeywords = emptyList()
+                category = category
             )
         }
     }
