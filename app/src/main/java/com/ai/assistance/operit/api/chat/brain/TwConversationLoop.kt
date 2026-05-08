@@ -1,10 +1,12 @@
 package com.ai.assistance.operit.api.chat.brain
 
 import android.content.Context
+import com.ai.assistance.operit.core.tools.AIToolHandler
 import com.ai.assistance.operit.core.tools.StringResultData
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.UUID
@@ -74,10 +76,68 @@ class TwConversationLoop(private val context: Context) {
 
         // Default iteration budget
         const val DEFAULT_ITERATION_BUDGET = 20
+
+        /**
+         * Register all brain tools with an AIToolHandler.
+         * Called reflectively from ToolRegistration to avoid compile-time coupling.
+         */
+        @JvmStatic
+        fun registerBrainTools(ctx: Context, handler: AIToolHandler) {
+            val instance = getInstance(ctx)
+            val toolNames = BRAIN_TOOL_NAMES
+            val descriptionMap = mapOf(
+                "tw_remember" to "Save a memory: title, content, optional category/importance/tags. Memories persist across sessions.",
+                "tw_recall" to "Search memories: query parameter. Returns relevant memories with access count and age.",
+                "tw_forget" to "Delete a memory by title or id.",
+                "tw_insights" to "Show conversation insights: memory count, topic frequency, key facts learned.",
+                "tw_snapshot" to "Save mid-session state: title, optional description. Useful to bookmark a moment.",
+                "tw_rollback" to "Restore a previous snapshot by id.",
+                "tw_branch" to "Branch conversation: new topic/tone while keeping current context.",
+                "tw_persona" to "Switch between personas: list, switch, or create personas.",
+                "tw_btw" to "Add a side note to the conversation that gets revealed at the next turn.",
+                "tw_steer" to "Change topic direction mid-conversation.",
+                "tw_queue" to "Queue user messages for later: queue items to be sent when user is ready.",
+                "tw_yolo" to "Toggle YOLO mode: agent acts without tool calls or excessive explanation.",
+                "tw_fast" to "Toggle fast mode: minimal reasoning, direct responses.",
+                "tw_reasoning" to "Toggle deep reasoning mode: extensive chain-of-thought before answering.",
+                "tw_forget_user" to "Remove all knowledge about the user.",
+                "tw_learn_user" to "Store information about the user."
+            )
+
+            for (toolName in toolNames) {
+                handler.registerTool(
+                    name = toolName,
+                    dangerCheck = { false },
+                    descriptionGenerator = { descriptionMap[toolName] ?: "Brain tool: $toolName" },
+                    executor = { tool ->
+                        val params = tool.parameters.associate { it.name to (it.value ?: "").toString() }
+                        runBlocking {
+                            // Use a temporary TwBrainState for tool registration context
+                            val tempState = TwBrainState()
+                            instance.handleBrainToolSync(toolName, params, tempState)
+                        }
+                    }
+                )
+            }
+        }
     }
 
     private val memoryManager = TwMemoryManager.getInstance(context)
     private val promptBuilder = TwPromptBuilder.getInstance(context)
+
+    /**
+     * Synchronous wrapper for handleBrainTool used during tool registration.
+     * Creates a blocking bridge for the coroutine-based handler.
+     */
+    internal fun handleBrainToolSync(
+        toolName: String,
+        parameters: Map<String, String>,
+        state: TwBrainState
+    ): ToolResult {
+        return runBlocking {
+            handleBrainTool(toolName, parameters, state)
+        }
+    }
 
     /**
      * Check if a tool call is a brain tool that should be intercepted.

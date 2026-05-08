@@ -1063,14 +1063,14 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                 chatHistoryDelegate.truncateChatHistory(
                         rewindHistory,
                         timestampOfFirstDeletedMessage
-                )
+)
 
                 // 显示重新发送的消息准备状态
                 uiStateDelegate.showToast(context.getString(R.string.chat_preparing_resend))
 
                 // 使用修改后的消息内容来发送
                 messageProcessingDelegate.updateUserMessage(editedContent)
-                sendUserMessage()
+                sendUserMessage(isTwentAgent = true)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "回档并重新发送消息失败", e)
                 uiStateDelegate.showErrorMessage(context.getString(R.string.chat_rewind_failed, e.message ?: ""))
@@ -1195,8 +1195,11 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun sendUserMessage(promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT) {
-        messageCoordinationDelegate.sendUserMessage(promptFunctionType)
+fun sendUserMessage(
+        promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+        isTwentAgent: Boolean = false
+    ) {
+        messageCoordinationDelegate.sendUserMessage(promptFunctionType, isTwentAgent = isTwentAgent)
     }
     
     fun startUIAutomation(task: String) {

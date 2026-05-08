@@ -240,9 +240,10 @@ class MessageProcessingDelegate(
             enableWorkspaceAttachment: Boolean = false, // 新增工作区附着参数
             maxTokens: Int,
             tokenUsageThreshold: Double,
-            replyToMessage: ChatMessage? = null, // 新增回复消息参数
+replyToMessage: ChatMessage? = null, // 新增回复消息参数
             isAutoContinuation: Boolean = false, // 标识是否为自动续写
-            enableSummary: Boolean = true
+            enableSummary: Boolean = true,
+            isTwentAgent: Boolean = false // 标识是否为Twent AI Chat agent（启用brain）
     ) {
         val rawMessageText = messageTextOverride ?: _userMessage.value.text
         if (rawMessageText.isBlank() && attachments.isEmpty() && !isAutoContinuation) return
@@ -418,11 +419,27 @@ class MessageProcessingDelegate(
                 // 根据enableSummary控制Token阈值检查和Token超限回调
                 val effectiveMaxTokens = if (enableSummary) maxTokens else 0
                 val effectiveTokenUsageThreshold = if (enableSummary) tokenUsageThreshold else Double.POSITIVE_INFINITY
-                val effectiveOnTokenLimitExceeded = if (enableSummary) {
+val effectiveOnTokenLimitExceeded = if (enableSummary) {
                     suspend { onTokenLimitExceeded(activeChatId) }
                 } else {
                     null
                 }
+
+                // Twent AI Agent Brain: build enhanced system prompt if this is a Twent agent chat
+                val brainSystemPrompt = if (isTwentAgent) {
+                    try {
+                        val handler = com.ai.assistance.operit.core.tools.AIToolHandler.getInstance(context)
+                        val brainClass = Class.forName("com.ai.assistance.operit.api.chat.brain.TwAgentChatBrain")
+                        val getInstanceMethod = brainClass.getMethod("getInstance", Context::class.java,
+                            Class.forName("com.ai.assistance.operit.core.tools.AIToolHandler"))
+                        val brain = getInstanceMethod.invoke(null, context, handler)
+                        val buildMethod = brain.javaClass.getMethod("buildEnhancedSystemPrompt", String::class.java, List::class.java)
+                        @Suppress("UNCHECKED_CAST")
+                        buildMethod.invoke(brain, activeChatId, chatHistory) as String?
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
 
                 // 2. 使用 AIMessageManager 发送消息
                 val responseStream = AIMessageManager.sendMessage(
@@ -450,7 +467,8 @@ class MessageProcessingDelegate(
                     characterName = characterName,
                     avatarUri = avatarUri,
                     roleCardId = effectiveRoleCardId,
-                    proxySenderName = proxySenderNameOverride
+                    proxySenderName = proxySenderNameOverride,
+                    brainSystemPrompt = brainSystemPrompt
                 )
 
                 // 将字符串流共享，以便多个收集器可以使用

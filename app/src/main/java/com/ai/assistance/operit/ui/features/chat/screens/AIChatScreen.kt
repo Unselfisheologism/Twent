@@ -506,10 +506,10 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                                             actualViewModel.resetAttachmentPanelState()
                                             // Auto scroll to bottom
                                             autoScrollToBottom = true
-                                        } else {
-                                            // Normal chat mode
+} else {
+                                            // Normal chat mode — enable Twent AI Agent Brain for all AI Chat sends
                                             focusManager.clearFocus()
-                                            actualViewModel.sendUserMessage()
+                                            actualViewModel.sendUserMessage(isTwentAgent = true)
                                             actualViewModel.resetAttachmentPanelState()
                                             autoScrollToBottom = true
                                         }

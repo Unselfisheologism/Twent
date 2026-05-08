@@ -343,6 +343,19 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
         // TwSkillsManager not available — skip native skill tools
     }
 
+    // MCVP Brain Tools — tw_remember, tw_recall, tw_insights, tw_snapshot,
+    // tw_branch, tw_persona, tw_btw, tw_steer, tw_yolo, tw_fast, tw_reasoning
+    // tw_forget_user, tw_learn_user
+    try {
+        val twConversationLoop = Class.forName("com.ai.assistance.operit.api.chat.brain.TwConversationLoop")
+        val method = twConversationLoop.getMethod("registerBrainTools",
+            Context::class.java,
+            Class.forName("com.ai.assistance.operit.core.tools.AIToolHandler"))
+        method.invoke(null, context, handler)
+    } catch (_: Exception) {
+        // TwConversationLoop not available — skip brain tools
+    }
+
     // Composio Tool - use composio_tool with toolkit="github", tool="github_create_issue", params={"owner": "...", "repo": "...", "title": "..."}
     handler.registerTool(
             name = "composio_tool",

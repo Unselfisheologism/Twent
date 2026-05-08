@@ -92,7 +92,8 @@ class MessageCoordinationDelegate(
         roleCardIdOverride: String? = null,
         chatIdOverride: String? = null,
         messageTextOverride: String? = null,
-        proxySenderNameOverride: String? = null
+        proxySenderNameOverride: String? = null,
+        isTwentAgent: Boolean = false // enables Twent AI Agent Brain for this call
     ) {
         // 仅在没有指定 chatId 的情况下，才需要确保有当前对话
         if (chatIdOverride.isNullOrBlank() && chatHistoryDelegate.currentChatId.value == null) {
@@ -127,7 +128,8 @@ class MessageCoordinationDelegate(
                     roleCardIdOverride = roleCardIdOverride,
                     chatIdOverride = chatIdOverride,
                     messageTextOverride = messageTextOverride,
-                    proxySenderNameOverride = proxySenderNameOverride
+                    proxySenderNameOverride = proxySenderNameOverride,
+                    isTwentAgent = isTwentAgent
                 )
             }
         } else {
@@ -137,7 +139,8 @@ class MessageCoordinationDelegate(
                 roleCardIdOverride = roleCardIdOverride,
                 chatIdOverride = chatIdOverride,
                 messageTextOverride = messageTextOverride,
-                proxySenderNameOverride = proxySenderNameOverride
+                proxySenderNameOverride = proxySenderNameOverride,
+                isTwentAgent = isTwentAgent
             )
         }
     }
@@ -153,7 +156,8 @@ class MessageCoordinationDelegate(
         roleCardIdOverride: String? = null,
         chatIdOverride: String? = null,
         messageTextOverride: String? = null,
-        proxySenderNameOverride: String? = null
+        proxySenderNameOverride: String? = null,
+        isTwentAgent: Boolean = false
     ) {
         // 如果不是自动续写，更新当前的 promptFunctionType
         if (!isAutoContinuation) {
@@ -246,7 +250,8 @@ class MessageCoordinationDelegate(
             tokenUsageThreshold = tokenUsageThresholdForSend,
             replyToMessage = if (isBackgroundSend) null else getReplyToMessage(),
             isAutoContinuation = isAutoContinuation,
-            enableSummary = if (isBackgroundSend) false else apiConfigDelegate.enableSummary.value
+            enableSummary = if (isBackgroundSend) false else apiConfigDelegate.enableSummary.value,
+            isTwentAgent = isTwentAgent
         )
 
         // 只有在非续写（即用户主动发送）时才清空附件和UI状态
