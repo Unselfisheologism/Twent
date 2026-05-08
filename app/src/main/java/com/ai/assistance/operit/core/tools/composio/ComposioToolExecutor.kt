@@ -190,7 +190,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
      * The API returns a `result` String field — try to parse as JSON for pretty-printing.
      */
     private fun extractComposioResult(response: ToolExecutionResponse): String {
-        val raw = response.result
+        val raw: String = response.result
 
         if (raw.isBlank()) {
             return response.data ?: "OK"
