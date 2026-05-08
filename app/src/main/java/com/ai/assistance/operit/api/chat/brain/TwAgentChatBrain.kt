@@ -446,7 +446,6 @@ class TwAgentChatBrain private constructor(private val context: Context) {
             }
         }
     }
-    }
 
     /**
      * Track a tool call for insights.
