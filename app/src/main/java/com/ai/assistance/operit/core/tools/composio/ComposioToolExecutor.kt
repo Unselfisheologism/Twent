@@ -2,6 +2,7 @@ package com.ai.assistance.operit.core.tools.composio
 
 import android.content.Context
 import com.ai.assistance.operit.data.integration.ComposioApiService
+import com.ai.assistance.operit.data.integration.ToolExecutionResponse
 import com.ai.assistance.operit.data.integration.IntegrationRepository
 import com.ai.assistance.operit.data.integration.model.AccountStatus
 import com.ai.assistance.operit.data.integration.model.ConnectedAccount
@@ -188,7 +189,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
      * Extract readable text from Composio's ToolExecutionResponse.
      * The API returns a `result` String field — try to parse as JSON for pretty-printing.
      */
-    private fun extractComposioResult(response: ComposioApiService.ToolExecutionResponse): String {
+    private fun extractComposioResult(response: ToolExecutionResponse): String {
         val raw = response.result
 
         if (raw.isBlank()) {
@@ -197,7 +198,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
 
         // Try to pretty-print JSON for readability
         return try {
-            val jsonObj = org.json.JSONObject(raw as CharSequence)
+            val jsonObj = org.json.JSONObject(raw)
             val pretty = jsonObj.toString(2)
             response.data?.let { data ->
                 if (data.isNotBlank()) "$pretty\n\nAdditional data: $data"
