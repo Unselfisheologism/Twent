@@ -198,7 +198,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
 
         // Try to pretty-print JSON for readability
         return try {
-            val jsonObj = org.json.JSONObject(raw as String)
+            val jsonObj = org.json.JSONObject(raw)
             val pretty = jsonObj.toString(2)
             response.data?.let { data ->
                 if (data.isNotBlank()) "$pretty\n\nAdditional data: $data"
