@@ -198,7 +198,7 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
    * @param chatModelHasDirectImage Whether the chat model has direct image capability
    * @return The complete system prompt with package information
    */
-  fun getSystemPrompt(
+fun getSystemPrompt(
           packageManager: PackageManager,
           workspacePath: String? = null,
           workspaceEnv: String? = null,
@@ -212,9 +212,15 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
           chatModelHasDirectImage: Boolean = false,
           hasAudioRecognition: Boolean = false,
           hasVideoRecognition: Boolean = false,
-          chatModelHasDirectAudio: Boolean = false,
           chatModelHasDirectVideo: Boolean = false,
-          useToolCallApi: Boolean = false
+          useToolCallApi: Boolean = false,
+          /**
+           * Brain-level injection (memory, persona, mid-session notes, etc.)
+           * Appended AFTER all tool guidance — hermes-agent layering pattern.
+           * Unlike customSystemPromptTemplate (which replaces the template),
+           * brainPromptInjection always preserves the base prompt's tool instructions.
+           */
+          brainPromptInjection: String = ""
   ): String {
     val importedPackages = packageManager.getImportedPackages()
     val mcpServers = packageManager.getAvailableServerPackages()
@@ -410,6 +416,13 @@ packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., server
     // Clean up multiple consecutive blank lines (replace 3+ newlines with 2)
     prompt = prompt.replace(Regex("\n{3,}"), "\n\n")
 
+    // FIX 1: Append brain injection AFTER all tool guidance (hermes-agent layering)
+    // Brain content (memory, persona, mid-session notes) comes LAST, never replaces
+    // the base template. This preserves tool instructions as the highest priority.
+    if (brainPromptInjection.isNotEmpty()) {
+        prompt = prompt.trimEnd() + "\n\n" + brainPromptInjection
+    }
+
     return prompt
   }
 
@@ -474,7 +487,8 @@ packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., server
           hasVideoRecognition: Boolean = false,
           chatModelHasDirectAudio: Boolean = false,
           chatModelHasDirectVideo: Boolean = false,
-          useToolCallApi: Boolean = false
+          useToolCallApi: Boolean = false,
+          brainPromptInjection: String = ""
   ): String {
     // Get the base system prompt
     val basePrompt = getSystemPrompt(
@@ -493,7 +507,8 @@ packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., server
         hasVideoRecognition = hasVideoRecognition,
         chatModelHasDirectAudio = chatModelHasDirectAudio,
         chatModelHasDirectVideo = chatModelHasDirectVideo,
-        useToolCallApi = useToolCallApi
+        useToolCallApi = useToolCallApi,
+        brainPromptInjection = brainPromptInjection
     )
 
     // Apply custom prompts

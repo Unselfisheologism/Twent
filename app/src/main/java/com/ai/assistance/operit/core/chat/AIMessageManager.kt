@@ -352,8 +352,11 @@ object AIMessageManager {
                 characterName = characterName,
                 avatarUri = avatarUri,
                 roleCardId = roleCardId,
+                // FIX 1: brainSystemPrompt goes to brainPromptInjection (append after tool guidance)
+                // NOT customSystemPromptTemplate (which would replace the entire template)
                 proxySenderName = proxySenderName,
-                customSystemPromptTemplate = brainSystemPrompt,
+                customSystemPromptTemplate = "", // brain goes to brainPromptInjection, not here
+                brainPromptInjection = brainSystemPrompt ?: "",
                 stream = enableStream
             ).share(
                 scope = scope,

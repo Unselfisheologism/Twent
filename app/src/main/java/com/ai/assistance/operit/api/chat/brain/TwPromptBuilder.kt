@@ -100,22 +100,23 @@ class TwPromptBuilder(private val context: Context) {
             sb.appendLine()
         }
 
-        // 4b. Active skills injection (hermes-agent's "Skills Are Slash Commands")
-        // hermes-agent: /android-development → instructions injected forever
+        // 4b. FIX 3: Progressive disclosure for skills — inject INDEX only, NOT full content.
+        // hermes-agent pattern: inject skill names/descriptions; LLM loads full content on-demand.
+        // Full skill content is loaded when relevant via the skill_view tool.
         if (loadedSkills.isNotEmpty()) {
             sb.appendLine("=== ACTIVE SKILLS ===")
             sb.appendLine("(loaded via /slash-command — remain active for this session)")
+            sb.appendLine("To use a skill's full instructions, call skill_view(name=\"skill_name\")")
             sb.appendLine()
             loadedSkills.forEach { skill ->
                 val keywords = if (skill.triggerKeywords.isNotEmpty()) {
                     " | Keywords: ${skill.triggerKeywords.joinToString(", ")}"
                 } else ""
-                sb.appendLine("--- ${skill.displayName}")
-                sb.appendLine("Category: ${skill.category}$keywords")
-                sb.appendLine()
-                // Strip YAML frontmatter before injecting — agent already knows metadata
-                sb.appendLine(stripFrontmatter(skill.skillContent))
-                sb.appendLine()
+                val triggerHint = if (skill.triggerKeywords.isNotEmpty()) {
+                    " (or say: ${skill.triggerKeywords.first()})"
+                } else ""
+                sb.appendLine("  - ${skill.displayName}${triggerHint}${keywords}")
+                sb.appendLine("    Category: ${skill.category} | ${skill.description}")
             }
         }
 
@@ -125,10 +126,11 @@ class TwPromptBuilder(private val context: Context) {
         sb.appendLine("Use them wisely. Combine operations when possible.")
         sb.appendLine()
 
-        // 6. Base system prompt (the existing Twent system prompt)
-        sb.appendLine("=== BASE SYSTEM PROMPT ===")
-        sb.appendLine(basePrompt)
-        sb.appendLine()
+        // 6. NOTE: The base system prompt is NOT included here.
+        // TwPromptBuilder's output goes to brainPromptInjection, which is appended AFTER
+        // the base prompt in SystemPromptConfig.getSystemPrompt().
+        // Including basePrompt here would duplicate it.
+        // Layering: [tool guidance] + [base prompt] + [brain context] — hermes-agent style.
 
         // 7. Brain-specific additional instructions
         sb.appendLine("=== BRAIN ENHANCEMENT RULES ===")

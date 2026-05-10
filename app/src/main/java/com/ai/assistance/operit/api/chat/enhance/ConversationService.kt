@@ -243,7 +243,13 @@ class ConversationService(
             chatModelHasDirectVideo: Boolean = false,
             useToolCallApi: Boolean = false,
             chatModelHasDirectImage: Boolean = false,
-            functionType: FunctionType = FunctionType.CHAT
+            functionType: FunctionType = FunctionType.CHAT,
+            /**
+             * Brain-level injection appended AFTER base prompt (hermes-agent layering).
+             * DO NOT confuse with customSystemPromptTemplate which replaces the template.
+             * brainPromptInjection always preserves tool guidance as the priority layer.
+             */
+            brainPromptInjection: String = ""
     ): List<Pair<String, String>> {
         val preparedHistory = mutableListOf<Pair<String, String>>()
         conversationMutex.withLock {
@@ -283,8 +289,21 @@ class ConversationService(
                     )
                 }.orEmpty()
 
-                // 获取自定义系统提示模板
-                val finalCustomSystemPromptTemplate = customSystemPromptTemplate ?: apiPreferences.customSystemPromptTemplateFlow.first()
+                // FIX 1: Brain injection → brainPromptInjection param (append), NOT customSystemPromptTemplate (replace)
+                // customSystemPromptTemplate replaces the whole template (kills tool guidance)
+                // brainPromptInjection is appended AFTER the base prompt (hermes-agent layering: tool first, context second)
+                val finalBrainPromptInjection: String
+                if (brainPromptInjection.isNotEmpty()) {
+                    // Brain passed via dedicated param — use as injection, keep customSystemPromptTemplate separate
+                    finalBrainPromptInjection = brainPromptInjection
+                    // customSystemPromptTemplate from user settings is preserved separately below
+                } else if (!customSystemPromptTemplate.isNullOrEmpty()) {
+                    // Fallback: customSystemPromptTemplate passed as brainInjection to preserve it
+                    // (avoids breaking existing callers that don't pass brainPromptInjection)
+                    finalBrainPromptInjection = customSystemPromptTemplate
+                } else {
+                    finalBrainPromptInjection = apiPreferences.customSystemPromptTemplateFlow.first()
+                }
 
                 // 获取工具启用状态
                 val enableTools = apiPreferences.enableToolsFlow.first()
@@ -295,7 +314,7 @@ class ConversationService(
 
                 val useEnglish = LocaleUtils.getCurrentLanguage(context).lowercase().startsWith("en")
 
-                // 获取系统提示词，现在传入workspacePath和识图配置状态
+                // 获取系统提示词 now with brainPromptInjection appended AFTER tool guidance
                 val systemPrompt = SystemPromptConfig.getSystemPromptWithCustomPrompts(
                     packageManager = packageManager,
                     workspacePath = workspacePath,
@@ -304,7 +323,7 @@ class ConversationService(
                     customIntroPrompt = introPrompt,
                     useEnglish = useEnglish,
                     thinkingGuidance = thinkingGuidance,
-                    customSystemPromptTemplate = finalCustomSystemPromptTemplate,
+                    customSystemPromptTemplate = "", // FIX 1: Don't use customSystemPromptTemplate — brain goes to brainPromptInjection
                     enableTools = enableTools,
                     enableMemoryQuery = enableMemoryQuery,
                     hasImageRecognition = hasImageRecognition,
@@ -313,7 +332,8 @@ class ConversationService(
                     hasVideoRecognition = hasVideoRecognition,
                     chatModelHasDirectAudio = chatModelHasDirectAudio,
                     chatModelHasDirectVideo = chatModelHasDirectVideo,
-                    useToolCallApi = useToolCallApi
+                    useToolCallApi = useToolCallApi,
+                    brainPromptInjection = finalBrainPromptInjection
                 )
 
                 // 构建waifu特殊规则

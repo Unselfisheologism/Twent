@@ -544,9 +544,19 @@ class TwConversationLoop(private val context: Context) {
         // Track tool usage
         brainState.trackToolCall(toolName)
 
+        // FIX 5: Log iteration budget usage periodically so user can monitor budget consumption
+        val iterationsRemaining = brainState.iterationBudget - brainState.currentIteration - 1
+        if (brainState.currentIteration > 0 && brainState.currentIteration % 5 == 0) {
+            AppLogger.i(TAG, "FIX 5 — Iteration $brainState.currentIteration/$brainState.iterationBudget | " +
+                    "Budget used: ${brainState.currentIteration}/${brainState.iterationBudget} | " +
+                    "Remaining: $iterationsRemaining | " +
+                    "Last tool: $toolName")
+        }
+
         // Reset iteration if this was the last allowed tool call
         if (!brainState.consumeIteration()) {
-            AppLogger.w(TAG, "Iteration budget exhausted after $toolName")
+            AppLogger.w(TAG, "Iteration budget EXHAUSTED after $toolName (was on iteration $brainState.currentIteration/$brainState.iterationBudget). " +
+                    "Consider increasing budget for complex tasks or improving tool error messages.")
         }
     }
 

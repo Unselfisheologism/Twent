@@ -195,51 +195,66 @@ data class TwBrainState(
      * Inject memory-relevant context for the current prompt.
      * Returns formatted string to prepend to system prompt.
      */
+    /**
+     * FIX 2: hermes-agent-style bounded memory injection.
+     * Hard cap: ~2,200 chars total for entire memory block.
+     * Simple key-value format, no metadata overhead.
+     * Sorted by importance; fills until cap reached.
+     */
     fun buildMemoryInjection(userQuery: String): String {
-        if (memory.memories.isEmpty() && userProfile.name.isEmpty()) {
-            return ""
-        }
-
         val sb = StringBuilder()
-        sb.appendLine("\n[BRAIN MEMORY - READ CAREFULLY]")
-        sb.appendLine("These are your persistent memories from previous sessions.")
-        sb.appendLine("Use them to give context-aware, personalized responses.")
+        val MEMORY_CAP = 2000
 
-        if (userProfile.name.isNotEmpty()) {
-            sb.appendLine("\nUSER PROFILE:")
-            sb.appendLine("  Name: ${userProfile.name}")
-            if (userProfile.bio.isNotEmpty()) sb.appendLine("  Bio: ${userProfile.bio}")
-            if (userProfile.communicationStyle.isNotEmpty()) {
-                sb.appendLine("  Communication style: ${userProfile.communicationStyle}")
-            }
-            if (userProfile.ongoingProjects.isNotEmpty()) {
-                sb.appendLine("  Ongoing projects: ${userProfile.ongoingProjects.joinToString(", ")}")
-            }
-        }
-
+        // MEMORY.md section (~2,200 char limit in hermes-agent)
         if (memory.memories.isNotEmpty()) {
-            // Sort by relevance (importance + recency) and take top entries
-            val relevant = memory.memories
-                .sortedByDescending { it.importance * (1 + it.accessCount * 0.1) }
+            sb.appendLine("\n[MEMORY]")
+            for (entry in memory.memories
+                .sortedByDescending { it.importance }
                 .take(15)
-
-            sb.appendLine("\nPERSISTENT MEMORIES:")
-            for (entry in relevant) {
-                sb.appendLine("  [${entry.category}] ${entry.title}: ${entry.content}")
+            ) {
+                val line = "  ${entry.title}: ${entry.content}"
+                if (sb.length + line.length > MEMORY_CAP) break
+                sb.appendLine(line)
             }
         }
 
-        if (midSessionNotes.isNotEmpty()) {
-            val steers = midSessionNotes.filter { it.type == NoteType.STEER_DIRECTIVE }
-            if (steers.isNotEmpty()) {
-                sb.appendLine("\nMID-SESSION DIRECTIVES:")
-                for (note in steers) {
-                    sb.appendLine("  → ${note.content}")
+        // USER.md section (~1,375 char limit in hermes-agent)
+        if (userProfile.name.isNotEmpty()) {
+            val profileLines = buildString {
+                appendLine("  user_name: ${userProfile.name}")
+                if (userProfile.bio.isNotEmpty()) appendLine("  user_bio: ${userProfile.bio}")
+                if (userProfile.communicationStyle.isNotEmpty()) {
+                    appendLine("  user_style: ${userProfile.communicationStyle}")
+                }
+                if (userProfile.ongoingProjects.isNotEmpty()) {
+                    appendLine("  user_projects: ${userProfile.ongoingProjects.joinToString(", ")}")
+                }
+                // Flatten preferences
+                for ((k, v) in userProfile.preferences) {
+                    appendLine("  user_pref_${k}: $v")
                 }
             }
+            if (sb.length + profileLines.length <= MEMORY_CAP) {
+                sb.appendLine("\n[USER]")
+                sb.append(profileLines)
+            }
         }
 
-        sb.appendLine("[END BRAIN MEMORY]")
+        // Mid-session steer directives (only directive-type notes, kept minimal)
+        if (midSessionNotes.isNotEmpty()) {
+            val steerLines = buildString {
+                for (note in midSessionNotes.filter { it.type == NoteType.STEER_DIRECTIVE }) {
+                    val line = "  steer: ${note.content.take(150)}"
+                    if (sb.length + length + line.length > MEMORY_CAP) break
+                    appendLine(line)
+                }
+            }
+            if (steerLines.isNotEmpty() && sb.length + steerLines.length <= MEMORY_CAP) {
+                sb.appendLine("\n[STEER]")
+                sb.append(steerLines)
+            }
+        }
+
         return sb.toString()
     }
 
