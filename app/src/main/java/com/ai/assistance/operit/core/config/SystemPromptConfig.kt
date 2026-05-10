@@ -212,6 +212,7 @@ fun getSystemPrompt(
           chatModelHasDirectImage: Boolean = false,
           hasAudioRecognition: Boolean = false,
           hasVideoRecognition: Boolean = false,
+          chatModelHasDirectAudio: Boolean = false,
           chatModelHasDirectVideo: Boolean = false,
           useToolCallApi: Boolean = false,
           /**
