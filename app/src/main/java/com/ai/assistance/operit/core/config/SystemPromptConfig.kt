@@ -533,7 +533,8 @@ packagesSection.appendLine("- For MCP servers: Call tools directly (e.g., server
         hasVideoRecognition = false,
         chatModelHasDirectAudio = false,
         chatModelHasDirectVideo = false,
-        useToolCallApi = false
+        useToolCallApi = false,
+        brainPromptInjection = ""
     )
   }
 
