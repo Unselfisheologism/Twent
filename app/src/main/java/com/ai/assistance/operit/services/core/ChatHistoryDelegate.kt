@@ -9,6 +9,7 @@ import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.data.repository.ChatHistoryManager
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -43,6 +44,12 @@ class ChatHistoryDelegate(
     private val isInitialized = AtomicBoolean(false)
     private val historyUpdateMutex = Mutex()
     private val allowAddMessage = AtomicBoolean(true) // 控制是否允许添加消息，切换对话时设为false
+
+    // Guard against concurrent reloads that cause UI vanishing
+    private val isReloading = AtomicBoolean(false)
+
+    // Track chatId of current reload for logging
+    private val currentReloadChatId = AtomicReference<String?>(null)
 
     private var pendingPersistChatOrderJob: Job? = null
 
@@ -146,42 +153,53 @@ class ChatHistoryDelegate(
      * @param chatId 聊天ID
      */
     suspend fun reloadChatMessagesSmart(chatId: String) {
-        historyUpdateMutex.withLock {
-            try {
-                // 从数据库加载最新消息
-                val newMessages = chatHistoryManager.loadChatMessages(chatId)
-                val currentMessages = _chatHistory.value
-                
-                AppLogger.d(TAG, "智能重新加载聊天 $chatId: 当前 ${currentMessages.size} 条，数据库 ${newMessages.size} 条")
-                
-                // 创建 timestamp 到消息的映射，用于快速查找
-                val currentMessageMap = currentMessages.associateBy { it.timestamp }
-                
-                // 智能合并：保持已存在消息的实例，只更新内容（如果变化）
-                val mergedMessages = newMessages.map { newMsg ->
-                    val existingMsg = currentMessageMap[newMsg.timestamp]
-                    if (existingMsg != null) {
-                        // 消息已存在，保持原实例，但更新内容（如果内容有变化）
-                        if (existingMsg.content != newMsg.content || existingMsg.roleName != newMsg.roleName) {
-                            existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
+        // Guard against concurrent reloads that cause UI vanishing
+        if (!isReloading.compareAndSet(false, true)) {
+            AppLogger.d(TAG, "Reload already in progress for chatId=$chatId (current: ${currentReloadChatId.get()}), skipping duplicate call")
+            return
+        }
+        currentReloadChatId.set(chatId)
+        try {
+            historyUpdateMutex.withLock {
+                try {
+                    // 从数据库加载最新消息
+                    val newMessages = chatHistoryManager.loadChatMessages(chatId)
+                    val currentMessages = _chatHistory.value
+
+                    AppLogger.d(TAG, "智能重新加载聊天 $chatId: 当前 ${currentMessages.size} 条，数据库 ${newMessages.size} 条")
+
+                    // 创建 timestamp 到消息的映射，用于快速查找
+                    val currentMessageMap = currentMessages.associateBy { it.timestamp }
+
+                    // 智能合并：保持已存在消息的实例，只更新内容（如果变化）
+                    val mergedMessages = newMessages.map { newMsg ->
+                        val existingMsg = currentMessageMap[newMsg.timestamp]
+                        if (existingMsg != null) {
+                            // 消息已存在，保持原实例，但更新内容（如果内容有变化）
+                            if (existingMsg.content != newMsg.content || existingMsg.roleName != newMsg.roleName) {
+                                existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
+                            } else {
+                                existingMsg
+                            }
                         } else {
-                            existingMsg
+                            // 新消息，直接添加
+                            newMsg
                         }
-                    } else {
-                        // 新消息，直接添加
-                        newMsg
                     }
+
+                    // 更新聊天历史
+                    _chatHistory.value = mergedMessages
+
+                    // 重新加载完成后，允许添加消息
+                    allowAddMessage.set(true)
+                    AppLogger.d(TAG, "智能合并完成: ${mergedMessages.size} 条消息，已允许添加消息")
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "智能重新加载聊天消息失败", e)
                 }
-                
-                // 更新聊天历史
-                _chatHistory.value = mergedMessages
-                
-                // 重新加载完成后，允许添加消息
-                allowAddMessage.set(true)
-                AppLogger.d(TAG, "智能合并完成: ${mergedMessages.size} 条消息，已允许添加消息")
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "智能重新加载聊天消息失败", e)
             }
+        } finally {
+            isReloading.set(false)
+            currentReloadChatId.set(null)
         }
     }
 
