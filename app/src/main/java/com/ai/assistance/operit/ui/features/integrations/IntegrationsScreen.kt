@@ -54,7 +54,7 @@ fun IntegrationsScreen() {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var connectingToolkit by remember { mutableStateOf<String?>(null) }
     
-    // Load toolkits and connections
+// Load toolkits and connections with full pagination
     LaunchedEffect(Unit) {
         loadIntegrations(composioApi, { items ->
             toolkits = items
@@ -64,7 +64,7 @@ fun IntegrationsScreen() {
             isLoading = false
         })
     }
-    
+
     // Refresh function
     fun refresh() {
         isLoading = true
@@ -79,14 +79,15 @@ fun IntegrationsScreen() {
             })
         }
     }
-    
+
+    // Filter out internal/non-user-facing Composio toolkits
+    // These are infrastructure/tooling toolkits, not user integrations
+    private val INTERNAL_TOOLKIT_SLUGS = setOf(
+        "composio",         // The platform itself — not a user service
+        "composio_search"  // Internal search tooling, not a user integration
+    )
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Header
-        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -224,7 +225,10 @@ data class ToolkitItem(
 )
 
 /**
- * Load integrations from Composio API
+ * Load ALL toolkits from Composio using cursor-based pagination.
+ * Composio returns max 50 per page — loop until no next_cursor.
+ * Also fetch connections to mark which toolkits are already linked.
+ * Filters out internal Composio toolkits (composio, composio_search).
  */
 private suspend fun loadIntegrations(
     composioApi: ComposioApiService,
@@ -232,42 +236,58 @@ private suspend fun loadIntegrations(
     onError: (String) -> Unit
 ) {
     try {
-        // Check if API key is configured
         if (!composioApi.isConfigured()) {
             onError("Composio API key not configured. Add COMPOSIO_API_KEY to local.properties.")
             return
         }
-        
-        // Load toolkits
-        val toolkitsResult = composioApi.listToolkits(limit = 50)
+
+        // Fetch all toolkits via offset-based pagination (Composio max 50/page)
+        val allToolkits = mutableListOf<com.ai.assistance.operit.data.integration.model.ToolkitDefinition>()
+        var offset = 0
+        var hasMore = true
+
+        while (hasMore) {
+            val result = composioApi.listToolkits(limit = 50, offset = offset)
+            result.fold(
+                onSuccess = { toolkits ->
+                    allToolkits.addAll(toolkits)
+                    // If we got fewer than 50, we've reached the end
+                    hasMore = toolkits.size >= 50
+                    offset += 50
+                },
+                onFailure = { error ->
+                    onError("Failed to load toolkits: ${error.message}")
+                    return
+                }
+            )
+        }
+
+        // Fetch all connected accounts
         val connectionsResult = composioApi.listConnections()
-        
-        toolkitsResult.fold(
-            onSuccess = { toolkits ->
-                // Build a map of connected toolkit slugs -> connected account IDs
-                val connectedToolkits = mutableMapOf<String, String>()
-                connectionsResult.getOrNull()?.forEach { conn ->
-                    if (conn.status == "ACTIVE") {
-                        connectedToolkits[conn.toolkit] = conn.id
-                    }
-                }
-                
-                val items = toolkits.map { toolkit ->
-                    ToolkitItem(
-                        slug = toolkit.name, // parseToolkitsResponse puts slug in "name" field
-                        name = toolkit.displayName,
-                        description = toolkit.description,
-                        isConnected = connectedToolkits.containsKey(toolkit.name),
-                        connectedAccountId = connectedToolkits[toolkit.name],
-                        logoUrl = null
-                    )
-                }
-                onSuccess(items)
-            },
-            onFailure = { error ->
-                onError("Failed to load toolkits: ${error.message}")
+        val connectedToolkits = mutableMapOf<String, String>()
+        connectionsResult.getOrNull()?.forEach { conn ->
+            if (conn.status == "ACTIVE") {
+                connectedToolkits[conn.toolkit] = conn.id
             }
-        )
+        }
+
+        // Internal toolkits to filter out
+        val internalSlugs = setOf("composio", "composio_search")
+
+        // Map to ToolkitItems, filtering internal toolkits
+        val items = allToolkits
+            .filter { it.name !in internalSlugs }
+            .map { toolkit ->
+                ToolkitItem(
+                    slug = toolkit.name,
+                    name = toolkit.displayName,
+                    description = toolkit.description,
+                    isConnected = connectedToolkits.containsKey(toolkit.name),
+                    connectedAccountId = connectedToolkits[toolkit.name],
+                    logoUrl = null
+                )
+            }
+        onSuccess(items)
     } catch (e: Exception) {
         onError("Error loading integrations: ${e.message}")
     }

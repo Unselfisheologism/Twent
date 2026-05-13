@@ -825,13 +825,31 @@ class ComposioApiService(private val context: Context) {
         }
     }
     
+    /**
+     * Build the request body for tool execution.
+     *
+     * Composio v3 API: Only ONE of 'text' or 'arguments' may be provided —
+     * never both. 'text' is a raw string for LLM-based tools.
+     * 'arguments' is a flat dict for structured parameter tools.
+     *
+     * Also: top-level fields only — NO nested "parameters" wrapper.
+     * The API expects flat "arguments" key, not "parameters".
+     */
     private fun buildToolExecutionBody(
         parameters: Map<String, Any>,
-        accountId: String?
+        accountId: String?,
+        text: String? = null
     ): JsonObject {
-        val body = mutableMapOf<String, JsonElement>(
-            "parameters" to buildJsonObject(parameters)
-        )
+        val body = mutableMapOf<String, JsonElement>()
+
+        // Mutually exclusive: text OR arguments, never both
+        if (!text.isNullOrBlank()) {
+            body["text"] = JsonPrimitive(text)
+        } else {
+            // Flat 'arguments' key (NOT nested under 'parameters')
+            body["arguments"] = buildJsonObject(parameters)
+        }
+
         accountId?.let { body["account_id"] = JsonPrimitive(it) }
         return JsonObject(body)
     }
