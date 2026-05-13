@@ -842,12 +842,19 @@ class ComposioApiService(private val context: Context) {
     ): JsonObject {
         val body = mutableMapOf<String, JsonElement>()
 
+        // Check if text was accidentally passed in the parameters map (LLM may do this).
+        // Pull it out so we send the correct v3 format.
+        val textFromParams = parameters["text"]?.toString()
+        val hasText = !text.isNullOrBlank() || !textFromParams.isNullOrBlank()
+
         // Mutually exclusive: text OR arguments, never both
-        if (!text.isNullOrBlank()) {
-            body["text"] = JsonPrimitive(text)
+        if (hasText) {
+            body["text"] = JsonPrimitive(text ?: textFromParams)
         } else {
             // Flat 'arguments' key (NOT nested under 'parameters')
-            body["arguments"] = buildJsonObject(parameters)
+            // Also remove any 'text' key from the arguments map if LLM accidentally included it
+            val cleanParams = parameters.filterKeys { it != "text" }
+            body["arguments"] = buildJsonObject(cleanParams)
         }
 
         accountId?.let { body["account_id"] = JsonPrimitive(it) }
