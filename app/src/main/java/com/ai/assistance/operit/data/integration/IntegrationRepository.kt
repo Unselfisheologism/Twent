@@ -28,7 +28,7 @@ class IntegrationRepository(private val context: Context) {
 
   companion object {
     private const val TAG = "IntegrationRepository"
-    private const val INTEGRATION_DIR = "Operit/integration"
+    private const val INTEGRATION_DIR = "Twent/integration"
     private const val ACCOUNTS_DIR = "accounts"
     private const val WEBHOOKS_DIR = "webhooks"
 
