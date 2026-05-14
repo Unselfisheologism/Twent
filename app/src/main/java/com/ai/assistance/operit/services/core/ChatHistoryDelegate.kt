@@ -172,28 +172,29 @@ class ChatHistoryDelegate(
                     val currentMessageMap = currentMessages.associateBy { it.timestamp }
 
                     // 智能合并：保持已存在消息的实例，只更新内容（如果变化）
-                    // CRITICAL FIX: Always prefer the message with LONGER content. This prevents
-                    // the vanishing bug where reloadChatMessagesSmart (called after tool completion)
-                    // replaces a complete in-memory streaming message with a stale/partial DB version.
+                    // FIX: Preserve in-memory streaming messages — DB version is stale during active streaming.
+                    // The in-memory message has the latest content being written, while DB hasn't caught up.
                     val mergedMessages = newMessages.map { newMsg ->
                         val existingMsg = currentMessageMap[newMsg.timestamp]
                         if (existingMsg != null) {
-                            // 消息已存在，保持原实例，但更新内容（如果变化）
-                            if (existingMsg.content != newMsg.content || existingMsg.roleName != newMsg.roleName) {
-                                // Prefer longer content — in-memory is always more up-to-date during streaming
+                            // Keep in-memory if it has an active stream (always more current than DB)
+                            if (existingMsg.contentStream != null) {
+                                // Merge: update content from DB if it's LONGER (DB has completed final content)
+                                // but only if in-memory stream is null (streaming finished)
+                                if (newMsg.content.length > existingMsg.content.length && existingMsg.content.isNotEmpty()) {
+                                    existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
+                                } else {
+                                    existingMsg // Keep in-memory (has stream = most current)
+                                }
+                            } else {
+                                // No stream in memory — use DB version if longer, otherwise keep memory
                                 if (newMsg.content.length > existingMsg.content.length) {
                                     existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
                                 } else {
-                                    // Keep existing (in-memory) even if content matches —
-                                    // in-memory may have complete content while DB version
-                                    // still has contentStream set, causing UI to discard it
                                     existingMsg
                                 }
-                            } else {
-                                existingMsg
                             }
                         } else {
-                            // 新消息，直接添加
                             newMsg
                         }
                     }
@@ -675,29 +676,30 @@ class ChatHistoryDelegate(
             // 当前会话：尝试在内存中定位并更新
             val currentMessages = _chatHistory.value
             val existingIndex = currentMessages.indexOfFirst { it.timestamp == message.timestamp }
-
             if (existingIndex >= 0) {
-                // 如果新消息结束了流，或者现有消息丢失了流（例如页面切换后重新加载），则允许替换以恢复流或更新最终内容。
-                // Also update if content has changed, even when both streams are non-null (e.g., a new AI turn
-                // completes after a tool call — the old turn's initial message has non-null stream, but we still
-                // need to replace it with the new turn's final content so the UI stays in sync).
+                // FIX: Prevent tool result from being replaced by the AI response that follows.
+                // Tool results have contentStream=null (complete, non-streaming).
+                // AI response after tool call has contentStream!=null (in-progress streaming).
+                // We must NEVER replace a complete message with an in-progress one.
                 val existingMsg = currentMessages[existingIndex]
-                val shouldReplace = message.contentStream == null
-                        || existingMsg.contentStream == null
-                        || message.content != existingMsg.content
-                if (shouldReplace) {
-                    AppLogger.d(TAG, "更新消息到聊天 $targetChatId, condition met, ts: ${message.timestamp}")
-                    val updatedMessages = currentMessages.mapIndexed { index, _ ->
-                        if (index == existingIndex) {
-                            message // 替换为新消息对象
-                        } else {
-                            currentMessages[index]
+                val existingIsComplete = existingMsg.contentStream == null
+                val incomingIsStreaming = message.contentStream != null
+                // If existing is complete and incoming is still streaming, skip replacement
+                if (existingIsComplete && incomingIsStreaming) {
+                    // Just update in DB, keep existing message in UI
+                    chatHistoryManager.updateMessage(targetChatId, message)
+                } else {
+                    val shouldReplace = message.contentStream == null
+                            || existingMsg.contentStream == null
+                            || message.content != existingMsg.content
+                    if (shouldReplace) {
+                        val updatedMessages = currentMessages.mapIndexed { index, _ ->
+                            if (index == existingIndex) message else currentMessages[index]
                         }
+                        _chatHistory.value = updatedMessages
                     }
-                    _chatHistory.value = updatedMessages
+                    chatHistoryManager.updateMessage(targetChatId, message)
                 }
-
-                chatHistoryManager.updateMessage(targetChatId, message)
             } else {
                 AppLogger.d(
                     TAG,
