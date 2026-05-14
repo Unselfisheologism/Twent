@@ -235,18 +235,51 @@ private suspend fun loadIntegrations(
         val allToolkits = mutableListOf<com.ai.assistance.operit.data.integration.model.ToolkitDefinition>()
         var nextCursor: String? = null
 
+        // Safety: limit max pages to 50 (max 2500 toolkits — well beyond Composio's actual count)
+        var pageCount = 0
+        val maxPages = 50
+        var lastCursor: String? = null
+        var stuckCount = 0
+
         do {
             val rawResponse = composioApi.fetchToolkitsRaw(limit = 50, nextCursor = nextCursor)
             if (rawResponse == null) {
                 AppLogger.e("Integrations", "Failed to fetch toolkits page (null response)")
+                // Fall back: if we got some toolkits, return them instead of failing
+                if (allToolkits.isNotEmpty()) {
+                    AppLogger.w("Integrations", "Returning ${allToolkits.size} toolkits fetched before failure")
+                    break
+                }
                 return Result.failure(Exception("Failed to fetch toolkits"))
             }
+
+            // Log raw response for debugging (first 500 chars to avoid log spam)
+            AppLogger.d("Integrations", "Raw response (${rawResponse.length} chars): ${rawResponse.take(500)}")
 
             val toolkits = composioApi.parseToolkits(rawResponse)
             allToolkits.addAll(toolkits)
             nextCursor = composioApi.getToolkitsNextCursor(rawResponse)
             
-            AppLogger.d("Integrations", "Loaded ${toolkits.size} toolkits, next_cursor=$nextCursor, total so far=${allToolkits.size}")
+            AppLogger.d("Integrations", "Parsed ${toolkits.size} toolkits, next_cursor=$nextCursor, total=${allToolkits.size}")
+
+            // Guard against infinite loop: if cursor keeps repeating, stop
+            if (nextCursor == lastCursor && nextCursor != null) {
+                stuckCount++
+                if (stuckCount >= 2) {
+                    AppLogger.w("Integrations", "Cursor stuck on '$nextCursor', stopping pagination after ${pageCount + 1} pages")
+                    nextCursor = null
+                }
+            } else {
+                stuckCount = 0
+            }
+            lastCursor = nextCursor
+
+            pageCount++
+
+            if (pageCount >= maxPages) {
+                AppLogger.w("Integrations", "Max pages ($maxPages) reached, stopping pagination")
+                nextCursor = null
+            }
         } while (nextCursor != null)
 
         // Fetch all connected accounts
