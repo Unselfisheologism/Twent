@@ -243,18 +243,14 @@ private suspend fun loadIntegrations(
 
         while (hasMore) {
             val result = composioApi.listToolkits(limit = 50, offset = offset)
-            result.fold(
-                onSuccess = { toolkits ->
-                    allToolkits.addAll(toolkits)
-                    // If we got fewer than 50, we've reached the end
-                    hasMore = toolkits.size >= 50
-                    offset += 50
-                },
-                onFailure = { error ->
-                    onError("Failed to load toolkits: ${error.message}")
-                    return
-                }
-            )
+            if (result.isFailure) {
+                onError("Failed to load toolkits: ${result.exceptionOrNull()?.message}")
+                return
+            }
+            val toolkits = result.getOrNull() ?: emptyList()
+            allToolkits.addAll(toolkits)
+            hasMore = toolkits.size >= 50
+            offset += 50
         }
 
         // Fetch all connected accounts

@@ -267,7 +267,8 @@ class ComposioApiService(private val context: Context) {
     suspend fun executeTool(
         toolName: String,
         parameters: Map<String, Any>,
-        accountId: String? = null
+        accountId: String? = null,
+        entityId: String = ""
     ): Result<ToolExecutionResponse> = withContext(Dispatchers.IO) {
         try {
             if (!isConfigured()) {
@@ -277,11 +278,11 @@ class ComposioApiService(private val context: Context) {
             val url = buildUrl(String.format(ENDPOINT_TOOL_EXECUTE, toolName))
             
             // Build request body
-            val requestBody = buildToolExecutionBody(parameters, accountId)
+            val requestBody = buildToolExecutionBody(parameters, accountId, entityId)
             val jsonBody = requestBody.toString()
-            
+
             AppLogger.d(TAG, "Executing tool: $toolName with params: $jsonBody")
-            
+
             val request = createAuthenticatedRequest(
                 url = url,
                 method = "POST",
@@ -838,7 +839,8 @@ class ComposioApiService(private val context: Context) {
     private fun buildToolExecutionBody(
         parameters: Map<String, Any>,
         accountId: String?,
-        text: String? = null
+        text: String? = null,
+        entityId: String = ""
     ): JsonObject {
         val body = mutableMapOf<String, JsonElement>()
 
@@ -858,6 +860,12 @@ class ComposioApiService(private val context: Context) {
         }
 
         accountId?.let { body["account_id"] = JsonPrimitive(it) }
+
+        // entity_id is required when a connected account is provided (identifies the user)
+        if (entityId.isNotBlank()) {
+            body["entity_id"] = JsonPrimitive(entityId)
+        }
+
         return JsonObject(body)
     }
     

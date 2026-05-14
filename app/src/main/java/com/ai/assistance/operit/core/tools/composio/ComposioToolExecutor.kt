@@ -13,6 +13,7 @@ import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.data.model.ToolValidationResult
 import com.ai.assistance.operit.data.preferences.ApiPreferences
+import com.ai.assistance.operit.voice.utilities.UserIdManager
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
@@ -67,17 +68,22 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
             "\n\n[... Result truncated. ${result.length - maxLen} additional characters omitted.]"
     }
 
+    data class ResolvedAccount(val accountId: String, val entityId: String)
+
     /** Find the best connected account for a given toolkit slug */
-    private suspend fun findAccountForToolkit(toolkit: String): ConnectedAccount? {
+    private suspend fun findAccountForToolkit(toolkit: String): ResolvedAccount? {
         val accounts = integrationRepo.listConnectedAccountsByStatus(AccountStatus.ACTIVE).getOrNull()
-        // Try exact match first, then case-insensitive
-        return accounts?.find {
+        val account = accounts?.find {
             it.toolkit.equals(toolkit, ignoreCase = true) ||
             it.toolkit.equals("composio_$toolkit", ignoreCase = true)
         } ?: accounts?.firstOrNull { acc ->
-            // Fallback: any active account if no toolkit-specific one found
             acc.toolkit.isNotBlank()
         }
+        if (account != null) {
+            val resolvedId = account.accountId.takeIf { it.isNotBlank() } ?: account.id
+            return ResolvedAccount(resolvedId, account.entityId ?: UserIdManager(context).getOrCreateUserId())
+        }
+        return null
     }
 
     /** Check if Composio API is configured */
@@ -121,17 +127,19 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
             }
         } else emptyMap()
 
-        // --- Step 3: Resolve account ID ---
-        val accountId: String? = if (!toolkitParam.isNullOrBlank()) {
-            val account = runBlocking { findAccountForToolkit(toolkitParam) }
-            if (account != null) {
-                AppLogger.d(TAG, "Found account for toolkit '$toolkitParam': ${account.id}")
-                account.accountId.takeIf { it.isNotBlank() } ?: account.id
-            } else {
-                AppLogger.w(TAG, "No active connected account found for toolkit '$toolkitParam'. Proceeding without account ID.")
-                null
-            }
+// --- Step 3: Resolve account ID and entity ID ---
+        val resolvedAccount = if (!toolkitParam.isNullOrBlank()) {
+            runBlocking { findAccountForToolkit(toolkitParam) }
         } else null
+
+        val accountId: String? = resolvedAccount?.accountId
+        val entityId: String = resolvedAccount?.entityId ?: ""
+
+        if (resolvedAccount != null) {
+            AppLogger.d(TAG, "Found account for toolkit '$toolkitParam': accountId=${resolvedAccount.accountId}, entityId=${resolvedAccount.entityId}")
+        } else {
+            AppLogger.w(TAG, "No active connected account found for toolkit '$toolkitParam'. Proceeding without account ID.")
+        }
 
         // --- Step 4: Execute via Composio REST API ---
         if (!checkConfigured()) {
@@ -143,13 +151,12 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
             )
         }
 
-        AppLogger.d(TAG, "Executing Composio tool: $toolNameParam, toolkit: $toolkitParam, accountId: $accountId, params: $parameters")
-
         return runBlocking {
             val execResult = composioApi.executeTool(
                 toolName = toolNameParam,
                 parameters = parameters,
-                accountId = accountId
+                accountId = accountId,
+                entityId = entityId
             )
 
             execResult.fold(
