@@ -98,6 +98,7 @@ class MessageProcessingDelegate(
         var responseStream: SharedStream<String>? = null,
         var streamCollectionJob: Job? = null,
         var stateCollectionJob: Job? = null,
+        var currentAiMessage: ChatMessage? = null, // Track the active aiMessage for the current turn
         val isLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
     )
 
@@ -532,6 +533,13 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                     }
                 }
 
+                // CRITICAL FIX: Cancel the previous turn's stream collection job to prevent
+                // race conditions where both jobs write to the same aiMessage.content.
+                // This prevents response content from vanishing when tool calls complete
+                // and trigger a new AI turn.
+                chatRuntime.streamCollectionJob?.cancel()
+                chatRuntime.currentAiMessage = aiMessage
+
                 // 启动一个独立的协程来收集流内容并持续更新数据库
                 chatRuntime.streamCollectionJob =
                     coroutineScope.launch(Dispatchers.IO) {
@@ -582,6 +590,7 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                         }
 
                         sharedCharStream.collect { chunk ->
+                            if (!isActive) return@collect // Skip if this job was cancelled (new turn started)
                             contentBuilder.append(chunk)
                             val content = contentBuilder.toString()
                             val updatedMessage = aiMessage.copy(content = content)
@@ -590,13 +599,13 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
 
                             // 只有在非waifu模式下才显示流式更新
                             if (!isWaifuModeEnabled) {
+
                                 if (chatId != null) {
                                     addMessageToChat(chatId, updatedMessage)
                                 }
                                 tryEmitScrollToBottomThrottled(chatId)
                             }
                         }
-
                         autoReadJob.join()
 
                         if (getIsAutoReadEnabled() && !isWaifuModeEnabled) {

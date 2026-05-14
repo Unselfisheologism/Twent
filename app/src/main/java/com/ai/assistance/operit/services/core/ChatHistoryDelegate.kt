@@ -666,14 +666,21 @@ class ChatHistoryDelegate(
             val existingIndex = currentMessages.indexOfFirst { it.timestamp == message.timestamp }
 
             if (existingIndex >= 0) {
-                // 如果新消息结束了流，或者现有消息丢失了流（例如页面切换后重新加载），则允许替换以恢复流或更新最终内容
-                if(message.contentStream == null || currentMessages[existingIndex].contentStream == null) {
+                // 如果新消息结束了流，或者现有消息丢失了流（例如页面切换后重新加载），则允许替换以恢复流或更新最终内容。
+                // Also update if content has changed, even when both streams are non-null (e.g., a new AI turn
+                // completes after a tool call — the old turn's initial message has non-null stream, but we still
+                // need to replace it with the new turn's final content so the UI stays in sync).
+                val existingMsg = currentMessages[existingIndex]
+                val shouldReplace = message.contentStream == null
+                        || existingMsg.contentStream == null
+                        || message.content != existingMsg.content
+                if (shouldReplace) {
                     AppLogger.d(TAG, "更新消息到聊天 $targetChatId, condition met, ts: ${message.timestamp}")
-                    val updatedMessages = currentMessages.mapIndexed { index, existingMessage ->
+                    val updatedMessages = currentMessages.mapIndexed { index, _ ->
                         if (index == existingIndex) {
                             message // 替换为新消息对象
                         } else {
-                            existingMessage // 保持原对象不变
+                            currentMessages[index]
                         }
                     }
                     _chatHistory.value = updatedMessages
