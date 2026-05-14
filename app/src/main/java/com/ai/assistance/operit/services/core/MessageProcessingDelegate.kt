@@ -590,7 +590,7 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                         }
 
                         sharedCharStream.collect { chunk ->
-                            if (!isActive) return@collect // Skip if this job was cancelled (new turn started)
+                            if (!currentCoroutineContext().isActive) return@collect // Skip if this job was cancelled (new turn started)
                             contentBuilder.append(chunk)
                             val content = contentBuilder.toString()
                             val updatedMessage = aiMessage.copy(content = content)
