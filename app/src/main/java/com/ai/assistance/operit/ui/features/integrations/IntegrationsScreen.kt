@@ -289,23 +289,31 @@ private suspend fun loadIntegrations(
         val connectedToolkits = mutableMapOf<String, String>()
         connectionsResult.getOrNull()?.forEach { conn ->
             if (conn.status == "ACTIVE") {
-                connectedToolkits[conn.toolkit] = conn.id
+                // Use lowercase normalized key so Composio's "composio_gmail" matches "gmail"
+                val normalizedKey = conn.toolkit.lowercase()
+                    .removePrefix("composio_")
+                    .removePrefix("composio-")
+                    .trim()
+                connectedToolkits[normalizedKey] = conn.id
             }
         }
 
         // Internal toolkits to filter out
-        val internalSlugs = setOf("composio", "composio_search")
+        val internalSlugs = setOf("composio", "composio_search", "composio-search")
 
-        // Map to ToolkitItems, filtering internal toolkits
+        // Map to ToolkitItems, filtering internal toolkits.
+        // Also do case-insensitive matching since Composio API may return "composio_gmail"
+        // while the toolkit name is just "gmail".
         val items = allToolkits
-            .filter { it.name !in internalSlugs }
+            .filter { it.name.lowercase() !in internalSlugs.map { s -> s.lowercase() } }
             .map { toolkit ->
+                val normalizedName = toolkit.name.lowercase()
                 ToolkitItem(
                     slug = toolkit.name,
                     name = toolkit.displayName,
                     description = toolkit.description,
-                    isConnected = connectedToolkits.containsKey(toolkit.name),
-                    connectedAccountId = connectedToolkits[toolkit.name],
+                    isConnected = connectedToolkits.containsKey(normalizedName),
+                    connectedAccountId = connectedToolkits[normalizedName],
                     logoUrl = null
                 )
             }

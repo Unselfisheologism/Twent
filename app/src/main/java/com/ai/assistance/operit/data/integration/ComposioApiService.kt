@@ -729,7 +729,12 @@ class ComposioApiService(private val context: Context) {
             }
             
             val urlBuilder = buildUrl(ENDPOINT_CONNECTED_ACCOUNTS).toHttpUrlOrNull()?.newBuilder()
-            toolkit?.let { urlBuilder?.addQueryParameter("toolkit_slugs", it) }
+            // NOTE: We intentionally do NOT filter by toolkit_slugs[] here.
+            // Composio internally stores some toolkits with "composio_" prefix (e.g. "composio_gmail").
+            // Filtering by "gmail" at the API level can silently return 0 results.
+            // Instead, fetch all ACTIVE connections and do client-side toolkit matching below.
+            // This is more reliable and catches all connection variants.
+            urlBuilder?.addQueryParameter("statuses[]", "ACTIVE")
             
             val url = urlBuilder?.build()?.toString()
                 ?: return@withContext Result.failure(Exception("Failed to build URL"))
@@ -860,7 +865,13 @@ class ComposioApiService(private val context: Context) {
     fun getToolkitsNextCursor(responseBody: String): String? {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
-            jsonElement.jsonObject["next_cursor"]?.toString()?.replace("\"", "")?.takeIf { it.isNotBlank() }
+            val cursorElement = jsonElement.jsonObject["next_cursor"]
+            // If the field is absent or JsonNull, return null (no more pages).
+            // Otherwise extract the string value, stripping surrounding quotes.
+            if (cursorElement == null || cursorElement is kotlinx.serialization.json.JsonNull) {
+                return null
+            }
+            cursorElement.toString().replace("\"", "").takeIf { it.isNotBlank() && it != "null" }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse next_cursor from toolkits response", e)
             null
@@ -918,7 +929,9 @@ class ComposioApiService(private val context: Context) {
         // Mutually exclusive: text OR arguments, never both
         if (hasText) {
             body["text"] = JsonPrimitive(text ?: textFromParams)
-        } else {
+            // Defensive: if LLM sent both text AND arguments in params, drop arguments
+            // (composio API rejects requests with both at top level)
+        } else if (!parameters.isEmpty()) {
             // Flat 'arguments' key (NOT nested under 'parameters')
             // Also remove any 'text' key from the arguments map if LLM accidentally included it
             val cleanParams = parameters.filterKeys { it != "text" }
@@ -1055,7 +1068,13 @@ class ComposioApiService(private val context: Context) {
                         val obj = element.jsonObject
                         ConnectionInfo(
                             id = obj["id"]?.toString()?.replace("\"", "") ?: "",
-                            toolkit = obj["toolkit"]?.jsonObject?.get("slug")?.toString()?.replace("\"", "") ?: "",
+                            toolkit = obj["toolkit"]?.let { element ->
+                                when (element) {
+                                    is JsonObject -> element["slug"]?.toString()?.replace("\"", "") ?: ""
+                                    is JsonPrimitive -> element.content
+                                    else -> element.toString().replace("\"", "")
+                                }
+                            } ?: "",
                             accountName = obj["name"]?.toString()?.replace("\"", "") ?: "",
                             status = obj["status"]?.toString()?.replace("\"", "") ?: "ACTIVE",
                             connectedAt = 0L,

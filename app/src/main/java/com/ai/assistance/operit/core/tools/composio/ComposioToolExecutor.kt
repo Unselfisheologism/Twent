@@ -85,13 +85,19 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
         val connectionsResult = composioApi.listConnections(toolkit = toolkit)
         val connections = connectionsResult.getOrNull()
 
-        val connection = connections?.firstOrNull {
-            it.toolkit.equals(toolkit, ignoreCase = true) ||
-            it.toolkit.equals("composio_$toolkit", ignoreCase = true)
+        val connection = connections?.firstOrNull { conn ->
+            val connToolkit = conn.toolkit.lowercase()
+            val target = toolkit.lowercase()
+            // Match: exact match, contains match, or composio_ prefixed match
+            // Also handle the case where Composio returns "composio_gmail" for a "gmail" connection
+            connToolkit == target ||
+            connToolkit.contains(target) ||
+            connToolkit.endsWith("_$target") ||
+            connToolkit == "composio_$target"
         }
 
         if (connection == null) {
-            AppLogger.d(TAG, "No Composio connection found for toolkit '$toolkit'")
+            AppLogger.d(TAG, "No Composio connection found for toolkit '$toolkit'. Available: ${connections?.map { it.toolkit }}")
             return null
         }
 
