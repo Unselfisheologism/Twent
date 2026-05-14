@@ -160,7 +160,8 @@ class ComposioApiService(private val context: Context) {
         category: String? = null,
         search: String? = null,
         limit: Int = 50,
-        offset: Int = 0
+        offset: Int = 0,
+        nextCursor: String? = null
     ): Result<List<ToolkitDefinition>> = withContext(Dispatchers.IO) {
         try {
             if (!isConfigured()) {
@@ -169,7 +170,13 @@ class ComposioApiService(private val context: Context) {
             
             val urlBuilder = buildUrl(ENDPOINT_TOOLKITS).toHttpUrlOrNull()?.newBuilder()
                 ?.addQueryParameter("limit", limit.toString())
-                ?.addQueryParameter("offset", offset.toString())
+            
+            // Use cursor-based pagination if nextCursor is provided, otherwise use offset
+            if (nextCursor != null) {
+                urlBuilder?.addQueryParameter("next_cursor", nextCursor)
+            } else {
+                urlBuilder?.addQueryParameter("offset", offset.toString())
+            }
             
             category?.let { urlBuilder?.addQueryParameter("category", it) }
             search?.let { urlBuilder?.addQueryParameter("search", it) }
@@ -193,6 +200,45 @@ class ComposioApiService(private val context: Context) {
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to list toolkits", e)
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Raw toolkits request that returns both items and next_cursor.
+     * Use this for pagination — returns null body on failure.
+     */
+    suspend fun fetchToolkitsRaw(
+        limit: Int = 50,
+        nextCursor: String? = null
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                AppLogger.e(TAG, "COMPOSIO_API_KEY not configured")
+                return@withContext null
+            }
+            
+            val urlBuilder = buildUrl(ENDPOINT_TOOLKITS).toHttpUrlOrNull()?.newBuilder()
+                ?.addQueryParameter("limit", limit.toString())
+            
+            if (nextCursor != null) {
+                urlBuilder?.addQueryParameter("next_cursor", nextCursor)
+            }
+            
+            val url = urlBuilder?.build()?.toString()
+                ?: return@withContext null
+            
+            val request = createAuthenticatedRequest(url)
+            val response = client.newCall(request).execute()
+            
+            if (response.isSuccessful) {
+                response.body?.string()
+            } else {
+                AppLogger.e(TAG, "Failed to fetch toolkits: HTTP ${response.code}")
+                null
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to fetch toolkits raw", e)
+            null
         }
     }
     
@@ -278,7 +324,7 @@ class ComposioApiService(private val context: Context) {
             val url = buildUrl(String.format(ENDPOINT_TOOL_EXECUTE, toolName))
             
             // Build request body
-            val requestBody = buildToolExecutionBody(parameters, accountId, entityId)
+            val requestBody = buildToolExecutionBody(parameters, accountId, text = null, entityId = entityId)
             val jsonBody = requestBody.toString()
 
             AppLogger.d(TAG, "Executing tool: $toolName with params: $jsonBody")
@@ -328,7 +374,7 @@ class ComposioApiService(private val context: Context) {
             
             val url = buildUrl(String.format(ENDPOINT_TOOL_EXECUTE, toolName) + "?async=true")
             
-            val requestBody = buildToolExecutionBody(parameters, accountId)
+            val requestBody = buildToolExecutionBody(parameters, accountId, text = null)
             val jsonBody = requestBody.toString()
 
             val request = createAuthenticatedRequest(
@@ -806,6 +852,26 @@ class ComposioApiService(private val context: Context) {
             emptyList()
         }
     }
+    
+    /**
+     * Get the next_cursor value from a toolkits response.
+     * Returns null if no more pages exist.
+     */
+    fun getToolkitsNextCursor(responseBody: String): String? {
+        return try {
+            val jsonElement = json.parseToJsonElement(responseBody)
+            jsonElement.jsonObject["next_cursor"]?.toString()?.replace("\"", "")?.takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to parse next_cursor from toolkits response", e)
+            null
+        }
+    }
+    
+    /**
+     * Parse toolkits from raw JSON response.
+     * Public so IntegrationsScreen can use it with fetchToolkitsRaw().
+     */
+    fun parseToolkits(responseBody: String): List<ToolkitDefinition> = parseToolkitsResponse(responseBody)
     
     private fun parseToolkitResponse(responseBody: String): ToolkitDefinition {
         return try {

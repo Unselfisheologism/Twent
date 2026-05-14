@@ -230,23 +230,24 @@ private suspend fun loadIntegrations(
     }
 
     return try {
-        // Fetch all toolkits via offset-based pagination (Composio max 50/page)
+        // Fetch all toolkits via cursor-based pagination
+        // Composio REST API uses next_cursor (NOT offset) for pagination
         val allToolkits = mutableListOf<com.ai.assistance.operit.data.integration.model.ToolkitDefinition>()
-        var offset = 0
-        var hasMore = true
+        var nextCursor: String? = null
 
-        while (hasMore) {
-            val result = composioApi.listToolkits(limit = 50, offset = offset)
-            if (result.isFailure) {
-                val ex = result.exceptionOrNull() ?: Exception("Unknown error")
-                AppLogger.e("Integrations", "Failed to load toolkits: ${ex.message}")
-                return Result.failure(ex)
+        do {
+            val rawResponse = composioApi.fetchToolkitsRaw(limit = 50, nextCursor = nextCursor)
+            if (rawResponse == null) {
+                AppLogger.e("Integrations", "Failed to fetch toolkits page (null response)")
+                return Result.failure(Exception("Failed to fetch toolkits"))
             }
-            val toolkits = result.getOrNull() ?: emptyList()
+
+            val toolkits = composioApi.parseToolkits(rawResponse)
             allToolkits.addAll(toolkits)
-            hasMore = toolkits.size >= 50
-            offset += 50
-        }
+            nextCursor = composioApi.getToolkitsNextCursor(rawResponse)
+            
+            AppLogger.d("Integrations", "Loaded ${toolkits.size} toolkits, next_cursor=$nextCursor, total so far=${allToolkits.size}")
+        } while (nextCursor != null)
 
         // Fetch all connected accounts
         val connectionsResult = composioApi.listConnections()
@@ -273,7 +274,7 @@ private suspend fun loadIntegrations(
                     logoUrl = null
                 )
             }
-        AppLogger.d("Integrations", "Loaded ${items.size} toolkits")
+        AppLogger.d("Integrations", "Loaded ${items.size} toolkits (filtered from ${allToolkits.size} total)")
         Result.success(items)
     } catch (e: Exception) {
         AppLogger.e("Integrations", "Error loading integrations: ${e.message}", e)

@@ -133,12 +133,17 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
         } else null
 
         val accountId: String? = resolvedAccount?.accountId
-        val entityId: String = resolvedAccount?.entityId ?: ""
+        val entityId: String? = resolvedAccount?.entityId?.takeIf { it.isNotBlank() }
 
         if (resolvedAccount != null) {
             AppLogger.d(TAG, "Found account for toolkit '$toolkitParam': accountId=${resolvedAccount.accountId}, entityId=${resolvedAccount.entityId}")
+            if (accountId != null && entityId != null) {
+                AppLogger.d(TAG, "Will execute with account_id=$accountId and entity_id=$entityId")
+            } else if (accountId != null) {
+                AppLogger.w(TAG, "Connected account found but entityId is empty — tool may fail with 1811. User needs to re-authenticate from Integrations page.")
+            }
         } else {
-            AppLogger.w(TAG, "No active connected account found for toolkit '$toolkitParam'. Proceeding without account ID.")
+            AppLogger.w(TAG, "No active connected account found for toolkit '$toolkitParam'. Proceeding without account ID (unauthenticated tool call).")
         }
 
         // --- Step 4: Execute via Composio REST API ---
@@ -156,7 +161,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
                 toolName = toolNameParam,
                 parameters = parameters,
                 accountId = accountId,
-                entityId = entityId
+                entityId = entityId ?: ""
             )
 
             execResult.fold(
