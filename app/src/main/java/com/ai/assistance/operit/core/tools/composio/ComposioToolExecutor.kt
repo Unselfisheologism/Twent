@@ -70,20 +70,41 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
 
     data class ResolvedAccount(val accountId: String, val entityId: String)
 
-    /** Find the best connected account for a given toolkit slug */
+        /** Find the best connected account for a given toolkit slug.
+     *
+     * IMPORTANT: reads directly from Composio API (via listConnections), NOT from local JSON files.
+     * Local JSON files are only written by the OAuth callback handler, which doesn't exist in this app.
+     * loadIntegrations() also reads from Composio API directly — this must match that behavior.
+     *
+     * Composio v3 requires BOTH account_id AND user_id (entity_id) when executing tools.
+     * The user_id was passed to Composio when the connection was created via createAuthLink.
+     * Composio returns it in the connected_accounts list response as "user_id".
+     */
     private suspend fun findAccountForToolkit(toolkit: String): ResolvedAccount? {
-        val accounts = integrationRepo.listConnectedAccountsByStatus(AccountStatus.ACTIVE).getOrNull()
-        val account = accounts?.find {
+        // Step 1: Get all connected accounts from Composio API (not local files)
+        val connectionsResult = composioApi.listConnections(toolkit = toolkit)
+        val connections = connectionsResult.getOrNull()
+
+        val connection = connections?.firstOrNull {
             it.toolkit.equals(toolkit, ignoreCase = true) ||
             it.toolkit.equals("composio_$toolkit", ignoreCase = true)
-        } ?: accounts?.firstOrNull { acc ->
-            acc.toolkit.isNotBlank()
         }
-        if (account != null) {
-            val resolvedId = account.accountId.takeIf { it.isNotBlank() } ?: account.id
-            return ResolvedAccount(resolvedId, account.metadata["entityId"]?.takeIf { it.isNotBlank() } ?: UserIdManager(context).getOrCreateUserId())
+
+        if (connection == null) {
+            AppLogger.d(TAG, "No Composio connection found for toolkit '$toolkit'")
+            return null
         }
-        return null
+
+        // accountId: use the Composio connection ID (ca_xxx)
+        val accountId = connection.id
+
+        // entityId: use the user_id from the Composio API response (set at auth time).
+        // Fall back to local user ID if not returned by Composio.
+        val entityId = connection.userId?.takeIf { it.isNotBlank() }
+            ?: UserIdManager(context).getOrCreateUserId()
+
+        AppLogger.d(TAG, "Resolved account for '$toolkit': accountId=$accountId, entityId=$entityId")
+        return ResolvedAccount(accountId, entityId)
     }
 
     /** Check if Composio API is configured */
@@ -153,6 +174,18 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
                 success = false,
                 result = StringResultData(""),
                 error = "Composio API key not configured. Please add COMPOSIO_API_KEY to your BuildConfig/local.properties."
+            )
+        }
+
+        // If there is NO connected account at all, we can't call authenticated tools.
+        // (entityId can be blank when no account is found — this is handled by the fallback above.)
+        if (accountId == null) {
+            AppLogger.w(TAG, "No connected account found for toolkit '$toolkitParam'. Cannot call authenticated tool.")
+            return ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Gmail is not connected. Please go to the Integrations page and connect Gmail first."
             )
         }
 

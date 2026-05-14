@@ -1058,7 +1058,8 @@ class ComposioApiService(private val context: Context) {
                             toolkit = obj["toolkit"]?.jsonObject?.get("slug")?.toString()?.replace("\"", "") ?: "",
                             accountName = obj["name"]?.toString()?.replace("\"", "") ?: "",
                             status = obj["status"]?.toString()?.replace("\"", "") ?: "ACTIVE",
-                            connectedAt = 0L
+                            connectedAt = 0L,
+                            userId = obj["user_id"]?.toString()?.replace("\"", "")?.takeIf { it.isNotBlank() }
                         )
                     } catch (e: Exception) {
                         AppLogger.e(TAG, "Failed to parse connection item", e)
@@ -1137,5 +1138,6 @@ data class ConnectionInfo(
     val toolkit: String,
     val accountName: String,
     val status: String,
-    val connectedAt: Long
+    val connectedAt: Long,
+    val userId: String? = null  // Composio's user_id used for entity_id in tool execution
 )

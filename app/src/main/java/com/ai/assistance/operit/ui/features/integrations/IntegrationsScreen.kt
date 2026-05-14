@@ -81,11 +81,14 @@ fun IntegrationsScreen() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Extension,
                 contentDescription = null,
@@ -96,27 +99,26 @@ fun IntegrationsScreen() {
             Text(
                 text = stringResource(R.string.nav_integrations),
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
-        }
-
-        IconButton(onClick = { refresh() }) {
-            Icon(
-                imageVector = Icons.Outlined.Refresh,
-                contentDescription = "Refresh"
-            )
+            IconButton(onClick = { refresh() }) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = "Refresh",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 
-    // Description
+    // Description — properly spaced below header
     Text(
         text = stringResource(R.string.integrations_description),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
     )
-
-    Spacer(modifier = Modifier.height(8.dp))
 
     // Content
     when {
