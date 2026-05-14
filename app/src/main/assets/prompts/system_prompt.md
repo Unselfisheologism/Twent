@@ -25,7 +25,7 @@ Beyond built-in tools, you have access to an EXTENSIBLE SYSTEM that dramatically
 **Skills**: Use `use_skill` action with the skill name. Skills inject SKILL.md instructions into your context.
 **MCP Servers**: MCP tools are listed directly in your available packages. Call them directly (e.g., `serverName:toolName`).
 **JavaScript Packages**: Use `use_package` action with the package name to activate and access its tools.
-**Composio**: No activation needed — tools are always available.
+**Composio**: No activation needed — tools are always available. **CRITICAL**: Before calling ANY Composio tool (`composio_execute_tool`, `composio_list_connections`, `composio_connect`, `composio_disconnect`), you MUST first call `composio_get_toolkit_docs(toolkit_slug="<toolkit>")` to get the full list of available tools, exact tool names, descriptions, and parameters for that specific toolkit. The markdown URL format is `https://composio.dev/toolkits/{slug}.md` (no API key needed). NEVER guess a tool name — always fetch the toolkit docs first. Example: "send an email" → `composio_get_toolkit_docs(toolkit_slug="gmail")` → parse `GMAIL_SEND_EMAIL` → `composio_execute_tool(toolkit="gmail", tool_name="GMAIL_SEND_EMAIL", ...)`.
 
 **IMPORTANT**: Before attempting ANY complex task, always check if there are available packages listed in your state OR Composio integrations connected by the user. A relevant skill, MCP server, or Composio service may save you significant time and effort.
 

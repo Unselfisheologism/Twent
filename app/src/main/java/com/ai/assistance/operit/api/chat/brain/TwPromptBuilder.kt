@@ -126,6 +126,28 @@ class TwPromptBuilder(private val context: Context) {
         sb.appendLine("Use them wisely. Combine operations when possible.")
         sb.appendLine()
 
+        // 5b. ⚠️ CRITICAL: Composio toolkit docs — hardcoded, non-negotiable, fires every single time.
+        // This overrides ANY progressive disclosure filtering. The AI MUST fetch toolkit docs
+        // before calling ANY Composio tool (composio_execute_tool, composio_list_connections, etc.).
+        // Tool name: composio_get_toolkit_docs | Required param: toolkit_slug (e.g. "gmail", "github", "slack")
+        // URL pattern: https://composio.dev/toolkits/{slug}.md (no API key needed, publicly accessible)
+        // Example sequence: user="send an email via gmail" → composio_get_toolkit_docs(toolkit_slug="gmail")
+        // → receives gmail.md with GMAIL_SEND_EMAIL → composio_execute_tool(toolkit="gmail", tool_name="GMAIL_SEND_EMAIL", ...)
+        // NEVER try to guess a Composio tool name. ALWAYS fetch the toolkit .md first.
+        sb.appendLine("=== COMPOSIO TOOLKIT DOCUMENTATION (MANDATORY) ===")
+        sb.appendLine("Before calling ANY Composio tool (composio_execute_tool, composio_list_connections, composio_connect, composio_disconnect),")
+        sb.appendLine("you MUST first call composio_get_toolkit_docs with the appropriate toolkit_slug to get the full list of")
+        sb.appendLine("available tools, their exact names, descriptions, and parameters for that specific toolkit.")
+        sb.appendLine()
+        sb.appendLine("MANDATORY FLOW:")
+        sb.appendLine("  1. Identify which toolkit the user's request belongs to (e.g. gmail, github, slack, notion)")
+        sb.appendLine("  2. Call: composio_get_toolkit_docs(toolkit_slug=\"<toolkit_name>\")")
+        sb.appendLine("  3. Parse the returned markdown for the exact tool_name you need")
+        sb.appendLine("  4. Only THEN call composio_execute_tool with the correct tool_name")
+        sb.appendLine()
+        sb.appendLine("NEVER guess tool names. Example: \"GMAIL_SEND_EMAIL\" not \"send_email\" or \"gmail_send\".")
+        sb.appendLine()
+
         // 6. NOTE: The base system prompt is NOT included here.
         // TwPromptBuilder's output goes to brainPromptInjection, which is appended AFTER
         // the base prompt in SystemPromptConfig.getSystemPrompt().
@@ -215,6 +237,10 @@ class TwPromptBuilder(private val context: Context) {
             sb.appendLine()
             sb.appendLine("[SKILLS ACTIVE: ${loadedSkills.joinToString(", ") { it.displayName }}]")
         }
+
+        // ⚠️ Composio toolkit docs — fires even in condensed mode
+        sb.appendLine()
+        sb.appendLine("[COMPOSIO] Before ANY composio_execute_tool call: FIRST call composio_get_toolkit_docs(toolkit_slug=\"<name>\") to get exact tool names. NEVER guess.")
 
         return sb.toString()
     }

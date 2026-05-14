@@ -54,16 +54,6 @@ fun IntegrationsScreen() {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var connectingToolkit by remember { mutableStateOf<String?>(null) }
 
-    // Load toolkits and connections with full pagination
-    LaunchedEffect(Unit) {
-        val result = loadIntegrations(composioApi)
-        result.fold(
-            onSuccess = { toolkits = it },
-            onFailure = { errorMessage = it.message ?: "Unknown error" }
-        )
-        isLoading = false
-    }
-
     // Refresh function
     fun refresh() {
         isLoading = true
@@ -78,128 +68,152 @@ fun IntegrationsScreen() {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Extension,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = stringResource(R.string.nav_integrations),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(onClick = { refresh() }) {
-                Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = "Refresh",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+    // Load on first composition
+    LaunchedEffect(Unit) {
+        val result = loadIntegrations(composioApi)
+        result.fold(
+            onSuccess = { toolkits = it },
+            onFailure = { errorMessage = it.message ?: "Unknown error" }
+        )
+        isLoading = false
     }
 
-    // Description — properly spaced below header
-    Text(
-        text = stringResource(R.string.integrations_description),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-    )
-
-    // Content
-    when {
-        isLoading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        errorMessage != null -> {
-            Column(
+    // ── Single scrollable column: header IS the first LazyColumn item ──
+    // This ensures the header scrolls WITH the content and the first toolkit card
+    // always appears BELOW the header — no overlap possible.
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // ── 1. Header Row ──────────────────────────────────────────────
+        item(key = "header") {
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = errorMessage ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge
+                Icon(
+                    imageVector = Icons.Outlined.Extension,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { refresh() }) {
-                    Text(stringResource(R.string.integrations_retry))
-                }
-            }
-        }
-        toolkits.isEmpty() -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = stringResource(R.string.integrations_no_toolkits),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = stringResource(R.string.nav_integrations),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-            }
-        }
-        else -> {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(toolkits) { toolkit ->
-                    ToolkitCard(
-                        toolkit = toolkit,
-                        onConnect = {
-                            connectingToolkit = toolkit.slug
-                            scope.launch {
-                                connectToolkit(context, composioApi, toolkit.slug) { success, error ->
-                                    connectingToolkit = null
-                                    if (success) {
-                                        refresh()
-                                    } else {
-                                        errorMessage = error
-                                    }
-                                }
-                            }
-                        },
-                        onDisconnect = { accountId ->
-                            scope.launch {
-                                disconnectToolkit(composioApi, accountId) { success, error ->
-                                    if (success) {
-                                        refresh()
-                                    } else {
-                                        errorMessage = error
-                                    }
-                                }
-                            }
-                        },
-                        isConnecting = connectingToolkit == toolkit.slug
+                IconButton(onClick = { refresh() }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = "Refresh",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+        }
+
+        // ── 2. Description ─────────────────────────────────────────────
+        item(key = "description") {
+            Text(
+                text = stringResource(R.string.integrations_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+
+        // ── 3. Loading state ───────────────────────────────────────────
+        if (isLoading) {
+            item(key = "loading") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        // ── 4. Error state ─────────────────────────────────────────────
+        errorMessage?.let { error ->
+            item(key = "error") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { refresh() }) {
+                        Text(stringResource(R.string.integrations_retry))
+                    }
+                }
+            }
+        }
+
+        // ── 5. Empty state ─────────────────────────────────────────────
+        if (!isLoading && errorMessage == null && toolkits.isEmpty()) {
+            item(key = "empty") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.integrations_no_toolkits),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // ── 6. Toolkit cards ───────────────────────────────────────────
+        items(
+            items = toolkits,
+            key = { it.slug }
+        ) { toolkit ->
+            ToolkitCard(
+                toolkit = toolkit,
+                onConnect = {
+                    connectingToolkit = toolkit.slug
+                    scope.launch {
+                        connectToolkit(context, composioApi, toolkit.slug) { success, error ->
+                            connectingToolkit = null
+                            if (success) {
+                                refresh()
+                            } else {
+                                errorMessage = error
+                            }
+                        }
+                    }
+                },
+                onDisconnect = { accountId ->
+                    scope.launch {
+                        disconnectToolkit(composioApi, accountId) { success, error ->
+                            if (success) {
+                                refresh()
+                            } else {
+                                errorMessage = error
+                            }
+                        }
+                    }
+                },
+                isConnecting = connectingToolkit == toolkit.slug
+            )
         }
     }
 }
