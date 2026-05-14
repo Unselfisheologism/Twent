@@ -13,6 +13,7 @@ data class ConnectedAccount(
     val toolkit: String,  // The integration toolkit (e.g., "github", "slack", "composio")
     val accountName: String,  // Display name for the account
     val accountId: String = "",  // Remote account ID from the provider
+    val entityId: String = "",  // Composio entity ID (user identifier for v3 API)
     val connectedAt: Long = System.currentTimeMillis(),  // Timestamp when connected
     val lastSyncAt: Long? = null,  // Last successful sync timestamp
     val status: AccountStatus = AccountStatus.ACTIVE,  // Current connection status

@@ -81,7 +81,7 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
         }
         if (account != null) {
             val resolvedId = account.accountId.takeIf { it.isNotBlank() } ?: account.id
-            return ResolvedAccount(resolvedId, account.entityId ?: UserIdManager(context).getOrCreateUserId())
+            return ResolvedAccount(resolvedId, account.metadata["entityId"]?.takeIf { it.isNotBlank() } ?: UserIdManager(context).getOrCreateUserId())
         }
         return null
     }
