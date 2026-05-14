@@ -142,12 +142,40 @@ Here's a complete overview of what you can do:
 
 ═══════════════════════════════════════════════════════════════════════
 ### 9. COMPOSIO INTEGRATION TOOLS (EXTERNAL SERVICES)
-═══════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
 
-Connect to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) via Composio. These tools allow direct integration with external apps without creating workflows.
+Connect to 1000+ external services (GitHub, Slack, Notion, Google Calendar, Gmail, etc.) via Composio. These tools allow direct integration with external apps without creating workflows.
 
+**CRITICAL — ALWAYS DO THIS FIRST:**
+Before using ANY Composio tool from a specific service (Gmail, GitHub, Slack, Notion, etc.), you MUST fetch that toolkit's documentation to get the exact tool names. Each toolkit has 10–100+ tools. You cannot guess the correct tool_name.
+
+**Step 1 — Fetch toolkit docs:**
+```
+{
+  "name": "composio_get_toolkit_docs",
+  "parameters": [
+    {"name": "toolkit_slug", "value": "gmail"}
+  ]
+}
+```
+Then read the documentation result to find the exact tool name you need (e.g., GMAIL_SEND_EMAIL).
+
+**Step 2 — Execute the tool:**
+```
+{
+  "name": "composio_execute_tool",
+  "parameters": [
+    {"name": "tool_name", "value": "<exact tool name from docs>"},
+    {"name": "parameters", "value": "{\"required_param\": \"value\"}"},
+    {"name": "account_id", "value": "<from composio_list_connections>"}
+  ]
+}
+```
+
+Tool descriptions:
+• composio_get_toolkit_docs - Fetch full documentation for a toolkit (tool names, descriptions, parameters). MANDATORY before any Composio tool call. Required: toolkit_slug (e.g. gmail, github, slack, notion, googlecalendar)
 • composio_list_toolkits - List available integrations/toolkits. Optional: category, search, limit
-• composio_execute_tool - Execute a Composio tool (e.g., create GitHub issue, send Slack message)
+• composio_execute_tool - Execute a Composio tool (requires exact tool_name from composio_get_toolkit_docs)
 • composio_list_connections - List all connected OAuth accounts
 • composio_connect - Initiate OAuth connection for a toolkit (opens browser for auth)
 • composio_disconnect - Disconnect an OAuth account

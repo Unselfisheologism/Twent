@@ -142,6 +142,7 @@ object TwToolsetProvider {
         "delete_mini_app",
         // Composio — pre-auth tool integrations (NOT messaging bots)
         "composio_list_toolkits",
+        "composio_get_toolkit_docs",
         "composio_execute_tool",
         "composio_list_connections",
         "composio_connect",

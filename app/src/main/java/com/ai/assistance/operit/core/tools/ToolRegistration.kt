@@ -2004,6 +2004,75 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // Get full toolkit documentation (tool names, descriptions, parameters) — MANDATORY before calling any Composio tool
+    handler.registerTool(
+            name = "composio_get_toolkit_docs",
+            dangerCheck = { false },
+            descriptionGenerator = { _ -> "Fetch full documentation for a Composio toolkit — all tool names, descriptions, parameters, and usage examples. REQUIRED before calling any Composio tool from a specific toolkit (e.g. Gmail, GitHub, Slack)." },
+            executor = { tool ->
+                try {
+                    if (!composioService.isConfigured()) {
+                        ToolResult(
+                                toolName = tool.name,
+                                success = false,
+                                result = StringResultData(""),
+                                error = s(R.string.toolreg_composio_not_configured)
+                        )
+                    } else {
+                        val toolkitSlug = tool.parameters.find { it.name == "toolkit_slug" }?.value
+
+                        if (toolkitSlug.isNullOrBlank()) {
+                            ToolResult(
+                                    toolName = tool.name,
+                                    success = false,
+                                    result = StringResultData(""),
+                                    error = "Missing required parameter: toolkit_slug. " +
+                                        "Examples: gmail, github, slack, notion, googlecalendar, jira, etc."
+                            )
+                        } else {
+                            val result = runBlocking(Dispatchers.IO) {
+                                composioService.fetchToolkitMarkdown(toolkitSlug.trim())
+                            }
+
+                            result.fold(
+                                    onSuccess = { markdown ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = true,
+                                                result = StringResultData(
+                                                    "=== $toolkitSlug Documentation ===\n" +
+                                                    "Tool: composio_execute_tool\n" +
+                                                    "Parameters needed:\n" +
+                                                    "  - toolkit: $toolkitSlug\n" +
+                                                    "  - tool_name: <exact tool name from below>\n" +
+                                                    "  - parameters: <JSON object with required params>\n\n" +
+                                                    markdown
+                                                )
+                                        )
+                                    },
+                                    onFailure = { e ->
+                                        ToolResult(
+                                                toolName = tool.name,
+                                                success = false,
+                                                result = StringResultData(""),
+                                                error = "Failed to fetch docs for toolkit '$toolkitSlug': ${e.message}. " +
+                                                    "Make sure the toolkit_slug is correct (e.g. 'gmail', not 'Gmail')."
+                                        )
+                                    }
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Error fetching toolkit docs: ${e.message}"
+                    )
+                }
+            }
+    )
+
     // Initiate OAuth connection for a toolkit
     handler.registerTool(
             name = "composio_connect",

@@ -78,7 +78,9 @@ Packages and integrations extend your capabilities beyond built-in tools:
 1. **Skills**: Reusable automation workflows with step-by-step guides for specific tasks (e.g., GitHub operations, API integrations, screen automation patterns). When activated, a skill's guide and tools become available.
 2. **MCP (Model Context Protocol) Servers**: External service integrations that expose tools from remote APIs (e.g., GitHub, databases, cloud services). MCP tools work like native tools once activated.
 3. **JavaScript Packages**: Custom tool bundles that add entirely new capabilities.
-4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Google Calendar, etc.) that the user has connected in the Integrations page. Unlike MCP servers (which are packages), Composio tools are always in your toolset — use `composio_list_toolkits` to discover available services and `composio_execute_tool` to call authenticated API actions.
+4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Google Calendar, Gmail, etc.) that the user has connected in the Integrations page. Unlike MCP servers (which are packages), Composio tools are always in your toolset — use `composio_list_toolkits` to discover available services and `composio_execute_tool` to call authenticated API actions.
+
+**CRITICAL — COMPOSIO TOOL NAMING**: Each toolkit has 10–100+ individual tools. You MUST NOT guess tool names. Before calling ANY Composio tool, first use `composio_get_toolkit_docs` with the correct toolkit_slug (e.g. "gmail", "github", "slack") to fetch the full documentation. This returns ALL available tool names (e.g. GMAIL_SEND_EMAIL, GITHUB_CREATE_ISSUE) with their exact names, descriptions, and parameters. Only then can you call `composio_execute_tool` with the correct tool_name.
 
 To use a package (skills, MCP, JS), activate it with:
   <tool name="use_package">
@@ -106,7 +108,9 @@ Packages and integrations extend your capabilities beyond built-in tools:
 1. **Skills**: Reusable automation workflows with step-by-step guides for specific tasks.
 2. **MCP (Model Context Protocol) Servers**: External service integrations that expose tools from remote APIs.
 3. **JavaScript Packages**: Custom tool bundles that add new capabilities.
-4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, etc.) that the user has connected in the Integrations page. Composio tools are always in your toolset — use `composio_list_toolkits` to discover services and `composio_execute_tool` to call authenticated API actions.
+4. **Composio Integrations**: Pre-authenticated connections to 1000+ external services (GitHub, Slack, Notion, Gmail, etc.) that the user has connected in the Integrations page. Composio tools are always in your toolset — use `composio_list_toolkits` to discover services and `composio_execute_tool` to call authenticated API actions.
+
+**CRITICAL — COMPOSIO TOOL NAMING**: Each toolkit has 10–100+ tools. You MUST NOT guess tool names. Before calling ANY Composio tool, first use `composio_get_toolkit_docs` with the toolkit_slug (e.g. "gmail", "github", "slack") to fetch all tool names and parameters. Then call `composio_execute_tool` with the exact tool_name.
 
 To use a package (skills, MCP, JS), call the use_package function with the package_name parameter.
 This will show you all the tools in the package and how to use them.

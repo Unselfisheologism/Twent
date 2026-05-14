@@ -274,6 +274,109 @@ class ComposioApiService(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Public markdown base URL — no API key needed, these docs are freely accessible.
+     * Format: https://composio.dev/toolkits/{slug}.md
+     * Contains full tool names, descriptions, parameters, and usage examples for the entire toolkit.
+     * CRITICAL: Call this FIRST before using any Composio tool from a specific toolkit.
+     * Example: composio.dev/toolkits/gmail.md contains GMAIL_SEND_EMAIL, GMAIL_CREATE_EMAIL_DRAFT, etc.
+     */
+    private val COMPOSIO_PUBLIC_MARKDOWN_BASE = "https://composio.dev/toolkits"
+
+    /**
+     * Fetch the full markdown documentation for a specific Composio toolkit.
+     * This returns ALL tool names, descriptions, parameters, and usage guidance for that toolkit.
+     * Use this to discover the exact tool_name before calling composio_execute_tool.
+     *
+     * @param toolkitSlug The toolkit slug (e.g., "gmail", "github", "slack", "notion")
+     * @return Result containing the full markdown documentation string
+     */
+    suspend fun fetchToolkitMarkdown(toolkitSlug: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            if (toolkitSlug.isBlank()) {
+                return@withContext Result.failure(Exception("Toolkit slug cannot be empty"))
+            }
+
+            // The public markdown URL follows the pattern: https://composio.dev/toolkits/{slug}.md
+            // This is a publicly accessible endpoint — no API key needed.
+            val markdownUrl = "$COMPOSIO_PUBLIC_MARKDOWN_BASE/${toolkitSlug.lowercase().trim()}.md"
+            AppLogger.d(TAG, "Fetching toolkit markdown from: $markdownUrl")
+
+            val client = OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build()
+
+            val request = okhttp3.Request.Builder()
+                .url(markdownUrl)
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            if (response.isSuccessful && responseBody != null) {
+                AppLogger.d(TAG, "Fetched ${responseBody.length} chars of markdown for toolkit: $toolkitSlug")
+                Result.success(responseBody)
+            } else {
+                val errorMsg = "HTTP ${response.code}: ${response.message} for URL: $markdownUrl"
+                AppLogger.e(TAG, errorMsg)
+                // Fallback: try the API endpoint to get markdown_url field
+                val fallbackResult = fetchToolkitMarkdownViaApi(toolkitSlug)
+                if (fallbackResult.isFailure) {
+                    Result.failure(Exception("Failed to fetch toolkit docs for '$toolkitSlug': HTTP ${response.code}. " +
+                        "Try using composio_list_toolkits to find the correct toolkit slug."))
+                } else {
+                    fallbackResult
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to fetch toolkit markdown for: $toolkitSlug", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fallback: fetch toolkit details via API to get the markdown_url field,
+     * then fetch the markdown from that URL.
+     */
+    private suspend fun fetchToolkitMarkdownViaApi(toolkitSlug: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val toolkitResult = getToolkit(toolkitSlug)
+            toolkitResult.fold(
+                onSuccess = { _ ->
+                    // Toolkit exists — the markdown_url from the API JSON is always:
+                    // https://composio.dev/toolkits/{slug}.md
+                    val markdownUrl = "$COMPOSIO_PUBLIC_MARKDOWN_BASE/${toolkitSlug.lowercase()}.md"
+
+                    val client = OkHttpClient.Builder()
+                        .connectTimeout(15, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .build()
+
+                    val request = okhttp3.Request.Builder()
+                        .url(markdownUrl)
+                        .header("User-Agent", USER_AGENT)
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseBody = response.body?.string()
+
+                    if (response.isSuccessful && responseBody != null) {
+                        Result.success(responseBody)
+                    } else {
+                        Result.failure(Exception("Failed to fetch markdown via fallback: HTTP ${response.code}"))
+                    }
+                },
+                onFailure = { e ->
+                    Result.failure(Exception("Toolkit '$toolkitSlug' not found. Error: ${e.message}"))
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     
     /**
      * Get all tools across all toolkits
