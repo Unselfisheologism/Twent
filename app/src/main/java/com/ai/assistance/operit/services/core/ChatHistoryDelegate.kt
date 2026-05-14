@@ -172,12 +172,23 @@ class ChatHistoryDelegate(
                     val currentMessageMap = currentMessages.associateBy { it.timestamp }
 
                     // 智能合并：保持已存在消息的实例，只更新内容（如果变化）
+                    // CRITICAL FIX: Always prefer the message with LONGER content. This prevents
+                    // the vanishing bug where reloadChatMessagesSmart (called after tool completion)
+                    // replaces a complete in-memory streaming message with a stale/partial DB version.
                     val mergedMessages = newMessages.map { newMsg ->
                         val existingMsg = currentMessageMap[newMsg.timestamp]
                         if (existingMsg != null) {
-                            // 消息已存在，保持原实例，但更新内容（如果内容有变化）
+                            // 消息已存在，保持原实例，但更新内容（如果变化）
                             if (existingMsg.content != newMsg.content || existingMsg.roleName != newMsg.roleName) {
-                                existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
+                                // Prefer longer content — in-memory is always more up-to-date during streaming
+                                if (newMsg.content.length > existingMsg.content.length) {
+                                    existingMsg.copy(content = newMsg.content, roleName = newMsg.roleName)
+                                } else {
+                                    // Keep existing (in-memory) even if content matches —
+                                    // in-memory may have complete content while DB version
+                                    // still has contentStream set, causing UI to discard it
+                                    existingMsg
+                                }
                             } else {
                                 existingMsg
                             }

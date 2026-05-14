@@ -56,13 +56,12 @@ fun IntegrationsScreen() {
 
     // Load toolkits and connections with full pagination
     LaunchedEffect(Unit) {
-        loadIntegrations(composioApi, { items ->
-            toolkits = items
-            isLoading = false
-        }, { error ->
-            errorMessage = error
-            isLoading = false
-        })
+        val result = loadIntegrations(composioApi)
+        result.fold(
+            onSuccess = { toolkits = it },
+            onFailure = { errorMessage = it.message ?: "Unknown error" }
+        )
+        isLoading = false
     }
 
     // Refresh function
@@ -70,20 +69,16 @@ fun IntegrationsScreen() {
         isLoading = true
         errorMessage = null
         scope.launch {
-            loadIntegrations(composioApi, { items ->
-                toolkits = items
-                isLoading = false
-            }, { error ->
-                errorMessage = error
-                isLoading = false
-            })
+            val result = loadIntegrations(composioApi)
+            result.fold(
+                onSuccess = { toolkits = it },
+                onFailure = { errorMessage = it.message ?: "Unknown error" }
+            )
+            isLoading = false
         }
     }
 
-// Filter out internal/non-user-facing Composio toolkits
-    // These are infrastructure/tooling toolkits, not user integrations
-
-Column(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
@@ -220,22 +215,21 @@ data class ToolkitItem(
 )
 
 /**
- * Load ALL toolkits from Composio using cursor-based pagination.
- * Composio returns max 50 per page — loop until no next_cursor.
+ * Load all toolkits from Composio with full pagination.
  * Also fetch connections to mark which toolkits are already linked.
  * Filters out internal Composio toolkits (composio, composio_search).
+ * Uses suspendCoroutine so the coroutine always completes (no callback ambiguity).
  */
 private suspend fun loadIntegrations(
-    composioApi: ComposioApiService,
-    onSuccess: (List<ToolkitItem>) -> Unit,
-    onError: (String) -> Unit
-) {
-    try {
-        if (!composioApi.isConfigured()) {
-            onError("Composio API key not configured. Add COMPOSIO_API_KEY to local.properties.")
-            return
-        }
+    composioApi: ComposioApiService
+): Result<List<ToolkitItem>> {
+    if (!composioApi.isConfigured()) {
+        val msg = "Composio API key not configured. Add COMPOSIO_API_KEY to local.properties."
+        AppLogger.e("Integrations", msg)
+        return Result.failure(Exception(msg))
+    }
 
+    return try {
         // Fetch all toolkits via offset-based pagination (Composio max 50/page)
         val allToolkits = mutableListOf<com.ai.assistance.operit.data.integration.model.ToolkitDefinition>()
         var offset = 0
@@ -244,8 +238,9 @@ private suspend fun loadIntegrations(
         while (hasMore) {
             val result = composioApi.listToolkits(limit = 50, offset = offset)
             if (result.isFailure) {
-                onError("Failed to load toolkits: ${result.exceptionOrNull()?.message}")
-                return
+                val ex = result.exceptionOrNull() ?: Exception("Unknown error")
+                AppLogger.e("Integrations", "Failed to load toolkits: ${ex.message}")
+                return Result.failure(ex)
             }
             val toolkits = result.getOrNull() ?: emptyList()
             allToolkits.addAll(toolkits)
@@ -278,9 +273,11 @@ private suspend fun loadIntegrations(
                     logoUrl = null
                 )
             }
-        onSuccess(items)
+        AppLogger.d("Integrations", "Loaded ${items.size} toolkits")
+        Result.success(items)
     } catch (e: Exception) {
-        onError("Error loading integrations: ${e.message}")
+        AppLogger.e("Integrations", "Error loading integrations: ${e.message}", e)
+        Result.failure(e)
     }
 }
 
