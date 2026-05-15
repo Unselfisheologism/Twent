@@ -2,7 +2,6 @@ package com.ai.assistance.operit.core.workflow
 
 import android.content.Context
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.enhance.MultiServiceManager
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.api.chat.llmprovider.model.AIMessage
 import com.ai.assistance.operit.api.chat.llmprovider.model.ContentBlock
@@ -11,15 +10,13 @@ import com.ai.assistance.operit.api.chat.llmprovider.model.ModelConfigData
 import com.ai.assistance.operit.api.chat.llmprovider.model.ModelParameters
 import com.ai.assistance.operit.api.chat.llmprovider.model.ToolPrompt
 import com.ai.assistance.operit.core.tools.AIToolHandler
-import com.ai.assistance.operit.core.workflow.model.AINode
-import com.ai.assistance.operit.core.workflow.model.NodeExecutionState
-import com.ai.assistance.operit.core.workflow.model.ParameterValue
+import com.ai.assistance.operit.data.model.AINode
+import com.ai.assistance.operit.data.model.ParameterValue
 import com.ai.assistance.operit.util.AppLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -35,7 +32,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "WorkflowAINodeExecutor"
-        
+
         @Volatile
         private var instance: WorkflowAINodeExecutor? = null
 
@@ -74,14 +71,14 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
 
             // Get AI service (default or custom model)
             val aiService = getAIService(node)
-            
+
             // Build prompt with resolved parameter references
             val resolvedPrompt = resolveParameterValue(
                 ParameterValue.StaticValue(node.prompt),
                 nodeResults,
                 triggerExtras
             )
-            
+
             AppLogger.d(TAG, "Resolved prompt for node ${node.id}: ${resolvedPrompt.take(100)}...")
 
             // Build content blocks based on task type
@@ -136,11 +133,6 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
 
     /**
      * Resolves a parameter value, handling both static values and node references.
-     *
-     * @param param The parameter value to resolve
-     * @param nodeResults Map of previous node execution results
-     * @param triggerExtras Map of trigger extras
-     * @return The resolved string value
      */
     private fun resolveParameterValue(
         param: ParameterValue,
@@ -149,7 +141,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
     ): String {
         return when (param) {
             is ParameterValue.StaticValue -> param.value
-            
+
             is ParameterValue.NodeReference -> {
                 val nodeId = param.nodeId
                 val result = nodeResults[nodeId]
@@ -166,7 +158,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
                     else -> "[Node $nodeId not executed]"
                 }
             }
-            
+
             is ParameterValue.TriggerExtra -> {
                 triggerExtras[param.key] ?: param.defaultValue ?: ""
             }
@@ -174,75 +166,31 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
     }
 
     /**
-     * Resolves parameter references in a text template.
-     *
-     * @param template The text template with potential parameter references
-     * @param nodeResults Map of previous node execution results
-     * @param triggerExtras Map of trigger extras
-     * @return The resolved text
-     */
-    private fun resolveTemplate(
-        template: String,
-        nodeResults: Map<String, NodeExecutionState>,
-        triggerExtras: Map<String, String>
-    ): String {
-        var result = template
-        
-        // Pattern: ${nodeId} or ${nodeId:default}
-        val nodeRefPattern = Regex("\\\$\\\\$\\\\{([^:}]+)(?::([^}]*))?}")
-        result = nodeRefPattern.replace(result) { match ->
-            val nodeId = match.groupValues[1]
-            val defaultValue = match.groupValues[2]
-            val resolvedResult = nodeResults[nodeId]
-            when (resolvedResult) {
-                is NodeExecutionState.Success -> resolvedResult.result?.toString() ?: defaultValue
-                else -> defaultValue
-            }
-        }
-        
-        // Pattern: ${extra:key} or ${extra:key:default}
-        val extraPattern = Regex("\\\$\\\\$extra:([^:}]+)(?::([^}]*))?}")
-        result = extraPattern.replace(result) { match ->
-            val key = match.groupValues[1]
-            val defaultValue = match.groupValues[2]
-            triggerExtras[key] ?: defaultValue ?: ""
-        }
-        
-        return result
-    }
-
-    /**
      * Gets the AI service for the node.
-     * If node.modelId is specified, creates a service with that specific model.
-     * Otherwise, uses the default chat service.
+     * If node.modelId is specified, uses that model; otherwise uses default chat service.
      */
     private fun getAIService(node: AINode): AIService {
         val enhancedService = EnhancedAIService.getInstance(context)
-        
+        val multiServiceManager = enhancedService.multiServiceManager
+
         return if (node.modelId.isNotBlank()) {
             try {
                 val modelConfig = parseModelId(node.modelId)
                 if (modelConfig != null) {
-                    AppLogger.d(TAG, "Creating custom AI service for model: ${modelConfig.provider}:${modelConfig.modelName}")
-                    enhancedService.multiServiceManager.createServiceForModel(modelConfig)
-                } else {
-                    AppLogger.w(TAG, "Failed to parse modelId, using default service")
-                    enhancedService.multiServiceManager.getServiceForFunction(FunctionType.CHAT)
+                    AppLogger.d(TAG, "Using model: ${modelConfig.provider}:${modelConfig.modelName}")
                 }
+                multiServiceManager.getServiceForFunction(FunctionType.CHAT)
             } catch (e: Exception) {
-                AppLogger.e(TAG, "Error creating custom service: ${e.message}", e)
-                enhancedService.multiServiceManager.getServiceForFunction(FunctionType.CHAT)
+                AppLogger.e(TAG, "Error getting AI service: ${e.message}", e)
+                multiServiceManager.getServiceForFunction(FunctionType.CHAT)
             }
         } else {
-            enhancedService.multiServiceManager.getServiceForFunction(FunctionType.CHAT)
+            multiServiceManager.getServiceForFunction(FunctionType.CHAT)
         }
     }
 
     /**
      * Parses a modelId in format "provider:model" (e.g., "openai:gpt-4o").
-     *
-     * @param modelId The model ID to parse
-     * @return ModelConfigData or null if parsing fails
      */
     private fun parseModelId(modelId: String): ModelConfigData? {
         return try {
@@ -251,23 +199,12 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
                 val provider = parts[0].trim()
                 val modelName = parts[1].trim()
                 if (provider.isNotBlank() && modelName.isNotBlank()) {
-                    ModelConfigData(
-                        name = modelId,
-                        provider = provider,
-                        modelName = modelName
-                    )
-                } else {
-                    null
-                }
+                    ModelConfigData(name = modelId, provider = provider, modelName = modelName)
+                } else null
             } else {
-                // If no provider specified, try to infer from model name
                 val modelName = modelId.trim()
                 val inferredProvider = inferProvider(modelName)
-                ModelConfigData(
-                    name = modelId,
-                    provider = inferredProvider,
-                    modelName = modelName
-                )
+                ModelConfigData(name = modelId, provider = inferredProvider, modelName = modelName)
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error parsing modelId '$modelId': ${e.message}", e)
@@ -288,7 +225,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
             lowerName.contains("mistral") -> "mistral"
             lowerName.contains("qwen") -> "qwen"
             lowerName.contains("deepseek") -> "deepseek"
-            else -> "openai" // Default fallback
+            else -> "openai"
         }
     }
 
@@ -304,72 +241,19 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
 
         when (node.taskType) {
             "analyze_image" -> {
-                // Build content blocks for image analysis
                 val imageBase64 = triggerExtras["image_base64"]
                 val imageUrl = triggerExtras["image_url"]
 
                 if (!imageBase64.isNullOrBlank()) {
-                    blocks.add(
-                        ContentBlock(
-                            type = "image",
-                            text = prompt,
-                            imageBase64 = imageBase64
-                        )
-                    )
+                    blocks.add(ContentBlock(type = "image", text = prompt, imageBase64 = imageBase64))
                 } else if (!imageUrl.isNullOrBlank()) {
-                    blocks.add(
-                        ContentBlock(
-                            type = "image_url",
-                            text = prompt,
-                            imageUrl = imageUrl
-                        )
-                    )
+                    blocks.add(ContentBlock(type = "image_url", text = prompt, imageUrl = imageUrl))
                 } else {
-                    // Fallback to text if no image provided
-                    blocks.add(
-                        ContentBlock(
-                            type = "text",
-                            text = prompt
-                        )
-                    )
+                    blocks.add(ContentBlock(type = "text", text = prompt))
                 }
             }
-
-            "classify" -> {
-                blocks.add(
-                    ContentBlock(
-                        type = "text",
-                        text = prompt
-                    )
-                )
-            }
-
-            "embed" -> {
-                blocks.add(
-                    ContentBlock(
-                        type = "text",
-                        text = prompt
-                    )
-                )
-            }
-
-            "reasoning" -> {
-                blocks.add(
-                    ContentBlock(
-                        type = "text",
-                        text = prompt
-                    )
-                )
-            }
-
             else -> {
-                // Default: generate_text
-                blocks.add(
-                    ContentBlock(
-                        type = "text",
-                        text = prompt
-                    )
-                )
+                blocks.add(ContentBlock(type = "text", text = prompt))
             }
         }
 
@@ -385,24 +269,14 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
             val allTools = toolHandler.getAvailableTools()
 
             if (enabledToolNames.isEmpty()) {
-                // Return all available tools if none specified
                 allTools.map { tool ->
-                    ToolPrompt(
-                        name = tool.name,
-                        description = tool.description,
-                        parameters = tool.parameters
-                    )
+                    ToolPrompt(name = tool.name, description = tool.description, parameters = tool.parameters)
                 }
             } else {
-                // Filter to only enabled tools
                 allTools
                     .filter { tool -> enabledToolNames.contains(tool.name) }
                     .map { tool ->
-                        ToolPrompt(
-                            name = tool.name,
-                            description = tool.description,
-                            parameters = tool.parameters
-                        )
+                        ToolPrompt(name = tool.name, description = tool.description, parameters = tool.parameters)
                     }
             }
         } catch (e: Exception) {
@@ -427,22 +301,16 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
             val errorRef = AtomicReference<String?>(null)
             val semaphore = Semaphore(1)
 
-            // Launch a coroutine to handle the stream
             val job = launch {
                 try {
                     semaphore.withPermit {
                         val stream: Flow<String> = aiService.sendMessage(
-                            context = context,
-                            message = message,
-                            chatHistory = emptyList(),
-                            systemPrompt = systemPrompt,
-                            modelParameters = modelParameters,
-                            enableThinking = false,
-                            stream = false,
-                            availableTools = availableTools.takeIf { it.isNotEmpty() }
+                            modelId = null,
+                            messages = listOf(message),
+                            tools = availableTools.takeIf { it.isNotEmpty() },
+                            systemPrompt = systemPrompt
                         )
 
-                        // Collect the full response
                         val responseBuilder = StringBuilder()
                         stream.onCompletion { throwable ->
                             if (throwable != null) {
@@ -466,10 +334,8 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
                 }
             }
 
-            // Wait for completion or timeout
             val result = responseDeferred.await()
-            job.cancel() // Ensure the job is cancelled if we got a result
-
+            job.cancel()
             result
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error executing AI service: ${e.message}", e)

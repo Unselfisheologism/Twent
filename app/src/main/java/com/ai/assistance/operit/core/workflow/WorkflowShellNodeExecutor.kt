@@ -3,7 +3,6 @@ package com.ai.assistance.operit.core.workflow
 import android.content.Context
 import com.ai.assistance.operit.core.tools.system.Terminal
 import com.ai.assistance.operit.data.model.ExecuteShellNode
-import com.ai.assistance.operit.data.model.NodeExecutionState
 import com.ai.assistance.operit.data.model.ParameterValue
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers

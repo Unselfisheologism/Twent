@@ -1,8 +1,8 @@
 package com.ai.assistance.operit.core.workflow
 
 import android.content.Context
-import com.ai.assistance.operit.data.model.NodeExecutionState
 import com.ai.assistance.operit.data.model.SkillNode
+import com.ai.assistance.operit.core.workflow.NodeExecutionState
 import com.ai.assistance.operit.data.skill.SkillRepository
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers
