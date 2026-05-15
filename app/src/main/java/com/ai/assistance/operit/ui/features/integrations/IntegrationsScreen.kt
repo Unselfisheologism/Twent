@@ -444,6 +444,7 @@ private fun ToolkitCard(
     onDisconnect: (String) -> Unit,
     isConnecting: Boolean
 ) {
+    val isStale = toolkit.isStale
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -478,7 +479,6 @@ private fun ToolkitCard(
                 }
                 
 // Connection status
-                val isStale = toolkit.isStale
                 val (statusIcon, statusText, statusColor) = when {
                     isStale -> Triple(
                         Icons.Filled.Warning,
