@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
+import com.ai.assistance.operit.util.AppLogger
+
+private const val TAG = "ToolRegistration"
 
 /**
  * This file contains all tool registrations centralized for easier maintenance and integration It
@@ -1955,8 +1958,34 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                                 emptyMap<String, Any>()
                             }
 
+                            // Auto-resolve entityId: Composio v3 requires user_id (entity_id) for ALL tool calls.
+                            // If accountId is provided but entityId is missing, we must look it up from Composio API.
+                            // This mirrors ComposioToolExecutor.findAccountForToolkit() logic.
+                            AppLogger.d(TAG, "composio_execute_tool: resolving entityId for accountId=$accountId")
+                            val resolvedEntityId = runBlocking(Dispatchers.IO) {
+                                val localUserId = com.ai.assistance.operit.voice.utilities.UserIdManager(context).getOrCreateUserId()
+                                if (!accountId.isNullOrBlank()) {
+                                    // Try to get user_id from Composio's connection details
+                                    val detailResult = composioService.getConnectionDetails(accountId)
+                                    val detailUserId = detailResult.getOrNull()
+                                    if (!detailUserId.isNullOrBlank()) {
+                                        AppLogger.d(TAG, "Got user_id from connection details: $detailUserId")
+                                        detailUserId
+                                    } else {
+                                        // Fall back to local UserIdManager
+                                        AppLogger.w(TAG, "No user_id from connection details for account $accountId, falling back to local UserIdManager: $localUserId")
+                                        localUserId
+                                    }
+                                } else {
+                                    // No accountId provided — use local UserIdManager
+                                    AppLogger.w(TAG, "No accountId provided, using local UserIdManager: $localUserId")
+                                    localUserId
+                                }
+                            }
+                            AppLogger.d(TAG, "composio_execute_tool: resolvedEntityId=$resolvedEntityId")
+
                             val result = runBlocking(Dispatchers.IO) {
-                                composioService.executeTool(toolName, parameters, accountId)
+                                composioService.executeTool(toolName, parameters, accountId, resolvedEntityId)
                             }
 
                             result.fold(
@@ -2014,7 +2043,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                         )
                     } else {
                         val result = runBlocking(Dispatchers.IO) {
-                            manageConnections.getAllConnections()
+                            composioService.listConnectionsAllStatuses()
                         }
 
                         result.fold(

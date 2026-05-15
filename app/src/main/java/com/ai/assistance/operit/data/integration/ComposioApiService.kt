@@ -1092,6 +1092,10 @@ class ComposioApiService(private val context: Context) {
      *
      * Also: top-level fields only — NO nested "parameters" wrapper.
      * The API expects flat "arguments" key, not "parameters".
+     *
+     * Our AI agent always sends structured parameters (never natural language text),
+     * so we always use 'arguments' and NEVER send 'text'. This avoids the
+     * 400 error: "Only one of 'text' or 'arguments' must be provided".
      */
     private fun buildToolExecutionBody(
         parameters: Map<String, Any>,
@@ -1101,21 +1105,11 @@ class ComposioApiService(private val context: Context) {
     ): JsonObject {
         val body = mutableMapOf<String, JsonElement>()
 
-        // Check if text was accidentally passed in the parameters map (LLM may do this).
-        // Pull it out so we send the correct v3 format.
-        val textFromParams = parameters["text"]?.toString()
-        val hasText = !text.isNullOrBlank() || !textFromParams.isNullOrBlank()
-
-        // Mutually exclusive: text OR arguments, never both
-        if (hasText) {
-            body["text"] = JsonPrimitive(text ?: textFromParams)
-            // Defensive: if LLM sent both text AND arguments in params, drop arguments
-            // (composio API rejects requests with both at top level)
-        } else if (!parameters.isEmpty()) {
-            // Flat 'arguments' key (NOT nested under 'parameters')
-            // Also remove any 'text' key from the arguments map if LLM accidentally included it
-            val cleanParams = parameters.filterKeys { it != "text" }
-            body["arguments"] = buildJsonObject(cleanParams)
+        // STRICTLY MUTUALLY EXCLUSIVE: text OR arguments — never both.
+        // We ALWAYS send arguments (structured params from AI agent).
+        // 'text' field is NEVER sent — it's only for LLM-based natural language tools.
+        if (!parameters.isEmpty()) {
+            body["arguments"] = buildJsonObject(parameters)
         }
 
         accountId?.let { body["account_id"] = JsonPrimitive(it) }
