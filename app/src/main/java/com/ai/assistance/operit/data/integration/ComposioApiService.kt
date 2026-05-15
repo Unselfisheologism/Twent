@@ -862,6 +862,48 @@ class ComposioApiService(private val context: Context) {
     }
     
     /**
+     * List connected accounts WITHOUT filtering by status.
+     * Used by ComposioToolExecutor when finding the best account for a toolkit —
+     * we want to match regardless of ACTIVE/EXPIRED/REVOKED status, because even
+     * a stale connection tells us the accountId + entityId needed to attempt execution.
+     */
+    suspend fun listConnectionsAllStatuses(
+        toolkit: String? = null
+    ): Result<List<ConnectionInfo>> = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
+            }
+
+            val urlBuilder = buildUrl(ENDPOINT_CONNECTED_ACCOUNTS).toHttpUrlOrNull()?.newBuilder()
+            // NOTE: intentionally NO status filter — fetch everything
+            if (toolkit != null) {
+                urlBuilder?.addQueryParameter("toolkit_slug", toolkit)
+            }
+
+            val url = urlBuilder?.build()?.toString()
+                ?: return@withContext Result.failure(Exception("Failed to build URL"))
+
+            val request = createAuthenticatedRequest(url)
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            if (response.isSuccessful && responseBody != null) {
+                AppLogger.d(TAG, "All-Statuses connections response: $responseBody")
+                val connections = parseConnectionsResponse(responseBody)
+                Result.success(connections)
+            } else {
+                val errorMsg = "HTTP ${response.code}: ${response.message}. Response: $responseBody"
+                AppLogger.e(TAG, errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to list all-status connections", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Disconnect a connected account
      * 
      * @param connectionId The connection ID to disconnect
