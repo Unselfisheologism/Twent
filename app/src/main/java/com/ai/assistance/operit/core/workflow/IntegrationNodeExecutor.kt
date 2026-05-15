@@ -313,10 +313,7 @@ class IntegrationNodeExecutor(private val context: Context) {
   /**
    * Execute an MCP type node
    * Uses the MCP server configuration to execute tools via MCP protocol
-   * 
-   * Note: MCP execution requires proper MCP server setup. This implementation
-   * provides a placeholder that can be enhanced with actual MCP protocol support
-   * when MCPLocalServer or MCPRepository integration is available.
+   * Delegates to WorkflowMcpNodeExecutor for actual MCP communication
    */
   private suspend fun executeMcp(
     node: IntegrationNode,
@@ -326,38 +323,17 @@ class IntegrationNodeExecutor(private val context: Context) {
       val mcpConfig = node.mcpServerConfig
         ?: return@withContext Result.failure(Exception("MCP server configuration missing"))
       
-      AppLogger.d(TAG, "Executing MCP tool: ${mcpConfig.toolName} on server: ${mcpConfig.serverName}")
+      AppLogger.d(TAG, "Executing MCP tool via WorkflowMcpNodeExecutor: ${mcpConfig.toolName} on server: ${mcpConfig.serverName}")
       
-      // Check if server ID is provided
-      val serverId = mcpConfig.serverId
-      if (serverId.isNullOrEmpty()) {
-        return@withContext Result.failure(Exception("MCP server ID not configured"))
+      // Delegate to WorkflowMcpNodeExecutor for MCP protocol execution
+      val mcpExecutor = WorkflowMcpNodeExecutor.getInstance(context)
+      val result = mcpExecutor.execute(node, emptyMap(), emptyMap())
+      
+      return@withContext when (result) {
+        is NodeExecutionState.Success -> Result.success(result.result)
+        is NodeExecutionState.Failed -> Result.failure(Exception(result.error))
+        is NodeExecutionState.Skipped -> Result.failure(Exception(result.reason))
       }
-      
-      // For now, return a placeholder that indicates MCP execution needs proper setup
-      // In a full implementation, this would:
-      // 1. Get MCP server config from MCPLocalServer or MCPRepository
-      // 2. Connect via stdio or SSE based on server type
-      // 3. Execute the tool using MCP protocol
-      // 4. Return the result
-      
-      // Try to get server from MCPLocalServer if available
-      try {
-        val mcpLocalServer = com.ai.assistance.operit.data.mcp.MCPLocalServer.getInstance(context)
-        val serverInfo = mcpLocalServer.getPluginMetadata(serverId)
-        if (serverInfo != null) {
-          // Server exists, but actual execution would require MCP protocol implementation
-          AppLogger.d(TAG, "Found MCP server: ${serverInfo.name}")
-        }
-      } catch (e: Exception) {
-        AppLogger.w(TAG, "Could not get MCP server info: ${e.message}")
-      }
-      
-      Result.failure(Exception(
-        "MCP execution is not fully implemented. " +
-        "Server: ${mcpConfig.serverName}, Tool: ${mcpConfig.toolName}. " +
-        "This feature requires MCP server configuration and protocol support."
-      ))
     } catch (e: Exception) {
       AppLogger.e(TAG, "MCP execution failed", e)
       Result.failure(e)

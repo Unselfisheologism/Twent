@@ -613,7 +613,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.deleteWorkflow(tool) } }
     )
 
-    // 触发工作流执行
+// 触发工作流执行
     handler.registerTool(
             name = "trigger_workflow",
             descriptionGenerator = { tool ->
@@ -621,6 +621,59 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 s(R.string.toolreg_trigger_workflow_desc, id)
             },
             executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.triggerWorkflow(tool) } }
+    )
+
+    // 添加节点到工作流
+    handler.registerTool(
+            name = "add_node",
+            descriptionGenerator = { tool ->
+                val type = tool.parameters.find { it.name == "node_type" }?.value ?: ""
+                val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+                s(R.string.toolreg_add_node_desc, type, name)
+            },
+            executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.addNode(tool) } }
+    )
+
+    // 配置工作流节点
+    handler.registerTool(
+            name = "configure_node",
+            descriptionGenerator = { tool ->
+                val nodeId = tool.parameters.find { it.name == "node_id" }?.value ?: ""
+                val field = tool.parameters.find { it.name == "field" }?.value ?: ""
+                s(R.string.toolreg_configure_node_desc, nodeId, field)
+            },
+            executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.configureNode(tool) } }
+    )
+
+    // 连接工作流节点
+    handler.registerTool(
+            name = "connect_nodes",
+            descriptionGenerator = { tool ->
+                val source = tool.parameters.find { it.name == "source_node_id" }?.value ?: ""
+                val target = tool.parameters.find { it.name == "target_node_id" }?.value ?: ""
+                s(R.string.toolreg_connect_nodes_desc, source, target)
+            },
+            executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.connectNodes(tool) } }
+    )
+
+    // 删除工作流节点
+    handler.registerTool(
+            name = "delete_node",
+            descriptionGenerator = { tool ->
+                val nodeId = tool.parameters.find { it.name == "node_id" }?.value ?: ""
+                s(R.string.toolreg_delete_node_desc, nodeId)
+            },
+            executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.deleteNode(tool) } }
+    )
+
+    // 获取工作流详情
+    handler.registerTool(
+            name = "get_workflow_detail",
+            descriptionGenerator = { tool ->
+                val id = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+                s(R.string.toolreg_get_workflow_detail_desc, id)
+            },
+            executor = { tool -> runBlocking(Dispatchers.IO) { workflowTools.getWorkflowDetail(tool) } }
     )
 
     // 对话管理工具

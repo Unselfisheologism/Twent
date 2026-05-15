@@ -305,6 +305,81 @@ data class NodePosition(
 )
 
 /**
+ * AI节点
+ * 在工作流中调用AI服务（复用AI Chat的EnhancedAIService配置）
+ * 支持：文本生成、图像分析、分类、嵌入等
+ */
+@Serializable
+data class AINode(
+    override val id: String = UUID.randomUUID().toString(),
+    override val type: String = "ai",
+    override var name: String = "",
+    override var description: String = "",
+    override var position: NodePosition = NodePosition(0f, 0f),
+    // AI任务类型
+    var taskType: String = "generate_text",  // generate_text, analyze_image, classify, embed, reasoning
+    // 模型选择（空=使用默认模型）
+    var modelId: String = "",
+    // 系统提示词模板
+    var systemPrompt: String = "",
+    // 用户提示词（支持节点引用）
+    var prompt: String = "",
+    // 启用工具调用（让AI在AI节点内调用工具）
+    var enableTools: Boolean = false,
+    // 工具列表（当enableTools=true时）
+    var enabledTools: List<String> = emptyList(),
+    // 最大token
+    var maxTokens: Int = 4096,
+    // 温度
+    var temperature: Float = 0.7f,
+    // 输出是否流式（工作流中建议false）
+    var stream: Boolean = false,
+    // 超时时间（毫秒）
+    var timeoutMs: Long = 60000L
+) : WorkflowNode()
+
+/**
+ * 执行Shell节点
+ * 在工作流中执行Ubuntu shell命令（复用Terminal页面的终端会话）
+ */
+@Serializable
+data class ExecuteShellNode(
+    override val id: String = UUID.randomUUID().toString(),
+    override val type: String = "execute_shell",
+    override var name: String = "",
+    override var description: String = "",
+    override var position: NodePosition = NodePosition(0f, 0f),
+    // 要执行的命令（支持节点引用）
+    var command: String = "",
+    // 指定会话ID（空=自动创建临时会话）
+    var sessionId: String = "",
+    // 超时时间（毫秒）
+    var timeoutMs: Long = 30000L,
+    // 是否捕获stderr
+    var captureStderr: Boolean = true,
+    // 工作目录（可选）
+    var workingDir: String = ""
+) : WorkflowNode()
+
+/**
+ * Skill节点
+ * 将已安装的SKILL.md内容注入到后续AI节点的上下文中
+ * 不执行任何逻辑，只存储skill引用
+ */
+@Serializable
+data class SkillNode(
+    override val id: String = UUID.randomUUID().toString(),
+    override val type: String = "skill",
+    override var name: String = "",
+    override var description: String = "",
+    override var position: NodePosition = NodePosition(0f, 0f),
+    // 要加载的skill名称（与SKILL.md文件名对应，如 "android-development"）
+    var skillNames: List<String> = emptyList(),
+    // 额外的指令（追加到skill内容后）
+    var extraInstructions: String = ""
+) : WorkflowNode()
+
+/**
  * 工作流节点连接
  * 定义节点之间的连接关系
  */

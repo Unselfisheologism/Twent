@@ -181,6 +181,12 @@
     <string name="workflow_node_label_logic">Logic</string>
     <string name="workflow_node_label_extract">Compute</string>
     <string name="workflow_node_label_unknown">Unknown</string>
+    <string name="workflow_node_label_ai">AI</string>
+    <string name="workflow_node_label_shell">Shell</string>
+    <string name="workflow_node_label_skill">Skill</string>
+    <string name="workflow_node_type_ai">AI Node</string>
+    <string name="workflow_node_type_execute_shell">Execute Shell Node</string>
+    <string name="workflow_node_type_skill">Skill Node</string>
     <string name="workflow_node_skipped">Skipped</string>
     <string name="workflow_not_found">Workflow not found</string>
     <string name="workflow_confirm_delete_title">Confirm deletion</string>
@@ -4613,7 +4619,12 @@
     <string name="toolreg_update_workflow_desc">Update workflow: %1$s</string>
     <string name="toolreg_patch_workflow_desc">Patch workflow: %1$s</string>
     <string name="toolreg_delete_workflow_desc">Delete workflow: %1$s</string>
-    <string name="toolreg_trigger_workflow_desc">Trigger workflow: %1$s</string>
+<string name="toolreg_trigger_workflow_desc">Trigger workflow: %1$s</string>
+    <string name="toolreg_add_node_desc">Add a %1$s node named \'%2$s\' to a workflow</string>
+    <string name="toolreg_configure_node_desc">Configure node %1$s field \'%2$s\'</string>
+    <string name="toolreg_connect_nodes_desc">Connect node %1$s to node %2$s</string>
+    <string name="toolreg_delete_node_desc">Delete node %1$s from a workflow</string>
+    <string name="toolreg_get_workflow_detail_desc">Get full details of workflow %1$s</string>
     <string name="toolreg_start_chat_service_desc">Start chat service (floating window)</string>
     <string name="toolreg_stop_chat_service_desc">Stop chat service (floating window)</string>
     <string name="toolreg_create_new_chat_desc">Create new chat</string>

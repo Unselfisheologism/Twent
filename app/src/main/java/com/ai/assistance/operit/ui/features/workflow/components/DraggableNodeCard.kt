@@ -38,6 +38,9 @@ import com.ai.assistance.operit.data.model.ConditionNode
 import com.ai.assistance.operit.data.model.LogicNode
 import com.ai.assistance.operit.data.model.ExtractNode
 import com.ai.assistance.operit.data.model.MCPNode
+import com.ai.assistance.operit.data.model.AINode
+import com.ai.assistance.operit.data.model.ExecuteShellNode
+import com.ai.assistance.operit.data.model.SkillNode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -112,6 +115,27 @@ fun DraggableNodeCard(
             borderColor = Color(0xFFCE93D8),
             icon = Icons.Default.Settings,
             label = stringResource(R.string.workflow_node_label_mcp)
+        )
+        is AINode -> NodeStyle(
+            primaryColor = Color(0xFF2196F3),
+            backgroundColor = Color(0xFFE3F2FD),
+            borderColor = Color(0xFF90CAF9),
+            icon = Icons.Default.Settings,
+            label = stringResource(R.string.workflow_node_label_ai)
+        )
+        is ExecuteShellNode -> NodeStyle(
+            primaryColor = Color(0xFF607D8B),
+            backgroundColor = Color(0xFFECEFF1),
+            borderColor = Color(0xFFB0BEC5),
+            icon = Icons.Default.Settings,
+            label = stringResource(R.string.workflow_node_label_shell)
+        )
+        is SkillNode -> NodeStyle(
+            primaryColor = Color(0xFFFF5722),
+            backgroundColor = Color(0xFFFBE9E7),
+            borderColor = Color(0xFFFFAB91),
+            icon = Icons.Default.Settings,
+            label = stringResource(R.string.workflow_node_label_skill)
         )
         else -> NodeStyle(
             primaryColor = Color(0xFF9E9E9E),

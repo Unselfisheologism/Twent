@@ -1268,5 +1268,724 @@ class StandardWorkflowTools(private val context: Context) {
         }
         return map
     }
+
+    // ==================== Node CRUD Tools ====================
+
+    /**
+     * 添加节点到工作流
+     * workflow_id: 工作流ID
+     * node_type: 节点类型 (trigger, ai, execute_shell, skill, integration, condition, logic, extract, mcp)
+     * name: 节点名称
+     */
+    suspend fun addNode(tool: AITool): ToolResult {
+        return try {
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value
+            if (workflowId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow ID cannot be empty"
+                )
+            }
+
+            val nodeType = tool.parameters.find { it.name == "node_type" }?.value?.lowercase()
+            if (nodeType.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Node type cannot be empty"
+                )
+            }
+
+            val name = tool.parameters.find { it.name == "name" }?.value ?: "New $nodeType node"
+
+            // Get existing workflow
+            val existingResult = workflowRepository.getWorkflowById(workflowId)
+            if (existingResult.isFailure || existingResult.getOrNull() == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow not found: $workflowId"
+                )
+            }
+
+            val existingWorkflow = existingResult.getOrNull()!!
+            val newNode = createNodeByType(nodeType, name)
+            if (newNode == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Unknown or unsupported node type: $nodeType"
+                )
+            }
+
+            val updatedNodes = existingWorkflow.nodes + newNode
+            val updatedWorkflow = existingWorkflow.copy(nodes = updatedNodes)
+
+            val result = workflowRepository.updateWorkflow(updatedWorkflow)
+            if (result.isSuccess) {
+                ToolResult(
+                    toolName = tool.name,
+                    success = true,
+                    result = StringResultData("{\"node_id\": \"${newNode.id}\", \"node_type\": \"$nodeType\", \"node_name\": \"${newNode.name}\"}")
+                )
+            } else {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to add node: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to add node", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to add node: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * 配置节点属性
+     * workflow_id: 工作流ID
+     * node_id: 节点ID
+     * field: 要修改的字段名
+     * value: 新的值
+     */
+    suspend fun configureNode(tool: AITool): ToolResult {
+        return try {
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value
+            if (workflowId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow ID cannot be empty"
+                )
+            }
+
+            val nodeId = tool.parameters.find { it.name == "node_id" }?.value
+            if (nodeId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Node ID cannot be empty"
+                )
+            }
+
+            val field = tool.parameters.find { it.name == "field" }?.value
+            if (field.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Field name cannot be empty"
+                )
+            }
+
+            val value = tool.parameters.find { it.name == "value" }?.value ?: ""
+
+            // Get existing workflow
+            val existingResult = workflowRepository.getWorkflowById(workflowId)
+            if (existingResult.isFailure || existingResult.getOrNull() == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow not found: $workflowId"
+                )
+            }
+
+            val existingWorkflow = existingResult.getOrNull()!!
+            val nodeIndex = existingWorkflow.nodes.indexOfFirst { it.id == nodeId }
+            if (nodeIndex < 0) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Node not found: $nodeId"
+                )
+            }
+
+            val updatedNode = updateNodeField(existingWorkflow.nodes[nodeIndex], field, value)
+            if (updatedNode == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to update field '$field': invalid field name or value"
+                )
+            }
+
+            val updatedNodes = existingWorkflow.nodes.toMutableList()
+            updatedNodes[nodeIndex] = updatedNode
+            val updatedWorkflow = existingWorkflow.copy(nodes = updatedNodes)
+
+            val result = workflowRepository.updateWorkflow(updatedWorkflow)
+            if (result.isSuccess) {
+                ToolResult(
+                    toolName = tool.name,
+                    success = true,
+                    result = StringResultData("{\"node_id\": \"$nodeId\", \"field\": \"$field\", \"value\": \"$value\", \"updated\": true}")
+                )
+            } else {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to configure node: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to configure node", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to configure node: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * 连接两个节点
+     * workflow_id: 工作流ID
+     * source_node_id: 源节点ID
+     * target_node_id: 目标节点ID
+     * condition: 连接条件（可选）
+     */
+    suspend fun connectNodes(tool: AITool): ToolResult {
+        return try {
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value
+            if (workflowId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow ID cannot be empty"
+                )
+            }
+
+            val sourceNodeId = tool.parameters.find { it.name == "source_node_id" }?.value
+            if (sourceNodeId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Source node ID cannot be empty"
+                )
+            }
+
+            val targetNodeId = tool.parameters.find { it.name == "target_node_id" }?.value
+            if (targetNodeId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Target node ID cannot be empty"
+                )
+            }
+
+            val condition = tool.parameters.find { it.name == "condition" }?.value
+
+            // Get existing workflow
+            val existingResult = workflowRepository.getWorkflowById(workflowId)
+            if (existingResult.isFailure || existingResult.getOrNull() == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow not found: $workflowId"
+                )
+            }
+
+            val existingWorkflow = existingResult.getOrNull()!!
+
+            val sourceNode = existingWorkflow.nodes.find { it.id == sourceNodeId }
+            if (sourceNode == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Source node not found: $sourceNodeId"
+                )
+            }
+
+            val targetNode = existingWorkflow.nodes.find { it.id == targetNodeId }
+            if (targetNode == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Target node not found: $targetNodeId"
+                )
+            }
+
+            val connection = WorkflowNodeConnection(
+                id = UUID.randomUUID().toString(),
+                sourceNodeId = sourceNodeId,
+                targetNodeId = targetNodeId,
+                condition = condition
+            )
+
+            val updatedConnections = existingWorkflow.connections + connection
+            val updatedWorkflow = existingWorkflow.copy(connections = updatedConnections)
+
+            val result = workflowRepository.updateWorkflow(updatedWorkflow)
+            if (result.isSuccess) {
+                ToolResult(
+                    toolName = tool.name,
+                    success = true,
+                    result = StringResultData("{\"connection_id\": \"${connection.id}\", \"source\": \"$sourceNodeId\", \"target\": \"$targetNodeId\"}")
+                )
+            } else {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to connect nodes: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to connect nodes", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to connect nodes: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * 删除节点
+     * workflow_id: 工作流ID
+     * node_id: 节点ID
+     */
+    suspend fun deleteNode(tool: AITool): ToolResult {
+        return try {
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value
+            if (workflowId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow ID cannot be empty"
+                )
+            }
+
+            val nodeId = tool.parameters.find { it.name == "node_id" }?.value
+            if (nodeId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Node ID cannot be empty"
+                )
+            }
+
+            // Get existing workflow
+            val existingResult = workflowRepository.getWorkflowById(workflowId)
+            if (existingResult.isFailure || existingResult.getOrNull() == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow not found: $workflowId"
+                )
+            }
+
+            val existingWorkflow = existingResult.getOrNull()!!
+
+            val nodeToDelete = existingWorkflow.nodes.find { it.id == nodeId }
+            if (nodeToDelete == null) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Node not found: $nodeId"
+                )
+            }
+
+            // Remove node and all connections referencing this node
+            val updatedNodes = existingWorkflow.nodes.filter { it.id != nodeId }
+            val updatedConnections = existingWorkflow.connections.filter {
+                it.sourceNodeId != nodeId && it.targetNodeId != nodeId
+            }
+
+            val updatedWorkflow = existingWorkflow.copy(
+                nodes = updatedNodes,
+                connections = updatedConnections
+            )
+
+            val result = workflowRepository.updateWorkflow(updatedWorkflow)
+            if (result.isSuccess) {
+                ToolResult(
+                    toolName = tool.name,
+                    success = true,
+                    result = StringResultData("{\"node_id\": \"$nodeId\", \"deleted\": true, \"connections_removed\": ${existingWorkflow.connections.size - updatedConnections.size}}")
+                )
+            } else {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to delete node: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to delete node", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to delete node: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * 获取工作流详细信息（JSON格式）
+     * workflow_id: 工作流ID
+     */
+    suspend fun getWorkflowDetail(tool: AITool): ToolResult {
+        return try {
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value
+            if (workflowId.isNullOrBlank()) {
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Workflow ID cannot be empty"
+                )
+            }
+
+            val result = workflowRepository.getWorkflowById(workflowId)
+            if (result.isSuccess) {
+                val workflow = result.getOrNull()
+                if (workflow == null) {
+                    ToolResult(
+                        toolName = tool.name,
+                        success = false,
+                        result = StringResultData(""),
+                        error = "Workflow not found: $workflowId"
+                    )
+                } else {
+                    // Build detailed JSON response
+                    val nodesJson = workflow.nodes.joinToString(",\n") { node ->
+                        buildNodeJson(node)
+                    }
+                    val connectionsJson = workflow.connections.joinToString(",\n") { conn ->
+                        """{"id": "${conn.id}", "source": "${conn.sourceNodeId}", "target": "${conn.targetNodeId}", "condition": ${conn.condition?.let { "\"$it\"" } ?: "null"}}"""
+                    }
+                    val fullJson = """
+                    {
+                        "id": "${workflow.id}",
+                        "name": "${escapeJson(workflow.name)}",
+                        "description": "${escapeJson(workflow.description)}",
+                        "enabled": ${workflow.enabled},
+                        "node_count": ${workflow.nodes.size},
+                        "connection_count": ${workflow.connections.size},
+                        "nodes": [
+                            $nodesJson
+                        ],
+                        "connections": [
+                            $connectionsJson
+                        ],
+                        "stats": {
+                            "total_executions": ${workflow.totalExecutions},
+                            "successful_executions": ${workflow.successfulExecutions},
+                            "failed_executions": ${workflow.failedExecutions},
+                            "last_execution_time": ${workflow.lastExecutionTime ?: "null"},
+                            "last_execution_status": ${workflow.lastExecutionStatus?.name?.let { "\"$it\"" } ?: "null"}
+                        }
+                    }
+                    """.trimIndent()
+
+                    ToolResult(
+                        toolName = tool.name,
+                        success = true,
+                        result = StringResultData(fullJson)
+                    )
+                }
+            } else {
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Failed to get workflow: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to get workflow detail", e)
+            ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Failed to get workflow detail: ${e.message}"
+            )
+        }
+    }
+
+    // ==================== Helper Methods ====================
+
+    /**
+     * Create a new node by type
+     */
+    private fun createNodeByType(nodeType: String, name: String): WorkflowNode? {
+        val id = UUID.randomUUID().toString()
+        val position = NodePosition(0f, 0f)
+
+        return when (nodeType) {
+            "trigger" -> TriggerNode(
+                id = id,
+                name = name,
+                position = position,
+                triggerType = "manual",
+                triggerConfig = emptyMap()
+            )
+            "ai" -> AINode(
+                id = id,
+                name = name,
+                position = position,
+                taskType = "generate_text",
+                prompt = ""
+            )
+            "execute_shell" -> ExecuteShellNode(
+                id = id,
+                name = name,
+                position = position,
+                command = ""
+            )
+            "skill" -> SkillNode(
+                id = id,
+                name = name,
+                position = position,
+                skillNames = emptyList()
+            )
+            "integration" -> IntegrationNode(
+                id = id,
+                name = name,
+                position = position,
+                integrationType = "tool",
+                toolkit = ""
+            )
+            "condition" -> ConditionNode(
+                id = id,
+                name = name,
+                position = position,
+                left = ParameterValue.StaticValue(""),
+                operator = ConditionOperator.EQ,
+                right = ParameterValue.StaticValue("")
+            )
+            "logic" -> LogicNode(
+                id = id,
+                name = name,
+                position = position,
+                operator = LogicOperator.AND
+            )
+            "extract" -> ExtractNode(
+                id = id,
+                name = name,
+                position = position,
+                source = ParameterValue.StaticValue(""),
+                mode = ExtractMode.REGEX,
+                expression = ""
+            )
+            "mcp" -> MCPNode(
+                id = id,
+                name = name,
+                position = position,
+                serverName = "",
+                toolName = ""
+            )
+            else -> null
+        }
+    }
+
+    /**
+     * Update a field on a node (using reflection for dynamic field access)
+     */
+    private fun updateNodeField(node: WorkflowNode, field: String, value: String): WorkflowNode? {
+        return try {
+            when (node) {
+                is TriggerNode -> updateTriggerNode(node, field, value)
+                is AINode -> updateAINode(node, field, value)
+                is ExecuteShellNode -> updateExecuteShellNode(node, field, value)
+                is SkillNode -> updateSkillNode(node, field, value)
+                is IntegrationNode -> updateIntegrationNode(node, field, value)
+                is ConditionNode -> updateConditionNode(node, field, value)
+                is LogicNode -> updateLogicNode(node, field, value)
+                is ExtractNode -> updateExtractNode(node, field, value)
+                is MCPNode -> updateMCPNode(node, field, value)
+                is ExecuteNode -> updateExecuteNode(node, field, value)
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to update node field", e)
+            null
+        }
+    }
+
+    private fun updateTriggerNode(node: TriggerNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "triggertype", "trigger_type" -> node.copy(triggerType = value)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateAINode(node: AINode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "tasktype", "task_type" -> node.copy(taskType = value)
+            "modelid", "model_id" -> node.copy(modelId = value)
+            "systemprompt", "system_prompt" -> node.copy(systemPrompt = value)
+            "prompt" -> node.copy(prompt = value)
+            "enabletools", "enable_tools" -> node.copy(enableTools = value.toBoolean())
+            "enabledtools", "enabled_tools" -> node.copy(enabledTools = value.split(",").map { it.trim() })
+            "maxtokens", "max_tokens" -> node.copy(maxTokens = value.toIntOrNull() ?: node.maxTokens)
+            "temperature" -> node.copy(temperature = value.toFloatOrNull() ?: node.temperature)
+            "timeout", "timeoutms", "timeout_ms" -> node.copy(timeoutMs = value.toLongOrNull() ?: node.timeoutMs)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateExecuteShellNode(node: ExecuteShellNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "command" -> node.copy(command = value)
+            "sessionid", "session_id" -> node.copy(sessionId = value)
+            "timeout", "timeoutms", "timeout_ms" -> node.copy(timeoutMs = value.toLongOrNull() ?: node.timeoutMs)
+            "capturestderr", "capture_stderr" -> node.copy(captureStderr = value.toBoolean())
+            "workingdir", "working_dir" -> node.copy(workingDir = value)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateSkillNode(node: SkillNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "skillnames", "skill_names" -> node.copy(skillNames = value.split(",").map { it.trim() })
+            "extrainstructions", "extra_instructions" -> node.copy(extraInstructions = value)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateIntegrationNode(node: IntegrationNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "integrationtype", "integration_type" -> node.copy(integrationType = value)
+            "toolkit" -> node.copy(toolkit = value)
+            "actionid", "action_id" -> node.copy(actionId = value)
+            "accountid", "account_id" -> node.copy(accountId = value.ifBlank { null })
+            "timeout" -> node.copy(timeout = value.toLongOrNull()?.times(1000) ?: node.timeout)
+            "enabled" -> node.copy(enabled = value.toBoolean())
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateConditionNode(node: ConditionNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "left" -> node.copy(left = ParameterValue.StaticValue(value))
+            "operator" -> node.copy(operator = try { ConditionOperator.valueOf(value.uppercase()) } catch (e: Exception) { node.operator })
+            "right" -> node.copy(right = ParameterValue.StaticValue(value))
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateLogicNode(node: LogicNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "operator" -> node.copy(operator = try { LogicOperator.valueOf(value.uppercase()) } catch (e: Exception) { node.operator })
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateExtractNode(node: ExtractNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "source" -> node.copy(source = ParameterValue.StaticValue(value))
+            "mode" -> node.copy(mode = try { ExtractMode.valueOf(value.uppercase()) } catch (e: Exception) { node.mode })
+            "expression" -> node.copy(expression = value)
+            "group" -> node.copy(group = value.toIntOrNull() ?: node.group)
+            "defaultvalue", "default_value" -> node.copy(defaultValue = value)
+            "startindex", "start_index" -> node.copy(startIndex = value.toIntOrNull() ?: node.startIndex)
+            "length" -> node.copy(length = value.toIntOrNull() ?: node.length)
+            "usefixed", "use_fixed" -> node.copy(useFixed = value.toBoolean())
+            "fixedvalue", "fixed_value" -> node.copy(fixedValue = value)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateMCPNode(node: MCPNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "servername", "server_name" -> node.copy(serverName = value)
+            "toolname", "tool_name" -> node.copy(toolName = value)
+            "tooldescription", "tool_description" -> node.copy(toolDescription = value)
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    private fun updateExecuteNode(node: ExecuteNode, field: String, value: String): WorkflowNode {
+        return when (field.lowercase()) {
+            "name" -> node.copy(name = value)
+            "description" -> node.copy(description = value)
+            "actiontype", "action_type" -> node.copy(actionType = value)
+            "jscode", "js_code" -> node.copy(jsCode = value.ifBlank { null })
+            else -> throw IllegalArgumentException("Unknown field: $field")
+        }
+    }
+
+    /**
+     * Build JSON representation of a node
+     */
+    private fun buildNodeJson(node: WorkflowNode): String {
+        val baseFields = "\"id\": \"${node.id}\", \"type\": \"${node.type}\", \"name\": \"${escapeJson(node.name)}\", \"description\": \"${escapeJson(node.description)}\""
+        return when (node) {
+            is TriggerNode -> "{$baseFields, \"triggerType\": \"${node.triggerType}\", \"triggerConfig\": ${mapToJson(node.triggerConfig)}}"
+            is AINode -> "{$baseFields, \"taskType\": \"${node.taskType}\", \"modelId\": \"${escapeJson(node.modelId)}\", \"prompt\": \"${escapeJson(node.prompt)}\", \"enableTools\": ${node.enableTools}}"
+            is ExecuteShellNode -> "{$baseFields, \"command\": \"${escapeJson(node.command)}\", \"timeoutMs\": ${node.timeoutMs}}"
+            is SkillNode -> "{$baseFields, \"skillNames\": ${node.skillNames.map { "\"$it\"" }.joinToString(",", "[", "]")}}"
+            is IntegrationNode -> "{$baseFields, \"integrationType\": \"${node.integrationType}\", \"toolkit\": \"${escapeJson(node.toolkit)}\", \"actionId\": \"${escapeJson(node.actionId)}\"}"
+            is ConditionNode -> "{$baseFields, \"operator\": \"${node.operator.name}\", \"left\": \"${node.left}\", \"right\": \"${node.right}\"}"
+            is LogicNode -> "{$baseFields, \"operator\": \"${node.operator.name}\"}"
+            is ExtractNode -> "{$baseFields, \"mode\": \"${node.mode.name}\", \"expression\": \"${escapeJson(node.expression)}\"}"
+            is MCPNode -> "{$baseFields, \"serverName\": \"${escapeJson(node.serverName)}\", \"toolName\": \"${escapeJson(node.toolName)}\"}"
+            is ExecuteNode -> "{$baseFields, \"actionType\": \"${node.actionType}\"}"
+        }
+    }
+
+    private fun mapToJson(map: Map<String, String>): String {
+        if (map.isEmpty()) return "{}"
+        val entries = map.entries.joinToString(",") { "\"${it.key}\": \"${escapeJson(it.value)}\"" }
+        return "{$entries}"
+    }
+
+    private fun escapeJson(s: String): String {
+        return s.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+    }
 }
 
