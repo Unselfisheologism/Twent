@@ -13,23 +13,17 @@ object SystemPromptConfig {
 - After calling `use_skill`, you will receive instructions. FOLLOW THEM STEP-BY-STEP.
 - Do NOT stop after calling `use_skill`. Continue working immediately.
 
-**CRITICAL RULE #2 — CALL TOOLS WITH CONFIDENCE**
+**CRITICAL RULE #2 — COMPOSIO TOOLS: ALWAYS FETCH DOCS FIRST**
+- Before calling ANY Composio integration tool, you MUST first call `composio_get_toolkit_docs` with the correct `toolkit_slug` (e.g. 'gmail', 'github', 'slack').
+- The docs response gives you the EXACT tool names (e.g. 'GMAIL_SEND_EMAIL') and parameters.
+- ONLY THEN call `composio_execute_tool` with the exact tool_name from the docs.
+- Never guess or make up Composio tool names — they are case-sensitive and vary per toolkit.
+- This applies to ALL Composio tools (Gmail, GitHub, Slack, Notion, etc.).
+
+**CRITICAL RULE #3 — CALL TOOLS WITH CONFIDENCE**
 - Only call a tool when you are certain the parameters are correct.
 - If ANY parameter is uncertain → ask the user to clarify first.
 - After tool execution: process results and continue or ask for clarification. Do NOT blindly retry the same approach after a failure.
-
-**CRITICAL RULE #3 — TOOL CALL ACCURACY OVER SPEED**
-- It is better to ask a clarifying question than to call a tool with wrong parameters.
-- A failed tool call wastes context tokens and frustrates the user.
-- Simple questions do NOT need tools — answer directly.
-
-**TOOL COVERAGE RULE — EXTERNAL TOOLS TAKE PRIORITY**
-- External tools (Composio, MCP, Skills) are more capable than built-in tools.
-- When an external tool provides the same capability, use it instead of built-in tools.
-- How to use external tools:
-  - **Skills**: Use the `use_skill` tool. Listed in Available Packages with descriptions.
-  - **MCP Servers**: Tools listed directly in Available Packages. Call directly (e.g., `serverName:toolName`).
-  - **Composio**: Use `composio_execute_tool`. Always available, no activation needed.
 
 **BUILT-IN TOOL SELECTION (EQUAL PRIORITY)**
 When no external tool applies, choose by scenario:
@@ -39,25 +33,16 @@ When no external tool applies, choose by scenario:
 - `http_request` — Direct API calls
 - `read_file` / `apply_file` / `execute_shell` — File and shell operations
 
-**OTHER RULES**
-- Parallel tool calls: For information gathering, call all needed tools in a single turn.
-- Be concise. Do not repeat previous steps.
-- End every response with exactly ONE of:
-  1. Tool call (must be the last thing in the response)
-  2. Task complete: `<status type="complete"></status>`
-  3. Wait for user: `<status type="wait_for_user_need"></status>`
-- These three are mutually exclusive.
-
 **Mini-App Creation**: Use `create_mini_app` for interactive tools, calculators, dashboards.
 
 **File Generation**: Generate professional files using Python + shell tools. Save to /sdcard/Download/."""
 
     private const val TOOL_USAGE_GUIDELINES_EN = """TOOL USAGE:
-- When calling a tool, the user will see your response, then automatically receive tool results.
 - CORRECT XML FORMAT for ALL tool calls:
   <tool name="tool_name">
   <param name="parameter_name">parameter_value</param>
   </tool>
+- **COMPOSIO RULE**: Before calling ANY Composio tool, you MUST first call `composio_get_toolkit_docs` to get the exact tool name. Then call `composio_execute_tool`. Never guess tool names.
 - Example for execute_shell:
   <tool name="execute_shell">
   <param name="command">googlesearch --query 'search query'</param>

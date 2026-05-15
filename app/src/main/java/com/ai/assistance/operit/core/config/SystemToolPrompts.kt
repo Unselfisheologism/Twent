@@ -260,20 +260,47 @@ object SystemToolPrompts {
     )
 
     // ==================== Composio Tools ====================
-    // Composio gives access to 100+ integrations (GitHub, Slack, Notion, Gmail, etc.)
-    // Format: composio_tool(toolkit="github", tool="github_create_issue", params={...})
+    // Composio gives access to 1000+ integrations (GitHub, Slack, Notion, Gmail, etc.)
+    // IMPORTANT: Before calling ANY Composio tool, you MUST first use composio_get_toolkit_docs
+    // to fetch the exact tool names, descriptions, and parameters for the relevant toolkit.
+    // Never guess Composio tool names — always fetch docs first.
     // Connected accounts from the Integrations page are used automatically for auth.
     private val composioToolsEn = SystemToolPromptCategory(
         categoryName = "composio_tools",
-        categoryHeader = "Composio Integration Tools — Access 100+ apps (GitHub, Gmail, Slack, Notion, Linear, etc.) connected via the Integrations page. Use composio_tool to call any connected integration. Example: toolkit='github', tool='github_create_issue', params={'owner': 'username', 'repo': 'my-repo', 'title': 'Bug found', 'body': '...'}",
+        categoryHeader = "Composio Integration Tools — Access 1000+ apps (Gmail, GitHub, Slack, Notion, Linear, Google Calendar, etc.) connected via the Integrations page. MANDATORY WORKFLOW: (1) First call composio_get_toolkit_docs with toolkit_slug (e.g. 'gmail') to get exact tool names and parameters. (2) Then call composio_execute_tool with tool_name and parameters. NEVER guess tool names. Example for Gmail: composio_get_toolkit_docs(toolkit_slug='gmail'), then composio_execute_tool(tool_name='GMAIL_SEND_EMAIL', parameters={'to': '...', 'subject': '...', 'body': '...'}).",
         tools = listOf(
             ToolPrompt(
-                name = "composio_tool",
-                description = "Call a Composio integration tool. Available integrations are configured in the Integrations page. For GitHub: toolkit='github', tool='github_create_issue', params={'owner': '...', 'repo': '...', 'title': '...', 'body': '...'}. For Gmail: toolkit='gmail', tool='gmail_send_email', params={'to': '...', 'subject': '...', 'body': '...'}. For Slack: toolkit='slack', tool='slack_send_message', params={'channel': '#general', 'text': '...'}. Check Integrations page for all connected apps and available tools.",
+                name = "composio_get_toolkit_docs",
+                description = "MANDATORY — Fetch full documentation for a specific Composio toolkit. Returns ALL available tool names, their descriptions, and exact parameters. MUST be called BEFORE composio_execute_tool. Example: toolkit_slug='gmail' returns GMAIL_SEND_EMAIL, GMAIL_LIST_EMAILS, etc. with full parameter details. Never call composio_execute_tool without first calling this.",
                 parametersStructured = listOf(
-                    ToolParameterSchema(name = "toolkit", type = "string", description = "The integration name (e.g. 'github', 'gmail', 'slack', 'notion', 'linear'). Find available toolkits in the Integrations page.", required = true),
-                    ToolParameterSchema(name = "tool", type = "string", description = "The tool name to call (e.g. 'github_create_issue', 'gmail_send_email', 'slack_send_message'). Required.", required = true),
-                    ToolParameterSchema(name = "params", type = "object", description = "Tool-specific parameters as a JSON object string. e.g. {'owner': 'username', 'repo': 'my-repo', 'title': 'Bug', 'body': 'Details...'}", required = false)
+                    ToolParameterSchema(name = "toolkit_slug", type = "string", description = "The toolkit identifier (e.g. 'gmail', 'github', 'slack', 'notion', 'linear', 'googlecalendar'). Use lowercase. Required.", required = true),
+                    ToolParameterSchema(name = "limit", type = "integer", description = "Max number of tools to return (default: 50, max: 200). Optional.", required = false)
+                )
+            ),
+            ToolPrompt(
+                name = "composio_execute_tool",
+                description = "Execute a specific Composio tool after getting its docs from composio_get_toolkit_docs. You MUST know the exact tool_name from the docs. Example: tool_name='GMAIL_SEND_EMAIL', parameters={'to': 'user@example.com', 'subject': 'Hello', 'body': 'Hi!'}. WARNING: Do NOT call this without first calling composio_get_toolkit_docs to get the correct tool_name.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "tool_name", type = "string", description = "The exact tool name from composio_get_toolkit_docs response (e.g. 'GMAIL_SEND_EMAIL', 'GITHUB_CREATE_ISSUE', 'SLACK_SEND_MESSAGE'). Case-sensitive. Required.", required = true),
+                    ToolParameterSchema(name = "parameters", type = "object", description = "Tool-specific parameters as JSON object. Must match the parameters from composio_get_toolkit_docs exactly. Example: {'to': 'email@example.com', 'subject': 'Hello'}", required = true),
+                    ToolParameterSchema(name = "account_id", type = "string", description = "Optional. Specific account ID to use. If not provided, uses the default connected account.", required = false)
+                )
+            ),
+            ToolPrompt(
+                name = "composio_list_connections",
+                description = "List all Composio integrations the user has connected in the Integrations page (Gmail, GitHub, Slack, etc.). Shows which services are available for use. Use this at the start of a task to know what's connected.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "category", type = "string", description = "Optional. Filter by category: 'productivity', 'communication', 'development', 'social', 'analytics', 'storage'.", required = false),
+                    ToolParameterSchema(name = "search", type = "string", description = "Optional. Search by connection name.", required = false)
+                )
+            ),
+            ToolPrompt(
+                name = "composio_list_toolkits",
+                description = "List all available Composio toolkits (services/integrations). Returns toolkit names, display names, and descriptions. Use this to discover what integrations are available. After finding a toolkit, use composio_get_toolkit_docs to see its specific tools.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "category", type = "string", description = "Optional. Filter by category: 'productivity', 'communication', 'development', 'social', 'analytics', 'storage'.", required = false),
+                    ToolParameterSchema(name = "search", type = "string", description = "Optional. Search by toolkit name.", required = false),
+                    ToolParameterSchema(name = "limit", type = "integer", description = "Max results (default: 20).", required = false)
                 )
             )
         )

@@ -124,9 +124,10 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
 
     override fun invoke(tool: AITool): ToolResult {
         // --- Step 1: Extract parameters ---
-        val toolkitParam = tool.parameters.find { it.name == "toolkit" }?.value
-        val toolNameParam = tool.parameters.find { it.name == "tool" }?.value
-        val paramsParam = tool.parameters.find { it.name == "params" }?.value
+        // Accept both old names (toolkit/tool/params) and new names (tool_name/parameters)
+        val toolkitParam = tool.parameters.find { it.name == "toolkit" || it.name == "toolkit_slug" }?.value
+        val toolNameParam = tool.parameters.find { it.name == "tool" || it.name == "tool_name" }?.value
+        val paramsParam = tool.parameters.find { it.name == "params" || it.name == "parameters" }?.value
 
         if (toolNameParam.isNullOrBlank()) {
             return ToolResult(
