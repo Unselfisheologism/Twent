@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Refresh
@@ -19,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -226,6 +228,7 @@ data class ToolkitItem(
     val name: String,
     val description: String,
     val isConnected: Boolean,
+    val isStale: Boolean,      // true = connected but auth token is stale/expired/revoked
     val connectedAccountId: String?,
     val logoUrl: String?
 )
@@ -300,15 +303,18 @@ private suspend fun loadIntegrations(
 
         // Fetch all connected accounts
         val connectionsResult = composioApi.listConnections()
-        val connectedToolkits = mutableMapOf<String, String>()
+        val connectedToolkits = mutableMapOf<String, String>()   // normalizedKey -> accountId
+        val staleToolkits    = mutableMapOf<String, String>()   // normalizedKey -> accountId (non-ACTIVE)
+
         connectionsResult.getOrNull()?.forEach { conn ->
-            if (conn.status == "ACTIVE") {
-                // Use lowercase normalized key so Composio's "composio_gmail" matches "gmail"
-                val normalizedKey = conn.toolkit.lowercase()
-                    .removePrefix("composio_")
-                    .removePrefix("composio-")
-                    .trim()
-                connectedToolkits[normalizedKey] = conn.id
+            val normalizedKey = conn.toolkit.lowercase()
+                .removePrefix("composio_")
+                .removePrefix("composio-")
+                .trim()
+            when {
+                conn.status == "ACTIVE" -> connectedToolkits[normalizedKey] = conn.id
+                // Treat EXPIRED / REVOKED / ERROR / PENDING as stale (auth needs reconnection)
+                else -> staleToolkits[normalizedKey] = conn.id
             }
         }
 
@@ -322,12 +328,14 @@ private suspend fun loadIntegrations(
             .filter { it.name.lowercase() !in internalSlugs.map { s -> s.lowercase() } }
             .map { toolkit ->
                 val normalizedName = toolkit.name.lowercase()
+                val isStale = staleToolkits.containsKey(normalizedName)
                 ToolkitItem(
                     slug = toolkit.name,
                     name = toolkit.displayName,
                     description = toolkit.description,
-                    isConnected = connectedToolkits.containsKey(normalizedName),
-                    connectedAccountId = connectedToolkits[normalizedName],
+                    isConnected = connectedToolkits.containsKey(normalizedName) || isStale,
+                    isStale = isStale,
+                    connectedAccountId = connectedToolkits[normalizedName] ?: staleToolkits[normalizedName],
                     logoUrl = null
                 )
             }
@@ -469,20 +477,34 @@ private fun ToolkitCard(
                     }
                 }
                 
-                // Connection status
-                if (toolkit.isConnected) {
+// Connection status
+                val isStale = toolkit.isStale
+                val (statusIcon, statusText, statusColor) = when {
+                    isStale -> Triple(
+                        Icons.Filled.Warning,
+                        stringResource(R.string.integrations_stale),
+                        MaterialTheme.colorScheme.error
+                    )
+                    toolkit.isConnected -> Triple(
+                        Icons.Filled.CheckCircle,
+                        stringResource(R.string.integrations_connected),
+                        MaterialTheme.colorScheme.primary
+                    )
+                    else -> Triple(null, "", Color.Transparent)
+                }
+                if (statusIcon != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Connected",
-                            tint = MaterialTheme.colorScheme.primary,
+                            imageVector = statusIcon,
+                            contentDescription = if (isStale) "Reconnect needed" else "Connected",
+                            tint = statusColor,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = stringResource(R.string.integrations_connected),
+                            text = statusText,
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = statusColor
                         )
                     }
                 }
@@ -495,22 +517,42 @@ private fun ToolkitCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                if (toolkit.isConnected) {
-                    OutlinedButton(
-                        onClick = { 
-                            toolkit.connectedAccountId?.let { onDisconnect(it) }
-                        },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.LinkOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.integrations_disconnect))
+if (toolkit.isConnected || isStale) {
+                    if (isStale) {
+                        Button(
+                            onClick = {
+                                toolkit.connectedAccountId?.let { onDisconnect(it) }
+                                onConnect()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.integrations_reconnect))
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                toolkit.connectedAccountId?.let { onDisconnect(it) }
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.LinkOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.integrations_disconnect))
+                        }
                     }
                 } else {
                     Button(

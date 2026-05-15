@@ -2412,6 +2412,8 @@
 <string name="integrations_connect">Connect</string>
 <string name="integrations_disconnect">Disconnect</string>
 <string name="integrations_connected">Connected</string>
+    <string name="integrations_stale">Reconnect needed</string>
+    <string name="integrations_reconnect">Reconnect</string>
 <string name="integrations_connecting">Connecting...</string>
 <string name="integrations_refresh">Refresh</string>
 <string name="integrations_retry">Retry</string>
