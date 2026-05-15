@@ -862,6 +862,41 @@ class ComposioApiService(private val context: Context) {
     }
     
     /**
+     * Get details of a single connected account, including user_id.
+     * Used when the list response doesn't include user_id — individual GET
+     * often has more fields including the user_id.
+     */
+    suspend fun getConnectionDetails(connectionId: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            if (!isConfigured()) {
+                return@withContext Result.failure(Exception("COMPOSIO_API_KEY not configured"))
+            }
+
+            val url = buildUrl("$ENDPOINT_CONNECTED_ACCOUNTS/$connectionId")
+            val request = createAuthenticatedRequest(url)
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            if (response.isSuccessful && responseBody != null) {
+                AppLogger.d(TAG, "Connection details response: $responseBody")
+                val jsonElement = json.parseToJsonElement(responseBody)
+                val obj = jsonElement.jsonObject
+                val userId = extractUserId(obj)
+                if (userId != null) {
+                    Result.success(userId)
+                } else {
+                    Result.failure(Exception("No user_id in connection details"))
+                }
+            } else {
+                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to get connection details: $connectionId", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * List connected accounts WITHOUT filtering by status.
      * Used by ComposioToolExecutor when finding the best account for a toolkit —
      * we want to match regardless of ACTIVE/EXPIRED/REVOKED status, because even
@@ -1206,24 +1241,36 @@ class ComposioApiService(private val context: Context) {
         return try {
             val jsonElement = json.parseToJsonElement(responseBody)
             val itemsArray = jsonElement.jsonObject["items"]
-            
+
             if (itemsArray is kotlinx.serialization.json.JsonArray) {
                 itemsArray.mapNotNull { element ->
                     try {
                         val obj = element.jsonObject
+                        val id = obj["id"]?.toString()?.replace("\"", "") ?: ""
+                        val toolkitRaw = obj["toolkit"]
+                        val toolkit = toolkitRaw?.let {
+                            when (it) {
+                                is JsonObject -> it["slug"]?.toString()?.replace("\"", "") ?: ""
+                                is JsonPrimitive -> it.content
+                                else -> it.toString().replace("\"", "")
+                            }
+                        } ?: ""
+
+                        // user_id: try top-level first, then nested under "metadata" or
+                        // "additional_data" (Composio sometimes stores it there)
+                        val userId = extractUserId(obj)
+
+                        if (id.isNotBlank()) {
+                            AppLogger.d(TAG, "Parsed connection: id=$id toolkit=$toolkit status=${obj["status"]} userId=$userId")
+                        }
+
                         ConnectionInfo(
-                            id = obj["id"]?.toString()?.replace("\"", "") ?: "",
-                            toolkit = obj["toolkit"]?.let { element ->
-                                when (element) {
-                                    is JsonObject -> element["slug"]?.toString()?.replace("\"", "") ?: ""
-                                    is JsonPrimitive -> element.content
-                                    else -> element.toString().replace("\"", "")
-                                }
-                            } ?: "",
+                            id = id,
+                            toolkit = toolkit,
                             accountName = obj["name"]?.toString()?.replace("\"", "") ?: "",
                             status = obj["status"]?.toString()?.replace("\"", "") ?: "ACTIVE",
                             connectedAt = 0L,
-                            userId = obj["user_id"]?.toString()?.replace("\"", "")?.takeIf { it.isNotBlank() }
+                            userId = userId
                         )
                     } catch (e: Exception) {
                         AppLogger.e(TAG, "Failed to parse connection item", e)
@@ -1231,12 +1278,51 @@ class ComposioApiService(private val context: Context) {
                     }
                 }
             } else {
+                AppLogger.w(TAG, "No 'items' array in connections response: $responseBody")
                 emptyList()
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse connections response", e)
             emptyList()
         }
+    }
+
+    /**
+     * Extract user_id from a connection object, checking multiple possible locations.
+     * Composio doesn't always put it at the top level — sometimes it's nested.
+     */
+    private fun extractUserId(obj: kotlinx.serialization.json.JsonObject): String? {
+        // 1. Top-level "user_id"
+        obj["user_id"]?.let { v ->
+            val s = v.toString().replace("\"", "").takeIf { it.isNotBlank() && it != "null" }
+            if (s != null) return s
+        }
+
+        // 2. "metadata" -> "user_id"
+        (obj["metadata"] as? JsonObject)?.let { meta ->
+            meta["user_id"]?.let { v ->
+                val s = v.toString().replace("\"", "").takeIf { it.isNotBlank() && it != "null" }
+                if (s != null) return s
+            }
+        }
+
+        // 3. "additional_data" -> "user_id"
+        (obj["additional_data"] as? JsonObject)?.let { add ->
+            add["user_id"]?.let { v ->
+                val s = v.toString().replace("\"", "").takeIf { it.isNotBlank() && it != "null" }
+                if (s != null) return s
+            }
+        }
+
+        // 4. "account" -> "user_id" (some toolkits nest it here)
+        (obj["account"] as? JsonObject)?.let { acct ->
+            acct["user_id"]?.let { v ->
+                val s = v.toString().replace("\"", "").takeIf { it.isNotBlank() && it != "null" }
+                if (s != null) return s
+            }
+        }
+
+        return null
     }
 }
 

@@ -125,8 +125,17 @@ class ComposioToolExecutor(private val context: Context) : ToolExecutor {
         // needs to reconnect from the Integrations page so the new auth includes user_id.
         val localUserId = UserIdManager(context).getOrCreateUserId()
         val entityId = connection.userId?.takeIf { it.isNotBlank() } ?: run {
-            AppLogger.w(TAG, "Composio connection '${connection.id}' has no user_id — using local UserIdManager fallback ('$localUserId'). If tool fails with 1811, reconnect Gmail from Integrations page.")
-            localUserId
+            // user_id wasn't in the list response — try fetching the individual connection directly
+            AppLogger.w(TAG, "user_id missing from list, fetching connection '${connection.id}' details directly...")
+            val detailResult = composioApi.getConnectionDetails(connection.id)
+            val detailUserId = detailResult.getOrNull()
+            if (!detailUserId.isNullOrBlank()) {
+                AppLogger.d(TAG, "Got user_id from connection details: '$detailUserId'")
+                detailUserId
+            } else {
+                AppLogger.w(TAG, "No user_id from details either. Using local UserIdManager fallback ('$localUserId'). If tool fails with 1811, reconnect Gmail from Integrations page.")
+                localUserId
+            }
         }
 
         AppLogger.d(TAG, "Resolved account for '$toolkit': accountId=$accountId, entityId=$entityId, status=${connection.status}")
