@@ -47,20 +47,16 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
             val maxTokens = if (node.maxTokens > 0) node.maxTokens else 4096
 
             // Use stream=false for synchronous result
-            val responseStream: Stream<String> = EnhancedAIService.sendMessage(
+            val responseStream: Stream<String> = EnhancedAIService.getInstance().sendMessage(
                 message = resolvedPrompt,
                 chatId = "workflow_${workflowId}_${node.id}",
                 chatHistory = emptyList(),
-                systemPrompt = node.systemPrompt,
                 functionType = FunctionType.CHAT,
                 promptFunctionType = PromptFunctionType.CHAT,
                 enableThinking = false,
                 enableMemoryQuery = false,
                 maxTokens = maxTokens,
-                tokenUsageThreshold = 0.9,
-                customSystemPromptTemplate = null,
-                isSubTask = false,
-                stream = false
+                tokenUsageThreshold = 0.9
             )
 
             // Stream<String> is a Java functional interface — consume synchronously

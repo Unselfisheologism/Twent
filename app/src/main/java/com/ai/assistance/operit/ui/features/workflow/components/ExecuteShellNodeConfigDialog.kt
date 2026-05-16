@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,13 +20,12 @@ fun ExecuteShellNodeConfigDialog(
     onDismiss: () -> Unit,
     onSave: (ExecuteShellNode) -> Unit
 ) {
-    val currentNode = remember { node }
-    var name by remember { mutableStateOf(currentNode.name) }
-    var description by remember { mutableStateOf(currentNode.description) }
-    var command by remember { mutableStateOf(currentNode.command) }
-    var workingDir by remember { mutableStateOf(currentNode.workingDir) }
-    var timeoutMs by remember { mutableLongStateOf(currentNode.timeoutMs) }
-    var captureStderr by remember { mutableStateOf(currentNode.captureStderr) }
+    var name by remember { mutableStateOf(node.name) }
+    var description by remember { mutableStateOf(node.description) }
+    var command by remember { mutableStateOf(node.command) }
+    var workingDir by remember { mutableStateOf(node.workingDir ?: "") }
+    var timeoutMs by remember { mutableStateOf(node.timeoutMs.toString()) }
+    var captureStderr by remember { mutableStateOf(node.captureStderr) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -43,8 +42,10 @@ fun ExecuteShellNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.shell_node_dialog_create_title)
-                           else stringResource(R.string.shell_node_dialog_edit_title),
+                    text = if (node.name.isEmpty())
+                        stringResource(R.string.shell_node_dialog_create_title)
+                    else
+                        stringResource(R.string.shell_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -79,7 +80,7 @@ fun ExecuteShellNodeConfigDialog(
                     label = { Text(stringResource(R.string.workflow_shell_command_label)) },
                     placeholder = { Text("echo 'Hello World'") },
                     minLines = 2,
-                    maxLines = 5,
+                    maxLines = 4,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -93,21 +94,22 @@ fun ExecuteShellNodeConfigDialog(
                 )
 
                 OutlinedTextField(
-                    value = timeoutMs.toString(),
-                    onValueChange = { value -> timeoutMs = value.toLongOrNull() ?: 60000L },
+                    value = timeoutMs,
+                    onValueChange = { timeoutMs = it },
                     label = { Text(stringResource(R.string.workflow_shell_timeout_label)) },
+                    placeholder = { Text("60000") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
-                }
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.workflow_shell_capture_stderr_label),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(1f)
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     Switch(
                         checked = captureStderr,
@@ -119,12 +121,12 @@ fun ExecuteShellNodeConfigDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val updatedNode = currentNode.copy(
+                    val updatedNode = node.copy(
                         name = name.ifEmpty { "Shell Node" },
                         description = description,
                         command = command,
-                        workingDir = workingDir,
-                        timeoutMs = timeoutMs,
+                        workingDir = workingDir.ifEmpty { null },
+                        timeoutMs = timeoutMs.toLongOrNull() ?: 60000L,
                         captureStderr = captureStderr
                     )
                     onSave(updatedNode)

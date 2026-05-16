@@ -1061,6 +1061,13 @@
     <!-- ErrorDialog -->
     <string name="request_failed">Request Failed</string>
     <string name="confirm">OK</string>
+    <string name="common_save">Save</string>
+    <string name="ai_node_dialog_create_title">Create AI Node</string>
+    <string name="ai_node_dialog_edit_title">Edit AI Node</string>
+    <string name="shell_node_dialog_create_title">Create Shell Node</string>
+    <string name="shell_node_dialog_edit_title">Edit Shell Node</string>
+    <string name="skill_node_dialog_create_title">Create Skill Node</string>
+    <string name="skill_node_dialog_edit_title">Edit Skill Node</string>
     <string name="server_connection_failed">Unable to connect to server, please check your network</string>
     <string name="connection_timeout">Server connection timeout, please check your network or try again later</string>
     <string name="connection_refused">Server refused connection, please try again later</string>

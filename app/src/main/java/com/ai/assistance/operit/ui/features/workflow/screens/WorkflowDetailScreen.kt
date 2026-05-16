@@ -67,9 +67,6 @@ import com.ai.assistance.operit.ui.features.workflow.components.AddMCPServerDial
 import com.ai.assistance.operit.ui.features.workflow.components.NodeActionMenuDialog
 import com.ai.assistance.operit.ui.features.workflow.components.ScheduleConfigDialog
 import com.ai.assistance.operit.ui.features.workflow.components.IntegrationNodeConfigDialog
-import com.ai.assistance.operit.ui.features.workflow.components.AINodeConfigDialog
-import com.ai.assistance.operit.ui.features.workflow.components.ExecuteShellNodeConfigDialog
-import com.ai.assistance.operit.ui.features.workflow.components.SkillNodeConfigDialog
 import com.ai.assistance.operit.data.model.AINode
 import com.ai.assistance.operit.data.model.ExecuteShellNode
 import com.ai.assistance.operit.data.model.SkillNode
