@@ -865,6 +865,13 @@
 <string name="code_editor">Code Editor</string>
 <string name="collapse">Collapse</string>
 <string name="collapsed">Collapsed</string>
+<string name="generated_ui">Generated UI</string>
+<string name="generated_ui_expand">Generated UI Expand</string>
+<string name="generated_ui_collapse">Generated UI Collapse</string>
+<string name="generated_ui_refresh">Refresh UI</string>
+<string name="generated_ui_error">UI Render Error</string>
+<string name="generated_ui_empty">No UI code provided</string>
+<string name="generated_ui_loading">Loading UI…</string>
 <string name="color_count_suffix">Color Count Suffix</string>
 <string name="color_qr_code">Color Qr Code</string>
 <string name="color_qr_not_recognized">Color Qr Not Recognized</string>
@@ -5003,6 +5010,13 @@
     <string name="workflow_ai_timeout_label">Timeout</string>
     <string name="workflow_ai_enable_tools_label">Enable Tool Calling</string>
     <string name="workflow_ai_enable_tools_desc">Allow AI to call tools during execution</string>
+    <string name="workflow_ai_input_files_label">Input Files</string>
+    <string name="workflow_ai_input_file_label">Input File</string>
+    <string name="workflow_ai_image_file_label">Image File</string>
+    <string name="workflow_ai_document_file_label">Document File</string>
+    <string name="workflow_ai_input_file_hint">Node reference (e.g. {node_id.output}) or file path</string>
+    <string name="workflow_ai_add_file">Add File</string>
+    <string name="workflow_ai_supported_formats">Supported: JPG, PNG, GIF, WebP, BMP, TXT, PDF</string>
     <string name="workflow_shell_command_label">Command</string>
     <string name="workflow_shell_working_dir_label">Working Directory</string>
     <string name="workflow_shell_timeout_label">Timeout</string>
@@ -5012,6 +5026,7 @@
     <string name="workflow_skill_selected_label">Selected (%d)</string>
     <string name="workflow_skill_empty_hint">Tap skills below to add them</string>
     <string name="workflow_skill_available_label">Available Skills</string>
+<string name="workflow_skill_select_skill">Select Skill</string>
     <string name="workflow_skill_extra_instructions_label">Extra Instructions</string>
     <string name="workflow_skill_extra_instructions_hint">Additional instructions appended to skill content</string>
     <string name="workflow_list_title">Workflows</string>

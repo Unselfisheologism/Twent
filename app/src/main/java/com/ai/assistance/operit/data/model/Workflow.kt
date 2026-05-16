@@ -338,7 +338,9 @@ data class AINode(
     // 输出是否流式（工作流中建议false）
     var stream: Boolean = false,
     // 超时时间（毫秒）
-    var timeoutMs: Long = 60000L
+    var timeoutMs: Long = 60000L,
+    // 输入文件列表（节点引用或文件路径，如 "{node_id.output}" 或 "/storage/..."）
+    var inputFiles: List<String> = emptyList()
 ) : WorkflowNode()
 
 /**

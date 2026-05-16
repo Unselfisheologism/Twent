@@ -14,19 +14,21 @@ data class ChatMessage(
         val roleName: String = "", // 角色名字字段
         val provider: String = "", // 供应商
         val modelName: String = "", // 模型名称
+        val generatedUiCode: String? = null, // OpenUI Lang code extracted from AI response
         @Transient
         var contentStream: Stream<String>? =
-                null // 修改为Stream<String>类型，与EnhancedAIService.sendMessage返回类型匹配
+                null // Stream<String>类型，与EnhancedAIService.sendMessage返回类型匹配
 ) : Parcelable {
     constructor(
             parcel: Parcel
     ) : this(
-        parcel.readString() ?: "", 
-        parcel.readString() ?: "", 
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
         parcel.readLong(),
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readString() ?: ""
+        parcel.readString() ?: "",
+        null // generatedUiCode: not serialized, set at runtime
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -36,7 +38,7 @@ data class ChatMessage(
         parcel.writeString(roleName)
         parcel.writeString(provider)
         parcel.writeString(modelName)
-        // 不需要序列化contentStream，因为它是暂时性的
+        // generatedUiCode is not serialized — it's set at runtime after stream completion
     }
 
     override fun describeContents(): Int {

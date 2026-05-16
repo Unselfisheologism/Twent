@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generative UI</title>
+    <style>
+        /* ── CSS Reset ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f5f5f7;
+            --surface: #ffffff;
+            --border: #e0e0e0;
+            --text: #1d1d1f;
+            --text-secondary: #86868b;
+            --primary: #0071e3;
+            --primary-hover: #0077ed;
+            --success: #34c759;
+            --error: #ff3b30;
+            --warning: #ff9500;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1c1c1e;
+                --surface: #2c2c2e;
+                --border: #3a3a3c;
+                --text: #f5f5f7;
+                --text-secondary: #98989d;
+            }
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .card-header {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Text ── */
+        .text { font-size: 14px; color: var(--text); }
+        .text-secondary { font-size: 13px; color: var(--text-secondary); }
+        .text-large { font-size: 18px; font-weight: 600; }
+        .text-small { font-size: 12px; color: var(--text-secondary); }
+        .text-muted { font-size: 13px; color: var(--text-secondary); font-style: italic; }
+
+        /* ── Stack (Flex) ── */
+        .stack { display: flex; flex-direction: column; gap: 8px; }
+        .stack-row { display: flex; flex-direction: row; gap: 8px; align-items: stretch; }
+        .stack-row.wrap { flex-wrap: wrap; }
+        .stack-row.center { align-items: center; }
+        .stack-row.end { align-items: flex-end; }
+        .stack-row.spread { justify-content: space-between; }
+        .stack-row > * { flex: 0 0 auto; }
+        .stack-row > *.fill { flex: 1 1 auto; min-width: 0; }
+
+        /* ── Button ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--bg); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-danger { background: var(--error); color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+        .btn-lg { padding: 12px 24px; font-size: 16px; }
+        .btn-full { width: 100%; }
+
+        /* ── Input ── */
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-label { font-size: 13px; font-weight: 500; color: var(--text); }
+        .input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--surface);
+            color: var(--text);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+        textarea.input { resize: vertical; min-height: 80px; }
+
+        /* ── Select ── */
+        select.input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386868b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+        /* ── Form ── */
+        .form { display: flex; flex-direction: column; gap: 12px; }
+        .form-control { display: flex; flex-direction: column; gap: 4px; }
+        .form-control-label { font-size: 13px; font-weight: 500; }
+        .form-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── Badge / Tag ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--border);
+            color: var(--text-secondary);
+        }
+        .badge-primary { background: rgba(0,113,227,0.12); color: var(--primary); }
+        .badge-success { background: rgba(52,199,89,0.12); color: var(--success); }
+        .badge-warning { background: rgba(255,149,0,0.12); color: var(--warning); }
+        .badge-error { background: rgba(255,59,48,0.12); color: var(--error); }
+
+        /* ── Stat / KPI ── */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+        .stat-change { font-size: 11px; margin-top: 4px; }
+        .stat-change.up { color: var(--success); }
+        .stat-change.down { color: var(--error); }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--bg); border-bottom: 1px solid var(--border); }
+        td { padding: 10px 14px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--bg); }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .tab-btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Accordion ── */
+        .accordion-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; }
+        .accordion-header { padding: 12px 16px; font-weight: 500; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--surface); transition: background 0.15s; }
+        .accordion-header:hover { background: var(--bg); }
+        .accordion-icon { transition: transform 0.2s; font-size: 12px; color: var(--text-secondary); }
+        .accordion-item.open .accordion-icon { transform: rotate(180deg); }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; background: var(--surface); }
+        .accordion-item.open .accordion-body { max-height: 500px; }
+        .accordion-content { padding: 12px 16px; font-size: 13px; color: var(--text-secondary); }
+
+        /* ── Progress / Loading ── */
+        .progress { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s ease; }
+        .spinner {
+            width: 24px; height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Callout ── */
+        .callout { padding: 12px 14px; border-radius: 8px; border-left: 4px solid; font-size: 13px; }
+        .callout-info { background: rgba(0,113,227,0.08); border-color: var(--primary); color: var(--primary); }
+        .callout-success { background: rgba(52,199,89,0.08); border-color: var(--success); color: var(--success); }
+        .callout-warning { background: rgba(255,149,0,0.08); border-color: var(--warning); color: var(--warning); }
+        .callout-error { background: rgba(255,59,48,0.08); border-color: var(--error); color: var(--error); }
+
+        /* ── Divider ── */
+        .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+        /* ── Alert ── */
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+        .alert-icon { font-size: 16px; flex-shrink: 0; }
+        .alert-success { background: rgba(52,199,89,0.1); color: var(--success); }
+        .alert-error { background: rgba(255,59,48,0.1); color: var(--error); }
+
+        /* ── Avatar / Icon ── */
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ── List ── */
+        .list { list-style: none; }
+        .list-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .list-item:last-child { border-bottom: none; }
+
+        /* ── Chart placeholder ── */
+        .chart-placeholder {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* ── Footer / Toolbar ── */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 12px;
+        }
+
+        /* ── JSON / Code ── */
+        pre.code {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+            overflow-x: auto;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Error state ── */
+        .error-box {
+            background: rgba(255,59,48,0.06);
+            border: 1px solid rgba(255,59,48,0.2);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            color: var(--error);
+            font-size: 13px;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-secondary);
+        }
+        .empty-state-icon { font-size: 40px; margin-bottom: 8px; opacity: 0.5; }
+        .empty-state-text { font-size: 14px; }
+
+        /* ── Loading overlay ── */
+        #loading-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        #loading-box {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div id="loading-overlay" style="display:none;">
+    <div id="loading-box">
+        <div class="spinner"></div>
+        <p class="text-secondary" style="margin-top:12px;">Loading UI...</p>
+    </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────
+   Generative UI Renderer — Twent Android
+   Parses OpenUI Lang-like component tree and renders
+   it as native HTML/CSS without React dependency.
+   ───────────────────────────────────────────────────── */
+
+const app = document.getElementById('app');
+
+// ── Logging bridge ──
+function log(level, msg) {
+    try {
+        if (window.TwAndroid && window.TwAndroid.log) {
+            window.TwAndroid.log(level, '[GenUI] ' + msg);
+        }
+    } catch(e) {}
+    console[level === 'error' ? 'error' : 'log']('[GenUI ' + level + ']', msg);
+}
+
+// ── Show/hide loading ──
+function showLoading() {
+    const el = document.getElementById('loading-overlay');
+    if (el) el.style.display = 'flex';
+}
+function hideLoading() {
+    const el = document.getElementById('loading-overlay');
+    if (el) el.style.display = 'none';
+}
+
+// ── State store ──
+const state = {};
+const subscribers = [];
+
+function setState(key, value) {
+    state[key] = value;
+    subscribers.forEach(fn => fn(state));
+}
+
+function subscribe(fn) {
+    subscribers.push(fn);
+    return () => { subscribers.splice(subscribers.indexOf(fn), 1); };
+}
+
+// ── Emit events to Android ──
+function emit(event, data) {
+    try {
+        if (window.TwAndroid && window.TwAndroid.onEvent) {
+            window.TwAndroid.onEvent(event, JSON.stringify(data));
+        }
+    } catch(e) { log('error', 'emit failed: ' + e.message); }
+}
+
+// ── OpenUI component renderers ──
+const R = {
+
+    Card: (props, children) => {
+        const header = props.header || '';
+        const shadow = props.shadow !== undefined ? props.shadow : 'sm';
+        const shadows = { sm: 'var(--shadow)', md: 'var(--shadow-lg)', lg: '0 8px 24px rgba(0,0,0,0.15)' };
+        return `<div class="card" style="box-shadow:${shadows[shadow]||shadows.sm}">${header ? '<div class="card-header">'+R.renderEl(header)+'</div>' : ''}${children.map(R.renderEl).join('')}</div>`;
+    },
+
+    Stack: (props, children) => {
+        const dir = props.direction === 'row' ? 'row' : 'column';
+        const wrap = props.wrap ? 'wrap' : '';
+        const align = props.align || 'stretch';
+        const gap = props.gap || 8;
+        const justify = props.justify || 'start';
+        const alignMap = { start: 'flex-start', center: 'center', end: 'flex-end', stretch: 'stretch' };
+        const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end', spread: 'space-between' };
+        return `<div class="stack${dir==='row'?' stack-row '+wrap:''}" style="gap:${gap}px;align-items:${alignMap[align]||align};justify-content:${justifyMap[justify]||justify}">${children.map(R.renderEl).join('')}</div>`;
+    },
+
+    Text: (props, children) => {
+        const size = props.size || 'sm';
+        const weight = props.weight || 'normal';
+        const color = props.color || 'default';
+        const style = props.style || [];
+        const align = props.align || 'left';
+        const colorMap = { default:'var(--text)', secondary:'var(--text-secondary)', primary:'var(--primary)', success:'var(--success)', error:'var(--error)', warning:'var(--warning)' };
+        const sizeMap = { xs:'11px', sm:'13px', md:'15px', lg:'18px', xl:'22px', '2xl':'28px' };
+        const fontStyle = style.includes('italic') ? 'italic' : 'normal';
+        const textDecor = style.includes('underline') ? 'underline' : (style.includes('strikethrough') ? 'line-through' : 'none');
+        return `<span style="font-size:${sizeMap[size]||size};font-weight:${weight==='bold'||weight==='heavy'?'700':'400'};color:${colorMap[color]||color};font-style:${fontStyle};text-decoration:${textDecor};text-align:${align}">${children.map(R.renderEl).join('')}</span>`;
+    },
+
+    Button: (props, children) => {
+        const variant = props.variant || 'secondary';
+        const size = props.size || 'md';
+        const fullWidth = props.fullWidth ? 'btn-full' : '';
+        const disabled = props.disabled ? 'disabled' : '';
+        const onclick = props.onclick ? `onclick="${R.escapeAttr(props.onclick)}"` : '';
+        const sizeClass = size === 'sm' ? 'btn-sm' : (size === 'lg' ? 'btn-lg' : '');
+        const variantClass = variant === 'primary' ? 'btn-primary' : (variant === 'success' ? 'btn-success' : (variant === 'danger' ? 'btn-danger' : 'btn-secondary'));
+        const label = children.length ? children.map(R.renderEl).join('') : (props.label || 'Button');
+        return `<button class="btn ${variantClass} ${sizeClass} ${fullWidth}" ${disabled} ${onclick}>${label}</button>`;
+    },
+
+    Input: (props, children) => {
+        const name = props.name || '';
+        const type = props.type || 'text';
+        const placeholder = props.placeholder || '';
+        const value = state[name] || props.value || '';
+        const disabled = props.disabled ? 'disabled' : '';
+        const oninput = `oninput="R.handleInput('${name}', this.value)"`;
+        if (type === 'textarea') {
+            return `<textarea class="input" name="${name}" placeholder="${placeholder}" ${disabled} ${oninput}>${R.escapeHtml(value)}</textarea>`;
+        }
+        return `<input class="input" type="${type}" name="${name}" value="${R.escapeHtml(value)}" placeholder="${placeholder}" ${disabled} ${oninput}>`;
+    },
+
+    Select: (props, children) => {
+        const name = props.name || '';
+        const value = state[name] || props.value || '';
+        const options = children.length ? children : (props.options || []);
+        const onchange = `onchange="R.handleInput('${name}', this.value)"`;
+        const opts = options.map(opt => {
+            const v = typeof opt === 'string' ? opt : (opt.value || opt);
+            const l = typeof opt === 'string' ? opt : (opt.label || opt);
+            return `<option value="${R.escapeAttr(v)}" ${value === v ? 'selected' : ''}>${R.escapeHtml(l)}</option>`;
+        }).join('');
+        return `<select class="input" name="${name}" ${onchange}>${opts}</select>`;
+    },
+
+    SelectItem: (props) => '',
+    Option: (props) => '',
+
+    Form: (props, children) => {
+        const name = props.name || '';
+        const onsubmit = `onsubmit="R.handleFormSubmit('${name}', event)"`;
+        return `<form class="form" ${onsubmit}>${children.map(R.renderEl).join('')}</form>`;
+    },
+
+    FormControl: (props, children) => {
+        const label = props.label || '';
+        const required = props.required ? '<span style="color:var(--error)">*</span>' : '';
+        return `<div class="form-control"><label class="form-control-label">${R.escapeHtml(label)} ${required}</label>${children.map(R.renderEl).join('')}</div>`;
+    },
+
+    StatCard: (props, children) => {
+        const label = props.label || 'Label';
+        const value = state[props.valueKey] !== undefined ? state[props.valueKey] : (props.value || '—');
+        const change = props.change;
+        const changeDir = change && change.startsWith('+') ? 'up' : (change && change.startsWith('-') ? 'down' : '');
+        return `<div class="stat-card"><div class="stat-label">${R.escapeHtml(label)}</div><div class="stat-value">${R.escapeHtml(String(value))}</div>${change ? '<div class="stat-change '+changeDir+'">'+R.escapeHtml(change)+'</div>' : ''}</div>`;
+    },
+
+    Table: (props, children) => {
+        const cols = children.filter(c => c && c.type === 'Col');
+        const rows = state[props.dataKey] || props.data || [];
+        const headers = cols.map(c => `<th>${R.escapeHtml(c.props.label || '')}</th>`).join('');
+        const cells = rows.slice(0, 50).map(row =>
+            `<tr>${cols.map(c => {
+                const val = c.props.dataKey ? row[c.props.dataKey] : (c.props.value !== undefined ? c.props.value : '');
+                return `<td>${R.escapeHtml(String(val ?? '—'))}</td>`;
+            }).join('')}</tr>`
+        ).join('');
+        return `<div class="table-wrap"><table><thead><tr>${headers}</tr></thead><tbody>${cells}</tbody></table></div>${rows.length > 50 ? '<p class="text-muted" style="padding:8px 0">Showing 50 of '+rows.length+' rows</p>' : ''}`;
+    },
+
+    Col: (props, children) => ({ type: 'Col', props, children }),
+
+    Tabs: (props, children) => {
+        const items = children.filter(c => c && c.type === 'TabItem');
+        const ids = items.map((_, i) => 'tab-' + i + '-' + Date.now());
+        const buttons = items.map((item, i) =>
+            `<button class="tab-btn ${i===0?'active':''}" onclick="R.switchTab(this, '${ids[i]}')">${R.escapeHtml(item.props.label || '')}</button>`
+        ).join('');
+        const contents = items.map((item, i) =>
+            `<div class="tab-content ${i===0?'active':''}" id="${ids[i]}">${item.children.map(R.renderEl).join('')}</div>`
+        ).join('');
+        return `<div><div class="tabs">${buttons}</div>${contents}</div>`;
+    },
+
+    TabItem: (props, children) => ({ type: 'TabItem', props, children }),
+
+    Accordion: (props, children) => {
+        const items = children.filter(c => c && c.type === 'AccordionItem');
+        return items.map((item, i) => {
+            const id = 'acc-' + i + '-' + Date.now();
+            return `<div class="accordion-item" id="${id}"><div class="accordion-header" onclick="R.toggleAccordion('${id}')">${R.escapeHtml(item.props.label || '')}<span class="accordion-icon">&#9660;</span></div><div class="accordion-body"><div class="accordion-content">${item.children.map(R.renderEl).join('')}</div></div></div>`;
+        }).join('');
+    },
+
+    AccordionItem: (props, children) => ({ type: 'AccordionItem', props, children }),
+
+    Badge: (props, children) => {
+        const variant = props.variant || '';
+        const variantClass = variant ? 'badge-'+variant : 'badge';
+        return `<span class="badge ${variantClass}">${children.map(R.renderEl).join('')}</span>`;
+    },
+
+    Callout: (props, children) => {
+        const type = props.type || 'info';
+        return `<div class="callout callout-${type}">${children.map(R.renderEl).join('')}</div>`;
+    },
+
+    Divider: () => `<div class="divider"></div>`,
+
+    ProgressBar: (props, children) => {
+        const value = state[props.valueKey] !== undefined ? state[props.valueKey] : (props.value || 0);
+        const max = props.max || 100;
+        const pct = Math.min(100, Math.max(0, (Number(value) / Number(max)) * 100));
+        const color = props.color || 'var(--primary)';
+        return `<div><div class="progress"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div><p class="text-small" style="margin-top:4px">${R.escapeHtml(value)} / ${R.escapeHtml(String(max))}</p></div>`;
+    },
+
+    StatGrid: (props, children) => {
+        const gap = props.gap || 12;
+        return `<div class="stat-grid" style="gap:${gap}px">${children.map(R.renderEl).join('')}</div>`;
+    },
+
+    EmptyState: (props, children) => {
+        const icon = props.icon || '📭';
+        const title = props.title || 'Nothing here yet';
+        const desc = props.description || '';
+        return `<div class="empty-state"><div class="empty-state-icon">${icon}</div><div class="empty-state-text"><strong>${R.escapeHtml(title)}</strong>${desc ? '<br><span class="text-secondary">'+R.escapeHtml(desc)+'</span>' : ''}</div></div>`;
+    },
+
+    List: (props, children) => {
+        const items = state[props.itemsKey] || children;
+        const rendered = Array.isArray(items) ? items.map(item =>
+            `<li class="list-item">${R.renderEl(typeof item === 'string' ? { type: 'Text', props: {}, children: [item] } : item)}</li>`
+        ).join('') : '';
+        return `<ul class="list">${rendered}</ul>`;
+    },
+
+    Alert: (props, children) => {
+        const type = props.type || 'success';
+        const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
+        return `<div class="alert alert-${type}"><span class="alert-icon">${icon}</span><span>${children.map(R.renderEl).join('')}</span></div>`;
+    },
+
+    Avatar: (props, children) => {
+        const initials = (props.label || '?').substring(0, 2).toUpperCase();
+        const bg = props.bg || 'var(--primary)';
+        return `<div class="avatar" style="background:${bg}">${initials}</div>`;
+    },
+
+    Buttons: (props, children) => `<div class="form-actions">${children.map(R.renderEl).join('')}</div>`,
+
+    CardHeader: (props, children) => `<div class="card-header">${children.map(R.renderEl).join('')}</div>`,
+
+    Code: (props, children) => `<pre class="code">${children.map(R.renderEl).join('')}</pre>`,
+
+    LoadingSpinner: (props, children) => `<div class="spinner" ${props.size ? `style="width:${props.size}px;height:${props.size}px"` : ''}></div>`,
+};
+
+// ── Render helpers ──
+R.escapeHtml = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+R.escapeAttr = (str) => String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+R.renderEl = (el) => {
+    if (!el) return '';
+    if (typeof el === 'string') return R.escapeHtml(el);
+    if (Array.isArray(el)) return el.map(R.renderEl).join('');
+    if (typeof el === 'object' && el !== null) {
+        const type = el.type || el.tag;
+        const props = el.props || {};
+        const children = el.children || [];
+        const renderer = R[type];
+        if (renderer) {
+            try { return renderer(props, children); }
+            catch(e) { return '<p class="error-box">Render error in ' + type + ': ' + R.escapeHtml(e.message) + '</p>'; }
+        }
+        return '<!-- unknown component: ' + type + ' -->';
+    }
+    return String(el);
+};
+
+// ── Interaction handlers ──
+R.switchTab = (btn, targetId) => {
+    const parent = btn.closest('.tabs');
+    if (!parent) return;
+    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    parent.parentElement.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(targetId)?.classList.add('active');
+};
+
+R.toggleAccordion = (id) => {
+    const item = document.getElementById(id);
+    if (!item) return;
+    item.classList.toggle('open');
+};
+
+R.handleInput = (name, value) => {
+    setState(name, value);
+    R.update();
+    emit('input', { name, value });
+};
+
+R.handleFormSubmit = (name, event) => {
+    event.preventDefault();
+    const form = event.target;
+    const data = {};
+    new FormData(form).forEach((v, k) => { data[k] = v; });
+    emit('formSubmit', { name, data });
+    log('log', 'Form submit: ' + name);
+};
+
+// ── Main parse & render ──
+R.parse = (code) => {
+    // Parse simple OpenUI-Lang-like DSL into component tree
+    // Supports: name = Type("prop", [...children])
+    // Supports: name = Query("tool", args)
+    // Supports: name = Mutation("tool", args)
+    // Supports: $var = "value"
+    const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
+    const vars = {};
+    const root = [];
+
+    for (const line of lines) {
+        // Skip comments and directives
+        if (line.startsWith('#') || line.startsWith('//')) continue;
+
+        // Variable assignment: $name = value
+        const varMatch = line.match(/^\$(\w+)\s*=\s*(.+)$/);
+        if (varMatch) {
+            vars['$' + varMatch[1]] = R.evalValue(varMatch[2], vars);
+            continue;
+        }
+
+        // Component: name = Type(...)
+        const compMatch = line.match(/^(\w+)\s*=\s*(\w+)\(([\s\S]*)?\)$/);
+        if (compMatch) {
+            const [, varName, type, argsStr] = compMatch;
+            const args = R.parseArgs(argsStr || '', vars);
+            const result = { type, props: {}, children: [] };
+            for (const [k, v] of Object.entries(args)) {
+                if (k.startsWith('children_')) {
+                    result.children.push(v);
+                } else {
+                    result.props[k] = v;
+                }
+            }
+            if (result.children.length === 0 && args._children) {
+                result.children = args._children;
+            }
+            vars[varName] = result;
+            if (varName === 'root') root.push(result);
+        }
+    }
+
+    // If no root defined, try to find any statement
+    if (root.length === 0) {
+        const nonVars = Object.values(vars).filter(v => typeof v === 'object' && v.type);
+        root.push(...nonVars.slice(-1));
+    }
+
+    return root;
+};
+
+R.parseArgs = (str, vars) => {
+    const args = {};
+    if (!str.trim()) return args;
+    let children = [];
+
+    // Split by comma, but respect brackets
+    const parts = [];
+    let depth = 0, start = 0;
+    for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (c === '[' || c === '(' || c === '{') depth++;
+        else if (c === ']' || c === ')' || c === '}') depth--;
+        else if (c === ',' && depth === 0) {
+            parts.push(str.substring(start, i).trim());
+            start = i + 1;
+        }
+    }
+    parts.push(str.substring(start).trim());
+
+    parts.forEach((part, idx) => {
+        part = part.trim();
+        if (!part) return;
+
+        // Named argument: name=value or name: value
+        const namedMatch = part.match(/^(\w+)\s*[=:]\s*([\s\S]+)$/);
+        if (namedMatch) {
+            const [, name, rawVal] = namedMatch;
+            args[name] = R.evalValue(rawVal, vars);
+            return;
+        }
+
+        // Child reference: refName
+        if (/^\w+$/.test(part) && vars[part] !== undefined) {
+            children.push(vars[part]);
+            args['children_' + idx] = vars[part];
+            return;
+        }
+
+        // Array of children: [ child1, child2 ]
+        if (part.startsWith('[') && part.endsWith(']')) {
+            const inner = part.slice(1, -1);
+            const innerParts = [];
+            let d = 0, s = 0;
+            for (let i = 0; i < inner.length; i++) {
+                if (inner[i] === '[' || inner[i] === '(') d++;
+                else if (inner[i] === ']' || inner[i] === ')') d--;
+                else if (inner[i] === ',' && d === 0) {
+                    innerParts.push(inner.substring(s, i).trim());
+                    s = i + 1;
+                }
+            }
+            innerParts.push(inner.substring(s).trim());
+            children = innerParts.filter(p => p).map(p => {
+                if (vars[p]) return vars[p];
+                // Inline component
+                const m = p.match(/^(\w+)\(([\s\S]*)?\)$/);
+                if (m) {
+                    const [, type, a] = m;
+                    return { type, props: {}, children: [] };
+                }
+                return { type: 'Text', props: {}, children: [p.replace(/^["']|["']$/g, '')] };
+            });
+            args._children = children;
+            return;
+        }
+
+        // String literal
+        if ((part.startsWith('"') && part.endsWith('"')) || (part.startsWith("'") && part.endsWith("'"))) {
+            args['children_' + idx] = part.slice(1, -1);
+            children.push(part.slice(1, -1));
+            return;
+        }
+
+        // Boolean
+        if (part === 'true') { args['children_' + idx] = true; children.push(true); return; }
+        if (part === 'false') { args['children_' + idx] = false; return; }
+
+        // Number
+        const num = Number(part);
+        if (!isNaN(num)) { args['children_' + idx] = num; children.push(num); return; }
+
+        // Inline component
+        const m = part.match(/^(\w+)\(([\s\S]*)?\)$/);
+        if (m) {
+            const [, type, a] = m;
+            const c = R.parseArgs(a || '', vars);
+            const obj = { type, props: c, children: c._children || [] };
+            children.push(obj);
+            args['children_' + idx] = obj;
+            return;
+        }
+
+        // Fallback: value reference
+        args['children_' + idx] = part;
+        children.push(part);
+    });
+
+    args._children = children.filter(c => typeof c === 'object' || typeof c === 'string');
+    return args;
+};
+
+R.evalValue = (str, vars) => {
+    str = str.trim();
+    if (!str) return '';
+
+    // String literal
+    if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'")))
+        return str.slice(1, -1);
+
+    // Boolean
+    if (str === 'true') return true;
+    if (str === 'false') return false;
+
+    // Number
+    const num = Number(str);
+    if (!isNaN(num)) return num;
+
+    // Variable reference
+    if (vars[str] !== undefined) return vars[str];
+
+    // JSON-like object
+    if (str.startsWith('{') && str.endsWith('}')) {
+        try { return JSON.parse(str); } catch(e) {}
+    }
+
+    // Array
+    if (str.startsWith('[') && str.endsWith(']')) {
+        const inner = str.slice(1, -1);
+        if (!inner.trim()) return [];
+        return inner.split(',').map(s => R.evalValue(s.trim(), vars));
+    }
+
+    return str;
+};
+
+R.update = () => {
+    if (!window._genUiCode) return;
+    try {
+        const tree = R.parse(window._genUiCode);
+        app.innerHTML = tree.map(R.renderEl).join('');
+    } catch(e) {
+        app.innerHTML = '<div class="error-box">Parse error: ' + R.escapeHtml(e.message) + '</div>';
+        log('error', 'Parse error: ' + e.message);
+    }
+};
+
+// ── Entry point — called from Android ──
+window.renderGenerativeUI = function(code) {
+    log('log', 'Rendering code, length=' + code.length);
+    window._genUiCode = code;
+    hideLoading();
+    R.update();
+};
+
+// ── Bootstrap — wait for Android bridge ──
+window.addEventListener('load', () => {
+    log('log', 'HTML renderer ready');
+    // If code was passed immediately, render it
+    if (window._genUiCode) {
+        hideLoading();
+        R.update();
+    }
+});
+</script>
+</body>
+</html>

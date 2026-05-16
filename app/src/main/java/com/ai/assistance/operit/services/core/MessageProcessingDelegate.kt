@@ -17,6 +17,7 @@ import com.ai.assistance.operit.data.preferences.ApiPreferences
 import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.WaifuPreferences
 import com.ai.assistance.operit.data.preferences.FunctionalConfigManager
+import com.ai.assistance.operit.util.OpenUiRegex
 import com.ai.assistance.operit.data.preferences.ModelConfigManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.services.FloatingChatService
@@ -678,6 +679,13 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
             val aiMessage = aiMessageProvider()
             val finalContent = aiMessage.content
 
+            // Extract OpenUI Lang code from the completed AI response
+            // AI wraps OpenUI code in <openui>...</openui> tags
+            val extractedOpenUiCode = OpenUiRegex.extractFirstOpenUiCode(finalContent)
+            if (extractedOpenUiCode != null) {
+                AppLogger.d(TAG, "Extracted OpenUI code, length=${extractedOpenUiCode.length}")
+            }
+
             var deferTurnCompleteToAsyncJob = false
             withContext(Dispatchers.IO) {
                 val waifuPreferences = WaifuPreferences.getInstance(context)
@@ -738,6 +746,8 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                             AppLogger.d(TAG, "创建第${index + 1}个独立消息: $sentence")
 
                             // 创建独立的AI消息（使用外层已获取的provider和modelName）
+                            // Attach OpenUI code only to the last sentence message
+                            val isLastSentence = index == sentences.lastIndex
                             val sentenceMessage = ChatMessage(
                                 sender = "ai",
                                 content = sentence,
@@ -745,7 +755,8 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                                 timestamp = System.currentTimeMillis() + index * 10,
                                 roleName = currentRoleName,
                                 provider = provider,
-                                modelName = modelName
+                                modelName = modelName,
+                                generatedUiCode = if (isLastSentence) extractedOpenUiCode else null
                             )
 
                             withContext(Dispatchers.Main) {
@@ -775,7 +786,11 @@ val effectiveOnTokenLimitExceeded = if (enableSummary) {
                     }
                 } else {
                     // 普通模式，直接清理流
-                    val finalMessage = aiMessage.copy(content = finalContent, contentStream = null)
+                    val finalMessage = aiMessage.copy(
+                        content = finalContent,
+                        contentStream = null,
+                        generatedUiCode = extractedOpenUiCode
+                    )
                     withContext(Dispatchers.Main) {
                         if (chatId != null) {
                             addMessageToChat(chatId, finalMessage)
