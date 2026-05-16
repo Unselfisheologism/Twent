@@ -1295,7 +1295,8 @@
     <string name="workflow_ai_no_toolkits">No hay kits de herramientas disponibles</string>
     <string name="select_all">Seleccionar todo</string>
     <string name="deselect_all">Deseleccionar todo</string>
-    <string name="error_loading_skills">Error al cargar habilidades: %s</string>
+    <string name="error_loading_skills">Error al cargar habilidades: %1$s</string>
+    <string name="workflow_configure_node">Configurar</string>
     <string name="workflow_skill_select_skill">Seleccionar Habilidad</string>
     <string name="workflow_skill_selected_label">Seleccionadas (%d)</string>
     <string name="workflow_skill_empty_hint">Toca las habilidades abajo para agregarlas</string>

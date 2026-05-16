@@ -21,15 +21,17 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillNodeConfigDialog(
-    node: SkillNode,
+    node: SkillNode? = null,
+    initialName: String = "",
+    initialDescription: String = "",
     onDismiss: () -> Unit,
     onSave: (SkillNode) -> Unit
 ) {
     val context = LocalContext.current
 
-    val currentNode = remember { node }
-    var name by remember { mutableStateOf(currentNode.name) }
-    var description by remember { mutableStateOf(currentNode.description) }
+    val currentNode = remember { node ?: SkillNode() }
+    var name by remember { mutableStateOf(initialName.ifEmpty { currentNode.name }) }
+    var description by remember { mutableStateOf(initialDescription.ifEmpty { currentNode.description }) }
     var skillNames by remember { mutableStateOf(currentNode.skillNames.toMutableList()) }
     var extraInstructions by remember { mutableStateOf(currentNode.extraInstructions) }
     var skillDropdownExpanded by remember { mutableStateOf(false) }
@@ -72,7 +74,7 @@ fun SkillNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
                            else stringResource(R.string.skill_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )

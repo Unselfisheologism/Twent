@@ -22,13 +22,15 @@ import com.ai.assistance.operit.data.model.AINode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AINodeConfigDialog(
-    node: AINode,
+    node: AINode? = null,
+    initialName: String = "",
+    initialDescription: String = "",
     onDismiss: () -> Unit,
     onSave: (AINode) -> Unit
 ) {
-    val currentNode = remember { node }
-    var name by remember { mutableStateOf(currentNode.name) }
-    var description by remember { mutableStateOf(currentNode.description) }
+    val currentNode = remember { node ?: AINode() }
+    var name by remember { mutableStateOf(initialName.ifEmpty { currentNode.name }) }
+    var description by remember { mutableStateOf(initialDescription.ifEmpty { currentNode.description }) }
     var taskType by remember { mutableStateOf(currentNode.taskType) }
     var prompt by remember { mutableStateOf(currentNode.prompt) }
     var systemPrompt by remember { mutableStateOf(currentNode.systemPrompt) }
@@ -84,7 +86,7 @@ fun AINodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
                            else stringResource(R.string.ai_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )

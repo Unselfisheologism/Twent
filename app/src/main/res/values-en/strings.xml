@@ -6149,6 +6149,7 @@
     <string name="workflow_ai_no_toolkits">No toolkits available</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
+    <string name="workflow_configure_node">Configure</string>
     <string name="workflow_shell_working_dir_label">Working Directory</string>
     <string name="workflow_shell_timeout_label">Timeout</string>
     <string name="workflow_shell_timeout_value">%d seconds</string>

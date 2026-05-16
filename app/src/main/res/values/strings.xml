@@ -865,13 +865,6 @@
 <string name="code_editor">Code Editor</string>
 <string name="collapse">Collapse</string>
 <string name="collapsed">Collapsed</string>
-<string name="generated_ui">Generated UI</string>
-<string name="generated_ui_expand">Generated UI Expand</string>
-<string name="generated_ui_collapse">Generated UI Collapse</string>
-<string name="generated_ui_refresh">Refresh UI</string>
-<string name="generated_ui_error">UI Render Error</string>
-<string name="generated_ui_empty">No UI code provided</string>
-<string name="generated_ui_loading">Loading UI…</string>
 <string name="color_count_suffix">Color Count Suffix</string>
 <string name="color_qr_code">Color Qr Code</string>
 <string name="color_qr_not_recognized">Color Qr Not Recognized</string>
@@ -5033,8 +5026,9 @@
     <string name="workflow_ai_select_tools_label">Select Tools</string>
     <string name="workflow_ai_loading_toolkits">Loading toolkits…</string>
     <string name="workflow_ai_no_toolkits">No toolkits available</string>
-    <string name="select_all">Select All</string>
+<string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
     <string name="loading">Loading…</string>
-    <string name="error_loading_skills">Error loading skills: %s</string>
+    <string name="error_loading_skills">Error loading skills: %1$s</string>
+    <string name="workflow_configure_node">Configure</string>
 </resources>
