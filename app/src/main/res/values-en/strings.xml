@@ -1068,6 +1068,7 @@
     <string name="shell_node_dialog_edit_title">Edit Shell Node</string>
     <string name="skill_node_dialog_create_title">Create Skill Node</string>
     <string name="skill_node_dialog_edit_title">Edit Skill Node</string>
+    <string name="error_loading_skills">Error loading skills: %1$s</string>
     <string name="server_connection_failed">Unable to connect to server, please check your network</string>
     <string name="connection_timeout">Server connection timeout, please check your network or try again later</string>
     <string name="connection_refused">Server refused connection, please try again later</string>
@@ -4181,6 +4182,7 @@
     <string name="chats_group_updated">Set group to \'%2$s\' for %1$d chat(s)</string>
     <string name="batch_update_failed">Batch update failed: %1$s</string>
     <string name="loading_data_please_wait">Loading data, please wait…</string>
+    <string name="loading_integration_data">Loading integration data...</string>
     <string name="no_chat_stats_to_assign">No chat statistics found to assign</string>
     <string name="please_select_a_character_card">Please select a character card</string>
     <string name="assigned_to_character_card">Assigned to character card \'%1$s\'</string>
@@ -6134,6 +6136,11 @@
     <string name="workflow_ai_timeout_label">Timeout</string>
     <string name="workflow_ai_enable_tools_label">Enable Tool Calling</string>
     <string name="workflow_ai_enable_tools_desc">Allow AI to call tools during execution</string>
+    <string name="workflow_ai_select_tools_label">Select Toolkits &amp; Tools</string>
+    <string name="workflow_ai_loading_toolkits">Loading toolkits...</string>
+    <string name="workflow_ai_no_toolkits">No toolkits available</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
     <string name="workflow_shell_command_label">Command</string>
     <string name="workflow_shell_working_dir_label">Working Directory</string>
     <string name="workflow_shell_timeout_label">Timeout</string>

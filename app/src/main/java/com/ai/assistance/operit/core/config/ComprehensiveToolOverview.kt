@@ -129,16 +129,46 @@ Here's a complete overview of what you can do:
 • calculate - Evaluate mathematical expressions
 
 ═══════════════════════════════════════════════════════════════════════
-### 8. WORKFLOW TOOLS
+### 8. WORKFLOW AUTOMATION TOOLS
 ═══════════════════════════════════════════════════════════════════════
 
-• get_all_workflows - List all available workflows
-• get_workflow - Get workflow details
-• create_workflow - Create new workflow
-• update_workflow - Update existing workflow
-• patch_workflow - Incrementally update workflow
-• delete_workflow - Delete workflow
-• trigger_workflow - Execute a workflow
+You have a full visual workflow automation system. Each workflow is a graph of NODES connected by edges. The user manages workflows in the Workflows page of the app. You can CRUD them entirely from here.
+
+**Workflow CRUD:**
+• get_all_workflows - List all available workflows (id, name, description, node count, status)
+• get_workflow - Get full workflow details including all nodes and connections
+• create_workflow - Create a new workflow with name, description, and optional initial nodes
+• update_workflow - Replace workflow content entirely
+• patch_workflow - Incrementally update fields (name, description, enabled, nodes, connections) — safer than full update
+• delete_workflow - Delete a workflow by ID
+• trigger_workflow - Execute a workflow immediately
+
+**Node-level operations (add/configure/connect/delete nodes in existing workflows):**
+• add_node - Add a node to an existing workflow. Required params: workflow_id, node_type, name. Optional: position, config.
+• configure_node - Update a node's configuration (prompt, parameters, tool selection, etc.)
+• connect_nodes - Connect two nodes with an edge (source_node_id → target_node_id)
+• delete_node - Remove a node and its connected edges from a workflow
+
+**Node types available:**
+• `trigger` - Starts the workflow (manual, schedule, event-based)
+• `ai` - AI Chat node: send prompts, select toolkits, set temperature/max_tokens
+• `execute_shell` - Run shell commands with working dir, timeout, stderr capture
+• `integration` - Call Composio toolkits (Gmail, GitHub, Slack, Notion, etc.) with connected accounts
+• `mcp` - Call MCP server tools from user-installed MCP servers
+• `skill` - Execute user-installed skill packages
+• `condition` - Branch the workflow based on a condition (==, !=, >, <, contains, etc.)
+• `loop` - Repeat a section of the workflow
+• `delay` - Wait/delay before continuing
+• `notification` - Send app notification
+• `http_request` - Make HTTP API calls
+
+**Important examples:**
+- Create workflow with AI node that uses Composio: create_workflow(name="Email Summary", nodes=[{type:"ai", name:"Summarize", prompt:"...", toolkits:["gmail"]}])
+- Add a node to existing workflow: add_node(workflow_id="<id>", node_type="execute_shell", name="Run Backup")
+- Update an AI node's prompt: patch_workflow(workflow_id="<id>", node_patches=[{node_id:"<nid>", prompt:"new prompt", toolkits:["github","slack"]}])
+- Connect nodes: connect_nodes(workflow_id="<id>", source_node_id="<src>", target_node_id="<tgt>")
+
+The user has a Workflows page in this app — show them the results of get_all_workflows so they can pick workflows to work with. You can build full workflow pipelines entirely through tool calls.
 
 ═══════════════════════════════════════════════════════════════════════
 ### 9. COMPOSIO INTEGRATION TOOLS (EXTERNAL SERVICES)

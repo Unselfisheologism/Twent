@@ -1792,6 +1792,7 @@
 <string name="integration_no_mcp_servers">Integration No Mcp Servers</string>
 <string name="integration_no_toolkit">Integration No Toolkit</string>
 <string name="integration_no_toolkits">Integration No Toolkits</string>
+    <string name="loading_integration_data">Loading integration data…</string>
 <string name="integration_no_webhook_configured">Integration No Webhook Configured</string>
 <string name="integration_node_default_name">Integration Node Default Name</string>
 <string name="integration_oauth_config_title">Integration Oauth Config Title</string>

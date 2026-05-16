@@ -2,6 +2,7 @@ package com.ai.assistance.operit.ui.features.workflow.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,9 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.integration.ComposioApiService
+import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.data.model.AINode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +41,21 @@ fun AINodeConfigDialog(
 
     var showSystemPromptSection by remember { mutableStateOf(currentNode.systemPrompt.isNotEmpty()) }
     var showAdvancedSection by remember { mutableStateOf(false) }
+
+    // Load toolkits for tool selection
+    val context = LocalContext.current
+    val composioApi = remember { ComposioApiService.getInstance(context) }
+    var availableToolkits by remember { mutableStateOf<List<ToolkitDefinition>>(emptyList()) }
+    var toolkitLoadError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(enableTools) {
+        if (enableTools) {
+            composioApi.listToolkits(limit = 50).fold(
+                onSuccess = { availableToolkits = it },
+                onFailure = { toolkitLoadError = it.message }
+            )
+        }
+    }
 
     val taskTypeOptions = listOf(
         "generate_text" to "Text Generation",
@@ -214,6 +234,110 @@ fun AINodeConfigDialog(
                                 checked = enableTools,
                                 onCheckedChange = { enableTools = it }
                             )
+                        }
+
+                        if (enableTools) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = stringResource(R.string.workflow_ai_select_tools_label),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (availableToolkits.isEmpty() && toolkitLoadError == null) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.workflow_ai_loading_toolkits), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                } else if (toolkitLoadError != null) {
+                                    Text(
+                                        text = "Error: $toolkitLoadError",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                } else {
+                                    availableToolkits.forEach { toolkit ->
+                                        val toolkitTools = toolkit.tools
+                                        if (toolkitTools.isNotEmpty()) {
+                                            var expanded by remember { mutableStateOf(false) }
+                                            val selectedCount = selectedTools.count { it.startsWith("${toolkit.name}:") }
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .toggleable(
+                                                        value = selectedCount == toolkitTools.size,
+                                                        onValueChange = { checked ->
+                                                            if (checked) {
+                                                                selectedTools.addAll(toolkitTools.map { "${toolkit.name}:${it.name}" })
+                                                            } else {
+                                                                selectedTools.removeAll { it.startsWith("${toolkit.name}:") }
+                                                            }
+                                                        },
+                                                        role = Role.Checkbox
+                                                    ),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Checkbox(checked = selectedCount == toolkitTools.size, onCheckedChange = null)
+                                                Text(toolkit.displayName.ifBlank { toolkit.name }, style = MaterialTheme.typography.bodySmall)
+                                                Spacer(Modifier.weight(1f))
+                                                TextButton(onClick = { expanded = !expanded }) {
+                                                    Text(
+                                                        if (selectedCount == toolkitTools.size) stringResource(R.string.deselect_all)
+                                                        else stringResource(R.string.select_all),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                            }
+                                            if (expanded) {
+                                                Column(modifier = Modifier.padding(start = 32.dp)) {
+                                                    toolkitTools.forEach { tool ->
+                                                        val toolId = "${toolkit.name}:${tool.name}"
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .toggleable(
+                                                                    value = selectedTools.contains(toolId),
+                                                                    onValueChange = { checked ->
+                                                                        if (checked) selectedTools.add(toolId)
+                                                                        else selectedTools.remove(toolId)
+                                                                    },
+                                                                    role = Role.Checkbox
+                                                                ),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Checkbox(
+                                                                checked = selectedTools.contains(toolId),
+                                                                onCheckedChange = null
+                                                            )
+                                                            Column {
+                                                                Text(tool.name, style = MaterialTheme.typography.bodySmall)
+                                                                if (tool.description.isNotEmpty()) {
+                                                                    Text(
+                                                                        tool.description.take(80),
+                                                                        style = MaterialTheme.typography.labelSmall,
+                                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (availableToolkits.isEmpty()) {
+                                        Text(
+Text(
+                                            stringResource(R.string.workflow_ai_no_toolkits),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package com.ai.assistance.operit.ui.features.workflow.components
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,12 +23,15 @@ import com.ai.assistance.operit.ui.theme.SteelPrimary
 import com.ai.assistance.operit.ui.theme.SteelLight
 import com.ai.assistance.operit.ui.theme.SteelAccent
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.data.integration.ComposioApiService
+import com.ai.assistance.operit.data.integration.IntegrationRepository
 import com.ai.assistance.operit.data.integration.model.ToolDefinition
 import com.ai.assistance.operit.data.integration.model.ToolParameter
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
@@ -36,7 +40,13 @@ import com.ai.assistance.operit.data.model.IntegrationNodeConstants
 import com.ai.assistance.operit.data.model.IntegrationWebhookConfig
 import com.ai.assistance.operit.data.model.IntegrationMcpServerConfig
 import com.ai.assistance.operit.data.model.ParameterValue
+import com.ai.assistance.operit.data.mcp.MCPRepository
+import com.ai.assistance.operit.util.AppLogger
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.util.UUID
+
+private const val TAG = "IntegrationNodeConfig"
 
 /**
  * Integration Node Configuration Dialog
@@ -50,18 +60,105 @@ import java.util.UUID
  * - MCP server configuration
  * - OAuth account selection
  * - Parameter input with static values or node reference binding
+ * - Auto-loads real data from Composio API, IntegrationRepository, and MCPRepository
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntegrationNodeConfigDialog(
-    node: IntegrationNode?,
-    availableToolkits: List<ToolkitDefinition> = emptyList(),
-    availableActions: List<ToolDefinition> = emptyList(),
-    availableAccounts: List<ConnectedAccountInfo> = emptyList(),
-    availableMcpServers: List<McpServerInfo> = emptyList(),
+    node: IntegrationNode? = null,
     onDismiss: () -> Unit,
     onConfirm: (IntegrationNode) -> Unit
 ) {
+    val context = LocalContext.current
+    
+    // Data loading state
+    var availableToolkits by remember { mutableStateOf<List<ToolkitDefinition>>(emptyList()) }
+    var availableActions by remember { mutableStateOf<List<ToolDefinition>>(emptyList()) }
+    var availableAccounts by remember { mutableStateOf<List<ConnectedAccountInfo>>(emptyList()) }
+    var availableMcpServers by remember { mutableStateOf<List<McpServerInfo>>(emptyList()) }
+    
+    var isLoading by remember { mutableStateOf(false) }
+    var loadingMessage by remember { mutableStateOf("") }
+    
+    // Services - using remember to ensure singleton instances
+    val composioApi = remember { ComposioApiService.getInstance(context) }
+    val integrationRepository = remember { IntegrationRepository.getInstance(context) }
+    val mcpRepository = remember { MCPRepository(context) }
+    
+    // Load data on first composition
+    LaunchedEffect(Unit) {
+        isLoading = true
+        
+        // Load all data sources concurrently using coroutineScope for structured concurrency
+        coroutineScope {
+            launch {
+                loadingMessage = "Loading toolkits..."
+                composioApi.listToolkits(limit = 100).fold(
+                    onSuccess = { toolkits ->
+                        availableToolkits = toolkits
+                        // Flatten all tools from toolkits
+                        availableActions = toolkits.flatMap { it.tools }
+                    },
+                    onFailure = { e ->
+                        AppLogger.e(TAG, "Failed to load toolkits", e)
+                    }
+                )
+            }
+            
+            launch {
+                loadingMessage = "Loading connected accounts..."
+                integrationRepository.listConnectedAccounts().fold(
+                    onSuccess = { accounts ->
+                        availableAccounts = accounts.map { account ->
+                            ConnectedAccountInfo(
+                                id = account.id,
+                                displayName = account.accountName.ifBlank { "${account.toolkit} Account" },
+                                accountType = account.toolkit,
+                                connectedAt = account.connectedAt
+                            )
+                        }
+                    },
+                    onFailure = { e ->
+                        AppLogger.e(TAG, "Failed to load connected accounts", e)
+                    }
+                )
+            }
+            
+            launch {
+                loadingMessage = "Loading MCP servers..."
+                val servers = mcpRepository.mcpServers.value
+                availableMcpServers = servers.map { server ->
+                    McpServerInfo(
+                        id = server.id,
+                        name = server.name,
+                        description = server.description
+                    )
+                }
+            }
+        }
+        
+        isLoading = false
+        loadingMessage = ""
+    }
+    
+    // Show loading indicator while fetching data
+    if (isLoading && availableToolkits.isEmpty()) {
+        AlertDialog(
+            onDismissRequest = { /* Don't allow dismiss while loading */ },
+            title = { Text(stringResource(R.string.loading_data_please_wait)) },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text(loadingMessage.ifEmpty { stringResource(R.string.loading_integration_data) })
+                }
+            },
+            confirmButton = {}
+        )
+        return
+    }
     // Create a new node or use existing
     var currentNode by remember {
         mutableStateOf(node ?: createDefaultIntegrationNode())
