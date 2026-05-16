@@ -1264,4 +1264,12 @@
     <string name="speech_services_deepgram_stt_model">model</string>
     <string name="speech_services_deepgram_stt_model_placeholder">p. ej.: nova-2</string>
     <string name="speech_services_stt_info">Admite motores Sherpa locales y OpenAI / Deepgram STT (remoto).</string>
+    <string name="workflow_list_title">Flujos de trabajo</string>
+    <string name="workflow_ai_select_tools_label">Seleccionar herramientas</string>
+    <string name="workflow_ai_loading_toolkits">Cargando kits de herramientas…</string>
+    <string name="workflow_ai_no_toolkits">No hay kits de herramientas disponibles</string>
+    <string name="select_all">Seleccionar todo</string>
+    <string name="deselect_all">Deseleccionar todo</string>
+    <string name="loading">Cargando…</string>
+    <string name="error_loading_skills">Error al cargar habilidades: %s</string>
 </resources>
