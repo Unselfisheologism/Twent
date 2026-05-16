@@ -668,7 +668,7 @@ fun WorkflowDetailScreen(
                             AINodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
-                                onConfirm = { updatedNode ->
+                                onSave = { updatedNode ->
                                     viewModel.updateNode(workflowId, updatedNode) {
                                         showEditNodeDialog = null
                                     }
@@ -679,7 +679,7 @@ fun WorkflowDetailScreen(
                             ExecuteShellNodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
-                                onConfirm = { updatedNode ->
+                                onSave = { updatedNode ->
                                     viewModel.updateNode(workflowId, updatedNode) {
                                         showEditNodeDialog = null
                                     }
@@ -690,7 +690,7 @@ fun WorkflowDetailScreen(
                             SkillNodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
-                                onConfirm = { updatedNode ->
+                                onSave = { updatedNode ->
                                     viewModel.updateNode(workflowId, updatedNode) {
                                         showEditNodeDialog = null
                                     }
@@ -846,6 +846,8 @@ fun NodeDialog(
                     ParameterConfig(key, false, paramValue.value)
                 is com.ai.assistance.operit.data.model.ParameterValue.NodeReference -> 
                     ParameterConfig(key, true, paramValue.nodeId)
+                is com.ai.assistance.operit.data.model.ParameterValue.TriggerExtra ->
+                    ParameterConfig(key, false, paramValue.defaultValue ?: "")
             }
         }
     } else {
@@ -996,6 +998,7 @@ fun NodeDialog(
             when (initialConditionLeft) {
                 is ParameterValue.StaticValue -> initialConditionLeft.value
                 is ParameterValue.NodeReference -> initialConditionLeft.nodeId
+                is ParameterValue.TriggerExtra -> initialConditionLeft.defaultValue ?: ""
             }
         )
     }
@@ -1005,6 +1008,7 @@ fun NodeDialog(
             when (initialConditionRight) {
                 is ParameterValue.StaticValue -> initialConditionRight.value
                 is ParameterValue.NodeReference -> initialConditionRight.nodeId
+                is ParameterValue.TriggerExtra -> initialConditionRight.defaultValue ?: ""
             }
         )
     }
@@ -1025,6 +1029,7 @@ fun NodeDialog(
             when (initialExtractSource) {
                 is ParameterValue.StaticValue -> initialExtractSource.value
                 is ParameterValue.NodeReference -> initialExtractSource.nodeId
+                is ParameterValue.TriggerExtra -> initialExtractSource.defaultValue ?: ""
             }
         )
     }
@@ -1036,6 +1041,7 @@ fun NodeDialog(
                 when (other) {
                     is ParameterValue.StaticValue -> ParameterConfig("", false, other.value)
                     is ParameterValue.NodeReference -> ParameterConfig("", true, other.nodeId)
+                    is ParameterValue.TriggerExtra -> ParameterConfig("", false, other.defaultValue ?: "")
                 }
             }
         )
