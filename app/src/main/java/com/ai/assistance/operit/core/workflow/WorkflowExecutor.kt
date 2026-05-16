@@ -106,6 +106,7 @@ class WorkflowExecutor(private val context: Context) {
                     else -> throw IllegalStateException(context.getString(R.string.workflow_error_referenced_node_not_completed, value.nodeId))
                 }
             }
+            is ParameterValue.TriggerExtra -> value.defaultValue ?: ""
         }
     }
 
@@ -1245,7 +1246,7 @@ class WorkflowExecutor(private val context: Context) {
 
             return try {
                 val aiExecutor = WorkflowAINodeExecutor.getInstance(context)
-                val result = aiExecutor.execute(node, nodeResults, triggerExtras, workflow.id)
+                val result = aiExecutor.execute(node, triggerExtras, workflow.id)
                 
                 when (result) {
                     is NodeExecutionState.Success -> {

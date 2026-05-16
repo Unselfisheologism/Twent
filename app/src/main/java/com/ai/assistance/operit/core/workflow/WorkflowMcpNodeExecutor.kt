@@ -274,6 +274,7 @@ class WorkflowMcpNodeExecutor private constructor(private val context: Context) 
                 // Resolve node reference
                 resolveNodeReference(value, nodeResults, triggerExtras)
             }
+            is ParameterValue.TriggerExtra -> value.defaultValue ?: ""
         }
     }
     

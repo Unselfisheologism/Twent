@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.AINode
-import com.ai.assistance.operit.data.model.AITaskType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,17 +25,27 @@ fun AINodeConfigDialog(
     var name by remember { mutableStateOf(currentNode.name) }
     var description by remember { mutableStateOf(currentNode.description) }
     var taskType by remember { mutableStateOf(currentNode.taskType) }
-    var userPrompt by remember { mutableStateOf(currentNode.userPrompt) }
-    var systemPrompt by remember { mutableStateOf(currentNode.systemPrompt ?: "") }
-    var temperature by remember { mutableStateOf(currentNode.temperature ?: 0.7f) }
-    var maxTokens by remember { mutableStateOf(currentNode.maxTokens ?: 4096) }
-    var timeoutSecs by remember { mutableStateOf(currentNode.timeoutSecs ?: 120) }
+    var prompt by remember { mutableStateOf(currentNode.prompt) }
+    var systemPrompt by remember { mutableStateOf(currentNode.systemPrompt) }
+    var temperature by remember { mutableFloatStateOf(currentNode.temperature) }
+    var maxTokens by remember { mutableIntStateOf(currentNode.maxTokens) }
+    var timeoutMs by remember { mutableLongStateOf(currentNode.timeoutMs) }
     var enableTools by remember { mutableStateOf(currentNode.enableTools) }
-    var selectedToolNames by remember { mutableStateOf(currentNode.enabledToolNames.toMutableList()) }
+    var selectedTools by remember { mutableStateOf(currentNode.enabledTools.toMutableList()) }
     var taskTypeExpanded by remember { mutableStateOf(false) }
 
-    var showSystemPromptSection by remember { mutableStateOf(false) }
+    var showSystemPromptSection by remember { mutableStateOf(currentNode.systemPrompt.isNotEmpty()) }
     var showAdvancedSection by remember { mutableStateOf(false) }
+
+    val taskTypeOptions = listOf(
+        "generate_text" to "Text Generation",
+        "analyze_image" to "Image Analysis",
+        "classify" to "Classification",
+        "embed" to "Embedding",
+        "reasoning" to "Reasoning"
+    )
+
+    val taskTypeDisplayName = taskTypeOptions.find { it.first == taskType }?.second ?: "Text Generation"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -68,7 +76,6 @@ fun AINodeConfigDialog(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Name
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -77,7 +84,6 @@ fun AINodeConfigDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Description
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -86,13 +92,12 @@ fun AINodeConfigDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Task Type
                 ExposedDropdownMenuBox(
                     expanded = taskTypeExpanded,
                     onExpandedChange = { taskTypeExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = taskType.displayName,
+                        value = taskTypeDisplayName,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.workflow_ai_task_type_label)) },
@@ -103,11 +108,11 @@ fun AINodeConfigDialog(
                         expanded = taskTypeExpanded,
                         onDismissRequest = { taskTypeExpanded = false }
                     ) {
-                        AITaskType.entries.forEach { type ->
+                        taskTypeOptions.forEach { (value, label) ->
                             DropdownMenuItem(
-                                text = { Text(type.displayName) },
+                                text = { Text(label) },
                                 onClick = {
-                                    taskType = type
+                                    taskType = value
                                     taskTypeExpanded = false
                                 }
                             )
@@ -115,10 +120,9 @@ fun AINodeConfigDialog(
                     }
                 }
 
-                // User Prompt
                 OutlinedTextField(
-                    value = userPrompt,
-                    onValueChange = { userPrompt = it },
+                    value = prompt,
+                    onValueChange = { prompt = it },
                     label = { Text(stringResource(R.string.workflow_ai_user_prompt_label)) },
                     placeholder = { Text(stringResource(R.string.workflow_ai_user_prompt_hint)) },
                     minLines = 3,
@@ -126,7 +130,6 @@ fun AINodeConfigDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Toggle: Show System Prompt
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -153,7 +156,6 @@ fun AINodeConfigDialog(
                     )
                 }
 
-                // Toggle: Show Advanced
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -171,17 +173,10 @@ fun AINodeConfigDialog(
 
                 if (showAdvancedSection) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Temperature
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.workflow_ai_temperature_label) + ": ${String.format("%.1f", temperature)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.workflow_ai_temperature_label) + ": ${String.format("%.1f", temperature)}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                         Slider(
                             value = temperature,
                             onValueChange = { temperature = it },
@@ -190,7 +185,6 @@ fun AINodeConfigDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        // Max Tokens
                         OutlinedTextField(
                             value = maxTokens.toString(),
                             onValueChange = { value -> maxTokens = value.toIntOrNull() ?: 4096 },
@@ -199,25 +193,23 @@ fun AINodeConfigDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        // Timeout
                         OutlinedTextField(
-                            value = timeoutSecs.toString(),
-                            onValueChange = { value -> timeoutSecs = value.toIntOrNull() ?: 120 },
+                            value = timeoutMs.toString(),
+                            onValueChange = { value -> timeoutMs = value.toLongOrNull() ?: 60000L },
                             label = { Text(stringResource(R.string.workflow_ai_timeout_label)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        // Enable Tools
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = stringResource(R.string.workflow_ai_enable_tools_label),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+                                style = MaterialTheme.typography.bodySmall
                             )
+                            Spacer(Modifier.weight(1f))
                             Switch(
                                 checked = enableTools,
                                 onCheckedChange = { enableTools = it }
@@ -234,13 +226,13 @@ fun AINodeConfigDialog(
                         name = name.ifEmpty { "AI Node" },
                         description = description,
                         taskType = taskType,
-                        userPrompt = userPrompt,
-                        systemPrompt = systemPrompt.ifEmpty { null },
+                        prompt = prompt,
+                        systemPrompt = systemPrompt,
                         temperature = temperature,
                         maxTokens = maxTokens,
-                        timeoutSecs = timeoutSecs,
+                        timeoutMs = timeoutMs,
                         enableTools = enableTools,
-                        enabledToolNames = selectedToolNames
+                        enabledTools = selectedTools
                     )
                     onSave(updatedNode)
                 }

@@ -2,141 +2,102 @@ package com.ai.assistance.operit.core.workflow
 
 import android.content.Context
 import com.ai.assistance.operit.api.chat.EnhancedAIService
+import com.ai.assistance.operit.api.chat.PromptFunctionType
+import com.ai.assistance.operit.api.chat.llmprovider.FunctionType
 import com.ai.assistance.operit.data.model.AINode
-import com.ai.assistance.operit.data.model.AITaskType
-import com.ai.assistance.operit.data.model.ParameterValue
-import com.ai.assistance.operit.core.workflow.NodeExecutionState
 import com.ai.assistance.operit.util.AppLogger
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.withContext
+import java.io.StringReader
 
 /**
- * AI节点执行器 - 在工作流中调用AI服务
+ * AI node executor — calls EnhancedAIService from within a workflow.
  */
-class WorkflowAINodeExecutor(
-    private val context: Context
-) {
+class WorkflowAINodeExecutor private constructor(private val context: Context) {
+
     companion object {
         private const val TAG = "WorkflowAINodeExecutor"
+
+        @Volatile
+        private var instance: WorkflowAINodeExecutor? = null
+
+        fun getInstance(context: Context): WorkflowAINodeExecutor {
+            return instance ?: synchronized(this) {
+                instance ?: WorkflowAINodeExecutor(context.applicationContext).also {
+                    instance = it
+                }
+            }
+        }
     }
 
     suspend fun execute(
         node: AINode,
-        triggerExtras: Map<String, NodeExecutionState>,
+        triggerExtras: Map<String, String>,
         workflowId: String
     ): NodeExecutionState = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "Executing AI node: ${node.name}")
 
-            // 解析参数
-            val userPrompt = resolveStringParam(node.userPrompt, triggerExtras)
-            val systemPrompt = node.systemPrompt?.let { resolveStringParam(it, triggerExtras) }
-
-            if (userPrompt.isEmpty()) {
-                return@withContext NodeExecutionState.Failed(
-                    nodeId = node.id,
-                    errorMessage = "User prompt is empty",
-                    result = null
-                )
+            // Resolve ${nodeId} references in prompt
+            val resolvedPrompt = resolveParam(node.prompt, triggerExtras)
+            if (resolvedPrompt.isEmpty()) {
+                return@withContext NodeExecutionState.Failed("Prompt is empty")
             }
 
-            // 使用 EnhancedAIService 发送消息（内部处理工具调用循环）
-            val aiService = EnhancedAIService.getInstance(context)
+            val maxTokens = if (node.maxTokens > 0) node.maxTokens else 4096
 
-            // 将 workflowId 作为 chatId，确保同一工作流使用相同的会话
-            val chatId = "workflow_${workflowId}_${node.id}"
-
-            // 构建聊天历史（如果需要）
-            val chatHistory = node.chatHistory.take(10).map { entry ->
-                entry.key to entry.value
-            }
-
-            // 计算 maxTokens
-            val maxTokens = node.maxTokens ?: 4096
-
-            // 使用非流式模式获取完整响应
-            val responseBuilder = StringBuilder()
-            var toolCallCount = 0
-            val maxToolCalls = 20 // 防止无限循环
-
-            // 直接调用 sendMessage，让 EnhancedAIService 内部处理工具调用循环
-            // 设置 stream=false 获取完整响应
-            val responseFlow = aiService.sendMessage(
-                message = userPrompt,
-                chatId = chatId,
-                chatHistory = chatHistory,
-                functionType = com.ai.assistance.operit.api.chat.llmprovider.FunctionType.CHAT,
-                promptFunctionType = com.ai.assistance.operit.api.chat.PromptFunctionType.CHAT,
+            // Use stream=false for synchronous result
+            val responseStream: Stream<String> = EnhancedAIService.sendMessage(
+                message = resolvedPrompt,
+                chatId = "workflow_${workflowId}_${node.id}",
+                chatHistory = emptyList(),
+                systemPrompt = node.systemPrompt,
+                functionType = FunctionType.CHAT,
+                promptFunctionType = PromptFunctionType.CHAT,
                 enableThinking = false,
-                enableMemoryQuery = false, // 工作流中禁用记忆
+                enableMemoryQuery = false,
                 maxTokens = maxTokens,
                 tokenUsageThreshold = 0.9,
-                customSystemPromptTemplate = systemPrompt,
+                customSystemPromptTemplate = null,
                 isSubTask = false,
-                stream = false // 非流式，获取完整响应
+                stream = false
             )
 
-            // 收集完整响应
-            responseFlow.onCompletion { error ->
-                if (error != null) {
-                    AppLogger.e(TAG, "Stream error: ${error.message}")
-                }
-            }.collect { chunk ->
-                responseBuilder.append(chunk)
-                toolCallCount++
-                if (toolCallCount > maxToolCalls) {
-                    AppLogger.w(TAG, "Tool call limit reached, stopping")
-                }
+            // Stream<String> is a Java functional interface — consume synchronously
+            val responseBuilder = StringBuilder()
+            val iterator = responseStream.iterator()
+            while (iterator.hasNext()) {
+                responseBuilder.append(iterator.next())
             }
 
             val response = responseBuilder.toString()
-
             AppLogger.d(TAG, "AI node response length: ${response.length}")
 
             return@withContext if (response.isNotEmpty()) {
-                NodeExecutionState.Success(
-                    nodeId = node.id,
-                    output = response,
-                    metadata = mapOf(
-                        "taskType" to node.taskType.name,
-                        "chatId" to chatId,
-                        "responseLength" to response.length
-                    )
-                )
+                NodeExecutionState.Success(response)
             } else {
-                NodeExecutionState.Failed(
-                    nodeId = node.id,
-                    errorMessage = "Empty response from AI",
-                    result = null
-                )
+                NodeExecutionState.Failed("Empty response from AI")
             }
 
         } catch (e: Exception) {
             AppLogger.e(TAG, "AI node execution failed: ${e.message}", e)
-            return@withContext NodeExecutionState.Failed(
-                nodeId = node.id,
-                errorMessage = e.message ?: "Unknown error",
-                result = null
-            )
+            return@withContext NodeExecutionState.Failed(e.message ?: "Unknown error")
         }
     }
 
     /**
-     * 解析参数值 - 支持静态值、节点引用、触发器额外数据
+     * Resolve ${nodeId} references in a string using triggerExtras (node results).
      */
-    private fun resolveStringParam(param: ParameterValue, triggerExtras: Map<String, NodeExecutionState>): String {
-        return when (param) {
-            is ParameterValue.StaticValue -> param.value
-            is ParameterValue.NodeReference -> {
-                val referencedState = triggerExtras[param.nodeId]
-                when (referencedState) {
-                    is NodeExecutionState.Success -> referencedState.output ?: ""
-                    else -> ""
-                }
+    private fun resolveParam(param: String, triggerExtras: Map<String, String>): String {
+        val regex = Regex("\$\{(\w+)}")
+        var result = param
+        for (match in regex.findAll(param)) {
+            val nodeId = match.groupValues[1]
+            val value = triggerExtras[nodeId]
+            if (value != null) {
+                result = result.replace(match.value, value)
             }
-            is ParameterValue.TriggerExtra -> param.defaultValue ?: ""
         }
+        return result
     }
 }

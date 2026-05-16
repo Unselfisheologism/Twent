@@ -25,7 +25,7 @@ fun ExecuteShellNodeConfigDialog(
     var description by remember { mutableStateOf(currentNode.description) }
     var command by remember { mutableStateOf(currentNode.command) }
     var workingDir by remember { mutableStateOf(currentNode.workingDir) }
-    var timeoutSecs by remember { mutableStateOf(currentNode.timeoutSecs) }
+    var timeoutMs by remember { mutableLongStateOf(currentNode.timeoutMs) }
     var captureStderr by remember { mutableStateOf(currentNode.captureStderr) }
 
     AlertDialog(
@@ -93,12 +93,12 @@ fun ExecuteShellNodeConfigDialog(
                 )
 
                 OutlinedTextField(
-                    value = timeoutSecs.toString(),
-                    onValueChange = { value -> timeoutSecs = value.toIntOrNull() ?: 60 },
+                    value = timeoutMs.toString(),
+                    onValueChange = { value -> timeoutMs = value.toLongOrNull() ?: 60000L },
                     label = { Text(stringResource(R.string.workflow_shell_timeout_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
-                )
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -124,7 +124,7 @@ fun ExecuteShellNodeConfigDialog(
                         description = description,
                         command = command,
                         workingDir = workingDir,
-                        timeoutSecs = timeoutSecs,
+                        timeoutMs = timeoutMs,
                         captureStderr = captureStderr
                     )
                     onSave(updatedNode)

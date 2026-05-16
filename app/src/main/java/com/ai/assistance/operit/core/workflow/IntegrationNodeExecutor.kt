@@ -160,6 +160,7 @@ class IntegrationNodeExecutor(private val context: Context) {
       resolved[key] = when (value) {
         is ParameterValue.StaticValue -> parseValue(value.value)
         is ParameterValue.NodeReference -> resolveNodeReference(value, nodeResults, triggerExtras)
+        is ParameterValue.TriggerExtra -> value.defaultValue ?: ""
       }
     }
     
