@@ -75,12 +75,10 @@ class TwGlobalBrain private constructor(private val context: Context) {
         val loadedSkills: MutableSet<TwLoadedSkill> = mutableSetOf(),
         val midSessionNotes: MutableList<TwMidSessionNote> = mutableListOf(),
         var activeMode: AgentMode = AgentMode.NORMAL,
-        var iterationBudget: Int = DEFAULT_ITERATION_BUDGET
+        var iterationBudget: Int = 20
     )
 
     enum class AgentMode { NORMAL, YOLO, FAST, DEEP_REASONING }
-
-    const val DEFAULT_ITERATION_BUDGET = 20
 
     enum class AgentType { AI_CHAT, OVERLAY, EXECUTOR }
 
