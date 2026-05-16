@@ -330,7 +330,6 @@ fun AINodeConfigDialog(
                                     }
                                     if (availableToolkits.isEmpty()) {
                                         Text(
-Text(
                                             stringResource(R.string.workflow_ai_no_toolkits),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
