@@ -131,7 +131,7 @@ class WorkflowMcpNodeExecutor private constructor(private val context: Context) 
             val command = MCPBridgeClient.buildListToolsCommand(serverName)
             
             // Send command to MCP bridge
-            val response = mcpBridge.sendCommand(command)
+            val response = MCPBridge.sendCommand(command)
             
             // Handle null response (connection failure)
             if (response == null) {
@@ -179,7 +179,7 @@ class WorkflowMcpNodeExecutor private constructor(private val context: Context) 
             )
             
             // Send command to MCP bridge
-            val response = mcpBridge.sendCommand(command)
+            val response = MCPBridge.sendCommand(command)
             
             // Handle null response (connection failure)
             if (response == null) {
@@ -223,7 +223,7 @@ class WorkflowMcpNodeExecutor private constructor(private val context: Context) 
             val command = MCPBridgeClient.buildListServicesCommand(serverName)
             
             // Send command to MCP bridge
-            val response = mcpBridge.sendCommand(command)
+            val response = MCPBridge.sendCommand(command)
             
             // Handle null response (connection failure)
             if (response == null) {

@@ -125,7 +125,7 @@ fun ExecuteShellNodeConfigDialog(
                         name = name.ifEmpty { "Shell Node" },
                         description = description,
                         command = command,
-                        workingDir = workingDir.ifEmpty { null },
+                        workingDir = workingDir.ifEmpty { "" },
                         timeoutMs = timeoutMs.toLongOrNull() ?: 60000L,
                         captureStderr = captureStderr
                     )

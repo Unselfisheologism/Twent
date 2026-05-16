@@ -62,7 +62,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
 
             // Collect the stream into a string
             val responseBuilder = StringBuilder()
-            responseStream.forEach { chunk -> responseBuilder.append(chunk) }
+            responseStream.collect { chunk -> responseBuilder.append(chunk) }
 
             val response = responseBuilder.toString()
             AppLogger.d(TAG, "AI node response length: ${response.length}")
