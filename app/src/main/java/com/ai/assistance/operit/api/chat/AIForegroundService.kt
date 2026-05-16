@@ -24,6 +24,8 @@ import android.view.View
 import android.view.WindowManager
 import android.graphics.PixelFormat
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.api.chat.autonomous.TwAutonomousAgent
+import com.ai.assistance.operit.data.preferences.AutonomousAgentPreferences
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -474,6 +476,17 @@ class AIForegroundService : Service() {
         )
         startWakeMonitoring()
         
+        // Start autonomous agent if enabled
+        try {
+            val autonomousPrefs = AutonomousAgentPreferences(applicationContext)
+            if (autonomousPrefs.enabled) {
+                val agent = TwAutonomousAgent.getInstance(applicationContext)
+                agent.start()
+                AppLogger.d(TAG, "Autonomous agent started via AIForegroundService")
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to start autonomous agent", e)
+        }
 
         AppLogger.d(TAG, "AI 前台服务已启动。")
     }
@@ -701,7 +714,14 @@ class AIForegroundService : Service() {
         isRunning.set(false)
         hideKeepAliveOverlay()
         stopWakeMonitoring()
-        
+
+        // Stop autonomous agent
+        try {
+            val agent = TwAutonomousAgent.getInstance(applicationContext)
+            agent.stop()
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to stop autonomous agent", e)
+        }
 
         AppLogger.d(TAG, "AI 前台服务已销毁。")
     }

@@ -61,6 +61,7 @@ import com.ai.assistance.operit.ui.features.settings.screens.CustomHeadersSettin
 import com.ai.assistance.operit.ui.features.settings.screens.MnnModelDownloadScreen
 import com.ai.assistance.operit.ui.features.settings.screens.TokenUsageStatisticsScreen
 import com.ai.assistance.operit.ui.features.settings.screens.PowerUserModeSettingsScreen
+import com.ai.assistance.operit.ui.features.autonomous.screens.AutonomousAgentSettingsScreen
 import com.ai.assistance.operit.ui.features.token.TokenConfigWebViewScreen
 import com.ai.assistance.operit.ui.features.toolbox.screens.AppPermissionsToolScreen
 import com.ai.assistance.operit.ui.features.toolbox.screens.FileManagerToolScreen
@@ -974,7 +975,24 @@ sealed class Screen(
                 onError: (String) -> Unit,
                 onGestureConsumed: (Boolean) -> Unit
         ) {
-            PowerUserModeSettingsScreen(onBackPressed = onGoBack)
+PowerUserModeSettingsScreen(onBackPressed = onGoBack, navigateToAutonomousAgent = { navigateTo(AutonomousAgentSettings) })
+        }
+    }
+
+    data object AutonomousAgentSettings :
+            Screen(parentScreen = Settings, navItem = NavItem.Settings, titleRes = R.string.nav_autonomous_agent) {
+        @Composable
+        override fun Content(
+                navController: NavController,
+                navigateTo: ScreenNavigationHandler,
+                updateNavItem: NavItemChangeHandler,
+                onGoBack: () -> Unit,
+                hasBackgroundImage: Boolean,
+                onLoading: (Boolean) -> Unit,
+                onError: (String) -> Unit,
+                onGestureConsumed: (Boolean) -> Unit
+        ) {
+            AutonomousAgentSettingsScreen(onNavigateBack = onGoBack)
         }
     }
 

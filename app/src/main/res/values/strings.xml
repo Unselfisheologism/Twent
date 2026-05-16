@@ -2426,6 +2426,16 @@
 <string name="nav_help">Nav Help</string>
 <string name="nav_item_agreement">Nav Item Agreement</string>
 <string name="nav_power_user_mode">Nav Power User Mode</string>
+<string name="nav_autonomous_agent">Nav Autonomous Agent</string>
+<string name="autonomous_agent_channel">Autonomous Agent</string>
+<string name="autonomous_agent_channel_name">Autonomous Agent</string>
+<string name="autonomous_agent_channel_desc">Background AI agent notifications</string>
+<string name="autonomous_notification_title">Twent AI Agent</string>
+<string name="autonomous_notification_working">Working in background — observing and learning</string>
+<string name="autonomous_notification_idle">Autonomous agent idle</string>
+<string name="autonomous_notification_observation_complete">Observation cycle complete</string>
+<string name="autonomous_notification_learning_complete">Learning complete — patterns detected</string>
+<string name="autonomous_notification_content_ready">Content ready for review</string>
 <string name="nav_memory_base">Nav Memory Base</string>
 <string name="nav_packages">Nav Packages</string>
 <string name="nav_toolbox">Toolset</string>
