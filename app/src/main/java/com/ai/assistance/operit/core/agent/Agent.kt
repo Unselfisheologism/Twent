@@ -16,6 +16,7 @@ import com.ai.assistance.operit.core.agent.perception.Perception
 import com.ai.assistance.operit.core.agent.message.MessageManager
 
 import kotlinx.coroutines.delay
+import com.ai.assistance.operit.api.chat.brain.TwGlobalBrain
 
 @RequiresApi(Build.VERSION_CODES.R)
 class Agent(
@@ -33,6 +34,12 @@ class Agent(
     val history = AgentHistoryList<Unit>()
 
     suspend fun run(initialTask: String, maxSteps: Int = 150) {
+        // Inject cross-session memory from TwGlobalBrain
+        val globalBrain = TwGlobalBrain.getInstance(context)
+        val memoryContext = globalBrain.getExecutorSystemPromptAddition(initialTask)
+        state.memoryContext = memoryContext
+        messageManager.memoryContext = memoryContext
+
         messageManager.addNewTask(initialTask)
         state.stopped = false
         Log.d(TAG, "--- Agent starting task: '$initialTask' ---")

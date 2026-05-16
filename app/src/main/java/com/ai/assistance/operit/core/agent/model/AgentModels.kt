@@ -13,7 +13,9 @@ data class AgentState(
     var nSteps: Int = 0,
     var consecutiveFailures: Int = 0,
     var lastModelOutput: AgentOutput? = null,
-    var lastResult: List<com.ai.assistance.operit.core.agent.actions.ActionResult>? = null
+    var lastResult: List<com.ai.assistance.operit.core.agent.actions.ActionResult>? = null,
+    /** Cross-session memory context injected from TwGlobalBrain. */
+    var memoryContext: String = ""
 )
 
 data class AgentOutput(

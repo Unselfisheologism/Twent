@@ -52,7 +52,9 @@ data class AgentState(
     var paused: Boolean = false,
     var stopped: Boolean = false,
     val memoryManagerState: MemoryState = MemoryState(),
-    val fileSystemState: FileSystemState? = null
+    val fileSystemState: FileSystemState? = null,
+    /** Cross-session memory context injected from TwGlobalBrain. */
+    var memoryContext: String = ""
 )
 
 data class AgentStepInfo(

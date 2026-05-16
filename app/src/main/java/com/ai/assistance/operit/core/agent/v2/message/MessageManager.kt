@@ -16,7 +16,9 @@ class MemoryManager(
     private val context: Context,
     private var task: String,
     private val fileSystem: com.ai.assistance.operit.core.agent.v2.fs.FileSystem,
-    private val settings: AgentSettings
+    private val settings: AgentSettings,
+    /** Cross-session memory context injected from TwGlobalBrain. */
+    var memoryContext: String = ""
 ) {
     private val historyItems = mutableListOf<HistoryItem>()
     private var systemMessage: String = ""
@@ -161,7 +163,13 @@ $actionsDescription
 
     fun getMessages(): List<LlmMessage> {
         val result = mutableListOf<LlmMessage>()
-        result.add(LlmMessage(MessageRole.SYSTEM, systemMessage))
+        // Append cross-session memory to system prompt
+        val effectiveSystem = if (memoryContext.isNotEmpty()) {
+            "$systemMessage\n\n[CROSS-SESSION MEMORY]\n$memoryContext"
+        } else {
+            systemMessage
+        }
+        result.add(LlmMessage(MessageRole.SYSTEM, effectiveSystem))
         
         if (stateMessage.isNotEmpty()) {
             result.add(LlmMessage(MessageRole.USER, stateMessage))

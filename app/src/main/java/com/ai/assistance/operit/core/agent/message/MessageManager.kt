@@ -8,19 +8,31 @@ import com.ai.assistance.operit.core.agent.model.AgentStepInfo
 import com.ai.assistance.operit.core.agent.perception.ScreenAnalysis
 
 class MessageManager(
-    private val systemPrompt: String
+    private val systemPrompt: String,
+    /** Cross-session memory context injected from TwGlobalBrain. */
+    var memoryContext: String = ""
 ) {
     private val messages = mutableListOf<LlmMessage>()
     private var currentTask: String = ""
 
     init {
-        messages.add(LlmMessage(MessageRole.SYSTEM, systemPrompt))
+        val effectiveSystem = if (memoryContext.isNotEmpty()) {
+            "$systemPrompt\n\n[CROSS-SESSION MEMORY]\n$memoryContext"
+        } else {
+            systemPrompt
+        }
+        messages.add(LlmMessage(MessageRole.SYSTEM, effectiveSystem))
     }
 
     fun addNewTask(task: String) {
         messages.clear()
         currentTask = task
-        messages.add(LlmMessage(MessageRole.SYSTEM, systemPrompt))
+        val effectiveSystem = if (memoryContext.isNotEmpty()) {
+            "$systemPrompt\n\n[CROSS-SESSION MEMORY]\n$memoryContext"
+        } else {
+            systemPrompt
+        }
+        messages.add(LlmMessage(MessageRole.SYSTEM, effectiveSystem))
     }
 
     fun createStateMessage(

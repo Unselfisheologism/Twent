@@ -16,6 +16,7 @@ import com.ai.assistance.operit.core.agent.v2.message.HistoryItem
 import com.ai.assistance.operit.core.agent.v2.message.MemoryManager
 import com.ai.assistance.operit.core.agent.v2.perception.Perception
 import com.ai.assistance.operit.core.agent.v2.perception.ScreenAnalysis
+import com.ai.assistance.operit.api.chat.brain.TwGlobalBrain
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +89,13 @@ class Agent(
 
     suspend fun run(initialTask: String, maxSteps: Int = 150) {
         acquireWakeLock()
-        
+
+        // Inject cross-session memory from TwGlobalBrain
+        val globalBrain = TwGlobalBrain.getInstance(context)
+        val memoryContext = globalBrain.getOverlaySystemPromptAddition(initialTask)
+        memoryManager.memoryContext = memoryContext
+        state.memoryContext = memoryContext
+
         memoryManager.addNewTask(initialTask)
         state.stopped = false
         Log.d(TAG, "--- Agent starting task: '$initialTask' ---")
