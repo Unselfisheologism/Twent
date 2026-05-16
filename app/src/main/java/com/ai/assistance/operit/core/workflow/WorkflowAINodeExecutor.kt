@@ -2,13 +2,13 @@ package com.ai.assistance.operit.core.workflow
 
 import android.content.Context
 import com.ai.assistance.operit.api.chat.EnhancedAIService
-import com.ai.assistance.operit.api.chat.PromptFunctionType
-import com.ai.assistance.operit.api.chat.llmprovider.FunctionType
+import com.ai.assistance.operit.data.model.FunctionType
+import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.data.model.AINode
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.util.stream.Stream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.StringReader
 
 /**
  * AI node executor — calls EnhancedAIService from within a workflow.
@@ -47,7 +47,7 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
             val maxTokens = if (node.maxTokens > 0) node.maxTokens else 4096
 
             // Use stream=false for synchronous result
-            val responseStream: Stream<String> = EnhancedAIService.getInstance().sendMessage(
+            val responseStream: Stream<String> = EnhancedAIService.getInstance(context).sendMessage(
                 message = resolvedPrompt,
                 chatId = "workflow_${workflowId}_${node.id}",
                 chatHistory = emptyList(),
@@ -56,15 +56,13 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
                 enableThinking = false,
                 enableMemoryQuery = false,
                 maxTokens = maxTokens,
-                tokenUsageThreshold = 0.9
+                tokenUsageThreshold = 0.9,
+                stream = false
             )
 
-            // Stream<String> is a Java functional interface — consume synchronously
+            // Collect the stream into a string
             val responseBuilder = StringBuilder()
-            val iterator = responseStream.iterator()
-            while (iterator.hasNext()) {
-                responseBuilder.append(iterator.next())
-            }
+            responseStream.forEach { chunk -> responseBuilder.append(chunk) }
 
             val response = responseBuilder.toString()
             AppLogger.d(TAG, "AI node response length: ${response.length}")
@@ -85,13 +83,16 @@ class WorkflowAINodeExecutor private constructor(private val context: Context) {
      * Resolve ${nodeId} references in a string using triggerExtras (node results).
      */
     private fun resolveParam(param: String, triggerExtras: Map<String, String>): String {
-        val regex = Regex("\$\{(\w+)}")
+        val dollar = "$"
+        val openBrace = "{"
+        val closeBrace = "}"
+        val regex = Regex("""\$\{(\w+)}""")
         var result = param
         for (match in regex.findAll(param)) {
             val nodeId = match.groupValues[1]
             val value = triggerExtras[nodeId]
             if (value != null) {
-                result = result.replace(match.value, value)
+                result = result.replace("$dollar$openBrace$nodeId$closeBrace", value)
             }
         }
         return result
