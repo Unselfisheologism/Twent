@@ -187,7 +187,7 @@ fun SkillNodeConfigDialog(
                             )
                         }
                     } else if (skillsLoadError != null) {
-                        val errorMsg = skillsLoadError
+                        val errorMsg = skillsLoadError!!
                         Text(
                             text = stringResource(R.string.error_loading_skills, errorMsg),
                             style = MaterialTheme.typography.bodySmall,
