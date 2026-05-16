@@ -333,6 +333,8 @@ class IntegrationNodeExecutor(private val context: Context) {
         is NodeExecutionState.Success -> Result.success(result.result)
         is NodeExecutionState.Failed -> Result.failure(Exception(result.error))
         is NodeExecutionState.Skipped -> Result.failure(Exception(result.reason))
+        is NodeExecutionState.Pending -> Result.failure(Exception("Pending state not expected"))
+        is NodeExecutionState.Running -> Result.failure(Exception("Running state not expected"))
       }
     } catch (e: Exception) {
       AppLogger.e(TAG, "MCP execution failed", e)

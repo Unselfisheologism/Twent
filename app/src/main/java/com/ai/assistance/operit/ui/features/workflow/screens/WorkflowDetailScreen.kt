@@ -47,9 +47,9 @@ import com.ai.assistance.operit.data.model.ExtractNode
 import com.ai.assistance.operit.data.model.ExtractMode
 import com.ai.assistance.operit.data.model.MCPNode
 import com.ai.assistance.operit.data.model.IntegrationNode
-import com.ai.assistance.operit.data.model.AINode
-import com.ai.assistance.operit.data.model.ExecuteShellNode
-import com.ai.assistance.operit.data.model.SkillNode
+import com.ai.assistance.operit.data.model.AINode as DataAINode
+import com.ai.assistance.operit.data.model.ExecuteShellNode as DataExecuteShellNode
+import com.ai.assistance.operit.data.model.SkillNode as DataSkillNode
 import com.ai.assistance.operit.data.model.ParameterValue
 import com.ai.assistance.operit.data.model.IntegrationNodeConstants
 import com.ai.assistance.operit.ui.features.workflow.components.AINodeConfigDialog
@@ -664,7 +664,7 @@ fun WorkflowDetailScreen(
                                 }
                             )
                         }
-                        is AINode -> {
+                        is DataAINode -> {
                             AINodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
@@ -675,7 +675,7 @@ fun WorkflowDetailScreen(
                                 }
                             )
                         }
-                        is ExecuteShellNode -> {
+                        is DataExecuteShellNode -> {
                             ExecuteShellNodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
@@ -686,7 +686,7 @@ fun WorkflowDetailScreen(
                                 }
                             )
                         }
-                        is SkillNode -> {
+                        is DataSkillNode -> {
                             SkillNodeConfigDialog(
                                 node = node,
                                 onDismiss = { showEditNodeDialog = null },
@@ -2530,11 +2530,11 @@ fun NodeDialog(
                             // IntegrationNode 编辑模式：使用专门的配置对话框处理
                             is IntegrationNode -> node
                             // AINode 编辑模式：使用专门的配置对话框处理
-                            is AINode -> node
+                            is DataAINode -> node
                             // ExecuteShellNode 编辑模式：使用专门的配置对话框处理
-                            is ExecuteShellNode -> node
+                            is DataExecuteShellNode -> node
                             // SkillNode 编辑模式：使用专门的配置对话框处理
-                            is SkillNode -> node
+                            is DataSkillNode -> node
                             else -> node
                         }
                     } else {
@@ -2654,19 +2654,19 @@ fun NodeDialog(
                                 position = smartPosition
                             )
                             // AINode 创建：使用专门的配置对话框处理
-                            "ai" -> AINode(
+                            "ai" -> DataAINode(
                                 name = nodeName,
                                 description = description,
                                 position = smartPosition
                             )
                             // ExecuteShellNode 创建：使用专门的配置对话框处理
-                            "execute_shell" -> ExecuteShellNode(
+                            "execute_shell" -> DataExecuteShellNode(
                                 name = nodeName,
                                 description = description,
                                 position = smartPosition
                             )
                             // SkillNode 创建：使用专门的配置对话框处理
-                            "skill" -> SkillNode(
+                            "skill" -> DataSkillNode(
                                 name = nodeName,
                                 description = description,
                                 position = smartPosition

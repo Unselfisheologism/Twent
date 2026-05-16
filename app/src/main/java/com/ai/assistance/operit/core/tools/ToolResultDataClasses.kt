@@ -1346,6 +1346,37 @@ data class WorkflowDetailResultData(
                         sb.appendLine("    Description: ${node.description}")
                     }
                 }
+                is com.ai.assistance.operit.data.model.AINode -> {
+                    sb.appendLine("  - [AI] ${node.name} (${node.id})")
+                    sb.appendLine("    Task: ${node.taskType}")
+                    if (node.modelId.isNotBlank()) {
+                        sb.appendLine("    Model: ${node.modelId}")
+                    }
+                    if (node.description.isNotBlank()) {
+                        sb.appendLine("    Description: ${node.description}")
+                    }
+                }
+                is com.ai.assistance.operit.data.model.ExecuteShellNode -> {
+                    sb.appendLine("  - [Shell] ${node.name} (${node.id})")
+                    val cmdPreview = if (node.command.length > 50) node.command.take(50) + "..." else node.command
+                    sb.appendLine("    Command: $cmdPreview")
+                    if (node.description.isNotBlank()) {
+                        sb.appendLine("    Description: ${node.description}")
+                    }
+                }
+                is com.ai.assistance.operit.data.model.SkillNode -> {
+                    sb.appendLine("  - [Skill] ${node.name} (${node.id})")
+                    sb.appendLine("    Skills: ${node.skillNames.joinToString(", ")}")
+                    if (node.description.isNotBlank()) {
+                        sb.appendLine("    Description: ${node.description}")
+                    }
+                }
+                else -> {
+                    sb.appendLine("  - [${node.type}] ${node.name} (${node.id})")
+                    if (node.description.isNotBlank()) {
+                        sb.appendLine("    Description: ${node.description}")
+                    }
+                }
             }
         }
         sb.appendLine()

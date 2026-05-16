@@ -1306,7 +1306,7 @@ class WorkflowExecutor(private val context: Context) {
 
             return try {
                 val shellExecutor = WorkflowShellNodeExecutor.getInstance(context)
-                val result = shellExecutor.execute(node, nodeResults, triggerExtras)
+                val result = shellExecutor.execute(node, nodeResults, triggerExtras, workflow.id)
                 
                 when (result) {
                     is NodeExecutionState.Success -> {
@@ -1367,18 +1367,13 @@ class WorkflowExecutor(private val context: Context) {
 
             return try {
                 val skillExecutor = WorkflowSkillNodeExecutor.getInstance(context)
-                val result = skillExecutor.execute(node, workflow.id)
+                val result = skillExecutor.execute(node, nodeResults, triggerExtras, workflow.id)
                 
                 when (result) {
                     is NodeExecutionState.Success -> {
                         nodeResults[node.id] = result
                         onNodeStateChange(node.id, result)
-                        // 缓存skills供后续AINode使用
-                        try {
-                            skillExecutor.accumulateSkills(workflow.id, node, context)
-                        } catch (e: Exception) {
-                            AppLogger.w(TAG, "Failed to accumulate skills: ${e.message}")
-                        }
+
                         try {
                             webhookService.sendWorkflowNodeComplete(workflow.id, workflow.name, node.id, node.name, "Skill", true, result.result.take(500))
                         } catch (e: Exception) {

@@ -604,7 +604,6 @@ class StandardWorkflowTools(private val context: Context) {
                         val oauthAccountId = if (patchObj.has("oauthAccountId")) patchObj.optString("oauthAccountId", existingNode.accountId ?: "") else existingNode.accountId ?: ""
                         val timeout = if (patchObj.has("timeout")) patchObj.optInt("timeout", (existingNode.timeout / 1000).toInt()) else (existingNode.timeout / 1000).toInt()
 
-                        // Map JSON field names to IntegrationNode field names
                         val webhookConfig = if (webhookUrl.isNotBlank()) {
                             com.ai.assistance.operit.data.model.IntegrationWebhookConfig(
                                 url = webhookUrl,
@@ -635,6 +634,44 @@ class StandardWorkflowTools(private val context: Context) {
                             mcpServerConfig = mcpServerConfig,
                             accountId = if (oauthAccountId.isNotBlank()) oauthAccountId else null,
                             timeout = timeout.toLong() * 1000
+                        )
+                    }
+                    is com.ai.assistance.operit.data.model.AINode -> {
+                        val taskType = if (patchObj.has("taskType")) patchObj.optString("taskType", existingNode.taskType) else existingNode.taskType
+                        val modelId = if (patchObj.has("modelId")) patchObj.optString("modelId", existingNode.modelId) else existingNode.modelId
+                        val systemPrompt = if (patchObj.has("systemPrompt")) patchObj.optString("systemPrompt", existingNode.systemPrompt) else existingNode.systemPrompt
+                        val prompt = if (patchObj.has("prompt")) patchObj.optString("prompt", existingNode.prompt) else existingNode.prompt
+                        val enableTools = if (patchObj.has("enableTools")) patchObj.optBoolean("enableTools", existingNode.enableTools) else existingNode.enableTools
+                        val maxTokens = if (patchObj.has("maxTokens")) patchObj.optInt("maxTokens", existingNode.maxTokens) else existingNode.maxTokens
+                        val temperature = if (patchObj.has("temperature")) patchObj.optDouble("temperature", existingNode.temperature.toDouble()).toFloat() else existingNode.temperature
+                        val timeoutMs = if (patchObj.has("timeoutMs")) patchObj.optLong("timeoutMs", existingNode.timeoutMs) else existingNode.timeoutMs
+                        existingNode.copy(
+                            name = name, description = description, position = position,
+                            taskType = taskType, modelId = modelId, systemPrompt = systemPrompt,
+                            prompt = prompt, enableTools = enableTools, maxTokens = maxTokens,
+                            temperature = temperature, timeoutMs = timeoutMs
+                        )
+                    }
+                    is com.ai.assistance.operit.data.model.ExecuteShellNode -> {
+                        val command = if (patchObj.has("command")) patchObj.optString("command", existingNode.command) else existingNode.command
+                        val workingDir = if (patchObj.has("workingDir")) patchObj.optString("workingDir", existingNode.workingDir) else existingNode.workingDir
+                        val timeoutMs = if (patchObj.has("timeoutMs")) patchObj.optLong("timeoutMs", existingNode.timeoutMs) else existingNode.timeoutMs
+                        val captureStderr = if (patchObj.has("captureStderr")) patchObj.optBoolean("captureStderr", existingNode.captureStderr) else existingNode.captureStderr
+                        existingNode.copy(
+                            name = name, description = description, position = position,
+                            command = command, workingDir = workingDir,
+                            timeoutMs = timeoutMs, captureStderr = captureStderr
+                        )
+                    }
+                    is com.ai.assistance.operit.data.model.SkillNode -> {
+                        val skillNamesArray = patchObj.optJSONArray("skillNames")
+                        val skillNames = if (skillNamesArray != null) {
+                            (0 until skillNamesArray.length()).map { skillNamesArray.getString(it) }
+                        } else existingNode.skillNames
+                        val extraInstructions = if (patchObj.has("extraInstructions")) patchObj.optString("extraInstructions", existingNode.extraInstructions) else existingNode.extraInstructions
+                        existingNode.copy(
+                            name = name, description = description, position = position,
+                            skillNames = skillNames, extraInstructions = extraInstructions
                         )
                     }
                 }

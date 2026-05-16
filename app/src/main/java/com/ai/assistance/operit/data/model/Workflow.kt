@@ -290,9 +290,12 @@ data class IntegrationRetryConfig(
 sealed class ParameterValue {
     @Serializable
     data class StaticValue(val value: String) : ParameterValue()
-    
+
     @Serializable
     data class NodeReference(val nodeId: String) : ParameterValue()
+
+    @Serializable
+    data class TriggerExtra(val key: String, val defaultValue: String? = null) : ParameterValue()
 }
 
 /**
