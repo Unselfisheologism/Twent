@@ -569,9 +569,17 @@ fun WorkflowDetailScreen(
                                         }
                                     }
                                 }
-                            }
-                        }
-                    },
+}
+            ) {
+                Text(
+                    text = when {
+                        isEditMode -> stringResource(R.string.settings_save)
+                        needsDedicatedDialog -> stringResource(R.string.workflow_configure_node)
+                        else -> stringResource(R.string.add_action)
+                    }
+                )
+            }
+        },
                     confirmButton = {
                         TextButton(onClick = { showTriggerResult = null }) {
                             Text(stringResource(R.string.confirm))
