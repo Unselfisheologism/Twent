@@ -574,6 +574,7 @@ fun WorkflowDetailScreen(
                     Text(stringResource(R.string.confirm))
                 }
             },
+            )
             // 错误提示
             viewModel.error?.let { error ->
                 AlertDialog(
