@@ -571,13 +571,6 @@ fun WorkflowDetailScreen(
             }
                         }
                     }
-            confirmButton = {
-                TextButton(onClick = { showTriggerResult = null }) {
-                    Text(stringResource(R.string.confirm))
-                }
-            }
-            )
-            // 错误提示
             viewModel.error?.let { error ->
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
@@ -2539,6 +2532,7 @@ fun NodeDialog(
                         pendingNodeType = nodeType
                         showDedicatedDialogForCreate = true
                         onDismiss()
+                    }
                     } else {
                         // 自动生成节点名称
                         val nodeName = if (name.isBlank()) {
@@ -2789,13 +2783,6 @@ fun NodeDialog(
                     } else {
                         onDismiss()
                     }
-            }
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_action))
-            }
-        }
-    )
     
     // 定时配置对话框
     if (showScheduleDialog) {
