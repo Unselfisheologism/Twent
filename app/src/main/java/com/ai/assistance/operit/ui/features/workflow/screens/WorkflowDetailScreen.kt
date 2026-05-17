@@ -568,26 +568,12 @@ fun WorkflowDetailScreen(
                                             )
                                         }
                                     }
-                                }
-}
-            ) {
-                Text(
-                    text = when {
-                        isEditMode -> stringResource(R.string.settings_save)
-                        needsDedicatedDialog -> stringResource(R.string.workflow_configure_node)
-                        else -> stringResource(R.string.add_action)
-                    }
-                )
-            }
-        },
-                    confirmButton = {
-                        TextButton(onClick = { showTriggerResult = null }) {
-                            Text(stringResource(R.string.confirm))
-                        }
-                    }
-                )
-            }
-
+            },
+            confirmButton = {
+                TextButton(onClick = { showTriggerResult = null }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
             // 错误提示
             viewModel.error?.let { error ->
                 AlertDialog(
@@ -2800,17 +2786,7 @@ fun NodeDialog(
                     } else {
                         onDismiss()
                     }
-                }
-            ) {
-                Text(
-                    text = when {
-                        isEditMode -> stringResource(R.string.settings_save)
-                        needsDedicatedDialog -> stringResource(R.string.workflow_configure_node)
-                        else -> stringResource(R.string.add_action)
-                    }
-                )
-            }
-        },
+            },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel_action))
