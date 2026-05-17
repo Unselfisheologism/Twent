@@ -568,7 +568,7 @@ fun WorkflowDetailScreen(
                                             )
                                         }
                                     }
-            },
+            }
             confirmButton = {
                 TextButton(onClick = { showTriggerResult = null }) {
                     Text(stringResource(R.string.confirm))
@@ -2787,7 +2787,7 @@ fun NodeDialog(
                     } else {
                         onDismiss()
                     }
-            ,
+            }
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel_action))
