@@ -2532,7 +2532,6 @@ fun NodeDialog(
                         pendingNodeType = nodeType
                         showDedicatedDialogForCreate = true
                         onDismiss()
-                    }
                     } else {
                         // 自动生成节点名称
                         val nodeName = if (name.isBlank()) {
