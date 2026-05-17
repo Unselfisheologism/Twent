@@ -569,6 +569,8 @@ fun WorkflowDetailScreen(
                                         }
                                     }
             }
+                        }
+                    }
             confirmButton = {
                 TextButton(onClick = { showTriggerResult = null }) {
                     Text(stringResource(R.string.confirm))
