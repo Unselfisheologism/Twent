@@ -18,7 +18,7 @@ import com.ai.assistance.operit.data.skill.SkillRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SkillNodeConfigDialog(
     node: SkillNode,
