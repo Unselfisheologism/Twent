@@ -45,7 +45,7 @@ fun ExecuteShellNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty())
+                    text = if (currentNode.name.isEmpty())
                         stringResource(R.string.shell_node_dialog_create_title)
                     else
                         stringResource(R.string.shell_node_dialog_edit_title),

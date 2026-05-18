@@ -18,7 +18,6 @@ import com.ai.assistance.operit.data.model.SkillNode
 import com.ai.assistance.operit.data.skill.SkillRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -76,8 +75,8 @@ fun SkillNodeConfigDialog(
                     skillRepo.getAvailableSkillPackages()[selectedSkill]
                 }
                 if (skillPackage != null) {
-                    val skillDir = skillPackage.skillDir
-                    val skillMdFile = File(skillDir, "SKILL.md")
+                    val skillDir = skillPackage.directory
+                    val skillMdFile = java.io.File(skillDir, "SKILL.md")
                     skillMarkdownContent = if (skillMdFile.exists()) {
                         withContext(Dispatchers.IO) {
                             skillMdFile.readText()

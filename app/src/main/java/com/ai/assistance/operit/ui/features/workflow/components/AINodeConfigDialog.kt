@@ -18,7 +18,6 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.integration.ComposioApiService
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.data.model.AINode
-import com.ai.assistance.operit.services.core.ApiConfigDelegate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +43,7 @@ fun AINodeConfigDialog(
     var enableTools by remember { mutableStateOf(currentNode.enableTools) }
     var selectedTools by remember { mutableStateOf(currentNode.enabledTools.toMutableList()) }
     var taskTypeExpanded by remember { mutableStateOf(false) }
-    var modelExpanded by remember { mutableStateOf(false) }
+    var useCustomModel by remember { mutableStateOf(currentNode.modelId.isNotBlank()) }
 
     var showSystemPromptSection by remember { mutableStateOf(currentNode.systemPrompt.isNotEmpty()) }
     var showAdvancedSection by remember { mutableStateOf(false) }
@@ -55,14 +54,6 @@ fun AINodeConfigDialog(
     val composioApi = remember { ComposioApiService.getInstance(context) }
     var availableToolkits by remember { mutableStateOf<List<ToolkitDefinition>>(emptyList()) }
     var toolkitLoadError by remember { mutableStateOf<String?>(null) }
-
-    // Get current model from ApiConfigDelegate
-    val apiConfigDelegate = remember { ApiConfigDelegate.getInstance(context) }
-    val currentModelName by apiConfigDelegate.modelName.collectAsState()
-
-    LaunchedEffect(Unit) {
-        apiConfigDelegate.initialize()
-    }
 
     LaunchedEffect(enableTools) {
         if (enableTools) {
@@ -82,7 +73,6 @@ fun AINodeConfigDialog(
     )
 
     val taskTypeDisplayName = taskTypeOptions.find { it.first == taskType }?.second ?: "Text Generation"
-    val modelDisplayName = if (modelId.isBlank()) "Default (${currentModelName.ifBlank { "kilo-auto/free" }})" else modelId
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -157,43 +147,37 @@ fun AINodeConfigDialog(
                     }
                 }
 
-                ExposedDropdownMenuBox(
-                    expanded = modelExpanded,
-                    onExpandedChange = { modelExpanded = it }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = modelDisplayName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.workflow_ai_model_label)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    Text(
+                        text = "Use Custom Model",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    ExposedDropdownMenu(
-                        expanded = modelExpanded,
-                        onDismissRequest = { modelExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Default (${currentModelName.ifBlank { "kilo-auto/free" }})") },
-                            onClick = {
-                                modelId = ""
-                                modelExpanded = false
-                            },
-                            leadingIcon = {
-                                if (modelId.isBlank()) {
-                                    Icon(Icons.Default.Check, contentDescription = null)
-                                }
-                            }
-                        )
-                        HorizontalDivider()
-                        OutlinedTextField(
-                            value = modelId,
-                            onValueChange = { modelId = it },
-                            label = { Text("Custom Model ID") },
-                            singleLine = true,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
+                    Spacer(Modifier.weight(1f))
+                    Switch(
+                        checked = useCustomModel,
+                        onCheckedChange = { useCustomModel = it }
+                    )
+                }
+
+                if (useCustomModel) {
+                    OutlinedTextField(
+                        value = modelId,
+                        onValueChange = { modelId = it },
+                        label = { Text("Custom Model ID") },
+                        placeholder = { Text("kilo-auto/free") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        text = "Using default model: kilo-auto/free",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
 
                 Row(
@@ -479,7 +463,7 @@ fun AINodeConfigDialog(
                         name = name.ifEmpty { "AI Node" },
                         description = description,
                         taskType = taskType,
-                        modelId = modelId,
+                        modelId = if (useCustomModel) modelId else "",
                         prompt = prompt,
                         systemPrompt = systemPrompt,
                         temperature = temperature,
