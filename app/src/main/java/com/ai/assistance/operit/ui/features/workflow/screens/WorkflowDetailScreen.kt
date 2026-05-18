@@ -68,9 +68,6 @@ import com.ai.assistance.operit.ui.features.workflow.components.AddMCPServerDial
 import com.ai.assistance.operit.ui.features.workflow.components.NodeActionMenuDialog
 import com.ai.assistance.operit.ui.features.workflow.components.ScheduleConfigDialog
 import com.ai.assistance.operit.ui.features.workflow.components.IntegrationNodeConfigDialog
-import com.ai.assistance.operit.data.model.AINode
-import com.ai.assistance.operit.data.model.ExecuteShellNode
-import com.ai.assistance.operit.data.model.SkillNode
 import com.ai.assistance.operit.core.workflow.NodeExecutionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -195,6 +192,10 @@ fun WorkflowDetailScreen(
     var showConnectionMenu by remember { mutableStateOf<String?>(null) }
     var showEditNodeDialog by remember { mutableStateOf<WorkflowNode?>(null) }
     var showIntegrationNodeConfigDialog by remember { mutableStateOf(false) }
+    var showDedicatedDialogForCreate by remember { mutableStateOf(false) }
+    var pendingNodeName by remember { mutableStateOf("") }
+    var pendingNodeDescription by remember { mutableStateOf("") }
+    var pendingNodeType by remember { mutableStateOf("") }
     var isFabMenuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(workflowId) {
@@ -567,19 +568,9 @@ fun WorkflowDetailScreen(
                                             )
                                         }
                                     }
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { showTriggerResult = null }) {
-                            Text(stringResource(R.string.confirm))
+            }
                         }
                     }
-                )
-            }
-
-            // 错误提示
             viewModel.error?.let { error ->
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
@@ -733,6 +724,96 @@ fun WorkflowDetailScreen(
                 }
             }
 
+            // 创建模式下：ai/shell/skill/integration 类型通过专用配置对话框完成
+            if (showDedicatedDialogForCreate && workflow != null) {
+                when (pendingNodeType) {
+                    "ai" -> {
+                        AINodeConfigDialog(
+                            node = null,
+                            initialName = pendingNodeName,
+                            initialDescription = pendingNodeDescription,
+                            onDismiss = {
+                                showDedicatedDialogForCreate = false
+                                pendingNodeName = ""
+                                pendingNodeDescription = ""
+                                pendingNodeType = ""
+                            },
+                            onSave = { node ->
+                                viewModel.addNode(workflowId, node) {
+                                    showDedicatedDialogForCreate = false
+                                    pendingNodeName = ""
+                                    pendingNodeDescription = ""
+                                    pendingNodeType = ""
+                                }
+                            }
+                        )
+                    }
+                    "execute_shell" -> {
+                        ExecuteShellNodeConfigDialog(
+                            node = null,
+                            initialName = pendingNodeName,
+                            initialDescription = pendingNodeDescription,
+                            onDismiss = {
+                                showDedicatedDialogForCreate = false
+                                pendingNodeName = ""
+                                pendingNodeDescription = ""
+                                pendingNodeType = ""
+                            },
+                            onSave = { node ->
+                                viewModel.addNode(workflowId, node) {
+                                    showDedicatedDialogForCreate = false
+                                    pendingNodeName = ""
+                                    pendingNodeDescription = ""
+                                    pendingNodeType = ""
+                                }
+                            }
+                        )
+                    }
+                    "skill" -> {
+                        SkillNodeConfigDialog(
+                            node = null,
+                            initialName = pendingNodeName,
+                            initialDescription = pendingNodeDescription,
+                            onDismiss = {
+                                showDedicatedDialogForCreate = false
+                                pendingNodeName = ""
+                                pendingNodeDescription = ""
+                                pendingNodeType = ""
+                            },
+                            onSave = { node ->
+                                viewModel.addNode(workflowId, node) {
+                                    showDedicatedDialogForCreate = false
+                                    pendingNodeName = ""
+                                    pendingNodeDescription = ""
+                                    pendingNodeType = ""
+                                }
+                            }
+                        )
+                    }
+                    "integration" -> {
+                        IntegrationNodeConfigDialog(
+                            node = null,
+                            initialName = pendingNodeName,
+                            initialDescription = pendingNodeDescription,
+                            onDismiss = {
+                                showDedicatedDialogForCreate = false
+                                pendingNodeName = ""
+                                pendingNodeDescription = ""
+                                pendingNodeType = ""
+                            },
+                            onConfirm = { node ->
+                                viewModel.addNode(workflowId, node) {
+                                    showDedicatedDialogForCreate = false
+                                    pendingNodeName = ""
+                                    pendingNodeDescription = ""
+                                    pendingNodeType = ""
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             // 连接菜单对话框
             showConnectionMenu?.let { sourceNodeId ->
                 val sourceNode = workflow?.nodes?.find { it.id == sourceNodeId }
@@ -812,12 +893,25 @@ fun NodeDialog(
     node: WorkflowNode? = null, // null 表示创建新节点，非 null 表示编辑
     workflow: Workflow, // 用于获取前置节点信息
     onDismiss: () -> Unit,
-    onConfirm: (WorkflowNode) -> Unit
+    onConfirm: (WorkflowNode) -> Unit,
+    onRequestDedicatedDialog: ((nodeType: String, name: String, description: String) -> Unit)? = null
 ) {
     // 判断是编辑还是创建模式
     val isEditMode = node != null
-    
-    // 初始化节点类型
+
+    // For create mode with types that need dedicated dialogs, show a "Configure" button
+    // instead of confirming here. The dedicated dialog handles full config.
+    val needsDedicatedDialog = !isEditMode && when (node) {
+        is TriggerNode -> false
+        is ExecuteNode -> false
+        is ConditionNode -> false
+        is LogicNode -> false
+        is ExtractNode -> false
+        is MCPNode -> false
+        is DataAINode, is DataExecuteShellNode, is DataSkillNode, is IntegrationNode -> true
+        else -> false
+    }
+
     val initialNodeType = when (node) {
         is TriggerNode -> "trigger"
         is ExecuteNode -> "execute"
@@ -826,6 +920,9 @@ fun NodeDialog(
         is ExtractNode -> "extract"
         is MCPNode -> "mcp"
         is IntegrationNode -> "integration"
+        is DataAINode -> "ai"
+        is DataExecuteShellNode -> "execute_shell"
+        is DataSkillNode -> "skill"
         else -> "trigger"
     }
     
@@ -2429,35 +2526,36 @@ fun NodeDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    // 自动生成节点名称
-                    val nodeName = if (name.isBlank()) {
-                        when (nodeType) {
-                            "trigger" -> {
-                                // 根据触发类型生成名称
-                                when (triggerType) {
-                                    "manual" -> triggerTypes["manual"].orEmpty()
-                                    "schedule" -> triggerTypes["schedule"].orEmpty()
-                                    "tasker" -> triggerTypes["tasker"].orEmpty()
-                                    "intent" -> triggerTypes["intent"].orEmpty()
-                                    "speech" -> triggerTypes["speech"].orEmpty()
-                                    else -> context.getString(R.string.workflow_trigger_fallback)
-                                }
-                            }
-                            "execute" -> {
-                                // 根据动作类型生成名称
-                                actionType.takeIf { it.isNotBlank() } ?: context.getString(R.string.workflow_default_execute_action)
-                            }
-                            "condition" -> context.getString(R.string.workflow_node_default_name_condition)
-                            "logic" -> context.getString(R.string.workflow_node_default_name_logic)
-                            "extract" -> context.getString(R.string.workflow_node_default_name_extract)
-                            "integration" -> context.getString(R.string.workflow_node_type_integration)
-                            else -> nodeTypes[nodeType] ?: context.getString(R.string.workflow_node_fallback)
-                        }
+                    if (needsDedicatedDialog) {
+                        pendingNodeName = name.ifBlank { nodeTypes[nodeType] ?: "New Node" }
+                        pendingNodeDescription = description
+                        pendingNodeType = nodeType
+                        showDedicatedDialogForCreate = true
+                        onDismiss()
                     } else {
-                        name
-                    }
-                    
-                    val resultNode: WorkflowNode = if (isEditMode && node != null) {
+                        // 自动生成节点名称
+                        val nodeName = if (name.isBlank()) {
+                            when (nodeType) {
+                                "trigger" -> {
+                                    when (triggerType) {
+                                        "manual" -> triggerTypes["manual"].orEmpty()
+                                        "schedule" -> triggerTypes["schedule"].orEmpty()
+                                        "tasker" -> triggerTypes["tasker"].orEmpty()
+                                        "intent" -> triggerTypes["intent"].orEmpty()
+                                        "speech" -> triggerTypes["speech"].orEmpty()
+                                        else -> context.getString(R.string.workflow_trigger_fallback)
+                                    }
+                                }
+                                "execute" -> actionType.takeIf { it.isNotBlank() } ?: context.getString(R.string.workflow_default_execute_action)
+                                "condition" -> context.getString(R.string.workflow_node_default_name_condition)
+                                "logic" -> context.getString(R.string.workflow_node_default_name_logic)
+                                "extract" -> context.getString(R.string.workflow_node_default_name_extract)
+                                "integration" -> context.getString(R.string.workflow_node_type_integration)
+                                else -> nodeTypes[nodeType] ?: context.getString(R.string.workflow_node_fallback)
+                            }
+                        } else { name }
+
+                        val resultNode: WorkflowNode? = if (isEditMode && node != null) {
                         // 编辑模式：更新现有节点
                         when (node) {
                             is TriggerNode -> node.copy(
@@ -2668,50 +2766,22 @@ fun NodeDialog(
                                     },
                                 position = smartPosition
                             )
-                            // IntegrationNode 创建：使用专门的配置对话框处理
-                            "integration" -> IntegrationNode(
-                                name = nodeName,
-                                description = description,
-                                enabled = true,
-                                integrationType = com.ai.assistance.operit.data.model.IntegrationNodeConstants.TYPE_TOOL,
-                                toolkit = "",
-                                actionId = "",
-                                parameters = emptyMap(),
-                                position = smartPosition
-                            )
-                            // AINode 创建：使用专门的配置对话框处理
-                            "ai" -> DataAINode(
-                                name = nodeName,
-                                description = description,
-                                position = smartPosition
-                            )
-                            // ExecuteShellNode 创建：使用专门的配置对话框处理
-                            "execute_shell" -> DataExecuteShellNode(
-                                name = nodeName,
-                                description = description,
-                                position = smartPosition
-                            )
-                            // SkillNode 创建：使用专门的配置对话框处理
-                            "skill" -> DataSkillNode(
-                                name = nodeName,
-                                description = description,
-                                position = smartPosition
-                            )
+                            // IntegrationNode 创建：使用专门的配置对话框处理 → return null
+                            "integration" -> null
+                            // AINode 创建：使用专门的配置对话框处理 → return null
+                            "ai" -> null
+                            // ExecuteShellNode 创建：使用专门的配置对话框处理 → return null
+                            "execute_shell" -> null
+                            // SkillNode 创建：使用专门的配置对话框处理 → return null
+                            "skill" -> null
                             else -> TriggerNode(name = nodeName, description = description, position = smartPosition)
                         }
                     }
-                    onConfirm(resultNode)
-                }
-            ) {
-                Text(if (isEditMode) stringResource(R.string.settings_save) else stringResource(R.string.add_action))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_action))
-            }
-        }
-    )
+                    if (resultNode != null) {
+                        onConfirm(resultNode)
+                    } else {
+                        onDismiss()
+                    }
     
     // 定时配置对话框
     if (showScheduleDialog) {

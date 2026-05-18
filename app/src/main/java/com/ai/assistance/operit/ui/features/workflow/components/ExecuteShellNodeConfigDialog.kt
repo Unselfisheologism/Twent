@@ -16,14 +16,17 @@ import com.ai.assistance.operit.data.model.ExecuteShellNode
 
 @Composable
 fun ExecuteShellNodeConfigDialog(
-    node: ExecuteShellNode,
+    node: ExecuteShellNode? = null,
+    initialName: String = "",
+    initialDescription: String = "",
     onDismiss: () -> Unit,
     onSave: (ExecuteShellNode) -> Unit
 ) {
-    var name by remember { mutableStateOf(node.name) }
-    var description by remember { mutableStateOf(node.description) }
+    val currentNode = remember { node ?: ExecuteShellNode() }
+    var name by remember { mutableStateOf(initialName.ifEmpty { currentNode.name }) }
+    var description by remember { mutableStateOf(initialDescription.ifEmpty { currentNode.description }) }
     var command by remember { mutableStateOf(node.command) }
-    var workingDir by remember { mutableStateOf(node.workingDir ?: "") }
+    var workingDir by remember { mutableStateOf(currentNode.workingDir.ifEmpty { "" }) }
     var timeoutMs by remember { mutableStateOf(node.timeoutMs.toString()) }
     var captureStderr by remember { mutableStateOf(node.captureStderr) }
 
@@ -42,7 +45,7 @@ fun ExecuteShellNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty())
+                    text = if (currentNode.name.isEmpty())
                         stringResource(R.string.shell_node_dialog_create_title)
                     else
                         stringResource(R.string.shell_node_dialog_edit_title),
@@ -121,11 +124,11 @@ fun ExecuteShellNodeConfigDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val updatedNode = node.copy(
+                    val updatedNode = currentNode.copy(
                         name = name.ifEmpty { "Shell Node" },
                         description = description,
                         command = command,
-                        workingDir = workingDir.ifEmpty { "" },
+                        workingDir = workingDir,
                         timeoutMs = timeoutMs.toLongOrNull() ?: 60000L,
                         captureStderr = captureStderr
                     )

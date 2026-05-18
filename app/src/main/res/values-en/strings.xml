@@ -6136,12 +6136,20 @@
     <string name="workflow_ai_timeout_label">Timeout</string>
     <string name="workflow_ai_enable_tools_label">Enable Tool Calling</string>
     <string name="workflow_ai_enable_tools_desc">Allow AI to call tools during execution</string>
+    <string name="workflow_ai_input_files_label">Input Files</string>
+    <string name="workflow_ai_input_file_label">Input File</string>
+    <string name="workflow_ai_image_file_label">Image File</string>
+    <string name="workflow_ai_document_file_label">Document File</string>
+    <string name="workflow_ai_input_file_hint">Node reference (e.g. {node_id.output}) or file path</string>
+    <string name="workflow_ai_add_file">Add File</string>
+    <string name="workflow_ai_supported_formats">Supported: JPG, PNG, GIF, WebP, BMP, TXT, PDF</string>
     <string name="workflow_ai_select_tools_label">Select Toolkits &amp; Tools</string>
+    <string name="workflow_shell_command_label">Command</string>
     <string name="workflow_ai_loading_toolkits">Loading toolkits...</string>
     <string name="workflow_ai_no_toolkits">No toolkits available</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
-    <string name="workflow_shell_command_label">Command</string>
+    <string name="workflow_configure_node">Configure</string>
     <string name="workflow_shell_working_dir_label">Working Directory</string>
     <string name="workflow_shell_timeout_label">Timeout</string>
     <string name="workflow_shell_timeout_value">%d seconds</string>
@@ -6150,6 +6158,7 @@
     <string name="workflow_skill_selected_label">Selected (%d)</string>
     <string name="workflow_skill_empty_hint">Tap skills below to add them</string>
     <string name="workflow_skill_available_label">Available Skills</string>
+    <string name="workflow_skill_select_skill">Select Skill</string>
     <string name="workflow_skill_extra_instructions_label">Extra Instructions</string>
     <string name="workflow_skill_extra_instructions_hint">Additional instructions appended to skill content</string>
 </resources>

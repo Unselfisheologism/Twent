@@ -41,7 +41,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var statusTextView: TextView? = null
     private var pausePlayButton: android.widget.ImageButton? = null
     private var simplifyButton: android.widget.ImageButton? = null
-    
+
     // Top-left control buttons (same layer as shimmer glow)
     private var topLeftControlLayout: android.widget.LinearLayout? = null
     private var stopTaskButton: android.widget.ImageButton? = null
@@ -56,7 +56,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
     private var onSimplifyPageClicked: (() -> Unit)? = null
     private var onPausePlayClicked: ((isPaused: Boolean) -> Unit)? = null
     private var isAudioPaused = false
-    
+
     // Callbacks for attach functionality
     private var onAttachClicked: (() -> Unit)? = null
     private var onAttachImageClicked: (() -> Unit)? = null
@@ -330,7 +330,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
         onActivated: () -> Unit,
         onSubmit: (String) -> Unit,
         onOutsideTap: () -> Unit,
-        placeholderText: String = "Ask Operit",
+        placeholderText: String = "Ask Twent",
         onAttachClicked: (() -> Unit)? = null,
         onAttachImageClicked: (() -> Unit)? = null,
         onAttachFileClicked: (() -> Unit)? = null,
@@ -361,7 +361,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
 
             val inflater = LayoutInflater.from(context)
             inputBoxView = inflater.inflate(R.layout.overlay_input_box, null)
-            
+
             // Store the callbacks for later use
             this.onAttachClicked = onAttachClicked
             this.onAttachImageClicked = onAttachImageClicked
@@ -426,7 +426,7 @@ class VisualFeedbackManager private constructor(private val context: Context) {
                 onActivated()
                 false
             }
-            
+
             // Set up attach button - shows selection menu
             val attachButton = inputBoxView?.findViewById<android.widget.ImageButton>(R.id.attachButton)
             attachButton?.setOnClickListener {
@@ -584,7 +584,7 @@ private var edgeGlowViewTop: View? = null
             }
 
             Log.d(TAG, "=== showEdgeGlowInternal START ===")
-            
+
             val glowThickness = (4 * context.resources.displayMetrics.density).toInt()
             val displayMetrics = context.resources.displayMetrics
             val screenWidth = displayMetrics.widthPixels
@@ -1028,7 +1028,7 @@ edgeGlowViewLeft = null
                 "🎵  Audio",
                 "📱  Current Screen"
             )
-            
+
             // Create a custom view for the menu
             val layout = android.widget.LinearLayout(context).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
@@ -1037,7 +1037,7 @@ edgeGlowViewLeft = null
                     setColor(0xFF1A1A2E.toInt())
                 }
                 setPadding(0, 0, 0, 0)
-                
+
                 // Title
                 addView(android.widget.TextView(context).apply {
                     text = "📎 Attach Content"
@@ -1046,7 +1046,7 @@ edgeGlowViewLeft = null
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     setPadding(48, 32, 48, 24)
                 })
-                
+
                 // Options
                 options.forEachIndexed { index, option ->
                     addView(android.widget.TextView(context).apply {
@@ -1066,7 +1066,7 @@ edgeGlowViewLeft = null
                         }
                     })
                 }
-                
+
                 // Cancel button
                 addView(android.widget.TextView(context).apply {
                     text = "Cancel"
@@ -1079,12 +1079,12 @@ edgeGlowViewLeft = null
                     }
                 })
             }
-            
+
             // Create AlertDialog with custom view
             val dialog = android.app.AlertDialog.Builder(context)
                 .setView(layout)
                 .create()
-            
+
             dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
             dialog.window?.setLayout(
                 (context.resources.displayMetrics.widthPixels * 0.85).toInt(),
@@ -1093,7 +1093,7 @@ edgeGlowViewLeft = null
             dialog.show()
         }
     }
-    
+
     /**
      * Capture current screen content using the same logic as Simplify Page button
      */
@@ -1101,15 +1101,15 @@ edgeGlowViewLeft = null
         try {
             // Use FullPageCapture to get screen content (same as simplify page)
             val fullPageCapture = com.ai.assistance.operit.voice.utilities.FullPageCapture.getInstance(context)
-            
+
             // Get screen text content
             val screenText = fullPageCapture.getCurrentScreenText()
-            
+
             // Notify that screen content is captured
             mainHandler.post {
                 android.widget.Toast.makeText(context, "Screen content captured (${screenText.length} chars)", android.widget.Toast.LENGTH_SHORT).show()
             }
-            
+
             // The actual attachment would be handled by the callback in ConversationalAgentService
             onAttachScreenClicked?.invoke()
         } catch (e: Exception) {
@@ -1119,7 +1119,7 @@ edgeGlowViewLeft = null
             }
         }
     }
-    
+
     /**
      * Check if audio is currently paused
      */
@@ -1132,7 +1132,7 @@ edgeGlowViewLeft = null
         isAudioPaused = false
         pausePlayButton?.setImageResource(android.R.drawable.ic_media_pause)
     }
-    
+
     /**
      * Show top-left control buttons (stop and pause/play) during ongoing tasks
      * These buttons are now part of the edge glow layer to ensure they're always visible
@@ -1248,7 +1248,7 @@ edgeGlowViewLeft = null
             }
         }
     }
-    
+
     /**
      * Hide top-left control buttons (stop and pause/play)
      */
@@ -1278,11 +1278,11 @@ edgeGlowViewLeft = null
         mainHandler.post {
             val layout = topLeftControlLayout ?: return@post
             if (!layout.isAttachedToWindow) return@post
-            
+
             try {
                 // Remove and re-add to bring to front
                 windowManager.removeView(layout)
-                
+
                 // Re-add with same parameters
                 val density = context.resources.displayMetrics.density
                 val params = WindowManager.LayoutParams(
@@ -1299,7 +1299,7 @@ edgeGlowViewLeft = null
                 }
                 params.x = (16 * density).toInt()
                 params.y = (40 * density).toInt()
-                
+
                 windowManager.addView(layout, params)
                 Log.d(TAG, "Top-left task controls brought to front.")
             } catch (e: Exception) {
@@ -1307,7 +1307,7 @@ edgeGlowViewLeft = null
             }
         }
     }
-    
+
     /**
      * Update the pause/play button icon
      */

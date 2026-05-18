@@ -22,13 +22,15 @@ import com.ai.assistance.operit.data.model.AINode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AINodeConfigDialog(
-    node: AINode,
+    node: AINode? = null,
+    initialName: String = "",
+    initialDescription: String = "",
     onDismiss: () -> Unit,
     onSave: (AINode) -> Unit
 ) {
-    val currentNode = remember { node }
-    var name by remember { mutableStateOf(currentNode.name) }
-    var description by remember { mutableStateOf(currentNode.description) }
+    val currentNode = remember { node ?: AINode() }
+    var name by remember { mutableStateOf(initialName.ifEmpty { currentNode.name }) }
+    var description by remember { mutableStateOf(initialDescription.ifEmpty { currentNode.description }) }
     var taskType by remember { mutableStateOf(currentNode.taskType) }
     var prompt by remember { mutableStateOf(currentNode.prompt) }
     var systemPrompt by remember { mutableStateOf(currentNode.systemPrompt) }
@@ -41,6 +43,8 @@ fun AINodeConfigDialog(
 
     var showSystemPromptSection by remember { mutableStateOf(currentNode.systemPrompt.isNotEmpty()) }
     var showAdvancedSection by remember { mutableStateOf(false) }
+    var showInputFilesSection by remember { mutableStateOf(currentNode.inputFiles.isNotEmpty()) }
+    var inputFiles by remember { mutableStateOf(currentNode.inputFiles.toMutableList()) }
 
     // Load toolkits for tool selection
     val context = LocalContext.current
@@ -82,7 +86,7 @@ fun AINodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
                            else stringResource(R.string.ai_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -137,6 +141,80 @@ fun AINodeConfigDialog(
                                 }
                             )
                         }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.workflow_ai_input_files_label),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Switch(
+                        checked = showInputFilesSection,
+                        onCheckedChange = {
+                            showInputFilesSection = it
+                            if (it && inputFiles.isEmpty()) {
+                                inputFiles.add("")
+                            }
+                        }
+                    )
+                }
+
+                if (showInputFilesSection) {
+                    val fileLabel = when (taskType) {
+                        "analyze_image" -> stringResource(R.string.workflow_ai_image_file_label)
+                        "embed" -> stringResource(R.string.workflow_ai_document_file_label)
+                        else -> stringResource(R.string.workflow_ai_input_file_label)
+                    }
+                    if (taskType == "analyze_image") {
+                        Text(
+                            text = stringResource(R.string.workflow_ai_supported_formats),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    inputFiles.forEachIndexed { index, filePath ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = filePath,
+                                onValueChange = { inputFiles[index] = it },
+                                label = { Text("$fileLabel ${index + 1}") },
+                                placeholder = { Text(stringResource(R.string.workflow_ai_input_file_hint)) },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = {
+                                    if (inputFiles.size > 1) {
+                                        inputFiles.removeAt(index)
+                                    } else {
+                                        inputFiles[index] = ""
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.remove),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                    TextButton(
+                        onClick = { inputFiles.add("") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(R.string.workflow_ai_add_file))
                     }
                 }
 
@@ -355,7 +433,8 @@ fun AINodeConfigDialog(
                         maxTokens = maxTokens,
                         timeoutMs = timeoutMs,
                         enableTools = enableTools,
-                        enabledTools = selectedTools
+                        enabledTools = selectedTools,
+                        inputFiles = inputFiles.filter { it.isNotBlank() }
                     )
                     onSave(updatedNode)
                 }

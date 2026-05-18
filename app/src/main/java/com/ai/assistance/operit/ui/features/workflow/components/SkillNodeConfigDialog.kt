@@ -1,6 +1,5 @@
 package com.ai.assistance.operit.ui.features.workflow.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,20 +18,23 @@ import com.ai.assistance.operit.data.skill.SkillRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillNodeConfigDialog(
-    node: SkillNode,
+    node: SkillNode? = null,
+    initialName: String = "",
+    initialDescription: String = "",
     onDismiss: () -> Unit,
     onSave: (SkillNode) -> Unit
 ) {
     val context = LocalContext.current
 
-    val currentNode = remember { node }
-    var name by remember { mutableStateOf(currentNode.name) }
-    var description by remember { mutableStateOf(currentNode.description) }
+    val currentNode = remember { node ?: SkillNode() }
+    var name by remember { mutableStateOf(initialName.ifEmpty { currentNode.name }) }
+    var description by remember { mutableStateOf(initialDescription.ifEmpty { currentNode.description }) }
     var skillNames by remember { mutableStateOf(currentNode.skillNames.toMutableList()) }
     var extraInstructions by remember { mutableStateOf(currentNode.extraInstructions) }
-    var showAvailableSkills by remember { mutableStateOf(false) }
+    var skillDropdownExpanded by remember { mutableStateOf(false) }
 
     // Real available skills loaded from SkillRepository
     var availableSkillNames by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -72,7 +74,7 @@ fun SkillNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
                            else stringResource(R.string.skill_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -102,131 +104,105 @@ fun SkillNodeConfigDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Selected skills
-                Text(
-                    text = stringResource(R.string.workflow_skill_selected_label),
-                    style = MaterialTheme.typography.labelLarge
-                )
-
-                if (skillNames.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.workflow_skill_empty_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    skillNames.forEach { skillName ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = skillName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
+                // Selected skills shown as chips
+                if (skillNames.isNotEmpty()) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        skillNames.forEach { skillName ->
+                            AssistChip(
                                 onClick = { skillNames.remove(skillName) },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
+                                label = { Text(skillName) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
                         }
                     }
                 }
 
-                // Toggle available skills
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showAvailableSkills = !showAvailableSkills },
-                    verticalAlignment = Alignment.CenterVertically
+                // Dropdown for selecting skills
+                ExposedDropdownMenuBox(
+                    expanded = skillDropdownExpanded,
+                    onExpandedChange = { skillDropdownExpanded = it }
                 ) {
-                    Text(
-                        text = stringResource(R.string.workflow_skill_available_label),
-                        style = MaterialTheme.typography.labelLarge
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.workflow_skill_select_skill)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = skillDropdownExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
-                    Spacer(Modifier.weight(1f))
-                    Icon(
-                        imageVector = if (showAvailableSkills) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null
-                    )
-                }
-
-                if (showAvailableSkills) {
-                    if (isLoadingSkills) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
+                    ExposedDropdownMenu(
+                        expanded = skillDropdownExpanded,
+                        onDismissRequest = { skillDropdownExpanded = false }
+                    ) {
+                        // Loading state
+                        if (isLoadingSkills) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row {
+                                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Loading...")
+                                    }
+                                },
+                                onClick = {},
+                                enabled = false
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.loading),
-                                style = MaterialTheme.typography.bodySmall
+                        } else if (skillsLoadError != null) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Error: $skillsLoadError",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                onClick = {},
+                                enabled = false
                             )
-                        }
-                    } else if (skillsLoadError != null) {
-                        val errorMsg = skillsLoadError!!
-                        Text(
-                            text = stringResource(R.string.error_loading_skills, errorMsg),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    } else if (availableSkillNames.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.no_skills_available),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        availableSkillNames
-                            .filter { it !in skillNames }
-                            .forEach { skillName ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (skillName !in skillNames) {
-                                                skillNames.add(skillName)
+                        } else if (availableSkillNames.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.no_skills_available)) },
+                                onClick = {},
+                                enabled = false
+                            )
+                        } else {
+                            availableSkillNames.forEach { skillName ->
+                                val isSelected = skillName in skillNames
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(skillName)
+                                            if (isSelected) {
+                                                Spacer(Modifier.weight(1f))
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
                                             }
                                         }
-                                        .padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = skillName,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
+                                    },
+                                    onClick = {
+                                        if (!isSelected) skillNames.add(skillName)
+                                    }
+                                )
                             }
+                        }
                     }
                 }
 

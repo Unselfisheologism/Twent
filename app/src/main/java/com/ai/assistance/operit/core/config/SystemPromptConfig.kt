@@ -35,7 +35,59 @@ When no external tool applies, choose by scenario:
 
 **Mini-App Creation**: Use `create_mini_app` for interactive tools, calculators, dashboards.
 
-**File Generation**: Generate professional files using Python + shell tools. Save to /sdcard/Download/."""
+**File Generation**: Generate professional files using Python + shell tools. Save to /sdcard/Download/.
+
+**GENERATIVE UI — OpenUI Lang**:
+You can generate interactive UI components (forms, tables, charts, dashboards, stat cards) that render directly in the chat.
+To emit UI code, wrap it in `<openui>...</openui>` tags at the END of your response (after all text/explanations).
+
+Example:
+```
+Here's your dashboard:
+
+<openui>
+$title = "Sales Dashboard"
+title = Text($title, "large", "bold")
+statGrid = StatGrid([StatCard("Revenue", "$12,450", "+8%"), StatCard("Users", "1,234", "+3%")])
+root = Card("Sales Overview", [title, Divider(), statGrid])
+</openui>
+```
+
+Available components (use `root = Card("Title", [...])` as the entry point):
+- `Card(title, children)` — Container with optional header
+- `Stack(children, direction="row"|"column", gap=8, wrap=true)` — Flex layout
+- `Text(value, size="sm"|"md"|"lg", style="bold"|"italic")` — Text labels
+- `Button(label, variant="primary"|"secondary"|"success"|"danger", onclick)` — Buttons
+- `Input(name, placeholder, type="text"|"number"|"email", value)` — Text inputs
+- `TextArea(name, placeholder, value)` — Multi-line input
+- `Select(name, options=[Option("v1","Label1"), Option("v2","Label2")], value)` — Dropdown
+- `Form(name, buttons, controls=[FormControl("Label", field)])` — Form container
+- `FormControl(label, field)` — Label + field pair
+- `Table(dataKey, columns=[Col("Name", "nameKey"), Col("Status", "statusKey")])` — Data table
+- `Col(label, dataKey)` — Table column definition
+- `StatCard(label, value, change)` — Metric display card
+- `StatGrid(children)` — Grid of StatCards
+- `Badge(text, variant="primary"|"success"|"warning"|"error")` — Tags/labels
+- `Tabs([TabItem("Tab1", [content]), TabItem("Tab2", [content])])` — Tab panel
+- `Accordion([AccordionItem("Section", [content])])` — Collapsible sections
+- `List(itemsKey)` — List of items
+- `Alert(text, type="success"|"error"|"info")` — Alert banner
+- `Callout(text, type="info"|"success"|"warning"|"error")` — Callout box
+- `ProgressBar(value, max=100)` — Progress indicator
+- `Divider()` — Horizontal separator
+- `EmptyState(icon, title, description)` — Empty placeholder
+- `Avatar(label, bg)` — User avatar initials
+- `CardHeader(title)` — Card header
+- `Buttons([btn1, btn2])` — Button row
+
+Component props use named arguments. Children can be inline or referenced variables.
+Use `$variable = "value"` for state variables. State changes trigger automatic re-render.
+
+IMPORTANT:
+- Always end with `root = Card("Title", [...])` as the outermost component
+- Put the `<openui>` block at the VERY END of your response
+- Do NOT wrap the openui tag in backticks or code fences
+- Keep code concise — prefer reference variables over inline children for reuse"""
 
     private const val TOOL_USAGE_GUIDELINES_EN = """TOOL USAGE:
 - CORRECT XML FORMAT for ALL tool calls:

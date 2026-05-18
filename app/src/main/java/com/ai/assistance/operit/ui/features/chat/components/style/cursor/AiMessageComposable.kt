@@ -16,12 +16,14 @@ import androidx.compose.runtime.setValue
 import com.ai.assistance.operit.ui.common.markdown.StreamMarkdownRendererState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.ui.common.markdown.StreamMarkdownRenderer
 import com.ai.assistance.operit.ui.features.chat.components.part.CustomXmlRenderer
 import com.ai.assistance.operit.ui.features.chat.components.part.ThinkToolsXmlNodeGrouper
+import com.ai.assistance.operit.ui.features.chat.components.part.GenerativeUiWebView
 import com.ai.assistance.operit.ui.features.chat.components.LinkPreviewDialog
 import com.ai.assistance.operit.util.markdown.toCharStream
 import com.ai.assistance.operit.util.stream.Stream
@@ -191,6 +193,18 @@ fun AiMessageComposable(
                     nodeGrouper = nodeGrouper,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     state = rendererState
+                )
+            }
+        }
+
+        // ── Generative UI (OpenUI Lang) — rendered after AI stream completes ──
+        // Only show when the message has extracted OpenUI code (set at stream completion)
+        message.generatedUiCode?.let { openUiCode ->
+            if (openUiCode.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                GenerativeUiWebView(
+                    openUiCode = openUiCode,
+                    isDarkTheme = backgroundColor.luminance < 0.5f
                 )
             }
         }
