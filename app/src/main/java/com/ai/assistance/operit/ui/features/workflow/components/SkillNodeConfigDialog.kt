@@ -11,23 +11,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.SkillNode
 import com.ai.assistance.operit.data.skill.SkillRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillNodeConfigDialog(
-    node: SkillNode,
+    node: SkillNode? = null,
     onDismiss: () -> Unit,
     onSave: (SkillNode) -> Unit
 ) {
     val context = LocalContext.current
-
-    val currentNode = remember { node }
+    val isCreateMode = node == null
+    val defaultNode = node ?: SkillNode(name = "", description = "")
+    val currentNode = remember { defaultNode }
     var name by remember { mutableStateOf(currentNode.name) }
     var description by remember { mutableStateOf(currentNode.description) }
     var skillNames by remember { mutableStateOf(currentNode.skillNames.toMutableList()) }
@@ -38,6 +41,11 @@ fun SkillNodeConfigDialog(
     var availableSkillNames by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoadingSkills by remember { mutableStateOf(false) }
     var skillsLoadError by remember { mutableStateOf<String?>(null) }
+
+    // SKILL.md preview state
+    var skillMarkdownContent by remember { mutableStateOf("") }
+    var isLoadingMarkdown by remember { mutableStateOf(false) }
+    var showMarkdownPreview by remember { mutableStateOf(false) }
 
     // Load available skills from the plugins system using LaunchedEffect
     LaunchedEffect(Unit) {
@@ -57,6 +65,39 @@ fun SkillNodeConfigDialog(
         }
     }
 
+    // Load SKILL.md content when a skill is selected
+    LaunchedEffect(skillNames) {
+        if (skillNames.isNotEmpty()) {
+            val selectedSkill = skillNames.last()
+            isLoadingMarkdown = true
+            try {
+                val skillRepo = SkillRepository.getInstance(context)
+                val skillPackage = withContext(Dispatchers.IO) {
+                    skillRepo.getAvailableSkillPackages()[selectedSkill]
+                }
+                if (skillPackage != null) {
+                    val skillDir = skillPackage.skillDir
+                    val skillMdFile = File(skillDir, "SKILL.md")
+                    skillMarkdownContent = if (skillMdFile.exists()) {
+                        withContext(Dispatchers.IO) {
+                            skillMdFile.readText()
+                        }
+                    } else {
+                        "SKILL.md not found for this skill."
+                    }
+                } else {
+                    skillMarkdownContent = "Skill package not found."
+                }
+            } catch (e: Exception) {
+                skillMarkdownContent = "Error loading SKILL.md: ${e.message}"
+            } finally {
+                isLoadingMarkdown = false
+            }
+        } else {
+            skillMarkdownContent = ""
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -72,7 +113,7 @@ fun SkillNodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.skill_node_dialog_create_title)
                            else stringResource(R.string.skill_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -213,6 +254,60 @@ fun SkillNodeConfigDialog(
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // SKILL.md Preview Section
+                if (skillNames.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "SKILL.md Preview: ${skillNames.last()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Switch(
+                            checked = showMarkdownPreview,
+                            onCheckedChange = { showMarkdownPreview = it }
+                        )
+                    }
+
+                    if (showMarkdownPreview) {
+                        if (isLoadingMarkdown) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Loading SKILL.md...")
+                            }
+                        } else {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 100.dp, max = 300.dp)
+                                        .padding(12.dp)
+                                        .verticalScroll(rememberScrollState())
+                                ) {
+                                    Text(
+                                        text = skillMarkdownContent.ifEmpty { "No SKILL.md content available." },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {

@@ -190,6 +190,7 @@ fun WorkflowDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showTriggerResult by remember { mutableStateOf<String?>(null) }
     var showAddNodeDialog by remember { mutableStateOf(false) }
+    var pendingNodeType by remember { mutableStateOf<String?>(null) }
     var showDeleteNodeDialog by remember { mutableStateOf<String?>(null) }
     var showNodeActionMenu by remember { mutableStateOf<String?>(null) }
     var showConnectionMenu by remember { mutableStateOf<String?>(null) }
@@ -598,10 +599,70 @@ fun WorkflowDetailScreen(
                 NodeDialog(
                     node = null, // 创建模式
                     workflow = workflow,
-                    onDismiss = { showAddNodeDialog = false },
+                    onDismiss = { showAddNodeDialog = false; pendingNodeType = null },
                     onConfirm = { node ->
                         viewModel.addNode(workflowId, node) {
                             showAddNodeDialog = false
+                            pendingNodeType = null
+                        }
+                    },
+                    onSelectNodeType = { nodeType ->
+                        pendingNodeType = nodeType
+                    }
+                )
+            }
+
+            // AI节点创建专用对话框
+            if (showAddNodeDialog && pendingNodeType == "ai" && workflow != null) {
+                AINodeConfigDialog(
+                    node = null,
+                    onDismiss = { showAddNodeDialog = false; pendingNodeType = null },
+                    onSave = { node ->
+                        viewModel.addNode(workflowId, node) {
+                            showAddNodeDialog = false
+                            pendingNodeType = null
+                        }
+                    }
+                )
+            }
+
+            // Skill节点创建专用对话框
+            if (showAddNodeDialog && pendingNodeType == "skill" && workflow != null) {
+                SkillNodeConfigDialog(
+                    node = null,
+                    onDismiss = { showAddNodeDialog = false; pendingNodeType = null },
+                    onSave = { node ->
+                        viewModel.addNode(workflowId, node) {
+                            showAddNodeDialog = false
+                            pendingNodeType = null
+                        }
+                    }
+                )
+            }
+
+            // ExecuteShell节点创建专用对话框
+            if (showAddNodeDialog && pendingNodeType == "execute_shell" && workflow != null) {
+                ExecuteShellNodeConfigDialog(
+                    node = null,
+                    onDismiss = { showAddNodeDialog = false; pendingNodeType = null },
+                    onSave = { node ->
+                        viewModel.addNode(workflowId, node) {
+                            showAddNodeDialog = false
+                            pendingNodeType = null
+                        }
+                    }
+                )
+            }
+
+            // Integration节点创建专用对话框
+            if (showAddNodeDialog && pendingNodeType == "integration" && workflow != null) {
+                IntegrationNodeConfigDialog(
+                    node = null,
+                    onDismiss = { showAddNodeDialog = false; pendingNodeType = null },
+                    onConfirm = { node ->
+                        viewModel.addNode(workflowId, node) {
+                            showAddNodeDialog = false
+                            pendingNodeType = null
                         }
                     }
                 )
@@ -812,7 +873,8 @@ fun NodeDialog(
     node: WorkflowNode? = null, // null 表示创建新节点，非 null 表示编辑
     workflow: Workflow, // 用于获取前置节点信息
     onDismiss: () -> Unit,
-    onConfirm: (WorkflowNode) -> Unit
+    onConfirm: (WorkflowNode) -> Unit,
+    onSelectNodeType: ((String) -> Unit)? = null // 用于在创建模式下选择特定节点类型时触发专用对话框
 ) {
     // 判断是编辑还是创建模式
     val isEditMode = node != null
@@ -1277,6 +1339,10 @@ fun NodeDialog(
                                     onClick = {
                                         nodeType = key
                                         expanded = false
+                                        // 对于特殊节点类型，重定向到专用配置对话框
+                                        if (onSelectNodeType != null && (key == "ai" || key == "skill" || key == "execute_shell" || key == "integration")) {
+                                            onSelectNodeType(key)
+                                        }
                                     }
                                 )
                             }

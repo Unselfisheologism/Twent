@@ -16,16 +16,19 @@ import com.ai.assistance.operit.data.model.ExecuteShellNode
 
 @Composable
 fun ExecuteShellNodeConfigDialog(
-    node: ExecuteShellNode,
+    node: ExecuteShellNode? = null,
     onDismiss: () -> Unit,
     onSave: (ExecuteShellNode) -> Unit
 ) {
-    var name by remember { mutableStateOf(node.name) }
-    var description by remember { mutableStateOf(node.description) }
-    var command by remember { mutableStateOf(node.command) }
-    var workingDir by remember { mutableStateOf(node.workingDir ?: "") }
-    var timeoutMs by remember { mutableStateOf(node.timeoutMs.toString()) }
-    var captureStderr by remember { mutableStateOf(node.captureStderr) }
+    val isCreateMode = node == null
+    val defaultNode = node ?: ExecuteShellNode(name = "", description = "")
+    var name by remember { mutableStateOf(defaultNode.name) }
+    var description by remember { mutableStateOf(defaultNode.description) }
+    var command by remember { mutableStateOf(defaultNode.command) }
+    var workingDir by remember { mutableStateOf(defaultNode.workingDir ?: "") }
+    var timeoutMs by remember { mutableStateOf(defaultNode.timeoutMs.toString()) }
+    var captureStderr by remember { mutableStateOf(defaultNode.captureStderr) }
+    val currentNode = remember { defaultNode }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -121,7 +124,7 @@ fun ExecuteShellNodeConfigDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val updatedNode = node.copy(
+                    val updatedNode = currentNode.copy(
                         name = name.ifEmpty { "Shell Node" },
                         description = description,
                         command = command,

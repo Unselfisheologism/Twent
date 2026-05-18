@@ -18,18 +18,24 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.integration.ComposioApiService
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.data.model.AINode
+import com.ai.assistance.operit.services.core.ApiConfigDelegate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AINodeConfigDialog(
-    node: AINode,
+    node: AINode? = null,
     onDismiss: () -> Unit,
     onSave: (AINode) -> Unit
 ) {
-    val currentNode = remember { node }
+    val context = LocalContext.current
+    val isCreateMode = node == null
+    val defaultNode = node ?: AINode(name = "", description = "")
+    val currentNode = remember { defaultNode }
+
     var name by remember { mutableStateOf(currentNode.name) }
     var description by remember { mutableStateOf(currentNode.description) }
     var taskType by remember { mutableStateOf(currentNode.taskType) }
+    var modelId by remember { mutableStateOf(currentNode.modelId) }
     var prompt by remember { mutableStateOf(currentNode.prompt) }
     var systemPrompt by remember { mutableStateOf(currentNode.systemPrompt) }
     var temperature by remember { mutableFloatStateOf(currentNode.temperature) }
@@ -38,6 +44,7 @@ fun AINodeConfigDialog(
     var enableTools by remember { mutableStateOf(currentNode.enableTools) }
     var selectedTools by remember { mutableStateOf(currentNode.enabledTools.toMutableList()) }
     var taskTypeExpanded by remember { mutableStateOf(false) }
+    var modelExpanded by remember { mutableStateOf(false) }
 
     var showSystemPromptSection by remember { mutableStateOf(currentNode.systemPrompt.isNotEmpty()) }
     var showAdvancedSection by remember { mutableStateOf(false) }
@@ -45,10 +52,17 @@ fun AINodeConfigDialog(
     var inputFiles by remember { mutableStateOf(currentNode.inputFiles.toMutableList()) }
 
     // Load toolkits for tool selection
-    val context = LocalContext.current
     val composioApi = remember { ComposioApiService.getInstance(context) }
     var availableToolkits by remember { mutableStateOf<List<ToolkitDefinition>>(emptyList()) }
     var toolkitLoadError by remember { mutableStateOf<String?>(null) }
+
+    // Get current model from ApiConfigDelegate
+    val apiConfigDelegate = remember { ApiConfigDelegate.getInstance(context) }
+    val currentModelName by apiConfigDelegate.modelName.collectAsState()
+
+    LaunchedEffect(Unit) {
+        apiConfigDelegate.initialize()
+    }
 
     LaunchedEffect(enableTools) {
         if (enableTools) {
@@ -68,6 +82,7 @@ fun AINodeConfigDialog(
     )
 
     val taskTypeDisplayName = taskTypeOptions.find { it.first == taskType }?.second ?: "Text Generation"
+    val modelDisplayName = if (modelId.isBlank()) "Default (${currentModelName.ifBlank { "kilo-auto/free" }})" else modelId
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -84,7 +99,7 @@ fun AINodeConfigDialog(
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    text = if (node.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
+                    text = if (currentNode.name.isEmpty()) stringResource(R.string.ai_node_dialog_create_title)
                            else stringResource(R.string.ai_node_dialog_edit_title),
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -139,6 +154,45 @@ fun AINodeConfigDialog(
                                 }
                             )
                         }
+                    }
+                }
+
+                ExposedDropdownMenuBox(
+                    expanded = modelExpanded,
+                    onExpandedChange = { modelExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = modelDisplayName,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.workflow_ai_model_label)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = modelExpanded,
+                        onDismissRequest = { modelExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Default (${currentModelName.ifBlank { "kilo-auto/free" }})") },
+                            onClick = {
+                                modelId = ""
+                                modelExpanded = false
+                            },
+                            leadingIcon = {
+                                if (modelId.isBlank()) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                }
+                            }
+                        )
+                        HorizontalDivider()
+                        OutlinedTextField(
+                            value = modelId,
+                            onValueChange = { modelId = it },
+                            label = { Text("Custom Model ID") },
+                            singleLine = true,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
                     }
                 }
 
@@ -425,6 +479,7 @@ fun AINodeConfigDialog(
                         name = name.ifEmpty { "AI Node" },
                         description = description,
                         taskType = taskType,
+                        modelId = modelId,
                         prompt = prompt,
                         systemPrompt = systemPrompt,
                         temperature = temperature,
