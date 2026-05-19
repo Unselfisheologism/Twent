@@ -2289,6 +2289,180 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+
+    // ==================== Workflow Management Tools ====================
+    // These tools provide full CRUD access to workflows and all node types
+    
+    // List all workflows
+    handler.registerTool(
+        name = "list_workflows",
+        dangerCheck = { false },
+        descriptionGenerator = { _ ->
+            "Lists all available workflows. Use to find workflow IDs and names."
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Get workflow details
+    handler.registerTool(
+        name = "get_workflow",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "Gets detailed information about a specific workflow (ID: $workflowId)"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Create a new workflow
+    handler.registerTool(
+        name = "create_workflow",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val name = tool.parameters.find { it.name == "name" }?.value ?: ""
+            "Creates a new workflow with name: $name"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Update an existing workflow
+    handler.registerTool(
+        name = "update_workflow",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "Updates an existing workflow (ID: $workflowId)"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Patch workflow (incremental update)
+    handler.registerTool(
+        name = "patch_workflow",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "Incrementally updates a workflow's nodes and connections (ID: $workflowId)"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Delete a workflow
+    handler.registerTool(
+        name = "delete_workflow",
+        dangerCheck = { true },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "DELETES a workflow (ID: $workflowId). This cannot be undone!"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Trigger workflow execution
+    handler.registerTool(
+        name = "trigger_workflow",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "Triggers execution of workflow (ID: $workflowId)"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Add a node to workflow
+    handler.registerTool(
+        name = "add_node",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val nodeType = tool.parameters.find { it.name == "node_type" }?.value ?: ""
+            "Adds a new node of type: $nodeType to a workflow"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Configure/update a node
+    handler.registerTool(
+        name = "configure_node",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val nodeId = tool.parameters.find { it.name == "node_id" }?.value ?: ""
+            val field = tool.parameters.find { it.name == "field" }?.value ?: ""
+            "Updates node (ID: $nodeId) field: $field"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Connect two nodes
+    handler.registerTool(
+        name = "connect_nodes",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val sourceId = tool.parameters.find { it.name == "source_node_id" }?.value ?: ""
+            val targetId = tool.parameters.find { it.name == "target_node_id" }?.value ?: ""
+            "Creates a connection from node $sourceId to node $targetId"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Delete a node
+    handler.registerTool(
+        name = "delete_node",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val nodeId = tool.parameters.find { it.name == "node_id" }?.value ?: ""
+            "Deletes node (ID: $nodeId) from its workflow"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+    // Get workflow detail (full JSON)
+    handler.registerTool(
+        name = "get_workflow_detail",
+        dangerCheck = { false },
+        descriptionGenerator = { tool ->
+            val workflowId = tool.parameters.find { it.name == "workflow_id" }?.value ?: ""
+            "Gets full workflow details including all nodes and connections (ID: $workflowId)"
+        },
+        executor = { tool ->
+            val workflowTools = ToolGetter.getWorkflowTools(context)
+            workflowTools.invoke(tool)
+        }
+    )
+
+
     // Register package creator tools (create packages, MCP servers, and skills)
     PackageCreatorTools.registerCreatorTools(handler, context)
 }

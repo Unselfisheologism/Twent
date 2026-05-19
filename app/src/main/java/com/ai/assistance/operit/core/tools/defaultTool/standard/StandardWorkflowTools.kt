@@ -3,6 +3,7 @@ package com.ai.assistance.operit.core.tools.defaultTool.standard
 import android.content.Context
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.core.tools.StringResultData
+import com.ai.assistance.operit.core.tools.ToolExecutor
 import com.ai.assistance.operit.core.tools.WorkflowDetailResultData
 import com.ai.assistance.operit.core.tools.WorkflowListResultData
 import com.ai.assistance.operit.core.tools.WorkflowResultData
@@ -24,8 +25,9 @@ import java.util.UUID
 /**
  * 工作流管理工具
  * 提供工作流的创建、查询、更新和删除功能
+ * 实现 ToolExecutor 接口以便在 AI Agent 中使用
  */
-class StandardWorkflowTools(private val context: Context) {
+class StandardWorkflowTools(private val context: Context) : ToolExecutor {
 
     companion object {
         private const val TAG = "StandardWorkflowTools"
@@ -35,6 +37,81 @@ class StandardWorkflowTools(private val context: Context) {
     private val json = Json {
         ignoreUnknownKeys = true
         classDiscriminator = "__type"
+    }
+
+    /**
+     * 实现 ToolExecutor 接口的 invoke 方法
+     * 根据 tool.name 派发到相应的 CRUD 方法
+     * 支持的工具名称：list_workflows, get_workflow, create_workflow, update_workflow,
+     *                  patch_workflow, delete_workflow, trigger_workflow, add_node,
+     *                  configure_node, connect_nodes, delete_node, get_workflow_detail
+     */
+    override fun invoke(tool: AITool): ToolResult {
+        return runBlocking {
+            try {
+                val toolName = tool.name.lowercase()
+                
+                when {
+                    toolName == "list_workflows" -> getAllWorkflows(tool)
+                    toolName == "get_workflow" -> getWorkflow(tool)
+                    toolName == "create_workflow" -> createWorkflow(tool)
+                    toolName == "update_workflow" -> updateWorkflow(tool)
+                    toolName == "patch_workflow" -> patchWorkflow(tool)
+                    toolName == "delete_workflow" -> deleteWorkflow(tool)
+                    toolName == "trigger_workflow" -> triggerWorkflow(tool)
+                    toolName == "add_node" -> addNode(tool)
+                    toolName == "configure_node" -> configureNode(tool)
+                    toolName == "connect_nodes" -> connectNodes(tool)
+                    toolName == "delete_node" -> deleteNode(tool)
+                    toolName == "get_workflow_detail" -> getWorkflowDetail(tool)
+                    // Also support legacy action parameter for backward compatibility
+                    tool.parameters.any { it.name == "action" } -> {
+                        // Check action parameter for legacy support
+                        val action = tool.parameters.find { it.name == "action" }?.value?.lowercase()
+                        when (action) {
+                            "list" -> getAllWorkflows(tool)
+                            "get" -> getWorkflow(tool)
+                            "create" -> createWorkflow(tool)
+                            "update" -> updateWorkflow(tool)
+                            "patch" -> patchWorkflow(tool)
+                            "delete" -> deleteWorkflow(tool)
+                            "trigger" -> triggerWorkflow(tool)
+                            "add_node" -> addNode(tool)
+                            "configure_node" -> configureNode(tool)
+                            "connect_nodes" -> connectNodes(tool)
+                            "delete_node" -> deleteNode(tool)
+                            "get_detail" -> getWorkflowDetail(tool)
+                            else -> {
+                                AppLogger.w(TAG, "Unknown tool name: $toolName, action: $action")
+                                ToolResult(
+                                    toolName = tool.name,
+                                    success = false,
+                                    result = StringResultData(""),
+                                    error = "Unknown tool: $toolName. Use: list_workflows, get_workflow, create_workflow, update_workflow, patch_workflow, delete_workflow, trigger_workflow, add_node, configure_node, connect_nodes, delete_node, get_workflow_detail"
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        AppLogger.w(TAG, "Unknown workflow tool: $toolName")
+                        ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = "Unknown tool: $toolName. Use: list_workflows, get_workflow, create_workflow, update_workflow, patch_workflow, delete_workflow, trigger_workflow, add_node, configure_node, connect_nodes, delete_node, get_workflow_detail"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Error invoking workflow tool: ${tool.name}", e)
+                ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "Error: ${e.message}"
+                )
+            }
+        }
     }
 
     /**
@@ -1081,6 +1158,53 @@ class StandardWorkflowTools(private val context: Context) {
                         fixedValue = fixedValue
                     )
                 }
+                "ai" -> {
+                    val taskType = nodeObj.optString("taskType", "generate_text")
+                    val modelId = nodeObj.optString("modelId", "")
+                    val systemPrompt = nodeObj.optString("systemPrompt", "")
+                    val prompt = nodeObj.optString("prompt", "")
+                    val enableTools = nodeObj.optBoolean("enableTools", false)
+                    val maxTokens = nodeObj.optInt("maxTokens", 4096)
+                    val temperature = nodeObj.optDouble("temperature", 0.7).toFloat()
+                    val timeoutMs = nodeObj.optLong("timeoutMs", 60000L)
+                    AINode(id = id, name = name.ifBlank { "AI" }, description = description, position = position,
+                        taskType = taskType, modelId = modelId, systemPrompt = systemPrompt, prompt = prompt,
+                        enableTools = enableTools, maxTokens = maxTokens, temperature = temperature, timeoutMs = timeoutMs)
+                }
+                "execute_shell", "shell" -> {
+                    val command = nodeObj.optString("command", "")
+                    val sessionId = nodeObj.optString("sessionId", "")
+                    val timeoutMs = nodeObj.optLong("timeoutMs", 30000L)
+                    val captureStderr = nodeObj.optBoolean("captureStderr", true)
+                    val workingDir = nodeObj.optString("workingDir", "")
+                    ExecuteShellNode(id = id, name = name.ifBlank { "Shell" }, description = description, position = position,
+                        command = command, sessionId = sessionId, timeoutMs = timeoutMs, captureStderr = captureStderr, workingDir = workingDir)
+                }
+                "skill" -> {
+                    val skillNamesArray = nodeObj.optJSONArray("skillNames")
+                    val skillNames = if (skillNamesArray != null) {
+                        (0 until skillNamesArray.length()).map { skillNamesArray.getString(it) }
+                    } else emptyList<String>()
+                    val extraInstructions = nodeObj.optString("extraInstructions", "")
+                    SkillNode(id = id, name = name.ifBlank { "Skill" }, description = description, position = position,
+                        skillNames = skillNames, extraInstructions = extraInstructions)
+                }
+                "integration" -> {
+                    val integrationType = nodeObj.optString("integrationType", "tool")
+                    val toolkit = nodeObj.optString("toolkit", "")
+                    val actionId = nodeObj.optString("actionId", "")
+                    val timeout = nodeObj.optLong("timeout", 30000L)
+                    val enabled = nodeObj.optBoolean("enabled", true)
+                    IntegrationNode(id = id, name = name.ifBlank { "Integration" }, description = description, position = position,
+                        integrationType = integrationType, toolkit = toolkit, actionId = actionId, timeout = timeout, enabled = enabled)
+                }
+                "mcp" -> {
+                    val serverName = nodeObj.optString("serverName", "")
+                    val toolName = nodeObj.optString("toolName", "")
+                    val toolDescription = nodeObj.optString("toolDescription", "")
+                    MCPNode(id = id, name = name.ifBlank { "MCP" }, description = description, position = position,
+                        serverName = serverName, toolName = toolName, toolDescription = toolDescription)
+                }
                 else -> {
                     AppLogger.w(TAG, "Unknown node type: $type")
                     null
@@ -1102,6 +1226,11 @@ class StandardWorkflowTools(private val context: Context) {
                 simple.endsWith("conditionnode") -> return "condition"
                 simple.endsWith("logicnode") -> return "logic"
                 simple.endsWith("extractnode") -> return "extract"
+                simple.endsWith("ainode") -> return "ai"
+                simple.endsWith("executeshellnode") -> return "execute_shell"
+                simple.endsWith("skillnode") -> return "skill"
+                simple.endsWith("integrationnode") -> return "integration"
+                simple.endsWith("mcpnode") -> return "mcp"
             }
         }
 
@@ -1110,6 +1239,11 @@ class StandardWorkflowTools(private val context: Context) {
         if (nodeObj.has("left") || nodeObj.has("right")) return "condition"
         if (nodeObj.has("source") || nodeObj.has("mode") || nodeObj.has("expression") || nodeObj.has("pattern") || nodeObj.has("path")) return "extract"
         if (nodeObj.has("operator")) return "logic"
+        if (nodeObj.has("taskType") || nodeObj.has("modelId") || nodeObj.has("systemPrompt") || nodeObj.has("prompt")) return "ai"
+        if (nodeObj.has("command") || nodeObj.has("sessionId")) return "execute_shell"
+        if (nodeObj.has("skillNames") || nodeObj.has("extraInstructions")) return "skill"
+        if (nodeObj.has("integrationType") || nodeObj.has("toolkit") || nodeObj.has("actionId") || nodeObj.has("webhookConfig")) return "integration"
+        if (nodeObj.has("serverName") || nodeObj.has("toolName")) return "mcp"
 
         return ""
     }
