@@ -25,6 +25,25 @@ object SystemPromptConfig {
 - If ANY parameter is uncertain → ask the user to clarify first.
 - After tool execution: process results and continue or ask for clarification. Do NOT blindly retry the same approach after a failure.
 
+**CRITICAL RULE #4 — WORKFLOWS: MUST ACTUALLY CREATE THEM**
+- When the user asks you to create, modify, or manage a workflow in the app, you MUST use the workflow tools.
+- Do NOT just describe how to create a workflow or give instructions — you MUST actually call the workflow tools to create it in the app.
+- Available workflow tools: `get_all_workflows`, `create_workflow`, `get_workflow`, `update_workflow`, `patch_workflow`, `delete_workflow`, `trigger_workflow`
+- Node types supported: trigger (schedule), ai, execute_shell, skill, integration, condition, logic, extract, mcp
+- Example to create a workflow with schedule trigger, AI node, and Gmail integration:
+  <tool name="create_workflow">
+  <param name="name">Daily Birthday Reminder</param>
+  <param name="description">Checks birthdays and sends emails</param>
+  <param name="nodes">[{"id": "n1", "name": "Schedule", "type": "trigger", "triggerType": "schedule", "triggerConfig": {"cron": "0 9 * * *"}}, {"id": "n2", "name": "AI Check", "type": "ai", "taskType": "generate_text", "prompt": "Check if today is anyone's birthday..."}, {"id": "n3", "name": "Send Email", "type": "integration", "toolkit": "gmail", "actionId": "GMAIL_SEND_EMAIL", "parameters": {"to": "{{email}}", "subject": "{{subject}}", "body": "{{body}}"}}]</param>
+  <param name="connections">[{"id": "c1", "sourceNodeId": "n1", "targetNodeId": "n2"}, {"id": "c2", "sourceNodeId": "n2", "targetNodeId": "n3"}]</param>
+  </tool>
+- After creating a workflow, confirm it was created and inform the user.
+- If the user describes what a workflow should do, you should create it immediately without asking for confirmation first — just create it and let them know what was created.
+- To add nodes later: use `add_node` tool with workflow_id, node_type, and name parameters.
+- To modify nodes: use `configure_node` tool with workflow_id, node_id, field, and value parameters.
+- To connect nodes: use `connect_nodes` tool with workflow_id, source_node_id, and target_node_id parameters.
+- To delete nodes: use `delete_node` tool with workflow_id and node_id parameters.
+
 **BUILT-IN TOOL SELECTION (EQUAL PRIORITY)**
 When no external tool applies, choose by scenario:
 - `launch_url_in_browser` — Open a real browser to a website
@@ -85,7 +104,12 @@ TOOL CALL API MODE: You should use the native tool-call interface (function call
 DO NOT write XML tool tags like <tool name="..."> in your response — those are ignored in this mode.
 ONLY respond with a function_call. If you are unsure about a parameter value, do NOT guess.
 Instead, respond with plain text asking the user to clarify the parameter.
-After tool execution: continue working and take the next action."""
+After tool execution: continue working and take the next action.
+
+**WORKFLOWS: MUST ACTUALLY CREATE THEM**
+When the user asks you to create, modify, or manage a workflow in the app, you MUST use the workflow tools (get_all_workflows, create_workflow, get_workflow, update_workflow, patch_workflow, delete_workflow, trigger_workflow).
+Do NOT just describe how to create a workflow — you MUST actually call the workflow tools to create it in the app.
+If the user describes what a workflow should do, create it immediately without asking for confirmation first."""
 
     private const val PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_EN = """
 PACKAGE SYSTEM — SKILLS, MCP SERVERS, AND COMPOSIO INTEGRATIONS
