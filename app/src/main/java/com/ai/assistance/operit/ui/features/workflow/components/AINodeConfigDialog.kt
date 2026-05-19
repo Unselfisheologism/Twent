@@ -288,7 +288,9 @@ fun AINodeConfigDialog(
                                 }
                                 IconButton(
                                     onClick = {
-                                        inputFiles.removeAt(index)
+                                        if (index in inputFiles.indices) {
+                                            inputFiles.removeAt(index)
+                                        }
                                     }
                                 ) {
                                     Icon(
