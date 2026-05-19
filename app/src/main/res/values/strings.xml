@@ -5017,6 +5017,8 @@
     <string name="workflow_ai_input_file_hint">Node reference (e.g. {node_id.output}) or file path</string>
     <string name="workflow_ai_add_file">Add File</string>
     <string name="workflow_ai_supported_formats">Supported: JPG, PNG, GIF, WebP, BMP, TXT, PDF</string>
+    <string name="workflow_ai_select_file">Select File from Device</string>
+    <string name="workflow_ai_no_files_selected">No files selected. Tap the button above to select files from your device.</string>
     <string name="workflow_shell_command_label">Command</string>
     <string name="workflow_shell_working_dir_label">Working Directory</string>
     <string name="workflow_shell_timeout_label">Timeout</string>

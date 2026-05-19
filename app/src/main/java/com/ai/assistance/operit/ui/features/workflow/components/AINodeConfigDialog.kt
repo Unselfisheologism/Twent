@@ -1,5 +1,8 @@
 package com.ai.assistance.operit.ui.features.workflow.components
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -18,6 +21,9 @@ import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.integration.ComposioApiService
 import com.ai.assistance.operit.data.integration.model.ToolkitDefinition
 import com.ai.assistance.operit.data.model.AINode
+import com.ai.assistance.operit.util.AppLogger
+
+private const val TAG = "AINodeConfigDialog"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +55,32 @@ fun AINodeConfigDialog(
     var showAdvancedSection by remember { mutableStateOf(false) }
     var showInputFilesSection by remember { mutableStateOf(currentNode.inputFiles.isNotEmpty()) }
     var inputFiles by remember { mutableStateOf(currentNode.inputFiles.toMutableList()) }
+
+    // File picker launcher using Storage Access Framework - no runtime permissions needed
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            // Take persistable permission so we can access the file later
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    selectedUri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: SecurityException) {
+                // Permission couldn't be persisted, but we can still use the URI for this session
+                AppLogger.d(TAG, "Could not persist permission: ${e.message}")
+            }
+            // Add the file URI to input files
+            inputFiles.add(selectedUri.toString())
+        }
+    }
+
+    // Helper function to open file picker
+    fun launchFilePicker() {
+        // Open any document that can be read - will filter by task type in the future if needed
+        filePickerLauncher.launch(arrayOf("*/*"))
+    }
 
     // Load toolkits for tool selection
     val composioApi = remember { ComposioApiService.getInstance(context) }
@@ -214,43 +246,79 @@ fun AINodeConfigDialog(
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
-                    inputFiles.forEachIndexed { index, filePath ->
-                        Row(
+                    
+                    // Display selected files with option to remove
+                    inputFiles.forEachIndexed { index, fileUri ->
+                        val fileName = try {
+                            Uri.parse(fileUri).lastPathSegment ?: fileUri.substringAfterLast("/")
+                        } catch (e: Exception) {
+                            fileUri.substringAfterLast("/")
+                        }
+                        
+                        Card(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = filePath,
-                                onValueChange = { inputFiles[index] = it },
-                                label = { Text("$fileLabel ${index + 1}") },
-                                placeholder = { Text(stringResource(R.string.workflow_ai_input_file_hint)) },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
                             )
-                            IconButton(
-                                onClick = {
-                                    if (inputFiles.size > 1) {
-                                        inputFiles.removeAt(index)
-                                    } else {
-                                        inputFiles[index] = ""
-                                    }
-                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = stringResource(R.string.remove),
-                                    tint = MaterialTheme.colorScheme.error
+                                    imageVector = Icons.Default.InsertDriveFile,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
                                 )
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = fileName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = fileLabel,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        inputFiles.removeAt(index)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.remove),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
+                        Spacer(Modifier.height(8.dp))
                     }
-                    TextButton(
-                        onClick = { inputFiles.add("") },
+                    
+                    // File picker button - opens system file picker
+                    OutlinedButton(
+                        onClick = { launchFilePicker() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(R.string.workflow_ai_add_file))
+                        Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.workflow_ai_select_file))
+                    }
+                    
+                    if (inputFiles.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.workflow_ai_no_files_selected),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
 
